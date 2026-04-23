@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.log
+.env
+outputs/
+uploads/
+tasks/
+nohup.out
+error_log
+.DS_Store
