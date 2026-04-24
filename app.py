@@ -128,96 +128,125 @@ def list_all_tasks() -> list[dict]:
 # ── 工具函数 ───────────────────────────────────────────────────
 import mimetypes
 
-CODE_VERSION = "v0.3.7-debug"  # 调试版本，生产环境删除日志后改版本号
+CODE_VERSION = "v0.4.0"
 
-def call_image_api(image_path: str | None, prompt: str) -> str:
+# ── API 调用封装 ───────────────────────────────────────────────────
+
+def call_gemini_api(image_path: str | None, prompt: str) -> str:
     """
-    调用生图 API，返回图片 URL 或 base64 data URI。
-    使用 requests 直接调用 laozhang.ai API，避免 SDK 兼容性问题。
+    调用 Gemini 生图 API，返回 base64 数据。
     """
-    logger.info(f"\n{'='*60}")
-    logger.info(f"[DEBUG] 代码版本: {CODE_VERSION}")
+    api_key = os.getenv("OPENAI_API_KEY")
+    model = os.getenv("IMAGE_MODEL", "gemini-3.1-flash-image-preview")
+    base_url = os.getenv("OPENAI_BASE_URL", "https://api.laozhang.ai").rstrip("/")
     
-    # 检查环境变量是否被正确加载
-    env_api_key = os.getenv("OPENAI_API_KEY")
-    env_base_url = os.getenv("OPENAI_BASE_URL")
-    logger.info(f"[DEBUG] 环境变量检查 - API_KEY: {env_api_key}")
-    logger.info(f"[DEBUG] 环境变量检查 - BASE_URL: {env_base_url}")
-    logger.info(f"{'='*60}")
+    url = f"{base_url}/v1beta/models/{model}:generateContent"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
     
+    parts = [{"text": prompt}]
+    
+    # 如果有参考图片，编码为 inline_data
+    if image_path and Path(image_path).exists():
+        mime_type = mimetypes.guess_type(image_path)[0] or "image/jpeg"
+        with open(image_path, "rb") as f:
+            image_b64 = base64.b64encode(f.read()).decode("utf-8")
+        parts.append({"inline_data": {"mime_type": mime_type, "data": image_b64}})
+        logger.info(f"[Gemini] 已添加参考图片: {image_path}")
+    
+    payload = {
+        "contents": [{"parts": parts}],
+        "generationConfig": {
+            "responseModalities": ["IMAGE"],
+            "imageConfig": {"imageSize": "2K"}
+        }
+    }
+    
+    logger.info(f"[Gemini] 请求URL: {url}")
+    response = requests.post(url, headers=headers, json=payload, timeout=180)
+    
+    if response.status_code != 200:
+        raise ValueError(f"Gemini API 错误 {response.status_code}: {response.text}")
+    
+    result = response.json()
+    
+    # 从 Gemini 响应中提取图片
+    for candidate in result.get("candidates", []):
+        for part in candidate.get("content", {}).get("parts", []):
+            inline_data = part.get("inlineData") or part.get("inline_data")
+            if inline_data and inline_data.get("data"):
+                logger.info(f"[Gemini] 返回 base64 数据")
+                return inline_data["data"]
+    
+    raise ValueError(f"Gemini API 返回结果中无图片数据: {result}")
+
+
+def call_openai_api(image_path: str | None, prompt: str) -> str:
+    """
+    调用 OpenAI 格式生图 API，返回 URL 或 base64 数据。
+    """
     api_key = os.getenv("OPENAI_API_KEY")
     base_url = os.getenv("OPENAI_BASE_URL", "https://api.laozhang.ai/v1").rstrip("/")
     model = os.getenv("IMAGE_MODEL", "gpt-image-2")
     size = os.getenv("IMAGE_SIZE", "1024x1024")
     
-    # [DEBUG] 明文输出配置
-    logger.info(f"[DEBUG] API_KEY: {api_key}")
-    logger.info(f"[DEBUG] BASE_URL: {base_url}")
-    logger.info(f"[DEBUG] MODEL: {model}")
-    logger.info(f"[DEBUG] SIZE: {size}")
-    logger.info(f"[DEBUG] IMAGE_PATH: {image_path}")
-    prompt_preview = prompt[:100] + "..." if len(prompt) > 100 else prompt
-    logger.info(f"[DEBUG] PROMPT: {prompt_preview}")
-    
     headers = {"Authorization": f"Bearer {api_key}"}
     
-    # ── 有参考图 → edit，无图 → generate ──────────────────────
+    # 有参考图 → edit，无图 → generate
     if image_path and Path(image_path).exists():
-        logger.info(f"[DEBUG] 模式: 图片编辑 (edits)")
         url = f"{base_url}/images/edits"
-        logger.info(f"[DEBUG] 请求URL: {url}")
-        
-        data = {
-            "model": model,
-            "prompt": prompt,
-            "n": 1,
-            "size": size,
-        }
-        logger.info(f"[DEBUG] 请求数据: {data}")
-        
+        data = {"model": model, "prompt": prompt, "n": 1, "size": size}
         mime_type = mimetypes.guess_type(image_path)[0] or "image/jpeg"
-        logger.info(f"[DEBUG] 图片MIME类型: {mime_type}")
         
         with open(image_path, "rb") as f:
             files = [("image", (Path(image_path).name, f, mime_type))]
-            logger.info(f"[DEBUG] 发送请求...")
             response = requests.post(url, headers=headers, data=data, files=files, timeout=300)
+        logger.info(f"[OpenAI] 图片编辑模式: {url}")
     else:
-        logger.info(f"[DEBUG] 模式: 纯文本生成 (generations)")
         url = f"{base_url}/images/generations"
-        logger.info(f"[DEBUG] 请求URL: {url}")
-        
-        data = {
-            "model": model,
-            "prompt": prompt,
-            "n": 1,
-            "size": size,
-        }
-        logger.info(f"[DEBUG] 请求数据: {data}")
-        logger.info(f"[DEBUG] 发送请求...")
-        
+        data = {"model": model, "prompt": prompt, "n": 1, "size": size}
         response = requests.post(url, headers=headers, json=data, timeout=300)
-    
-    logger.info(f"[DEBUG] 响应状态码: {response.status_code}")
-    logger.info(f"[DEBUG] 响应头: {dict(response.headers)}")
-    logger.info(f"[DEBUG] 响应内容: {response.text[:500]}..." if len(response.text) > 500 else f"[DEBUG] 响应内容: {response.text}")
+        logger.info(f"[OpenAI] 纯文本生成模式: {url}")
     
     if response.status_code != 200:
-        raise ValueError(f"API 错误 {response.status_code}: {response.text}")
+        raise ValueError(f"OpenAI API 错误 {response.status_code}: {response.text}")
     
     result = response.json()
     image_data = result.get("data", [{}])[0]
-    logger.info(f"[DEBUG] 图片数据字段: {list(image_data.keys())}")
     
     # 优先返回 base64，其次 URL
     if image_data.get("b64_json"):
-        logger.info(f"[DEBUG] 返回: base64数据 (长度: {len(image_data['b64_json'])})")
+        logger.info(f"[OpenAI] 返回 base64 数据")
         return image_data["b64_json"]
     if image_data.get("url"):
-        logger.info(f"[DEBUG] 返回: URL {image_data['url']}")
+        logger.info(f"[OpenAI] 返回 URL: {image_data['url']}")
         return image_data["url"]
     
-    raise ValueError(f"API 返回结果中既无 url 也无 b64_json: {result}")
+    raise ValueError(f"OpenAI API 返回结果中既无 url 也无 b64_json: {result}")
+
+
+def call_image_api(image_path: str | None, prompt: str) -> str:
+    """
+    根据 IMAGE_MODEL 自动选择 API 格式调用生图接口。
+    返回图片 URL 或 base64 数据。
+    """
+    model = os.getenv("IMAGE_MODEL", "gpt-image-2")
+    
+    logger.info(f"
+{'='*60}")
+    logger.info(f"[DEBUG] 代码版本: {CODE_VERSION}")
+    logger.info(f"[DEBUG] MODEL: {model}")
+    logger.info(f"[DEBUG] IMAGE_PATH: {image_path}")
+    logger.info(f"[DEBUG] PROMPT: {prompt[:100]}...")
+    logger.info(f"{'='*60}")
+    
+    # 根据模型名选择 API 格式
+    if "gemini" in model.lower():
+        return call_gemini_api(image_path, prompt)
+    else:
+        return call_openai_api(image_path, prompt)
 
 
 def save_output_image(url_or_b64: str, task_id: str, card_index: int) -> str:
@@ -227,13 +256,19 @@ def save_output_image(url_or_b64: str, task_id: str, card_index: int) -> str:
     filename = f"card_{card_index}_{uuid.uuid4().hex[:8]}.png"
     filepath = out_dir / filename
 
-    if url_or_b64.startswith("data:image"):
-        b64_data = url_or_b64.split(",", 1)[1]
-        filepath.write_bytes(base64.b64decode(b64_data))
-    else:
+    # 判断是 URL 还是 base64
+    if url_or_b64.startswith("http://") or url_or_b64.startswith("https://"):
+        # URL 格式，下载图片
         resp = requests.get(url_or_b64, timeout=60)
         resp.raise_for_status()
         filepath.write_bytes(resp.content)
+    elif url_or_b64.startswith("data:image"):
+        # data URI 格式
+        b64_data = url_or_b64.split(",", 1)[1]
+        filepath.write_bytes(base64.b64decode(b64_data))
+    else:
+        # 纯 base64 格式（Gemini 返回的格式）
+        filepath.write_bytes(base64.b64decode(url_or_b64))
 
     return str(filepath)
 
