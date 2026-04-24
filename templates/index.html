@@ -671,9 +671,10 @@ function makeCard(i) {
   card.innerHTML = `
     <div class="card-header">
       <span class="card-num">#${i + 1}</span>
-      <span style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+      <span style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
         ${s.imageName || ''}
       </span>
+      <span class="card-delete" data-card="${i}" title="Delete this card">×</span>
     </div>
     <div class="card-body">
 
@@ -734,6 +735,7 @@ function makeCard(i) {
 
   // Generate
   card.querySelector(`#btn-gen-${i}`).addEventListener('click', () => generateImage(i));
+  card.querySelector('.card-delete').addEventListener('click', (e) => deleteCard(parseInt(e.target.dataset.card)));
 
   // Prompt save on blur
   card.querySelector(`#prompt-${i}`).addEventListener('input', () => {
