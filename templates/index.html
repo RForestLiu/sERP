@@ -548,7 +548,8 @@ $('btn-split').addEventListener('click', () => {
     // 尝试按文件名匹配
     const matchResult = tryMatchByImageName(items);
     if (matchResult.matched > 0) {
-      if (confirm(`检测到 ${matchResult.matched} 个文件名匹配。\n\n点击"确定"按文件名匹配\n点击"取消"按顺序填充`)) {
+      const msg = `检测到 ${matchResult.matched}/${items.length} 个文件名可匹配。\n\n【确定】按文件名匹配（保持对应关系）\n【取消】按顺序填充（覆盖现有提示词）`;
+      if (confirm(msg)) {
         applyMatchResult(items, matchResult.mapping);
         renderCards();
         setStatus(`${matchResult.matched} matched by filename, ${items.length - matchResult.matched} filled in order`, 'ok');
@@ -856,7 +857,8 @@ async function handleBatchFiles(files) {
     });
     
     if (matchCount > 0) {
-      useFilenameMatch = confirm(`检测到 ${matchCount} 个文件名匹配。\n\n点击"确定"按文件名匹配\n点击"取消"按顺序填充`);
+      const msg = `检测到 ${matchCount}/${sorted.length} 个文件名可匹配。\n\n【确定】按文件名匹配（保持对应关系）\n【取消】按顺序填充`;
+      useFilenameMatch = confirm(msg);
     }
   }
 
