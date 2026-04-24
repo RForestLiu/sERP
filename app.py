@@ -393,6 +393,26 @@ def index():
 
 
 # ── 启动 ───────────────────────────────────────────────────────
+@app.route("/api/tasks/<task_id>/open_folder")
+def open_output_folder(task_id):
+    """打开任务的输出文件夹"""
+    import subprocess
+    import platform
+    
+    task_dir = OUTPUT_DIR / task_id
+    task_dir.mkdir(parents=True, exist_ok=True)  # 确保目录存在
+    
+    abs_path = task_dir.resolve()
+    
+    if platform.system() == "Windows":
+        subprocess.run(["explorer", str(abs_path)])
+    elif platform.system() == "Darwin":  # macOS
+        subprocess.run(["open", str(abs_path)])
+    else:  # Linux
+        subprocess.run(["xdg-open", str(abs_path)])
+    
+    return jsonify({"ok": True, "path": str(abs_path)})
+
 if __name__ == "__main__":
     port  = int(os.getenv("PORT", 5000))
     debug = os.getenv("FLASK_DEBUG", "false").lower() == "true"
@@ -417,22 +437,3 @@ def list_task_outputs(task_id):
     return jsonify(files)
 
 
-@app.route("/api/tasks/<task_id>/open_folder")
-def open_output_folder(task_id):
-    """打开任务的输出文件夹"""
-    import subprocess
-    import platform
-    
-    task_dir = OUTPUT_DIR / task_id
-    task_dir.mkdir(parents=True, exist_ok=True)  # 确保目录存在
-    
-    abs_path = task_dir.resolve()
-    
-    if platform.system() == "Windows":
-        subprocess.run(["explorer", str(abs_path)])
-    elif platform.system() == "Darwin":  # macOS
-        subprocess.run(["open", str(abs_path)])
-    else:  # Linux
-        subprocess.run(["xdg-open", str(abs_path)])
-    
-    return jsonify({"ok": True, "path": str(abs_path)})
