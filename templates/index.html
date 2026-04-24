@@ -582,15 +582,21 @@ function tryMatchByImageName(items) {
     const imageName = item.image_name;
     if (!imageName) return;
     
+    // 去掉扩展名比较
+    const itemNameNoExt = imageName.replace(/\.[^.]+$/, '');
+    
     // 在cardStates中查找匹配的imageName
     for (let cardIdx = 0; cardIdx < cardStates.length; cardIdx++) {
       if (usedCards.has(cardIdx)) continue;
       const card = cardStates[cardIdx];
-      if (card && card.imageName && card.imageName === imageName) {
-        mapping.push({itemIndex: itemIdx, cardIndex: cardIdx});
-        usedCards.add(cardIdx);
-        matched++;
-        break;
+      if (card && card.imageName) {
+        const cardNameNoExt = card.imageName.replace(/\.[^.]+$/, '');
+        if (cardNameNoExt === itemNameNoExt) {
+          mapping.push({itemIndex: itemIdx, cardIndex: cardIdx});
+          usedCards.add(cardIdx);
+          matched++;
+          break;
+        }
       }
     }
   });
@@ -882,16 +888,20 @@ async function handleBatchFiles(files) {
   const hasExistingCards = cardStates.some(c => c && c.imageName && c.prompt);
 
   if (hasExistingCards && sorted.length > 0) {
-    // 计算匹配数
+    // 计算匹配数（去掉扩展名比较）
     let matchCount = 0;
     const usedCards = new Set();
     sorted.forEach(file => {
+      const fileNameNoExt = file.name.replace(/\.[^.]+$/, '');
       for (let i = 0; i < cardStates.length; i++) {
         if (usedCards.has(i)) continue;
-        if (cardStates[i] && cardStates[i].imageName === file.name) {
-          matchCount++;
-          usedCards.add(i);
-          break;
+        if (cardStates[i] && cardStates[i].imageName) {
+          const cardNameNoExt = cardStates[i].imageName.replace(/\.[^.]+$/, '');
+          if (cardNameNoExt === fileNameNoExt) {
+            matchCount++;
+            usedCards.add(i);
+            break;
+          }
         }
       }
     });
@@ -939,17 +949,21 @@ async function uploadAndFill(sorted, useFilenameMatch) {
 
   // 分配到卡片
   if (useFilenameMatch) {
-    // 按文件名匹配
+    // 按文件名匹配（去掉扩展名比较）
     const usedCards = new Set();
     uploadResults.forEach(r => {
+      const fileNameNoExt = r.file.name.replace(/\.[^.]+$/, '');
       for (let i = 0; i < cardStates.length; i++) {
         if (usedCards.has(i)) continue;
-        if (cardStates[i] && cardStates[i].imageName === r.file.name) {
-          cardStates[i].uploadUrl = r.uploadUrl;
-          cardStates[i].uploadPath = r.uploadPath;
-          usedCards.add(i);
-          updateImgBox1(i, r.uploadUrl);
-          break;
+        if (cardStates[i] && cardStates[i].imageName) {
+          const cardNameNoExt = cardStates[i].imageName.replace(/\.[^.]+$/, '');
+          if (cardNameNoExt === fileNameNoExt) {
+            cardStates[i].uploadUrl = r.uploadUrl;
+            cardStates[i].uploadPath = r.uploadPath;
+            usedCards.add(i);
+            updateImgBox1(i, r.uploadUrl);
+            break;
+          }
         }
       }
     });
