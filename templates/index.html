@@ -598,6 +598,29 @@ function tryMatchByImageName(items) {
   return { mapping, matched };
 }
 
+// 执行分割匹配
+function doSplitMatch(useFilename) {
+  document.querySelector('.toast')?.remove();
+  const items = window._splitItems;
+  const matchResult = window._splitMatchResult;
+  
+  if (useFilename) {
+    applyMatchResult(items, matchResult.mapping);
+    renderCards();
+    setStatus(`${matchResult.matched} matched by filename`, 'ok');
+  } else {
+    items.forEach((item, i) => {
+      if (!cardStates[i]) cardStates[i] = {};
+      cardStates[i].prompt = item.prompt || '';
+      cardStates[i].imageName = item.image_name || `Card ${i}`;
+    });
+    if (items.length < cardStates.length) cardStates = cardStates.slice(0, items.length);
+    renderCards();
+    setStatus(`${items.length} prompts filled in order`, 'ok');
+  }
+  saveCardsDebounced();
+}
+
 // 应用匹配结果
 function applyMatchResult(items, mapping) {
   const newCardStates = [...cardStates];
@@ -627,6 +650,22 @@ function applyMatchResult(items, mapping) {
   });
   
   cardStates = newCardStates;
+}
+
+// Toast提示函数
+function showToast(msg, type='info', duration=2000, actions=null) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = msg + (actions ? `<div class="toast-actions">${actions}</div>` : '');
+  document.body.appendChild(toast);
+  
+  if (duration > 0) {
+    setTimeout(() => toast.remove(), duration);
+  }
+  return toast;
 }
 
 // ================================================================
@@ -841,7 +880,6 @@ async function handleBatchFiles(files) {
 
   // 检查是否可以按文件名匹配
   const hasExistingCards = cardStates.some(c => c && c.imageName && c.prompt);
-  let useFilenameMatch = false;
 
   if (hasExistingCards && sorted.length > 0) {
     // 计算匹配数
@@ -859,11 +897,28 @@ async function handleBatchFiles(files) {
     });
     
     if (matchCount > 0) {
-      const msg = `检测到 ${matchCount}/${sorted.length} 个文件名可匹配。\n\n【确定】按文件名匹配（保持对应关系）\n【取消】按顺序填充`;
-      useFilenameMatch = confirm(msg);
+      // 使用Toast提示
+      const actions = `<button class="toast-btn primary" onclick="doDropMatch(true)">按文件名匹配</button><button class="toast-btn" onclick="doDropMatch(false)">按顺序填充</button>`;
+      window._dropFiles = sorted;
+      window._dropMatchCount = matchCount;
+      showToast(`检测到 ${matchCount}/${sorted.length} 个文件名可匹配`, 'warning', 0, actions);
+      return;
     }
   }
 
+  // 无匹配，直接上传
+  await uploadAndFill(sorted, false);
+}
+
+// 执行拖拽匹配
+async function doDropMatch(useFilename) {
+  document.querySelector('.toast')?.remove();
+  const sorted = window._dropFiles;
+  await uploadAndFill(sorted, useFilename);
+}
+
+// 上传并填充
+async function uploadAndFill(sorted, useFilenameMatch) {
   setStatus(`Uploading ${sorted.length} image(s)...`, 'busy');
 
   // 上传文件
