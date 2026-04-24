@@ -88,13 +88,25 @@
             align-items: center; justify-content: center; overflow: hidden; border-radius: 4px;
         }
         .img-frame-result img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .save-all-btn, .open-folder-btn {
+        .save-all-btn, .open-folder-btn, .compress-btn {
             padding: 12px 20px; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;
             margin-right: 10px;
         }
         .save-all-btn { background: #8e44ad; }
         .open-folder-btn { background: #2ecc71; }
+        .compress-btn { background: #e67e22; }
+        .compress-btn:disabled { background: #95a5a6; cursor: not-allowed; }
+        .compress-btn.running::after {
+            content: ""; display: inline-block; width: 12px; height: 12px; margin-left: 6px;
+            border: 2px solid white; border-top: 2px solid transparent; border-radius: 50%;
+            animation: spin 0.8s linear infinite; vertical-align: middle;
+        }
         .toolbar { display: flex; margin-top: 15px; align-items: center; }
+        .auto-compress-label {
+            font-size: 12px; color: #555; display: inline-flex; align-items: center; gap: 4px;
+            margin-right: 10px; cursor: pointer; user-select: none;
+        }
+        .auto-compress-label input { margin: 0; }
         .message {
             position: fixed; top: 20px; right: 20px; background: #2ecc71; color: white; padding: 10px 20px;
             border-radius: 4px; z-index: 1000; display: none;
@@ -144,6 +156,10 @@
         </div>
         <div class="cards-container" id="cards-container"></div>
         <div class="toolbar">
+            <button class="compress-btn" id="compress-btn">🔽 压缩到1.5MB以下</button>
+            <label class="auto-compress-label">
+                <input type="checkbox" id="auto-compress" checked> 自动压缩
+            </label>
             <button class="save-all-btn" id="save-images-btn">💾 保存生成图片到任务文件夹</button>
             <button class="open-folder-btn" id="open-folder-btn">📂 打开生成图片文件夹</button>
         </div>
@@ -372,6 +388,8 @@
                 b.textContent = "正在执行生图…";
             });
 
+            const autoCompress = document.getElementById("auto-compress").checked;
+
             try {
                 const res = await fetch("/api/generate", {
                     method: "POST",
@@ -380,7 +398,8 @@
                         task_id: currentTaskId,
                         card_id: card.id,
                         prompt: card.prompt,
-                        source_image_path: card.source_image
+                        source_image_path: card.source_image,
+                        auto_compress: autoCompress
                     })
                 });
                 if (!res.ok) {
@@ -541,6 +560,34 @@
             renderCards();
             await saveCurrentTask();
             showMsg(`已将 ${data.moved.length} 张生成图片保存至任务文件夹。`);
+        });
+
+        // ---------- 压缩生成图片到1.5MB以下 ----------
+        document.getElementById("compress-btn").addEventListener("click", async () => {
+            if (!currentTaskId) {
+                showMsg("请先选择一个任务！", true);
+                return;
+            }
+            const btn = document.getElementById("compress-btn");
+            btn.disabled = true;
+            btn.classList.add("running");
+            btn.textContent = "🔽 压缩中…";
+            try {
+                const res = await fetch(`/api/tasks/${currentTaskId}/compress_images`, { method: "POST" });
+                const data = await res.json();
+                if (data.compressed_count > 0) {
+                    const savedKB = (data.saved_bytes / 1024).toFixed(1);
+                    showMsg(`✅ 压缩完成：${data.compressed_count} 张图片，节省 ${savedKB}KB`);
+                } else {
+                    showMsg("✅ 所有图片已小于1.5MB，无需压缩");
+                }
+            } catch (e) {
+                showMsg("❌ 压缩失败: " + e.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove("running");
+                btn.textContent = "🔽 压缩到1.5MB以下";
+            }
         });
 
         // ---------- 打开生成文件夹 ----------

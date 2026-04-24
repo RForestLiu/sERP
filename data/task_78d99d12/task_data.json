@@ -1,0 +1,53 @@
+{
+  "cards": [
+    {
+      "generated_draft": "",
+      "generated_final": "",
+      "id": "mocssmjku66nj",
+      "image_name": "6_71x114D7DfL.jpg",
+      "prompt": "Commercial product photography of a women's bifold wallet in two-tone cream and brown vegan leather. Top section shows a textured leather background with Russian text: 'ЭКОКОЖА ПРЕМИУМ'. Middle section features four icons: a shield, wireless signal, wallet, and gift box with labels 'ПРОЧНОСТЬ', 'ЗАЩИТА RFID', 'МНОГО МЕСТА', 'ДЛЯ ПОДАРКА'. Bottom section has three detail close-ups: a gold metal keychain, a front gold snap button, and a smooth gold zipper. High-end studio lighting, soft beige aesthetic. --ar 3:4",
+      "source_image": ""
+    },
+    {
+      "generated_draft": "",
+      "generated_final": "",
+      "id": "mocssmjkaimtk",
+      "image_name": "7_71HTDfzQnHL.jpg",
+      "prompt": "Lifestyle photography of a gift-giving moment. A person in a red sweater is handing over a black gift box containing the cream and brown women's wallet nestled in decorative straw. Background is a festive, blurred holiday setting with balloons. Clean vector graphic at the bottom with a gift icon and Russian text: 'ИДЕАЛЬНЫЙ ПОДАРОК'. Subtext: 'Стильный и практичный сюрприз для нее'. No brand logos. --ar 3:4",
+      "source_image": ""
+    },
+    {
+      "generated_draft": "",
+      "generated_final": "",
+      "id": "mocssmjk6nghe",
+      "image_name": "2_81XRm8vmhLL.jpg",
+      "prompt": "Collage of three lifestyle images of the cream and brown leather wallet. Top left: wallet being tucked into a denim jeans pocket. Bottom left: wallet being placed into a brown leather handbag. Right: a beautiful young woman smiling and holding the wallet near her face. Bright natural sunlight, outdoor setting. Bold Russian text overlay at bottom right: 'СТИЛЬ И УДОБСТВО' and 'Для каждого дня'. --ar 3:4",
+      "source_image": ""
+    },
+    {
+      "generated_draft": "",
+      "generated_final": "",
+      "id": "mocssmjkgfoi5",
+      "image_name": "3_712cLW2kPeL.jpg",
+      "prompt": "Infographic showing RFID blocking technology. Top: an exploded view diagram of the wallet materials with three layers: 'Экокожа', 'Защитный слой RFID', 'Экокожа'. Right: the wallet with a gold keychain. Bottom: a lifestyle shot of a woman with the wallet in her bag, blocking a remote payment terminal (POS terminal) showing a red 'X' and 'ПЛАТЕЖ НЕПРОШЕЛ'. Russian title at top: 'ЗАЩИТА ВАШИХ ДАННЫХ'. --ar 3:4",
+      "source_image": ""
+    },
+    {
+      "generated_draft": "",
+      "generated_final": "",
+      "id": "mocssmjk9mb3z",
+      "image_name": "4_71rpUiQyImL.jpg",
+      "prompt": "Interior view of the opened cream and brown women's wallet, showing its capacity. It contains 8 credit cards, an ID card in a window, and Russian banknotes (Rubles). Two circular inset close-ups show the 'Front Card Slots' and 'Back Zipper Pocket' with coins. Russian text labels: '8 СЛОТОВ ДЛЯ КАРТ', 'ОТДЕЛЕНИЕ ДЛЯ КУПЮР', 'ОКНО ДЛЯ ID', 'КАРМАН ДЛЯ МОНЕТ'. Clean studio background, organized layout. --ar 3:4",
+      "source_image": ""
+    },
+    {
+      "generated_draft": "",
+      "generated_final": "",
+      "id": "mocssmjk9q9f3",
+      "image_name": "5_71wkiJOHIdL.jpg",
+      "prompt": "Size comparison infographic. Left: side profile of the slim wallet showing '2 см / 0.79 inch' thickness. Center: the wallet next to a smartphone (iPhone style) with dimension lines showing '9.5 см / 3.74 inch' width and '10.6 см / 4.18 inch' height. Right: a full-body shot of a woman in a floral dress holding the wallet. Russian title: 'КОМПАКТНЫЙ РАЗМЕР'. Subtext: 'Легко помещается в любой карман'. Studio lighting, minimalist style. --ar 3:4",
+      "source_image": ""
+    }
+  ],
+  "text1": "[\n  {\n    \"image_name\": \"6_71x114D7DfL.jpg\",\n    \"prompt\": \"Commercial product photography of a women's bifold wallet in two-tone cream and brown vegan leather. Top section shows a textured leather background with Russian text: 'ЭКОКОЖА ПРЕМИУМ'. Middle section features four icons: a shield, wireless signal, wallet, and gift box with labels 'ПРОЧНОСТЬ', 'ЗАЩИТА RFID', 'МНОГО МЕСТА', 'ДЛЯ ПОДАРКА'. Bottom section has three detail close-ups: a gold metal keychain, a front gold snap button, and a smooth gold zipper. High-end studio lighting, soft beige aesthetic. --ar 3:4\"\n  },\n  {\n    \"image_name\": \"7_71HTDfzQnHL.jpg\",\n    \"prompt\": \"Lifestyle photography of a gift-giving moment. A person in a red sweater is handing over a black gift box containing the cream and brown women's wallet nestled in decorative straw. Background is a festive, blurred holiday setting with balloons. Clean vector graphic at the bottom with a gift icon and Russian text: 'ИДЕАЛЬНЫЙ ПОДАРОК'. Subtext: 'Стильный и практичный сюрприз для нее'. No brand logos. --ar 3:4\"\n  },\n  {\n    \"image_name\": \"2_81XRm8vmhLL.jpg\",\n    \"prompt\": \"Collage of three lifestyle images of the cream and brown leather wallet. Top left: wallet being tucked into a denim jeans pocket. Bottom left: wallet being placed into a brown leather handbag. Right: a beautiful young woman smiling and holding the wallet near her face. Bright natural sunlight, outdoor setting. Bold Russian text overlay at bottom right: 'СТИЛЬ И УДОБСТВО' and 'Для каждого дня'. --ar 3:4\"\n  },\n  {\n    \"image_name\": \"3_712cLW2kPeL.jpg\",\n    \"prompt\": \"Infographic showing RFID blocking technology. Top: an exploded view diagram of the wallet materials with three layers: 'Экокожа', 'Защитный слой RFID', 'Экокожа'. Right: the wallet with a gold keychain. Bottom: a lifestyle shot of a woman with the wallet in her bag, blocking a remote payment terminal (POS terminal) showing a red 'X' and 'ПЛАТЕЖ НЕПРОШЕЛ'. Russian title at top: 'ЗАЩИТА ВАШИХ ДАННЫХ'. --ar 3:4\"\n  },\n  {\n    \"image_name\": \"4_71rpUiQyImL.jpg\",\n    \"prompt\": \"Interior view of the opened cream and brown women's wallet, showing its capacity. It contains 8 credit cards, an ID card in a window, and Russian banknotes (Rubles). Two circular inset close-ups show the 'Front Card Slots' and 'Back Zipper Pocket' with coins. Russian text labels: '8 СЛОТОВ ДЛЯ КАРТ', 'ОТДЕЛЕНИЕ ДЛЯ КУПЮР', 'ОКНО ДЛЯ ID', 'КАРМАН ДЛЯ МОНЕТ'. Clean studio background, organized layout. --ar 3:4\"\n  },\n  {\n    \"image_name\": \"5_71wkiJOHIdL.jpg\",\n    \"prompt\": \"Size comparison infographic. Left: side profile of the slim wallet showing '2 см / 0.79 inch' thickness. Center: the wallet next to a smartphone (iPhone style) with dimension lines showing '9.5 см / 3.74 inch' width and '10.6 см / 4.18 inch' height. Right: a full-body shot of a woman in a floral dress holding the wallet. Russian title: 'КОМПАКТНЫЙ РАЗМЕР'. Subtext: 'Легко помещается в любой карман'. Studio lighting, minimalist style. --ar 3:4\"\n  }\n]"
+}

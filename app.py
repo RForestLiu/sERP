@@ -6,7 +6,9 @@ import mimetypes
 import uuid
 import subprocess
 import sys
+import io
 from datetime import datetime
+from PIL import Image
 
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from dotenv import load_dotenv
@@ -142,6 +144,51 @@ def upload_source_images(task_id):
         })
     return jsonify({"saved": saved})
 
+# ── 图片压缩函数 ───────────────────────────────────────────────
+def compress_image(image_data, max_size=1.5*1024*1024):
+    """
+    将图片压缩到 max_size 字节以下（默认 1.5MB）
+    - 自动将 PNG/WebP 转为 JPEG 以获得更好压缩率
+    - 自适应质量：从 85 开始递减，最低至 30
+    - 若质量降到最低仍超标，则降低分辨率
+    返回: (压缩后的字节数据, mime类型)
+    """
+    try:
+        img = Image.open(io.BytesIO(image_data))
+        
+        # RGBA/LA/P 转 RGB（JPEG 不支持 Alpha）
+        if img.mode in ('RGBA', 'LA', 'P'):
+            img = img.convert('RGB')
+        
+        # 自适应质量压缩
+        quality = 85
+        while quality >= 30:
+            buf = io.BytesIO()
+            img.save(buf, format='JPEG', quality=quality, optimize=True)
+            if buf.tell() <= max_size:
+                return buf.getvalue(), 'image/jpeg'
+            quality -= 5
+        
+        # 最低质量仍超标，降低分辨率
+        scale = 0.9
+        while True:
+            w, h = int(img.width * scale), int(img.height * scale)
+            if w < 100 or h < 100:
+                break
+            resized = img.resize((w, h), Image.LANCZOS)
+            buf = io.BytesIO()
+            resized.save(buf, format='JPEG', quality=30, optimize=True)
+            if buf.tell() <= max_size:
+                return buf.getvalue(), 'image/jpeg'
+            scale *= 0.9
+        
+        # 兜底：返回原数据
+        return image_data, 'image/jpeg'
+    except Exception as e:
+        # 压缩失败则返回原数据
+        return image_data, 'image/jpeg'
+
+
 @app.route("/api/generate", methods=["POST"])
 def generate_image():
     data = request.get_json()
@@ -149,6 +196,7 @@ def generate_image():
     card_id = data.get("card_id")
     prompt = data.get("prompt", "")
     source_image_path = data.get("source_image_path", "")
+    auto_compress = data.get("auto_compress", True)
 
     if not API_KEY:
         return jsonify({"error": "API_KEY not configured"}), 500
@@ -207,6 +255,16 @@ def generate_image():
         os.makedirs(draft_dir, exist_ok=True)
         draft_path = os.path.join(draft_dir, file_name)
         image_data = base64.b64decode(image_part["data"])
+
+        # 自动压缩
+        if auto_compress:
+            compressed_data, compressed_mime = compress_image(image_data)
+            if len(compressed_data) < len(image_data):
+                image_data = compressed_data
+                # 压缩后统一为 jpg
+                file_name = f"{card_id}_{datetime.now().strftime('%Y%m%d%H%M%S%f')}.jpg"
+                draft_path = os.path.join(draft_dir, file_name)
+
         with open(draft_path, "wb") as f:
             f.write(image_data)
 
@@ -244,6 +302,65 @@ def save_images(task_id):
                 card["generated_draft"] = ""
     save_task_data(task_id, task_data)
     return jsonify({"moved": moved, "generated_dir": f"task_images/{task_id}/generated"})
+
+@app.route("/api/tasks/<task_id>/compress_images", methods=["POST"])
+def compress_task_images(task_id):
+    """批量压缩任务 generated 目录中所有大于 1.5MB 的图片"""
+    compressed_count = 0
+    error_count = 0
+    total_size_before = 0
+    total_size_after = 0
+
+    gen_dir = os.path.join(task_folder(task_id), "generated")
+    if not os.path.exists(gen_dir):
+        return jsonify({
+            "success": True,
+            "compressed_count": 0,
+            "error_count": 0,
+            "total_size_before": 0,
+            "total_size_after": 0,
+            "saved_bytes": 0
+        })
+
+    for fname in os.listdir(gen_dir):
+        fpath = os.path.join(gen_dir, fname)
+        if not os.path.isfile(fpath):
+            continue
+        ext = os.path.splitext(fname)[1].lower()
+        if ext not in ('.jpg', '.jpeg', '.png', '.webp', '.bmp', '.gif'):
+            continue
+        try:
+            with open(fpath, "rb") as f:
+                original_data = f.read()
+            size_before = len(original_data)
+            if size_before <= 1.5 * 1024 * 1024:
+                continue  # 已经小于 1.5MB，跳过
+            compressed_data, new_mime = compress_image(original_data)
+            size_after = len(compressed_data)
+            if size_after < size_before:
+                # 保存压缩后的图片（统一转为 jpg）
+                new_fname = os.path.splitext(fname)[0] + ".jpg"
+                new_fpath = os.path.join(gen_dir, new_fname)
+                with open(new_fpath, "wb") as f:
+                    f.write(compressed_data)
+                # 如果文件名变了，删除旧文件
+                if new_fname != fname:
+                    os.remove(fpath)
+                total_size_before += size_before
+                total_size_after += size_after
+                compressed_count += 1
+        except Exception as e:
+            error_count += 1
+            continue
+
+    return jsonify({
+        "success": True,
+        "compressed_count": compressed_count,
+        "error_count": error_count,
+        "total_size_before": total_size_before,
+        "total_size_after": total_size_after,
+        "saved_bytes": total_size_before - total_size_after
+    })
 
 @app.route("/api/tasks/<task_id>/open_folder", methods=["POST"])
 def open_folder(task_id):
