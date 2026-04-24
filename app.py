@@ -234,19 +234,22 @@ def call_image_api(image_path: str | None, prompt: str) -> str:
     """
     model = os.getenv("IMAGE_MODEL", "gpt-image-2")
     
-    logger.info(f"
-{'='*60}")
+    sep = "=" * 60
+    logger.info("")
+    logger.info(sep)
     logger.info(f"[DEBUG] 代码版本: {CODE_VERSION}")
     logger.info(f"[DEBUG] MODEL: {model}")
     logger.info(f"[DEBUG] IMAGE_PATH: {image_path}")
-    logger.info(f"[DEBUG] PROMPT: {prompt[:100]}...")
-    logger.info(f"{'='*60}")
+    prompt_preview = prompt[:100] + "..." if len(prompt) > 100 else prompt
+    logger.info(f"[DEBUG] PROMPT: {prompt_preview}")
+    logger.info(sep)
     
     # 根据模型名选择 API 格式
     if "gemini" in model.lower():
         return call_gemini_api(image_path, prompt)
     else:
         return call_openai_api(image_path, prompt)
+
 
 
 def save_output_image(url_or_b64: str, task_id: str, card_index: int) -> str:
