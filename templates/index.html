@@ -541,19 +541,92 @@ $('btn-split').addEventListener('click', () => {
   try { items = JSON.parse(raw); } catch(e) { setStatus('JSON parse error: ' + e.message, 'err'); return; }
   if (!Array.isArray(items)) { setStatus('JSON must be an array', 'err'); return; }
 
-  // Merge into existing cardStates (preserve upload info)
+  // 检查是否有可以按文件名匹配的卡片
+  const hasExistingCards = cardStates.some(c => c && c.imageName && c.prompt);
+  
+  if (hasExistingCards && items.length > 0) {
+    // 尝试按文件名匹配
+    const matchResult = tryMatchByImageName(items);
+    if (matchResult.matched > 0) {
+      if (confirm(`检测到 ${matchResult.matched} 个文件名匹配。\n\n点击"确定"按文件名匹配\n点击"取消"按顺序填充`)) {
+        applyMatchResult(items, matchResult.mapping);
+        renderCards();
+        setStatus(`${matchResult.matched} matched by filename, ${items.length - matchResult.matched} filled in order`, 'ok');
+        saveCardsDebounced();
+        return;
+      }
+    }
+  }
+
+  // 按顺序填充
   items.forEach((item, i) => {
     if (!cardStates[i]) cardStates[i] = {};
     cardStates[i].prompt    = item.prompt    || '';
     cardStates[i].imageName = item.image_name || `Card ${i}`;
   });
-  // If new count > old count, pad was done above; if less, trim
   if (items.length < cardStates.length) cardStates = cardStates.slice(0, items.length);
 
   renderCards();
   setStatus(`${items.length} prompt(s) split into cards`, 'ok');
   saveCardsDebounced();
 });
+
+// 尝试按文件名匹配
+function tryMatchByImageName(items) {
+  const mapping = []; // [{itemIndex, cardIndex}]
+  let matched = 0;
+  const usedCards = new Set();
+
+  items.forEach((item, itemIdx) => {
+    const imageName = item.image_name;
+    if (!imageName) return;
+    
+    // 在cardStates中查找匹配的imageName
+    for (let cardIdx = 0; cardIdx < cardStates.length; cardIdx++) {
+      if (usedCards.has(cardIdx)) continue;
+      const card = cardStates[cardIdx];
+      if (card && card.imageName && card.imageName === imageName) {
+        mapping.push({itemIndex: itemIdx, cardIndex: cardIdx});
+        usedCards.add(cardIdx);
+        matched++;
+        break;
+      }
+    }
+  });
+
+  return { mapping, matched };
+}
+
+// 应用匹配结果
+function applyMatchResult(items, mapping) {
+  const newCardStates = [...cardStates];
+  
+  // 先清空所有prompt
+  newCardStates.forEach(c => { if(c) c.prompt = ''; });
+  
+  // 应用匹配
+  mapping.forEach(m => {
+    if (!newCardStates[m.cardIndex]) newCardStates[m.cardIndex] = {};
+    newCardStates[m.cardIndex].prompt = items[m.itemIndex].prompt || '';
+  });
+  
+  // 未匹配的按顺序填充
+  const itemsCopy = [...items];
+  mapping.forEach(m => { itemsCopy[m.itemIndex] = null; });
+  
+  let fillIdx = 0;
+  itemsCopy.forEach(item => {
+    if (!item) return;
+    while (fillIdx < newCardStates.length && newCardStates[fillIdx].prompt) fillIdx++;
+    if (fillIdx < newCardStates.length) {
+      newCardStates[fillIdx].prompt = item.prompt || '';
+      newCardStates[fillIdx].imageName = item.image_name || `Card ${fillIdx}`;
+      fillIdx++;
+    }
+  });
+  
+  cardStates = newCardStates;
+}
 
 // ================================================================
 // Render Cards
@@ -763,32 +836,80 @@ async function handleBatchFiles(files) {
   // Sort by filename
   const sorted = [...files].sort((a, b) => a.name.localeCompare(b.name));
 
-  // Extend cardStates to fit
-  sorted.forEach((_, i) => {
-    if (!cardStates[i]) {
-      cardStates[i] = { prompt: '', imageName: sorted[i].name, uploadUrl: '', resultUrl: '' };
+  // 检查是否可以按文件名匹配
+  const hasExistingCards = cardStates.some(c => c && c.imageName && c.prompt);
+  let useFilenameMatch = false;
+
+  if (hasExistingCards && sorted.length > 0) {
+    // 计算匹配数
+    let matchCount = 0;
+    const usedCards = new Set();
+    sorted.forEach(file => {
+      for (let i = 0; i < cardStates.length; i++) {
+        if (usedCards.has(i)) continue;
+        if (cardStates[i] && cardStates[i].imageName === file.name) {
+          matchCount++;
+          usedCards.add(i);
+          break;
+        }
+      }
+    });
+    
+    if (matchCount > 0) {
+      useFilenameMatch = confirm(`检测到 ${matchCount} 个文件名匹配。\n\n点击"确定"按文件名匹配\n点击"取消"按顺序填充`);
     }
-  });
+  }
 
   setStatus(`Uploading ${sorted.length} image(s)...`, 'busy');
-  renderCards();
 
-  // Upload files one by one
+  // 上传文件
+  const uploadResults = [];
   try {
     for (let i = 0; i < sorted.length; i++) {
       const file = sorted[i];
       const fd = new FormData();
       fd.append('file', file);
       const result = await api('POST', '/api/upload', fd, true);
-      const realUrl = '/uploads/' + result.filename;
-      cardStates[i].uploadUrl = realUrl;
-      cardStates[i].uploadPath = result.path;
-      cardStates[i].imageName = cardStates[i].imageName || file.name;
-      updateImgBox1(i, realUrl);
+      uploadResults.push({
+        file: file,
+        uploadUrl: '/uploads/' + result.filename,
+        uploadPath: result.path
+      });
     }
-    setStatus(`${sorted.length} image(s) uploaded`, 'ok');
-    saveCardsDebounced();
-  } catch(e) { setStatus('Batch upload failed: ' + e.message, 'err'); }
+  } catch(e) { setStatus('Batch upload failed: ' + e.message, 'err'); return; }
+
+  // 分配到卡片
+  if (useFilenameMatch) {
+    // 按文件名匹配
+    const usedCards = new Set();
+    uploadResults.forEach(r => {
+      for (let i = 0; i < cardStates.length; i++) {
+        if (usedCards.has(i)) continue;
+        if (cardStates[i] && cardStates[i].imageName === r.file.name) {
+          cardStates[i].uploadUrl = r.uploadUrl;
+          cardStates[i].uploadPath = r.uploadPath;
+          usedCards.add(i);
+          updateImgBox1(i, r.uploadUrl);
+          break;
+        }
+      }
+    });
+  } else {
+    // 按顺序填充
+    uploadResults.forEach((r, i) => {
+      if (!cardStates[i]) {
+        cardStates[i] = { prompt: '', imageName: r.file.name, uploadUrl: '', resultUrl: '' };
+      }
+      cardStates[i].uploadUrl = r.uploadUrl;
+      cardStates[i].uploadPath = r.uploadPath;
+      cardStates[i].imageName = cardStates[i].imageName || r.file.name;
+      updateImgBox1(i, r.uploadUrl);
+    });
+  }
+
+  renderCards();
+  setStatus(`${sorted.length} image(s) uploaded`, 'ok');
+  saveCardsDebounced();
 }
 
 // ================================================================
