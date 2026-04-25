@@ -7,12 +7,73 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: "Microsoft YaHei", sans-serif; background: #f5f5f5; height: 100vh; display: flex; }
         
+        /* ===== 左侧导航栏 ===== */
+        .nav-bar {
+            width: 72px;
+            background: #1a1a2e;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            padding: 12px 4px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+            font-size: 11px;
+            gap: 4px;
+            user-select: none;
+        }
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.8);
+        }
+        .nav-item.active {
+            background: #1abc9c;
+            color: white;
+        }
+        .nav-item .nav-icon {
+            font-size: 24px;
+            line-height: 1;
+        }
+        .nav-item .nav-label {
+            line-height: 1.2;
+            text-align: center;
+        }
+        
+        /* ===== 模块容器（导航栏右侧所有内容） ===== */
+        .module-container {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        .module-panel {
+            display: none;
+            flex: 1;
+            overflow: hidden;
+        }
+        .module-panel.active {
+            display: flex;
+        }
+        
         /* 左侧任务栏 */
         .sidebar {
-            width: 220px; background: #2c3e50; color: white; display: flex; flex-direction: column;
-            padding: 15px; overflow-y: auto;
+            width: 200px; background: #2c3e50; color: white; display: flex; flex-direction: column;
+            padding: 15px; overflow-y: auto; flex-shrink: 0;
         }
-        .sidebar h2 { margin-bottom: 15px; font-size: 18px; }
+        .sidebar h2 { margin-bottom: 15px; font-size: 16px; }
         #task-list { list-style: none; flex:1; overflow-y: auto; }
         #task-list li {
             padding: 10px; margin-bottom: 5px; cursor: pointer; border-radius: 4px;
@@ -52,11 +113,11 @@
         .card {
             min-width: 280px; background: white; border: 1px solid #ddd; border-radius: 8px;
             padding: 10px; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            position: relative;  /* 新增：为删除按钮提供定位上下文 */
+            position: relative;
         }
         .card-title {
             font-size: 12px; color: #555; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            padding-right: 25px;  /* 防止被删除按钮遮挡 */
+            padding-right: 25px;
         }
         .img-frame {
             width: 100%; height: 150px; background: #f0f0f0; display: flex; align-items: center;
@@ -113,6 +174,72 @@
         }
         .message.error { background: #e74c3c; }
 
+        /* ===== 采集产品模块 ===== */
+        .collect-product-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .collect-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .collect-label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            white-space: nowrap;
+        }
+        .collect-url-input {
+            flex: 1;
+            padding: 10px 14px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .collect-url-input:focus {
+            border-color: #3498db;
+        }
+        .collect-btn {
+            padding: 10px 24px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .collect-btn:hover {
+            background: #2980b9;
+        }
+        .collect-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .collect-placeholder {
+            color: #aaa;
+            font-size: 16px;
+            text-align: center;
+            padding: 40px;
+        }
+
         /* 删除按钮样式 */
         .card-delete {
             position: absolute;
@@ -138,30 +265,62 @@
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <h2>任务列表</h2>
-        <ul id="task-list"></ul>
-        <button id="new-task-btn">+ 新建任务</button>
+    <!-- ===== 左侧导航栏 ===== -->
+    <div class="nav-bar">
+        <div class="nav-item" data-module="collect-product">
+            <span class="nav-icon">📦</span>
+            <span class="nav-label">采集产品</span>
+        </div>
+        <div class="nav-item active" data-module="image-batch">
+            <span class="nav-icon">📷</span>
+            <span class="nav-label">图片批量处理</span>
+        </div>
     </div>
 
-    <div class="workspace">
-        <div class="top-section">
-            <div class="json-section">
-                <textarea id="text1" placeholder="在此粘贴 JSON 提示词体..."></textarea>
-                <button class="json-btn" id="split-btn">拆分提示词</button>
+    <!-- ===== 模块容器 ===== -->
+    <div class="module-container">
+        <!-- 图片批量处理模块 -->
+        <div class="module-panel active" id="module-image-batch">
+            <div class="sidebar">
+                <h2>任务列表</h2>
+                <ul id="task-list"></ul>
+                <button id="new-task-btn">+ 新建任务</button>
             </div>
-            <div class="drop-zone" id="drop-zone">
-                <div>拖拽图片到此处<br>（可多选）</div>
+
+            <div class="workspace">
+                <div class="top-section">
+                    <div class="json-section">
+                        <textarea id="text1" placeholder="在此粘贴 JSON 提示词体..."></textarea>
+                        <button class="json-btn" id="split-btn">拆分提示词</button>
+                    </div>
+                    <div class="drop-zone" id="drop-zone">
+                        <div>拖拽图片到此处<br>（可多选）</div>
+                    </div>
+                </div>
+                <div class="cards-container" id="cards-container"></div>
+                <div class="toolbar">
+                    <button class="compress-btn" id="compress-btn">🔽 压缩到1.5MB以下</button>
+                    <label class="auto-compress-label">
+                        <input type="checkbox" id="auto-compress" checked> 自动压缩
+                    </label>
+                    <button class="save-all-btn" id="save-images-btn">💾 保存生成图片到任务文件夹</button>
+                    <button class="open-folder-btn" id="open-folder-btn">📂 打开生成图片文件夹</button>
+                </div>
             </div>
         </div>
-        <div class="cards-container" id="cards-container"></div>
-        <div class="toolbar">
-            <button class="compress-btn" id="compress-btn">🔽 压缩到1.5MB以下</button>
-            <label class="auto-compress-label">
-                <input type="checkbox" id="auto-compress" checked> 自动压缩
-            </label>
-            <button class="save-all-btn" id="save-images-btn">💾 保存生成图片到任务文件夹</button>
-            <button class="open-folder-btn" id="open-folder-btn">📂 打开生成图片文件夹</button>
+
+        <!-- 采集产品模块 -->
+        <div class="module-panel" id="module-collect-product">
+            <div class="collect-product-panel">
+                <div class="collect-header">
+                    <label class="collect-label">采集网址：</label>
+                    <input type="text" class="collect-url-input" id="collect-url" placeholder="请输入需要采集的产品网址..." />
+                    <button class="collect-btn" id="collect-start-btn">开始采集</button>
+                </div>
+                <div class="collect-content">
+                    <div class="collect-placeholder">请在上方输入网址，点击"开始采集"获取产品数据</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -602,6 +761,26 @@
             } catch (e) {
                 showMsg("无法打开文件夹，请检查权限", true);
             }
+        });
+
+        // ---------- 模块切换 ----------
+        function switchModule(moduleName) {
+            // 更新导航栏高亮
+            document.querySelectorAll(".nav-item").forEach(item => {
+                item.classList.toggle("active", item.dataset.module === moduleName);
+            });
+            // 切换模块面板
+            document.querySelectorAll(".module-panel").forEach(panel => {
+                panel.classList.toggle("active", panel.id === "module-" + moduleName);
+            });
+        }
+
+        // 导航栏点击事件
+        document.querySelectorAll(".nav-item").forEach(item => {
+            item.addEventListener("click", () => {
+                const moduleName = item.dataset.module;
+                switchModule(moduleName);
+            });
         });
 
         // ---------- 初始化 ----------
