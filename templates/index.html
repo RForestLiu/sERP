@@ -521,6 +521,400 @@
         .data-modal-tab:hover {
             color: #3498db;
         }
+
+        /* ===== 产品管理模块 ===== */
+        .product-manage-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+            gap: 16px;
+        }
+        .product-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: box-shadow 0.2s;
+        }
+        .product-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        .product-card-header {
+            padding: 16px 20px 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .product-card-header .skc-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .product-card-header .skc-badge {
+            font-size: 13px;
+            font-weight: bold;
+            color: #1abc9c;
+            background: #e8f8f5;
+            padding: 2px 10px;
+            border-radius: 4px;
+        }
+        .product-card-header .category-tag {
+            font-size: 11px;
+            color: #fff;
+            background: #3498db;
+            padding: 2px 8px;
+            border-radius: 3px;
+        }
+        .product-card-header .product-title {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+        .product-card-header .product-meta {
+            font-size: 12px;
+            color: #999;
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .product-card-body {
+            padding: 16px 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .product-info-col {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .product-info-col .col-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .product-info-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            min-height: 32px;
+        }
+        .product-info-row .row-label {
+            color: #999;
+            width: 60px;
+            flex-shrink: 0;
+            font-size: 12px;
+        }
+        .product-info-row .row-value {
+            color: #333;
+            flex: 1;
+        }
+        .product-info-row.collected {
+            background: #f5f5f5;
+        }
+        .product-info-row.collected .row-value {
+            color: #666;
+        }
+        .product-info-row.collected.overridden .row-value {
+            color: #bbb;
+        }
+        .product-info-row.manual {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+        }
+        .product-info-row.manual input {
+            flex: 1;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+            min-width: 0;
+        }
+        .product-info-row.manual input:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52,152,219,0.15);
+        }
+        .product-info-row.manual .save-manual-btn {
+            padding: 4px 12px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .product-info-row.manual .save-manual-btn:hover {
+            background: #2980b9;
+        }
+        .product-info-row.manual .save-manual-btn.saved {
+            background: #27ae60;
+        }
+        .product-info-row.manual .save-manual-btn.saving {
+            background: #f39c12;
+            cursor: wait;
+        }
+
+        /* ===== 画中画悬浮窗（采集原始数据） ===== */
+        .collected-pip-trigger {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            cursor: default;
+            font-size: 12px;
+            color: #888;
+            position: relative;
+            user-select: none;
+            margin-bottom: 6px;
+            transition: background 0.2s;
+        }
+        .collected-pip-trigger:hover {
+            background: #e8e8e8;
+        }
+        .collected-pip-trigger .pip-icon {
+            font-size: 14px;
+        }
+        .collected-pip-trigger .pip-label {
+            flex: 1;
+        }
+        .collected-pip-trigger .pip-hint {
+            font-size: 10px;
+            color: #aaa;
+        }
+
+        /* 画中画浮动卡片 */
+        .collected-pip-float {
+            position: fixed;
+            z-index: 9999;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+            padding: 14px 18px;
+            min-width: 200px;
+            max-width: 280px;
+            display: none;
+            pointer-events: none;
+            border: 1px solid #e5e7eb;
+        }
+        .collected-pip-float.show {
+            display: block;
+        }
+        .collected-pip-float .pip-float-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #eee;
+        }
+        .collected-pip-float .pip-float-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            padding: 3px 0;
+        }
+        .collected-pip-float .pip-float-row .pip-float-label {
+            color: #999;
+            width: 40px;
+            flex-shrink: 0;
+        }
+        .collected-pip-float .pip-float-row .pip-float-value {
+            color: #333;
+        }
+
+        /* 单列布局 */
+        .product-card-body {
+            padding: 10px 16px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .product-info-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            padding: 3px 6px;
+            border-radius: 4px;
+            min-height: 26px;
+        }
+        .product-info-row .row-label {
+            color: #999;
+            width: 60px;
+            flex-shrink: 0;
+            font-size: 11px;
+        }
+        .product-info-row .row-value {
+            color: #333;
+            flex: 1;
+            word-break: break-all;
+            font-size: 12px;
+        }
+        .product-info-row.manual {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+        }
+        .product-info-row.manual input {
+            flex: 1;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 3px 6px;
+            font-size: 12px;
+            outline: none;
+            transition: border-color 0.2s;
+            min-width: 0;
+        }
+        .product-info-row.manual input:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52,152,219,0.15);
+        }
+        .product-info-row.manual .save-manual-btn {
+            padding: 4px 14px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .product-info-row.manual .save-manual-btn:hover {
+            background: #2980b9;
+        }
+        .product-info-row.manual .save-manual-btn.saved {
+            background: #27ae60;
+        }
+        .product-info-row.manual .save-manual-btn.saving {
+            background: #f39c12;
+            cursor: wait;
+        }
+
+        /* 粘贴文本框 */
+        .paste-extract-area {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .paste-extract-area textarea {
+            width: 100%;
+            height: 44px;
+            padding: 4px 6px;
+            font-size: 11px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+        .paste-extract-area textarea:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52,152,219,0.15);
+        }
+        .paste-extract-btn {
+            padding: 4px 12px;
+            background: #8b5cf6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: background 0.2s;
+            align-self: flex-start;
+            white-space: nowrap;
+        }
+        .paste-extract-btn:hover {
+            background: #7c3aed;
+        }
+        .paste-extract-btn:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        /* 店铺矩阵 */
+        .product-store-matrix {
+            padding: 12px 20px 16px;
+            border-top: 1px solid #f0f0f0;
+        }
+        .product-store-matrix .matrix-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .matrix-grid {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .matrix-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 100px;
+            user-select: none;
+            border: 1px solid #e5e7eb;
+        }
+        .matrix-cell:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .matrix-cell .store-name {
+            font-size: 13px;
+            font-weight: bold;
+            color: #333;
+        }
+        .matrix-cell .store-status {
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        .matrix-cell .store-status.status-未上架 {
+            background: #f3f4f6;
+            color: #9ca3af;
+        }
+        .matrix-cell .store-status.status-已上架 {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        .matrix-cell .store-status.status-下架回归中 {
+            background: #fef9c3;
+            color: #ca8a04;
+        }
+        .product-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            color: #aaa;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -533,6 +927,10 @@
         <div class="nav-item active" data-module="image-batch">
             <span class="nav-icon">📷</span>
             <span class="nav-label">图片批量处理</span>
+        </div>
+        <div class="nav-item" data-module="product-manage">
+            <span class="nav-icon">📋</span>
+            <span class="nav-label">产品管理</span>
         </div>
     </div>
 
@@ -580,6 +978,14 @@
                     <div class="collect-cards-container" id="collect-cards-container"></div>
                     <div class="collect-placeholder" id="collect-placeholder">请在上方输入网址，点击"开始采集"获取产品数据</div>
                 </div>
+            </div>
+        </div>
+
+        <!-- 产品管理模块 -->
+        <div class="module-panel" id="module-product-manage">
+            <div class="product-manage-panel" id="product-manage-panel">
+                <div class="product-empty" id="product-empty">暂无正式产品，请先在"采集产品"模块中保存产品</div>
+                <div id="product-cards-container"></div>
             </div>
         </div>
     </div>
@@ -1274,19 +1680,37 @@
             }
         }
 
-        // 删除采集卡片
-        window.deleteCollectCard = function(taskId) {
-            if (!confirm("确定要删除这个采集任务吗？")) return;
-            const card = document.querySelector(`.collect-card[data-task-id="${taskId}"]`);
-            if (card) card.remove();
-            // 停止轮询
-            if (collectTasks[taskId] && collectTasks[taskId].pollTimer) {
-                clearInterval(collectTasks[taskId].pollTimer);
-            }
-            delete collectTasks[taskId];
-            // 检查是否还有卡片
-            if (collectCardsContainer.children.length === 0) {
-                collectPlaceholder.style.display = "block";
+        // 删除采集卡片（含后端数据和文件夹）
+        window.deleteCollectCard = async function(taskId) {
+            if (!confirm("确定要删除这个采集任务吗？此操作将同时删除所有已下载的图片数据。")) return;
+            
+            try {
+                const res = await fetch(`/api/collect/${taskId}`, {
+                    method: "DELETE"
+                });
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || "删除失败");
+                }
+                
+                // 从 DOM 移除卡片
+                const card = document.querySelector(`.collect-card[data-task-id="${taskId}"]`);
+                if (card) card.remove();
+                
+                // 停止轮询
+                if (collectTasks[taskId] && collectTasks[taskId].pollTimer) {
+                    clearInterval(collectTasks[taskId].pollTimer);
+                }
+                delete collectTasks[taskId];
+                
+                // 检查是否还有卡片
+                if (collectCardsContainer.children.length === 0) {
+                    collectPlaceholder.style.display = "block";
+                }
+                
+                showMsg("✅ 采集任务已删除（含图片数据）");
+            } catch (e) {
+                showMsg("❌ 删除失败: " + e.message, true);
             }
         };
 
@@ -1477,6 +1901,376 @@
                 setTimeout(() => checkProductStatus(taskId), 500);
             }
         };
+
+        // ==================== 产品管理模块 ====================
+
+        const productCardsContainer = document.getElementById("product-cards-container");
+        const productEmpty = document.getElementById("product-empty");
+
+        // 加载产品列表
+        async function loadProducts() {
+            try {
+                const res = await fetch("/api/products");
+                if (!res.ok) return;
+                const data = await res.json();
+                renderProducts(data.products, data.stores);
+            } catch (e) {
+                console.error("加载产品列表失败:", e);
+            }
+        }
+
+        // 渲染产品卡片（单列布局 + 画中画 + 大模型识别）
+        function renderProducts(products, stores) {
+            productCardsContainer.innerHTML = "";
+            
+            if (!products || products.length === 0) {
+                productEmpty.style.display = "flex";
+                return;
+            }
+            productEmpty.style.display = "none";
+
+            // 按创建时间倒序排列
+            products.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            products.forEach(p => {
+                const card = document.createElement("div");
+                card.className = "product-card";
+                card.dataset.skc = p.skc;
+
+                const pd = p.product_data || {};
+                const attrs = pd.attributes || {};
+                const manual = p.manual_data || {};
+                const storeStatus = p.store_status || {};
+
+                // 从采集数据中提取信息
+                function extractFromText(text, patterns) {
+                    if (!text) return "";
+                    for (const ptn of patterns) {
+                        const m = text.match(ptn);
+                        if (m) return m[0].trim();
+                    }
+                    return "";
+                }
+                const searchText = (pd.about_item || "") + " " + (pd.product_description || "") + " " + (pd.description || "");
+
+                // 重量
+                let collectedWeight = attrs.weight || attrs.重量 || "";
+                if (!collectedWeight) {
+                    collectedWeight = extractFromText(searchText, [
+                        /\d+\.?\d*\s*(?:g|克|kg|千克|公斤)/i,
+                        /重量[：:]\s*\d+\.?\d*\s*(?:g|克|kg|千克|公斤)/i,
+                    ]);
+                }
+
+                // 尺寸
+                let collectedSize = attrs.size || attrs.尺寸 || attrs.dimensions || "";
+                if (!collectedSize) {
+                    collectedSize = extractFromText(searchText, [
+                        /\d+\.?\d*\s*[×xX*]\s*\d+\.?\d*\s*[×xX*]\s*\d+\.?\d*\s*(?:cm|厘米|mm|毫米)?/i,
+                        /\d+\.?\d*\s*[×xX*]\s*\d+\.?\d*\s*(?:cm|厘米|mm|毫米)?/i,
+                        /尺寸[：:]\s*[\d\.\s×xX*cm厘米mm毫米]+/i,
+                    ]);
+                }
+
+                // 格式化时间
+                const createdDate = p.created_at ? new Date(p.created_at).toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) : "";
+
+                // 构建店铺矩阵
+                let matrixCells = "";
+                stores.forEach(s => {
+                    const status = storeStatus[s.id] || "未上架";
+                    matrixCells += `
+                        <div class="matrix-cell" data-skc="${p.skc}" data-store-id="${s.id}">
+                            <span class="store-name">${s.name}</span>
+                            <span class="store-status status-${status}">${status}</span>
+                        </div>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="product-card-header">
+                        <div class="skc-row">
+                            <span class="skc-badge">${p.skc}</span>
+                            <span class="category-tag">${p.category || '其他'}</span>
+                        </div>
+                        <div class="product-title">${p.title || '未命名产品'}</div>
+                        <div class="product-meta">
+                            <span>📎 ${p.platform || '未知平台'}</span>
+                            <span>💰 ${p.price || '—'}</span>
+                            <span>🕐 ${createdDate}</span>
+                            <span>📦 ${(p.skus || []).length} SKU</span>
+                        </div>
+                    </div>
+                    <div class="product-card-body">
+                        <!-- 画中画触发条 -->
+                        <div class="collected-pip-trigger" data-skc="${p.skc}">
+                            <span class="pip-icon">📖</span>
+                            <span class="pip-label">采集原始数据</span>
+                            <span class="pip-hint">悬停查看</span>
+                        </div>
+                        <!-- 粘贴文本框 + 识别按钮 -->
+                        <div class="paste-extract-area">
+                            <textarea class="paste-textarea" placeholder="粘贴产品描述文本，点击下方按钮用 AI 自动识别并转换为国际单位..."></textarea>
+                            <button class="paste-extract-btn" data-skc="${p.skc}">🤖 AI 识别并填充</button>
+                        </div>
+                        <!-- 人工登记字段 -->
+                        <div class="product-info-row manual">
+                            <span class="row-label">重量(g)</span>
+                            <input type="text" class="manual-input" data-field="weight_g" value="${manual.weight_g || ''}" placeholder="克">
+                        </div>
+                        <div class="product-info-row manual">
+                            <span class="row-label">尺寸规格</span>
+                            <input type="text" class="manual-input" data-field="size_spec" value="${manual.size_spec || ''}" placeholder="如 20×10×3cm">
+                        </div>
+                        <div class="product-info-row manual">
+                            <span class="row-label">规格</span>
+                            <input type="text" class="manual-input" data-field="spec" value="${manual.spec || ''}" placeholder="如 大号/黑色">
+                        </div>
+                        <div class="product-info-row manual">
+                            <button class="save-manual-btn" data-skc="${p.skc}">💾 保存人工数据</button>
+                        </div>
+                    </div>
+                    <div class="product-store-matrix">
+                        <div class="matrix-title">🏪 产品店铺矩阵</div>
+                        <div class="matrix-grid">
+                            ${matrixCells}
+                        </div>
+                    </div>
+                `;
+
+                productCardsContainer.appendChild(card);
+            });
+
+            // ===== 画中画悬浮窗逻辑（下方展开 + 边界检测） =====
+            // 创建全局画中画浮动卡片
+            let pipFloat = document.getElementById("pip-float-global");
+            if (!pipFloat) {
+                pipFloat = document.createElement("div");
+                pipFloat.id = "pip-float-global";
+                pipFloat.className = "collected-pip-float";
+                pipFloat.style.pointerEvents = "auto"; // 允许鼠标交互
+                document.body.appendChild(pipFloat);
+            }
+
+            let pipHideTimer = null;
+
+            function showPipFloat(triggerEl, weight, size) {
+                const rect = triggerEl.getBoundingClientRect();
+                const pipW = 240; // 漂框宽度
+                const pipH = 100; // 漂框高度
+                
+                pipFloat.innerHTML = `
+                    <div class="pip-float-title">📖 采集原始数据</div>
+                    <div class="pip-float-row">
+                        <span class="pip-float-label">📦 重量</span>
+                        <span class="pip-float-value">${weight || '—'}</span>
+                    </div>
+                    <div class="pip-float-row">
+                        <span class="pip-float-label">📐 尺寸</span>
+                        <span class="pip-float-value">${size || '—'}</span>
+                    </div>
+                `;
+                
+                // 先设为显示以获取实际尺寸
+                pipFloat.classList.add("show");
+                const actualH = pipFloat.offsetHeight || pipH;
+                const actualW = pipFloat.offsetWidth || pipW;
+                
+                // 默认：在触发条正下方，水平居中
+                let left = rect.left + (rect.width - actualW) / 2;
+                let top = rect.bottom + 6;
+                
+                // 边界检测：如果下方空间不够，向上展开
+                if (top + actualH > window.innerHeight) {
+                    top = rect.top - actualH - 6;
+                }
+                // 如果上方也不够，就放在触发条右侧
+                if (top < 0) {
+                    top = rect.top;
+                    left = rect.right + 8;
+                }
+                // 如果右侧也不够，放在左侧
+                if (left + actualW > window.innerWidth - 10) {
+                    left = rect.left - actualW - 8;
+                }
+                // 如果左侧也不够，强制居中
+                if (left < 10) {
+                    left = 10;
+                }
+                // 确保不超出顶部
+                if (top < 4) top = 4;
+                
+                pipFloat.style.left = left + "px";
+                pipFloat.style.top = top + "px";
+            }
+
+            function hidePipFloat() {
+                pipFloat.classList.remove("show");
+            }
+
+            // 为每个触发条绑定事件
+            document.querySelectorAll(".collected-pip-trigger").forEach(trigger => {
+                const skc = trigger.dataset.skc;
+                const product = products.find(p => p.skc === skc);
+                if (!product) return;
+                const pd = product.product_data || {};
+                const attrs = pd.attributes || {};
+                const searchText = (pd.about_item || "") + " " + (pd.product_description || "") + " " + (pd.description || "");
+                
+                let collectedWeight = attrs.weight || attrs.重量 || "";
+                if (!collectedWeight) {
+                    const m = searchText.match(/\d+\.?\d*\s*(?:g|克|kg|千克|公斤)/i);
+                    if (m) collectedWeight = m[0].trim();
+                }
+                let collectedSize = attrs.size || attrs.尺寸 || attrs.dimensions || "";
+                if (!collectedSize) {
+                    const m = searchText.match(/\d+\.?\d*\s*[×xX*]\s*\d+\.?\d*\s*[×xX*]\s*\d+\.?\d*\s*(?:cm|厘米|mm|毫米)?/i);
+                    if (m) collectedSize = m[0].trim();
+                }
+
+                trigger.addEventListener("mouseenter", function() {
+                    if (pipHideTimer) {
+                        clearTimeout(pipHideTimer);
+                        pipHideTimer = null;
+                    }
+                    showPipFloat(this, collectedWeight, collectedSize);
+                });
+                trigger.addEventListener("mouseleave", function() {
+                    pipHideTimer = setTimeout(() => {
+                        hidePipFloat();
+                    }, 300);
+                });
+                // 浮动卡片本身也保持显示（防止移入浮动卡片时消失）
+                pipFloat.addEventListener("mouseenter", function() {
+                    if (pipHideTimer) {
+                        clearTimeout(pipHideTimer);
+                        pipHideTimer = null;
+                    }
+                });
+                pipFloat.addEventListener("mouseleave", function() {
+                    pipHideTimer = setTimeout(() => {
+                        hidePipFloat();
+                    }, 300);
+                });
+            });
+
+            // ===== 绑定 AI 识别按钮事件（调用大模型 API） =====
+            document.querySelectorAll(".paste-extract-btn").forEach(btn => {
+                btn.addEventListener("click", async function() {
+                    const skc = this.dataset.skc;
+                    const card = this.closest(".product-card");
+                    const textarea = card.querySelector(".paste-textarea");
+                    const text = textarea.value.trim();
+                    
+                    if (!text) {
+                        showMsg("请先粘贴文本到文本框中！", true);
+                        return;
+                    }
+
+                    this.disabled = true;
+                    this.textContent = "🤖 AI 识别中...";
+
+                    try {
+                        const res = await fetch("/api/extract_from_text", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ text })
+                        });
+                        if (!res.ok) {
+                            const err = await res.json();
+                            throw new Error(err.error || "识别失败");
+                        }
+                        const data = await res.json();
+                        const extracted = data.extracted;
+
+                        const inputs = card.querySelectorAll(".manual-input");
+                        inputs.forEach(inp => {
+                            const field = inp.dataset.field;
+                            if (extracted[field]) {
+                                inp.value = extracted[field];
+                            }
+                        });
+
+                        const filled = Object.values(extracted).filter(v => v).length;
+                        showMsg(`✅ ${skc} AI 识别完成，已填充 ${filled} 个字段（已转换为国际单位）`);
+                    } catch (e) {
+                        showMsg("❌ AI 识别失败: " + e.message, true);
+                    } finally {
+                        this.disabled = false;
+                        this.textContent = "🤖 AI 识别并填充";
+                    }
+                });
+            });
+
+            // ===== 绑定人工登记保存事件 =====
+            document.querySelectorAll(".save-manual-btn").forEach(btn => {
+                btn.addEventListener("click", async function() {
+                    const skc = this.dataset.skc;
+                    const card = this.closest(".product-card");
+                    const inputs = card.querySelectorAll(".manual-input");
+                    const data = {};
+                    inputs.forEach(inp => {
+                        data[inp.dataset.field] = inp.value.trim();
+                    });
+
+                    this.classList.add("saving");
+                    this.textContent = "⏳ 保存中...";
+                    this.disabled = true;
+
+                    try {
+                        const res = await fetch(`/api/products/${skc}/manual`, {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(data)
+                        });
+                        if (!res.ok) throw new Error("保存失败");
+                        this.classList.remove("saving");
+                        this.classList.add("saved");
+                        this.textContent = "✅ 已保存";
+                        showMsg(`✅ ${skc} 人工数据已保存`);
+                    } catch (e) {
+                        this.classList.remove("saving");
+                        this.textContent = "💾 保存人工数据";
+                        this.disabled = false;
+                        showMsg("❌ 保存失败: " + e.message, true);
+                    }
+                });
+            });
+
+            // ===== 绑定店铺矩阵点击事件 =====
+            document.querySelectorAll(".matrix-cell").forEach(cell => {
+                cell.addEventListener("click", async function() {
+                    const skc = this.dataset.skc;
+                    const storeId = this.dataset.storeId;
+                    const statusEl = this.querySelector(".store-status");
+                    const currentStatus = statusEl.textContent;
+                    
+                    const statuses = ["未上架", "已上架", "下架回归中"];
+                    const idx = statuses.indexOf(currentStatus);
+                    const nextStatus = statuses[(idx + 1) % statuses.length];
+
+                    try {
+                        const res = await fetch(`/api/products/${skc}/store_status`, {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ store_id: storeId, status: nextStatus })
+                        });
+                        if (!res.ok) throw new Error("更新失败");
+                        
+                        statusEl.textContent = nextStatus;
+                        statusEl.className = "store-status status-" + nextStatus;
+                        showMsg(`✅ ${skc} 在 ${storeId} 状态已更新为「${nextStatus}」`);
+                    } catch (e) {
+                        showMsg("❌ 更新失败: " + e.message, true);
+                    }
+                });
+            });
+        }
+
+        // 切换到产品管理模块时加载数据
+        document.querySelector('.nav-item[data-module="product-manage"]').addEventListener("click", () => {
+            loadProducts();
+        });
     </script>
 </body>
 </html>

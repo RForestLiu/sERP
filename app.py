@@ -1,5 +1,6 @@
 import os
 import json
+import re
 import base64
 import shutil
 import mimetypes
@@ -388,6 +389,27 @@ COLLECT_TASKS_FILE = os.path.join(DATA_ROOT, "collect_tasks.json")
 
 # ==================== 正式产品管理 ====================
 PRODUCTS_FILE = os.path.join(DATA_ROOT, "products.json")
+STORES_FILE = os.path.join(DATA_ROOT, "stores.json")
+
+# 店铺状态枚举
+STORE_STATUSES = ["未上架", "已上架", "下架回归中"]
+
+def _load_stores():
+    """加载店铺列表"""
+    if os.path.exists(STORES_FILE):
+        try:
+            with open(STORES_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except:
+            pass
+    return []
+
+def _next_store_status(current):
+    """循环切换店铺状态"""
+    if current not in STORE_STATUSES:
+        return STORE_STATUSES[0]
+    idx = STORE_STATUSES.index(current)
+    return STORE_STATUSES[(idx + 1) % len(STORE_STATUSES)]
 
 def _load_products():
     """加载正式产品数据"""
@@ -687,6 +709,30 @@ def get_collect_product_status(task_id):
     return jsonify({"saved": False})
 
 
+@app.route("/api/collect/<task_id>", methods=["DELETE"])
+def delete_collect_task(task_id):
+    """删除采集任务（含数据文件和文件夹）"""
+    task = collect_tasks.get(task_id)
+    if not task:
+        return jsonify({"error": "任务不存在"}), 404
+    
+    # 1. 从内存中删除
+    if task_id in collect_tasks:
+        del collect_tasks[task_id]
+    
+    # 2. 从持久化文件中删除
+    _save_collect_tasks()
+    
+    # 3. 删除采集文件夹（含图片等数据）
+    from collector import _get_collect_dir
+    folder = _get_collect_dir(task_id)
+    if os.path.exists(folder):
+        import shutil
+        shutil.rmtree(folder)
+    
+    return jsonify({"success": True, "task_id": task_id, "message": "采集任务已删除"})
+
+
 @app.route("/api/collect/<task_id>/save_product", methods=["POST"])
 def save_collect_product(task_id):
     """将采集数据保存为正式产品，自动分配 SKC/SKU"""
@@ -777,6 +823,279 @@ def save_collect_product(task_id):
         "category": category_cn,
         "message": f"产品已保存为 {skc}"
     })
+
+
+# ==================== 产品管理模块 API ====================
+
+@app.route("/api/products", methods=["GET"])
+def get_products():
+    """获取所有正式产品列表"""
+    products_data = _load_products()
+    stores = _load_stores()
+    product_list = products_data.get("产品列表", [])
+    
+    # 为每个产品补充店铺状态（兼容旧数据）
+    for p in product_list:
+        if "manual_data" not in p:
+            p["manual_data"] = {
+                "weight_g": "", "size_spec": "", "spec": ""
+            }
+        else:
+            # 迁移旧数据：将旧字段合并到新字段
+            md = p["manual_data"]
+            # 旧 weight_g 保留，旧 length_cm/width_cm/height_cm 合并到 size_spec
+            if md.get("length_cm") or md.get("width_cm") or md.get("height_cm"):
+                if not md.get("size_spec"):
+                    parts = [md.get("length_cm",""), md.get("width_cm",""), md.get("height_cm","")]
+                    if any(parts):
+                        md["size_spec"] = "x".join(p for p in parts if p) + "cm"
+            # 旧 color/material 合并到 spec
+            if md.get("color") or md.get("material"):
+                if not md.get("spec"):
+                    parts = [md.get("color",""), md.get("material","")]
+                    md["spec"] = "/".join(p for p in parts if p)
+            # 删除旧字段
+            for old_key in ["length_cm", "width_cm", "height_cm", "color", "material"]:
+                md.pop(old_key, None)
+        if "store_status" not in p:
+            p["store_status"] = {}
+        for s in stores:
+            sid = s["id"]
+            if sid not in p["store_status"]:
+                p["store_status"][sid] = "未上架"
+    
+    return jsonify({
+        "products": product_list,
+        "stores": stores
+    })
+
+
+@app.route("/api/products/<skc>/manual", methods=["PUT"])
+def update_product_manual(skc):
+    """保存产品的人工登记数据"""
+    data = request.get_json()
+    products_data = _load_products()
+    product_list = products_data.get("产品列表", [])
+    
+    for p in product_list:
+        if p["skc"] == skc:
+            p["manual_data"] = {
+                "weight_g": data.get("weight_g", ""),
+                "size_spec": data.get("size_spec", ""),
+                "spec": data.get("spec", ""),
+            }
+            _save_products(products_data)
+            return jsonify({"success": True, "skc": skc})
+    
+    return jsonify({"error": "产品不存在"}), 404
+
+
+@app.route("/api/products/<skc>/store_status", methods=["PUT"])
+def update_product_store_status(skc):
+    """更新产品在某个店铺的状态"""
+    data = request.get_json()
+    store_id = data.get("store_id")
+    new_status = data.get("status")
+    
+    if not store_id or new_status not in STORE_STATUSES:
+        return jsonify({"error": "参数无效"}), 400
+    
+    products_data = _load_products()
+    product_list = products_data.get("产品列表", [])
+    
+    for p in product_list:
+        if p["skc"] == skc:
+            if "store_status" not in p:
+                p["store_status"] = {}
+            p["store_status"][store_id] = new_status
+            _save_products(products_data)
+            return jsonify({"success": True, "skc": skc, "store_id": store_id, "status": new_status})
+    
+    return jsonify({"error": "产品不存在"}), 404
+
+
+@app.route("/api/products/<skc>/auto_extract", methods=["POST"])
+def auto_extract_product(skc):
+    """智能识别产品文本中的重量、尺寸、颜色、材质，返回结构化数据"""
+    products_data = _load_products()
+    product_list = products_data.get("产品列表", [])
+    
+    for p in product_list:
+        if p["skc"] == skc:
+            pd = p.get("product_data", {})
+            attrs = pd.get("attributes", {})
+            
+            # 收集所有文本
+            texts = [
+                p.get("title", ""),
+                pd.get("about_item", ""),
+                pd.get("product_description", ""),
+                pd.get("description", ""),
+                pd.get("title", ""),
+            ]
+            search_text = " ".join(t for t in texts if t)
+            
+            result = {}
+            
+            # === 重量 ===
+            weight = attrs.get("weight") or attrs.get("重量") or ""
+            if not weight:
+                m = re.search(r'(\d+\.?\d*)\s*(?:g|克|gram)', search_text, re.IGNORECASE)
+                if m:
+                    weight = m.group(1)
+            result["weight_g"] = weight
+            
+            # === 尺寸（长宽高） ===
+            size_raw = attrs.get("size") or attrs.get("尺寸") or attrs.get("dimensions") or ""
+            length_cm = ""
+            width_cm = ""
+            height_cm = ""
+            
+            if not size_raw:
+                # 匹配 20×10×3cm / 20x10x3 cm / 20*10*3cm 等
+                m = re.search(r'(\d+\.?\d*)\s*[×xX*]\s*(\d+\.?\d*)\s*[×xX*]\s*(\d+\.?\d*)\s*(?:cm|厘米|mm|毫米)?', search_text)
+                if m:
+                    length_cm, width_cm, height_cm = m.group(1), m.group(2), m.group(3)
+                else:
+                    # 匹配 尺寸：20×10×3cm 格式
+                    m = re.search(r'尺寸[：:]\s*(\d+\.?\d*)\s*[×xX*]\s*(\d+\.?\d*)\s*[×xX*]\s*(\d+\.?\d*)', search_text)
+                    if m:
+                        length_cm, width_cm, height_cm = m.group(1), m.group(2), m.group(3)
+            else:
+                # 从 size_raw 中解析
+                m = re.search(r'(\d+\.?\d*)\s*[×xX*]\s*(\d+\.?\d*)\s*[×xX*]\s*(\d+\.?\d*)', size_raw)
+                if m:
+                    length_cm, width_cm, height_cm = m.group(1), m.group(2), m.group(3)
+            
+            result["length_cm"] = length_cm
+            result["width_cm"] = width_cm
+            result["height_cm"] = height_cm
+            
+            # === 颜色 ===
+            color = attrs.get("color") or attrs.get("颜色") or ""
+            if not color:
+                # 常见颜色词
+                color_keywords = [
+                    "black", "white", "red", "blue", "green", "yellow", "pink", "purple",
+                    "orange", "brown", "gray", "grey", "gold", "silver", "beige", "cream",
+                    "navy", "khaki", "camel", "coffee", "chocolate", "rose", "wine",
+                    "黑色", "白色", "红色", "蓝色", "绿色", "黄色", "粉色", "紫色",
+                    "橙色", "棕色", "灰色", "金色", "银色", "米色", "卡其", "咖啡",
+                    "深棕", "浅棕", "深蓝", "浅蓝", "深灰", "浅灰", "玫瑰", "酒红",
+                ]
+                found_colors = []
+                for c in color_keywords:
+                    if c in search_text.lower():
+                        found_colors.append(c)
+                if found_colors:
+                    color = ", ".join(found_colors[:3])
+            result["color"] = color
+            
+            # === 材质 ===
+            material = attrs.get("material") or attrs.get("材质") or ""
+            if not material:
+                material_keywords = [
+                    "leather", "genuine leather", "pu leather", "synthetic leather",
+                    "fabric", "cotton", "polyester", "nylon", "canvas", "silk",
+                    "wool", "linen", "velvet", "suede", "mesh", "rubber",
+                    "plastic", "metal", "stainless steel", "alloy", "wood",
+                    "皮革", "真皮", "pu皮", "合成革", "布料", "棉", "涤纶",
+                    "尼龙", "帆布", "丝绸", "羊毛", "亚麻", "天鹅绒", "麂皮",
+                    "橡胶", "塑料", "金属", "不锈钢", "合金", "木质",
+                ]
+                found_materials = []
+                for m in material_keywords:
+                    if m in search_text.lower():
+                        found_materials.append(m)
+                if found_materials:
+                    material = ", ".join(found_materials[:3])
+            result["material"] = material
+            
+            return jsonify({"success": True, "skc": skc, "extracted": result})
+    
+    return jsonify({"error": "产品不存在"}), 404
+
+
+@app.route("/api/stores", methods=["GET"])
+def get_stores():
+    """获取所有店铺列表"""
+    return jsonify(_load_stores())
+
+
+@app.route("/api/extract_from_text", methods=["POST"])
+def extract_from_text():
+    """调用 DeepSeek 从文本中提取重量、尺寸规格、规格，并统一转换为国际单位"""
+    data = request.get_json()
+    text = (data.get("text", "") or "").strip()
+    
+    if not text:
+        return jsonify({"error": "文本不能为空"}), 400
+    
+    DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
+    DEEPSEEK_API_URL = os.getenv("DEEPSEEK_API_URL", "https://api.deepseek.com/v1/chat/completions")
+    
+    if not DEEPSEEK_API_KEY:
+        return jsonify({"error": "DEEPSEEK_API_KEY not configured"}), 500
+    
+    system_prompt = """你是一个产品信息提取助手。请从用户提供的产品描述文本中提取三个字段，并**全部转换为国际单位**。
+
+提取规则：
+1. weight_g：提取产品的重量，**统一转换为克(g)**。例如 "0.5kg" → "500"，"1.2 pounds" → "544"，"200g" → "200"。只返回数字，不要单位。
+2. size_spec：提取产品的尺寸规格，**统一转换为厘米(cm)**，格式为 "长×宽×高cm"。例如 "10x5x2 inches" → "25.4×12.7×5.1cm"，"20×10×3cm" → "20×10×3cm"。如果只有两个维度也按此格式。
+3. spec：提取产品的规格描述，如颜色、尺码、型号、款式等变体信息。例如 "黑色/大号"、"红色 S码"。
+
+如果某个字段无法从文本中提取，返回空字符串。
+
+请严格按照以下 JSON 格式返回，不要包含其他内容：
+{"weight_g": "", "size_spec": "", "spec": ""}"""
+    
+    payload = {
+        "model": "deepseek-chat",
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": text}
+        ],
+        "temperature": 0.1,
+        "max_tokens": 256
+    }
+    
+    headers = {
+        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    try:
+        resp = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=30)
+        if resp.status_code != 200:
+            return jsonify({"error": f"DeepSeek API Error {resp.status_code}: {resp.text}"}), 500
+        
+        result = resp.json()
+        response_text = ""
+        choices = result.get("choices", [])
+        if choices:
+            response_text = choices[0].get("message", {}).get("content", "")
+        
+        if not response_text:
+            return jsonify({"error": "模型未返回文本"}), 500
+        
+        # 解析 JSON
+        import re as re_json
+        json_match = re_json.search(r'\{[^{}]*\}', response_text)
+        if json_match:
+            extracted = json.loads(json_match.group())
+        else:
+            extracted = {"weight_g": "", "size_spec": "", "spec": ""}
+        
+        return jsonify({
+            "success": True,
+            "extracted": {
+                "weight_g": extracted.get("weight_g", ""),
+                "size_spec": extracted.get("size_spec", ""),
+                "spec": extracted.get("spec", "")
+            }
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
