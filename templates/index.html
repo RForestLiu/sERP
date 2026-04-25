@@ -262,6 +262,265 @@
         .card-delete:hover {
             background: #c0392b;
         }
+
+        /* ===== 采集卡片样式 ===== */
+        .collect-cards-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 20px;
+            overflow-y: auto;
+            width: 100%;
+        }
+        .collect-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 16px 20px;
+            position: relative;
+            transition: box-shadow 0.2s;
+        }
+        .collect-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .collect-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .collect-card-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding-right: 10px;
+        }
+        .collect-card-url {
+            font-size: 11px;
+            color: #999;
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+        .collect-card-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        .collect-card-status.pending {
+            background: #f0f0f0;
+            color: #666;
+        }
+        .collect-card-status.crawling,
+        .collect-card-status.classifying,
+        .collect-card-status.downloading,
+        .collect-card-status.saving {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        .collect-card-status.completed {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        .collect-card-status.error {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        .collect-status-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid currentColor;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            flex-shrink: 0;
+        }
+        .collect-card-result {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .collect-result-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #555;
+            padding: 4px 8px;
+            background: #f9fafb;
+            border-radius: 4px;
+        }
+        .collect-result-item .label {
+            color: #999;
+        }
+        .collect-card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .collect-card-actions button {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .collect-card-actions button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .collect-btn-open-folder {
+            background: #2ecc71;
+            color: white;
+        }
+        .collect-btn-open-folder:hover {
+            background: #27ae60;
+        }
+        .collect-btn-view-data {
+            background: #3498db;
+            color: white;
+        }
+        .collect-btn-view-data:hover {
+            background: #2980b9;
+        }
+        .collect-btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+        .collect-btn-delete:hover {
+            background: #c0392b;
+        }
+        .collect-btn-save-product {
+            background: #8e44ad;
+            color: white;
+        }
+        .collect-btn-save-product:hover {
+            background: #7d3c98;
+        }
+        .collect-btn-save-product.saved {
+            background: #27ae60;
+            cursor: default;
+        }
+        .collect-btn-save-product.saved:hover {
+            background: #27ae60;
+        }
+        .collect-btn-save-product.saving {
+            background: #f39c12;
+            cursor: wait;
+        }
+        .collect-btn-save-product.saving:hover {
+            background: #f39c12;
+        }
+        .collect-card-progress {
+            margin-top: 8px;
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .collect-card-progress-bar {
+            height: 100%;
+            background: #3b82f6;
+            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+        .collect-card-progress-bar.completed {
+            background: #22c55e;
+        }
+        .collect-card-progress-bar.error {
+            background: #ef4444;
+        }
+
+        /* 数据查看弹窗 */
+        .data-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        .data-modal-overlay.active {
+            display: flex;
+        }
+        .data-modal {
+            background: white;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .data-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .data-modal-header h3 {
+            font-size: 16px;
+            color: #333;
+        }
+        .data-modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+            padding: 4px 8px;
+        }
+        .data-modal-close:hover {
+            color: #333;
+        }
+        .data-modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .data-modal-body pre {
+            background: #f5f5f5;
+            padding: 16px;
+            border-radius: 4px;
+            font-size: 12px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .data-modal-tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0 20px;
+        }
+        .data-modal-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #666;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .data-modal-tab.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+        }
+        .data-modal-tab:hover {
+            color: #3498db;
+        }
     </style>
 </head>
 <body>
@@ -317,9 +576,27 @@
                     <input type="text" class="collect-url-input" id="collect-url" placeholder="请输入需要采集的产品网址..." />
                     <button class="collect-btn" id="collect-start-btn">开始采集</button>
                 </div>
-                <div class="collect-content">
-                    <div class="collect-placeholder">请在上方输入网址，点击"开始采集"获取产品数据</div>
+                <div class="collect-content" id="collect-content">
+                    <div class="collect-cards-container" id="collect-cards-container"></div>
+                    <div class="collect-placeholder" id="collect-placeholder">请在上方输入网址，点击"开始采集"获取产品数据</div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 数据查看弹窗 -->
+    <div class="data-modal-overlay" id="data-modal-overlay">
+        <div class="data-modal">
+            <div class="data-modal-header">
+                <h3 id="data-modal-title">采集数据详情</h3>
+                <button class="data-modal-close" id="data-modal-close">✕</button>
+            </div>
+            <div class="data-modal-tabs">
+                <div class="data-modal-tab active" data-tab="product">产品数据</div>
+                <div class="data-modal-tab" data-tab="images">图片映射</div>
+            </div>
+            <div class="data-modal-body">
+                <pre id="data-modal-content">加载中...</pre>
             </div>
         </div>
     </div>
@@ -783,6 +1060,57 @@
             });
         });
 
+        // ---------- 恢复历史采集任务 ----------
+        async function restoreCollectTasks() {
+            try {
+                const res = await fetch("/api/collect/tasks");
+                if (!res.ok) return;
+                const tasks = await res.json();
+                if (tasks.length === 0) return;
+                
+                // 隐藏占位符
+                collectPlaceholder.style.display = "none";
+                
+                tasks.forEach(t => {
+                    // 创建卡片
+                    const card = document.createElement("div");
+                    card.className = "collect-card";
+                    card.dataset.taskId = t.task_id;
+                    
+                    const statusIcon = t.status === "completed" ? "✅" : "❌";
+                    const statusClass = t.status === "completed" ? "completed" : "error";
+                    
+                    card.innerHTML = `
+                        <div class="collect-card-header">
+                            <div class="collect-card-title">${t.title || '采集任务'}</div>
+                            <button class="collect-btn-delete" onclick="deleteCollectCard('${t.task_id}')">✕ 删除</button>
+                        </div>
+                        <div class="collect-card-url">${t.url}</div>
+                        <div class="collect-card-status ${statusClass}">
+                            ${statusIcon} ${t.message}
+                        </div>
+                        <div class="collect-card-progress">
+                            <div class="collect-card-progress-bar ${statusClass}" style="width: 100%"></div>
+                        </div>
+                        <div class="collect-card-result" style="display:grid">
+                            <div class="collect-result-item">📄 标题: <span>${t.title || '未知'}</span></div>
+                            <div class="collect-result-item">🏷️ 平台: <span>${t.platform || '未知'}</span></div>
+                            <div class="collect-result-item">🖼️ 图片: <span>${t.downloaded || 0}/${t.image_count || 0} 张已下载</span></div>
+                            <div class="collect-result-item">❌ 失败: <span>${t.failed || 0} 张</span></div>
+                        </div>
+                        <div class="collect-card-actions" style="display:flex">
+                            <button class="collect-btn-open-folder" onclick="openCollectFolder('${t.task_id}')">📂 打开文件夹</button>
+                            <button class="collect-btn-view-data" onclick="showDataModal('${t.task_id}')">📋 查看数据</button>
+                            <button class="collect-btn-save-product" id="collect-save-btn-${t.task_id}" onclick="saveAsProduct('${t.task_id}')">💾 保存为正式产品</button>
+                        </div>
+                    `;
+                    collectCardsContainer.appendChild(card);
+                });
+            } catch (e) {
+                console.error("恢复采集任务失败:", e);
+            }
+        }
+
         // ---------- 初始化 ----------
         (async function init() {
             await renderTaskList();
@@ -790,6 +1118,8 @@
             if (tasks.length > 0) {
                 await switchTask(tasks[0].id);
             }
+            // 恢复历史采集任务
+            await restoreCollectTasks();
         })();
 
         // 页面关闭或刷新时尝试保存
@@ -799,6 +1129,354 @@
                 navigator.sendBeacon(`/api/tasks/${currentTaskId}`, JSON.stringify({ data: taskData }));
             }
         });
+
+        // ==================== 采集产品模块 ====================
+
+        // 采集任务状态
+        const collectTasks = {};  // task_id -> {cardEl, pollTimer}
+
+        const collectUrlInput = document.getElementById("collect-url");
+        const collectStartBtn = document.getElementById("collect-start-btn");
+        const collectCardsContainer = document.getElementById("collect-cards-container");
+        const collectPlaceholder = document.getElementById("collect-placeholder");
+
+        // 数据查看弹窗
+        const dataModalOverlay = document.getElementById("data-modal-overlay");
+        const dataModalClose = document.getElementById("data-modal-close");
+        const dataModalTitle = document.getElementById("data-modal-title");
+        const dataModalContent = document.getElementById("data-modal-content");
+        const dataModalTabs = document.querySelectorAll(".data-modal-tab");
+        let currentModalTaskId = null;
+        let currentModalTab = "product";
+
+        // 弹窗关闭
+        dataModalClose.addEventListener("click", () => {
+            dataModalOverlay.classList.remove("active");
+        });
+        dataModalOverlay.addEventListener("click", (e) => {
+            if (e.target === dataModalOverlay) {
+                dataModalOverlay.classList.remove("active");
+            }
+        });
+
+        // 弹窗标签切换
+        dataModalTabs.forEach(tab => {
+            tab.addEventListener("click", async () => {
+                dataModalTabs.forEach(t => t.classList.remove("active"));
+                tab.classList.add("active");
+                currentModalTab = tab.dataset.tab;
+                await loadModalData(currentModalTaskId, currentModalTab);
+            });
+        });
+
+        async function loadModalData(taskId, tab) {
+            try {
+                const res = await fetch(`/api/collect/${taskId}/result`);
+                if (!res.ok) {
+                    dataModalContent.textContent = "数据加载失败";
+                    return;
+                }
+                const data = await res.json();
+                if (tab === "product") {
+                    dataModalTitle.textContent = "产品数据";
+                    dataModalContent.textContent = JSON.stringify(data.product_data || {}, null, 2);
+                } else {
+                    dataModalTitle.textContent = "图片映射表";
+                    dataModalContent.textContent = JSON.stringify(data.images_mapping || [], null, 2);
+                }
+            } catch (e) {
+                dataModalContent.textContent = "加载出错: " + e.message;
+            }
+        }
+
+        function showDataModal(taskId) {
+            currentModalTaskId = taskId;
+            dataModalOverlay.classList.add("active");
+            loadModalData(taskId, currentModalTab);
+        }
+
+        // 创建采集卡片
+        function createCollectCard(taskId, url) {
+            const card = document.createElement("div");
+            card.className = "collect-card";
+            card.dataset.taskId = taskId;
+            card.innerHTML = `
+                <div class="collect-card-header">
+                    <div class="collect-card-title" id="collect-title-${taskId}">正在采集...</div>
+                    <button class="collect-btn-delete" onclick="deleteCollectCard('${taskId}')">✕ 删除</button>
+                </div>
+                <div class="collect-card-url">${url}</div>
+                <div class="collect-card-status pending" id="collect-status-${taskId}">
+                    <span class="collect-status-spinner"></span>
+                    <span id="collect-msg-${taskId}">等待开始...</span>
+                </div>
+                <div class="collect-card-progress" id="collect-progress-${taskId}">
+                    <div class="collect-card-progress-bar" id="collect-progress-bar-${taskId}" style="width: 0%"></div>
+                </div>
+                <div class="collect-card-result" id="collect-result-${taskId}" style="display:none"></div>
+                <div class="collect-card-actions" id="collect-actions-${taskId}" style="display:none">
+                    <button class="collect-btn-open-folder" onclick="openCollectFolder('${taskId}')">📂 打开文件夹</button>
+                    <button class="collect-btn-view-data" onclick="showDataModal('${taskId}')">📋 查看数据</button>
+                    <button class="collect-btn-save-product" id="collect-save-btn-${taskId}" onclick="saveAsProduct('${taskId}')">💾 保存为正式产品</button>
+                </div>
+            `;
+            collectCardsContainer.appendChild(card);
+            return card;
+        }
+
+        // 更新采集卡片状态
+        function updateCollectCard(taskId, status, progress, message) {
+            const statusEl = document.getElementById(`collect-status-${taskId}`);
+            const msgEl = document.getElementById(`collect-msg-${taskId}`);
+            const progressBar = document.getElementById(`collect-progress-bar-${taskId}`);
+            const resultEl = document.getElementById(`collect-result-${taskId}`);
+            const actionsEl = document.getElementById(`collect-actions-${taskId}`);
+            const titleEl = document.getElementById(`collect-title-${taskId}`);
+
+            if (!statusEl) return;
+
+            // 更新状态样式
+            statusEl.className = "collect-card-status " + status;
+            
+            // 更新进度条
+            if (progressBar) {
+                progressBar.style.width = progress + "%";
+                progressBar.className = "collect-card-progress-bar";
+                if (status === "completed") progressBar.classList.add("completed");
+                if (status === "error") progressBar.classList.add("error");
+            }
+
+            if (status === "pending" || status === "crawling" || status === "classifying" || 
+                status === "downloading" || status === "saving") {
+                statusEl.innerHTML = `<span class="collect-status-spinner"></span><span>${message}</span>`;
+            } else if (status === "completed") {
+                statusEl.innerHTML = `✅ ${message}`;
+                // 显示结果区域
+                if (resultEl) {
+                    resultEl.style.display = "grid";
+                    // 从 collectTasks 中获取结果
+                    const taskInfo = collectTasks[taskId];
+                    if (taskInfo && taskInfo.result) {
+                        const r = taskInfo.result;
+                        resultEl.innerHTML = `
+                            <div class="collect-result-item">📄 标题: <span>${r.title || '未知'}</span></div>
+                            <div class="collect-result-item">🏷️ 平台: <span>${r.platform || '未知'}</span></div>
+                            <div class="collect-result-item">🖼️ 图片: <span>${r.downloaded || 0}/${r.image_count || 0} 张已下载</span></div>
+                            <div class="collect-result-item">❌ 失败: <span>${r.failed || 0} 张</span></div>
+                        `;
+                    }
+                    if (titleEl) titleEl.textContent = message;
+                }
+                if (actionsEl) actionsEl.style.display = "flex";
+            } else if (status === "error") {
+                statusEl.innerHTML = `❌ ${message}`;
+                if (titleEl) titleEl.textContent = "采集失败";
+            }
+        }
+
+        // 删除采集卡片
+        window.deleteCollectCard = function(taskId) {
+            if (!confirm("确定要删除这个采集任务吗？")) return;
+            const card = document.querySelector(`.collect-card[data-task-id="${taskId}"]`);
+            if (card) card.remove();
+            // 停止轮询
+            if (collectTasks[taskId] && collectTasks[taskId].pollTimer) {
+                clearInterval(collectTasks[taskId].pollTimer);
+            }
+            delete collectTasks[taskId];
+            // 检查是否还有卡片
+            if (collectCardsContainer.children.length === 0) {
+                collectPlaceholder.style.display = "block";
+            }
+        };
+
+        // 打开采集文件夹
+        window.openCollectFolder = async function(taskId) {
+            try {
+                await fetch(`/api/collect/${taskId}/open_folder`, { method: "POST" });
+                showMsg("已打开采集数据文件夹");
+            } catch (e) {
+                showMsg("无法打开文件夹", true);
+            }
+        };
+
+        // 轮询采集状态
+        function startPolling(taskId) {
+            if (collectTasks[taskId] && collectTasks[taskId].pollTimer) {
+                clearInterval(collectTasks[taskId].pollTimer);
+            }
+            
+            const pollTimer = setInterval(async () => {
+                try {
+                    const res = await fetch(`/api/collect/${taskId}/status`);
+                    if (!res.ok) {
+                        clearInterval(pollTimer);
+                        return;
+                    }
+                    const data = await res.json();
+                    
+                    // 保存结果到 collectTasks
+                    if (!collectTasks[taskId]) collectTasks[taskId] = {};
+                    collectTasks[taskId].result = data.result;
+                    
+                    updateCollectCard(taskId, data.status, data.progress || 0, data.message);
+                    
+                    // 如果任务已完成或出错，停止轮询
+                    if (data.status === "completed" || data.status === "error") {
+                        clearInterval(pollTimer);
+                        if (collectTasks[taskId]) {
+                            collectTasks[taskId].pollTimer = null;
+                        }
+                    }
+                } catch (e) {
+                    console.error("轮询失败:", e);
+                }
+            }, 2000);  // 每2秒轮询一次
+            
+            if (!collectTasks[taskId]) collectTasks[taskId] = {};
+            collectTasks[taskId].pollTimer = pollTimer;
+        }
+
+        // 开始采集
+        collectStartBtn.addEventListener("click", async () => {
+            const url = collectUrlInput.value.trim();
+            if (!url) {
+                showMsg("请输入采集网址！", true);
+                return;
+            }
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                showMsg("请输入有效的网址（以 http:// 或 https:// 开头）", true);
+                return;
+            }
+
+            // 禁用按钮，防止重复点击
+            collectStartBtn.disabled = true;
+            collectStartBtn.textContent = "采集中...";
+
+            try {
+                const res = await fetch("/api/collect", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ url })
+                });
+                
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || "启动采集失败");
+                }
+                
+                const data = await res.json();
+                const taskId = data.task_id;
+                
+                // 隐藏占位符
+                collectPlaceholder.style.display = "none";
+                
+                // 创建卡片
+                createCollectCard(taskId, url);
+                
+                // 开始轮询
+                startPolling(taskId);
+                
+                showMsg("采集任务已启动！");
+                
+            } catch (e) {
+                showMsg("启动采集失败: " + e.message, true);
+            } finally {
+                collectStartBtn.disabled = false;
+                collectStartBtn.textContent = "开始采集";
+            }
+        });
+
+        // 回车键触发采集
+        collectUrlInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                collectStartBtn.click();
+            }
+        });
+
+        // ==================== 保存为正式产品 ====================
+
+        // 保存为正式产品
+        window.saveAsProduct = async function(taskId) {
+            const btn = document.getElementById(`collect-save-btn-${taskId}`);
+            if (!btn) return;
+            
+            // 如果已保存，不做任何操作
+            if (btn.classList.contains("saved")) return;
+            
+            // 确认
+            if (!confirm("确定要将此采集数据保存为正式产品吗？系统将自动分配 SKC/SKU 编码。")) return;
+            
+            btn.disabled = true;
+            btn.classList.add("saving");
+            btn.textContent = "⏳ 保存中...";
+            
+            try {
+                const res = await fetch(`/api/collect/${taskId}/save_product`, {
+                    method: "POST"
+                });
+                
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || "保存失败");
+                }
+                
+                const data = await res.json();
+                
+                // 更新按钮状态为已保存
+                btn.classList.remove("saving");
+                btn.classList.add("saved");
+                btn.textContent = `✅ 已保存 (${data.skc})`;
+                btn.disabled = false;
+                
+                showMsg(`✅ 产品已保存为 ${data.skc}，共 ${data.skus.length} 个 SKU`);
+            } catch (e) {
+                btn.classList.remove("saving");
+                btn.disabled = false;
+                btn.textContent = "💾 保存为正式产品";
+                showMsg("❌ 保存失败: " + e.message, true);
+            }
+        };
+
+        // 检查采集任务是否已保存为正式产品（恢复历史任务时调用）
+        async function checkProductStatus(taskId) {
+            try {
+                const res = await fetch(`/api/collect/${taskId}/product_status`);
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data.saved) {
+                    const btn = document.getElementById(`collect-save-btn-${taskId}`);
+                    if (btn) {
+                        btn.classList.add("saved");
+                        btn.textContent = `✅ 已保存 (${data.skc})`;
+                        btn.disabled = false;
+                    }
+                }
+            } catch (e) {
+                console.error("检查产品状态失败:", e);
+            }
+        }
+
+        // 重写 restoreCollectTasks，在恢复后检查保存状态
+        const _originalRestore = restoreCollectTasks;
+        restoreCollectTasks = async function() {
+            await _originalRestore.call(this);
+            // 检查每个已完成任务的保存状态
+            document.querySelectorAll(".collect-card[data-task-id]").forEach(card => {
+                const taskId = card.dataset.taskId;
+                checkProductStatus(taskId);
+            });
+        };
+
+        // 重写 updateCollectCard，在完成时也检查保存状态
+        const _originalUpdate = updateCollectCard;
+        updateCollectCard = function(taskId, status, progress, message) {
+            _originalUpdate.call(this, taskId, status, progress, message);
+            if (status === "completed") {
+                // 延迟一点检查保存状态，确保按钮已渲染
+                setTimeout(() => checkProductStatus(taskId), 500);
+            }
+        };
     </script>
 </body>
 </html>

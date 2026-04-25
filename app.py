@@ -376,5 +376,408 @@ def open_folder(task_id):
             subprocess.Popen(['xdg-open', folder])
     return jsonify({"status": "opened", "folder": folder})
 
+# ==================== 采集产品模块 API ====================
+
+import threading
+import uuid as uuid_lib
+import asyncio
+
+# 采集任务状态存储
+collect_tasks = {}  # task_id -> {status, progress, message, result}
+COLLECT_TASKS_FILE = os.path.join(DATA_ROOT, "collect_tasks.json")
+
+# ==================== 正式产品管理 ====================
+PRODUCTS_FILE = os.path.join(DATA_ROOT, "products.json")
+
+def _load_products():
+    """加载正式产品数据"""
+    if os.path.exists(PRODUCTS_FILE):
+        try:
+            with open(PRODUCTS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except:
+            pass
+    return {"已注册编号": {}, "产品列表": []}
+
+def _save_products(products_data):
+    """保存正式产品数据"""
+    try:
+        with open(PRODUCTS_FILE, "w", encoding="utf-8") as f:
+            json.dump(products_data, f, indent=2, ensure_ascii=False)
+    except:
+        pass
+
+# 品类代码映射表（4位大写字母，无歧义）
+CATEGORY_CODES = {
+    "钱包": "WALLET", "手机壳": "PHCA", "背包": "BACK",
+    "支架": "STAND", "手表": "WATCH", "帽子": "HATS",
+    "首饰": "JEWL", "鞋子": "SHOE", "服装": "GARM",
+    "家居": "HOME", "电子": "ELEC", "玩具": "TOYS",
+    "汽车配件": "AUTO", "办公用品": "OFFC", "美妆": "BEAU",
+    "运动": "SPRT", "宠物": "PETS", "食品": "FOOD",
+    "箱包": "LUGG", "家具": "FURN",
+}
+
+def _guess_category(title: str) -> str:
+    """根据产品标题猜测品类，返回品类中文名"""
+    title_lower = title.lower()
+    keywords = {
+        "钱包": ["wallet", "钱包", "卡包", "钱夹"],
+        "手机壳": ["phone case", "手机壳", "手机套", "case for"],
+        "背包": ["backpack", "背包", "双肩包", "书包"],
+        "支架": ["stand", "支架", "holder", "支撑"],
+        "手表": ["watch", "手表", "腕表", "手环"],
+        "帽子": ["hat", "cap", "帽子", "棒球帽"],
+        "首饰": ["jewelry", "jewellery", "首饰", "项链", "手链", "戒指", "耳环"],
+        "鞋子": ["shoe", "shoes", "鞋子", "运动鞋", "靴子"],
+        "服装": ["clothing", "apparel", "服装", "衣服", "t-shirt", "shirt", "dress"],
+        "家居": ["home", "家居", "家装", "装饰"],
+        "电子": ["electronic", "电子", "充电", "cable", "adapter"],
+        "玩具": ["toy", "toys", "玩具", "玩偶"],
+        "汽车配件": ["auto", "car", "汽车", "车载"],
+        "办公用品": ["office", "办公", "文具"],
+        "美妆": ["beauty", "cosmetic", "美妆", "化妆", "护肤"],
+        "运动": ["sport", "sports", "运动", "健身"],
+        "宠物": ["pet", "宠物", "猫", "狗"],
+        "食品": ["food", "snack", "食品", "零食", "饮料"],
+        "箱包": ["luggage", "suitcase", "行李箱", "旅行箱"],
+        "家具": ["furniture", "家具", "桌子", "椅子", "沙发"],
+    }
+    for category, kws in keywords.items():
+        for kw in kws:
+            if kw in title_lower:
+                return category
+    return "其他"
+
+def _generate_skc(title: str) -> str:
+    """根据标题生成 SKC 编码"""
+    products_data = _load_products()
+    registered = products_data.get("已注册编号", {})
+    
+    # 猜测品类
+    category_cn = _guess_category(title)
+    category_code = CATEGORY_CODES.get(category_cn, "OTHR")
+    
+    # 查找该品类已使用的最大序号
+    max_num = 0
+    for skc in registered.keys():
+        if skc.startswith(category_code + "-"):
+            try:
+                num = int(skc.split("-")[1])
+                if num > max_num:
+                    max_num = num
+            except:
+                pass
+    
+    new_num = max_num + 1
+    skc = f"{category_code}-{new_num:04d}"
+    
+    # 确保唯一
+    while skc in registered:
+        new_num += 1
+        skc = f"{category_code}-{new_num:04d}"
+    
+    return skc, category_cn
+
+def _load_collect_tasks():
+    """从持久化文件加载采集任务"""
+    if os.path.exists(COLLECT_TASKS_FILE):
+        try:
+            with open(COLLECT_TASKS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except:
+            pass
+    return {}
+
+def _save_collect_tasks():
+    """保存采集任务到持久化文件"""
+    # 只保存已完成/出错的任务摘要（不保存进行中的临时状态）
+    saved = {}
+    for tid, task in collect_tasks.items():
+        if task["status"] in ("completed", "error"):
+            saved[tid] = {
+                "status": task["status"],
+                "progress": task["progress"],
+                "message": task["message"],
+                "result": task["result"]
+            }
+    try:
+        with open(COLLECT_TASKS_FILE, "w", encoding="utf-8") as f:
+            json.dump(saved, f, indent=2, ensure_ascii=False)
+    except:
+        pass
+
+# 启动时加载持久化的采集任务
+_persisted_tasks = _load_collect_tasks()
+for tid, tdata in _persisted_tasks.items():
+    collect_tasks[tid] = tdata
+
+def _collect_status_callback(task_id, status, progress, message):
+    """采集任务状态回调"""
+    if task_id in collect_tasks:
+        collect_tasks[task_id]["status"] = status
+        collect_tasks[task_id]["progress"] = progress
+        collect_tasks[task_id]["message"] = message
+
+
+def _run_collect_in_thread(url, task_id):
+    """在后台线程中执行采集"""
+    from collector import run_collect_pipeline
+    
+    collect_tasks[task_id] = {
+        "status": "pending",
+        "progress": 0,
+        "message": "等待开始...",
+        "result": None
+    }
+    
+    try:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        result = loop.run_until_complete(
+            run_collect_pipeline(url, task_id, _collect_status_callback)
+        )
+        loop.close()
+        
+        collect_tasks[task_id]["result"] = result
+        # 任务完成后持久化
+        _save_collect_tasks()
+    except Exception as e:
+        collect_tasks[task_id]["status"] = "error"
+        collect_tasks[task_id]["message"] = f"采集异常: {str(e)}"
+        collect_tasks[task_id]["result"] = {
+            "task_id": task_id,
+            "status": "error",
+            "url": url,
+            "error": str(e)
+        }
+
+
+@app.route("/api/collect/tasks", methods=["GET"])
+def get_collect_tasks():
+    """获取所有已保存的采集任务列表"""
+    tasks = []
+    for tid, task in collect_tasks.items():
+        if task["status"] in ("completed", "error"):
+            result = task.get("result") or {}
+            tasks.append({
+                "task_id": tid,
+                "status": task["status"],
+                "message": task["message"],
+                "url": result.get("url", ""),
+                "title": result.get("title", ""),
+                "platform": result.get("platform", ""),
+                "downloaded": result.get("downloaded", 0),
+                "image_count": result.get("image_count", 0),
+                "failed": result.get("failed", 0)
+            })
+    return jsonify(tasks)
+
+
+@app.route("/api/collect", methods=["POST"])
+def start_collect():
+    """启动采集任务"""
+    data = request.get_json()
+    url = data.get("url", "").strip()
+    
+    if not url:
+        return jsonify({"error": "请输入采集网址"}), 400
+    
+    if not url.startswith(("http://", "https://")):
+        return jsonify({"error": "请输入有效的网址（以 http:// 或 https:// 开头）"}), 400
+    
+    task_id = "collect_" + uuid_lib.uuid4().hex[:8]
+    
+    # 启动后台线程
+    thread = threading.Thread(target=_run_collect_in_thread, args=(url, task_id), daemon=True)
+    thread.start()
+    
+    return jsonify({
+        "task_id": task_id,
+        "status": "pending",
+        "message": "任务已创建，正在启动..."
+    })
+
+
+@app.route("/api/collect/<task_id>/status", methods=["GET"])
+def get_collect_status(task_id):
+    """查询采集任务状态"""
+    task = collect_tasks.get(task_id)
+    if not task:
+        return jsonify({"error": "任务不存在"}), 404
+    
+    return jsonify({
+        "task_id": task_id,
+        "status": task["status"],
+        "progress": task["progress"],
+        "message": task["message"],
+        "result": task["result"]
+    })
+
+
+@app.route("/api/collect/<task_id>/result", methods=["GET"])
+def get_collect_result(task_id):
+    """获取采集结果数据"""
+    task = collect_tasks.get(task_id)
+    if not task:
+        return jsonify({"error": "任务不存在"}), 404
+    
+    if task["status"] != "completed":
+        return jsonify({"error": "任务尚未完成", "status": task["status"]}), 400
+    
+    result = task["result"]
+    
+    # 读取 product_data.json
+    product_data = {}
+    if result and result.get("product_data"):
+        try:
+            with open(result["product_data"], "r", encoding="utf-8") as f:
+                product_data = json.load(f)
+        except:
+            pass
+    
+    # 读取 images_mapping.json
+    images_mapping = []
+    if result and result.get("images_mapping"):
+        try:
+            with open(result["images_mapping"], "r", encoding="utf-8") as f:
+                images_mapping = json.load(f)
+        except:
+            pass
+    
+    return jsonify({
+        "task_id": task_id,
+        "summary": result,
+        "product_data": product_data,
+        "images_mapping": images_mapping
+    })
+
+
+@app.route("/api/collect/<task_id>/open_folder", methods=["POST"])
+def open_collect_folder(task_id):
+    """打开采集任务文件夹"""
+    from collector import _get_collect_dir
+    folder = _get_collect_dir(task_id)
+    if not os.path.exists(folder):
+        os.makedirs(folder, exist_ok=True)
+    if os.name == 'nt':
+        os.startfile(folder)
+    else:
+        if sys.platform == 'darwin':
+            subprocess.Popen(['open', folder])
+        else:
+            subprocess.Popen(['xdg-open', folder])
+    return jsonify({"status": "opened", "folder": folder})
+
+
+@app.route("/api/collect/<task_id>/product_status", methods=["GET"])
+def get_collect_product_status(task_id):
+    """查询采集任务是否已保存为正式产品"""
+    products_data = _load_products()
+    product_list = products_data.get("产品列表", [])
+    for p in product_list:
+        if p.get("source_task_id") == task_id:
+            return jsonify({
+                "saved": True,
+                "skc": p["skc"],
+                "skus": p["skus"],
+                "category": p.get("category", ""),
+                "title": p.get("title", "")
+            })
+    return jsonify({"saved": False})
+
+
+@app.route("/api/collect/<task_id>/save_product", methods=["POST"])
+def save_collect_product(task_id):
+    """将采集数据保存为正式产品，自动分配 SKC/SKU"""
+    task = collect_tasks.get(task_id)
+    if not task:
+        return jsonify({"error": "任务不存在"}), 404
+    
+    if task["status"] != "completed":
+        return jsonify({"error": "任务尚未完成", "status": task["status"]}), 400
+    
+    # 检查是否已保存
+    products_data = _load_products()
+    product_list = products_data.get("产品列表", [])
+    for p in product_list:
+        if p.get("source_task_id") == task_id:
+            return jsonify({"error": "该产品已保存", "skc": p["skc"]}), 409
+    
+    result = task["result"]
+    title = result.get("title", "未命名产品")
+    
+    # 读取 product_data.json 获取完整数据
+    product_data = {}
+    if result and result.get("product_data"):
+        try:
+            with open(result["product_data"], "r", encoding="utf-8") as f:
+                product_data = json.load(f)
+        except:
+            pass
+    
+    # 生成 SKC
+    skc, category_cn = _generate_skc(title)
+    category_code = CATEGORY_CODES.get(category_cn, "OTHR")
+    
+    # 生成 SKU（从图片映射中提取变体信息）
+    images_mapping = []
+    if result and result.get("images_mapping"):
+        try:
+            with open(result["images_mapping"], "r", encoding="utf-8") as f:
+                images_mapping = json.load(f)
+        except:
+            pass
+    
+    # 从图片分类中提取 SKU 变体
+    skus = []
+    seen_variants = set()
+    for img in images_mapping:
+        if img.get("success") and img.get("type") == "sku":
+            # 从文件名中提取变体特征
+            fname = img.get("new_name", "")
+            # 简单处理：每个成功的 sku 图片作为一个变体
+            variant = fname.split("_")[-1].replace(".jpg", "").upper() if "_" in fname else f"V{len(skus)+1:02d}"
+            if variant not in seen_variants:
+                seen_variants.add(variant)
+                sku = f"{skc}-{variant}"
+                skus.append(sku)
+    
+    # 如果没有 SKU 变体，至少创建一个默认 SKU
+    if not skus:
+        skus.append(f"{skc}-DEFAULT")
+    
+    # 构建正式产品数据
+    product_entry = {
+        "skc": skc,
+        "skus": skus,
+        "title": title,
+        "category": category_cn,
+        "category_code": category_code,
+        "source_task_id": task_id,
+        "source_url": result.get("url", ""),
+        "platform": result.get("platform", ""),
+        "price": result.get("price", ""),
+        "created_at": datetime.now().isoformat(),
+        "product_data": product_data,
+        "images_dir": result.get("images_dir", ""),
+        "downloaded": result.get("downloaded", 0),
+        "image_count": result.get("image_count", 0),
+    }
+    
+    # 写入哈希表
+    products_data["已注册编号"][skc] = title
+    products_data["产品列表"].append(product_entry)
+    _save_products(products_data)
+    
+    return jsonify({
+        "success": True,
+        "skc": skc,
+        "skus": skus,
+        "category": category_cn,
+        "message": f"产品已保存为 {skc}"
+    })
+
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

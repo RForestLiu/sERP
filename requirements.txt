@@ -4,3 +4,8 @@ openai
 python-dotenv
 requests
 Pillow
+crawl4ai
+beautifulsoup4
+lxml
+aiohttp
+aiofiles

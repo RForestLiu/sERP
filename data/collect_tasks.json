@@ -1,0 +1,62 @@
+{
+  "collect_75ca26a1": {
+    "status": "completed",
+    "progress": 100,
+    "message": "采集完成！20张图片已下载",
+    "result": {
+      "task_id": "collect_75ca26a1",
+      "status": "completed",
+      "url": "https://www.amazon.com/-/zh/dp/B0DW8437WZ",
+      "platform": "amazon",
+      "title": "Travelambo RFID 钱包女式大号双折多卡钱包保护套带拉链口袋信用卡包, 米色和深棕色, 极简主义",
+      "price": "HKD78.27",
+      "image_count": 50,
+      "downloaded": 20,
+      "failed": 0,
+      "data_dir": "G:\\sERP\\data\\collect_collect_75ca26a1",
+      "product_data": "G:\\sERP\\data\\collect_collect_75ca26a1\\product_data.json",
+      "images_mapping": "G:\\sERP\\data\\collect_collect_75ca26a1\\images_mapping.json",
+      "images_dir": "G:\\sERP\\data\\collect_collect_75ca26a1\\images"
+    }
+  },
+  "collect_0f946647": {
+    "status": "completed",
+    "progress": 100,
+    "message": "采集完成！20张图片已下载",
+    "result": {
+      "task_id": "collect_0f946647",
+      "status": "completed",
+      "url": "https://www.amazon.com/-/zh/dp/B0DW8437WZ",
+      "platform": "amazon",
+      "title": "Travelambo RFID 钱包女式大号双折多卡钱包保护套带拉链口袋信用卡包, 米色和深棕色, 极简主义",
+      "price": "HKD78.27",
+      "image_count": 50,
+      "downloaded": 20,
+      "failed": 0,
+      "data_dir": "G:\\sERP\\data\\collect_collect_0f946647",
+      "product_data": "G:\\sERP\\data\\collect_collect_0f946647\\product_data.json",
+      "images_mapping": "G:\\sERP\\data\\collect_collect_0f946647\\images_mapping.json",
+      "images_dir": "G:\\sERP\\data\\collect_collect_0f946647\\images"
+    }
+  },
+  "collect_d4524658": {
+    "status": "completed",
+    "progress": 100,
+    "message": "采集完成！20张图片已下载",
+    "result": {
+      "task_id": "collect_d4524658",
+      "status": "completed",
+      "url": "https://www.amazon.com/-/zh/dp/B0DW8437WZ",
+      "platform": "amazon",
+      "title": "Travelambo RFID 钱包女式大号双折多卡钱包保护套带拉链口袋信用卡包, 米色和深棕色, 极简主义",
+      "price": "HKD78.27",
+      "image_count": 50,
+      "downloaded": 20,
+      "failed": 0,
+      "data_dir": "G:\\sERP\\data\\collect_collect_d4524658",
+      "product_data": "G:\\sERP\\data\\collect_collect_d4524658\\product_data.json",
+      "images_mapping": "G:\\sERP\\data\\collect_collect_d4524658\\images_mapping.json",
+      "images_dir": "G:\\sERP\\data\\collect_collect_d4524658\\images"
+    }
+  }
+}
