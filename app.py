@@ -1495,6 +1495,203 @@ def _save_translations(trans_path, translations):
         pass
 
 
+def _load_attr_translations(store_id):
+    """加载属性名翻译缓存"""
+    cache_path = os.path.join(OZON_CACHE_DIR, f"{store_id}_attr_translations.json")
+    if os.path.exists(cache_path):
+        try:
+            with open(cache_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except:
+            pass
+    return {}
+
+
+def _save_attr_translations(store_id, translations):
+    """保存属性名翻译缓存"""
+    cache_path = os.path.join(OZON_CACHE_DIR, f"{store_id}_attr_translations.json")
+    try:
+        with open(cache_path, "w", encoding="utf-8") as f:
+            json.dump(translations, f, indent=2, ensure_ascii=False)
+    except:
+        pass
+
+
+def _translate_attr_names(store_id, attr_names):
+    """批量翻译属性名（俄语→中文），带缓存。返回 {russian_name: chinese_name}"""
+    cached = _load_attr_translations(store_id)
+    untranslated = [n for n in attr_names if n and n not in cached]
+
+    if not untranslated:
+        return cached
+
+    DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
+    DEEPSEEK_API_URL = os.getenv("DEEPSEEK_API_URL", "https://api.deepseek.com/v1/chat/completions")
+
+    if not DEEPSEEK_API_KEY:
+        return cached
+
+    logger.info("[属性翻译] 翻译 %s 个属性名...", len(untranslated))
+
+    prompt = f"""翻译以下俄语电商属性名为中文，返回 JSON 对象格式：{{"俄语名": "中文翻译"}}
+只返回 JSON，不要其他内容。
+
+{json.dumps(untranslated, ensure_ascii=False)}"""
+
+    try:
+        resp = requests.post(DEEPSEEK_API_URL, headers={
+            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+            "Content-Type": "application/json"
+        }, json={
+            "model": "deepseek-chat",
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.1,
+            "max_tokens": 4096
+        }, timeout=60)
+
+        if resp.status_code == 200:
+            result = resp.json()
+            content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+            cleaned = content.strip()
+            if cleaned.startswith("```"):
+                cleaned = re.sub(r'^```(?:json)?\s*\n?', '', cleaned)
+                cleaned = re.sub(r'\n?```$', '', cleaned)
+            try:
+                new_trans = json.loads(cleaned)
+                if isinstance(new_trans, dict):
+                    cached.update(new_trans)
+                    _save_attr_translations(store_id, cached)
+                    logger.info("[属性翻译] ✅ 翻译完成，新增 %s 条", len(new_trans))
+            except json.JSONDecodeError:
+                logger.warning("[属性翻译] ⚠️ JSON 解析失败: %s", content[:200])
+    except Exception as e:
+        logger.warning("[属性翻译] ⚠️ 翻译请求失败: %s", e)
+
+    return cached
+
+
+def _get_excluded_categories(store_id):
+    """读取无属性品类缓存（Ozon attribute API 调用失败的品类 ID 集合）"""
+    cache_path = os.path.join(OZON_CACHE_DIR, f"{store_id}_excluded_categories.json")
+    if os.path.exists(cache_path):
+        try:
+            with open(cache_path, "r", encoding="utf-8") as f:
+                return set(json.load(f))
+        except:
+            pass
+    return set()
+
+
+def _mark_category_excluded(store_id, category_id):
+    """将品类标记为无属性，持久化到缓存"""
+    excluded = _get_excluded_categories(store_id)
+    excluded.add(int(category_id))
+    cache_path = os.path.join(OZON_CACHE_DIR, f"{store_id}_excluded_categories.json")
+    try:
+        with open(cache_path, "w", encoding="utf-8") as f:
+            json.dump(sorted(list(excluded)), f, ensure_ascii=False)
+        logger.info("[排除品类] 品类 %s 已标记为排除", category_id)
+    except Exception as e:
+        logger.warning("[排除品类] 保存失败: %s", e)
+
+
+def _get_tested_categories(store_id):
+    """读取已预检品类缓存（已完成属性验证的品类 ID 集合）"""
+    cache_path = os.path.join(OZON_CACHE_DIR, f"{store_id}_tested_categories.json")
+    if os.path.exists(cache_path):
+        try:
+            with open(cache_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            return set(data.get("ids", [])), data.get("tree_hash", "")
+        except:
+            pass
+    return set(), ""
+
+
+def _mark_categories_tested(store_id, ids, tree_hash=""):
+    """标记品类已预检，增量模式下跳过已验证的品类"""
+    cache_path = os.path.join(OZON_CACHE_DIR, f"{store_id}_tested_categories.json")
+    try:
+        tested, _ = _get_tested_categories(store_id)
+        tested.update(int(i) for i in ids)
+        with open(cache_path, "w", encoding="utf-8") as f:
+            json.dump({"ids": sorted(list(tested)), "tree_hash": tree_hash}, f, ensure_ascii=False)
+    except Exception as e:
+        logger.warning("[预检] 保存失败: %s", e)
+
+
+def _preflight_categories_background(store_id):
+    """后台增量预检：对尚未验证的叶子品类逐个调用 attribute API，排除失败的品类"""
+    import threading
+
+    def _run():
+        logger.info("[预检后台] 开始增量预检 | store=%s", store_id)
+        tree, err = _get_cached_category_tree(store_id)
+        if err or not tree:
+            logger.warning("[预检后台] 品类树加载失败，跳过")
+            return
+
+        excluded_ids = _get_excluded_categories(store_id)
+        tested_ids, _ = _get_tested_categories(store_id)
+
+        # 收集所有叶子品类
+        def _collect_leaves(nodes):
+            result = []
+            for n in nodes:
+                nid = n.get("type_id") or n.get("description_category_id") or n.get("id")
+                children = n.get("children", [])
+                if children:
+                    result.extend(_collect_leaves(children))
+                else:
+                    result.append(nid)
+            return result
+
+        all_leaves = _collect_leaves(tree)
+        # 增量：跳过已验证和已排除的
+        skip_ids = tested_ids | excluded_ids
+        untested = [lid for lid in all_leaves if int(lid) not in skip_ids]
+        logger.info("[预检后台] 总叶子: %s, 已验证: %s, 待预检: %s",
+                    len(all_leaves), len(tested_ids), len(untested))
+
+        if not untested:
+            logger.info("[预检后台] 所有品类已预检完毕")
+            return
+
+        new_failed = []
+        new_tested = []
+        batch_size = 10
+        tested_count = 0
+
+        for i in range(0, len(untested), batch_size):
+            batch = untested[i:i + batch_size]
+            for lid in batch:
+                try:
+                    result, err = _call_ozon_api(store_id, "/v1/description-category/attribute", {
+                        "description_category_id": lid
+                    })
+                    tested_count += 1
+                    if err:
+                        new_failed.append(lid)
+                    new_tested.append(lid)
+                except Exception as e:
+                    logger.warning("[预检后台] 品类 %s 验证异常: %s", lid, e)
+
+            # 每批存盘一次
+            if new_failed:
+                for lid in new_failed[-batch_size:]:
+                    _mark_category_excluded(store_id, lid)
+            if new_tested:
+                _mark_categories_tested(store_id, new_tested[-batch_size * 2:])
+            logger.info("[预检后台] 进度: %s/%s, 已排除: %s", tested_count, len(untested), len(new_failed))
+
+        logger.info("[预检后台] ✅ 预检完成 | 测试 %s 个, 排除 %s 个",
+                    len(new_tested), len(new_failed))
+
+    t = threading.Thread(target=_run, daemon=True)
+    t.start()
+    logger.info("[预检后台] 后台线程已启动 | store=%s", store_id)
+
+
 def _batch_translate_categories(translations, untranslated, trans_path, store_id, batch_label="品类"):
     """
     通用批量翻译函数：调用 DeepSeek 翻译一批品类名，自动保存缓存
@@ -1604,7 +1801,8 @@ def ozon_category_tree(store_id):
     
     return jsonify({
         "success": True,
-        "category_tree": tree
+        "category_tree": tree,
+        "excluded_ids": sorted(list(_get_excluded_categories(store_id)))
     })
 
 
@@ -1832,6 +2030,11 @@ def _run_refresh_in_background(store_id):
             "result_tree": enriched_tree
         })
         logger.info("[品类刷新][后台] ✅ 完成 | 总耗时 %.1fs", elapsed)
+
+        # 5. 启动增量后台预检（验证新品类属性可用性）
+        logger.info("[品类刷新][后台] 启动增量预检...")
+        _preflight_categories_background(store_id)
+
     except Exception as e:
         _refresh_tasks[store_id].update({
             "status": "error",
@@ -1952,199 +2155,386 @@ def ozon_match_category(store_id):
     trans_count = len(translations)
     logger.info("[品类匹配] 翻译缓存: %s 个品类已翻译", trans_count)
     
-    # 3. 展平品类树为紧凑格式（含中文翻译）
-    logger.info("[品类匹配] 第 2 步：展平品类树为文本格式...")
-    def _node_id(node):
-        return node.get("type_id") or node.get("description_category_id") or node.get("id")
-    
-    def _node_name(node):
-        return node.get("type_name") or node.get("category_name") or node.get("name", "")
-    
-    # 构建树的文本表示（带缩进，含俄文名+中文翻译）
-    tree_lines = []
-    def format_tree(nodes, depth=0):
-        for node in nodes:
-            node_id = _node_id(node)
-            node_name = _node_name(node)
-            node_cn = translations.get(str(node_id), "")
-            indent = "  " * depth
-            # 格式: ─ [ID] 俄语名（中文名）
-            display = node_name
-            if node_cn and node_cn != node_name:
-                display = f"{node_name}（{node_cn}）"
-            tree_lines.append(f"{indent}─ [{node_id}] {display}")
-            children = node.get("children", [])
-            if children:
-                format_tree(children, depth + 1)
-    
-    format_tree(tree)
-    tree_text = "\n".join(tree_lines)
-    total_nodes = len(tree_lines)
-    logger.info("[品类匹配] 品类树文本: %s 行, %s 字符", total_nodes, len(tree_text))
-    logger.info("[品类匹配] 估算 Token: ~%s", len(tree_text) // 2 + total_nodes * 5)
-    logger.info("[品类匹配] ✅ 全量发送（共 %s 个品类）", total_nodes)
-    
-    # 4. 调用 DeepSeek 直接匹配
+    # 3. 逐层 LLM 选择：每层聚焦当前候选，逐步深入直到有效叶子
+    logger.info("[品类匹配] 第 2 步：逐层 LLM 选择...")
+
     DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
     DEEPSEEK_API_URL = os.getenv("DEEPSEEK_API_URL", "https://api.deepseek.com/v1/chat/completions")
-    
+
     best_match = None
-    
+
     if not DEEPSEEK_API_KEY:
         return jsonify({"error": "DEEPSEEK_API_KEY not configured"}), 500
-    
-    system_prompt = """你是一个 Ozon 电商品类匹配专家。你的任务是从给定的 Ozon 品类树中，为产品选择最合适的品类。
 
-## 输入
-- 产品信息（标题、品类、描述）
-- Ozon 品类树（用缩进表示层级，格式：─ [品类ID] 俄语名（中文名））
+    def _node_id(node):
+        return node.get("type_id") or node.get("description_category_id") or node.get("id")
 
-## 输出要求
-请分析产品信息，从品类树中选出 **1 个** 最匹配的**叶子品类**（即没有子品类的具体品类）。
-如果找不到合适的品类，返回 null。
+    def _node_name(node):
+        return node.get("type_name") or node.get("category_name") or node.get("name", "")
 
-### 评分标准：
-1. 品类名称和产品标题/描述在语义上匹配（注意品类名是俄语+中文对照，产品信息是中文/英文）
-2. 品类在树中的层级越深（越具体）越好
-3. 宁可匹配一个大致相关的品类，也不要返回 null
-4. **品类 ID 必须从上方品类树中选取，不要自己编造品类 ID**
+    excluded_ids = _get_excluded_categories(store_id)
+    if excluded_ids:
+        logger.info("[品类匹配] 已排除 %s 个无属性品类", len(excluded_ids))
 
-请严格按照以下 JSON 格式返回，不要包含其他内容：
-{"category_id": 12345, "reason": "匹配理由（简要说明中文）"} 
-或
-{"category_id": null, "reason": "无法匹配合适的品类的原因"}"""
+    def _llm_pick(candidates, level_desc):
+        """让 DeepSeek 从候选列表中选一个最佳品类"""
+        cand_lines = []
+        for c in candidates:
+            display = c["name"]
+            if c.get("cn") and c["cn"] != c["name"]:
+                display = f"{c['name']}（{c['cn']}）"
+            leaf_mark = "" if c["is_leaf"] else " [含子品类]"
+            cand_lines.append(f"[{c['id']}] {display}{leaf_mark}")
 
-    user_prompt = f"""## 产品信息
+        prompt = f"""## 产品信息
 标题: {product_title or "未提供"}
 品类: {product_category or "未提供"}
-描述: {product_description[:500] if product_description else "未提供"}
+描述: {product_description[:300] if product_description else "未提供"}
 
-## Ozon 品类树（共 {total_nodes} 个品类，品类 ID 必须从下方列表中选取）
-{tree_text}
+## {level_desc}（共 {len(candidates)} 个）
+{chr(10).join(cand_lines)}
 
-请从以上品类树中选出最匹配的一个品类，返回其 ID 和匹配理由。"""
+请选出最匹配的一个品类，返回 JSON：
+{{"category_id": <ID>, "reason": "<理由>"}}
+都不合适返回 {{"category_id": null, "reason": "<原因>"}}"""
 
-    try:
-        resp = requests.post(DEEPSEEK_API_URL, headers={
-            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
-            "Content-Type": "application/json"
-        }, json={
-            "model": "deepseek-chat",
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            "temperature": 0.1,
-            "max_tokens": 512
-        }, timeout=60)
-        
-        if resp.status_code == 200:
+        try:
+            resp = requests.post(DEEPSEEK_API_URL, headers={
+                "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+                "Content-Type": "application/json"
+            }, json={
+                "model": "deepseek-chat",
+                "messages": [
+                    {"role": "system", "content": "你是 Ozon 电商品类匹配专家。根据产品信息从候选品类中选择最匹配的一个。注意俄语+中文对照，产品信息是中文/英文。返回纯 JSON。"},
+                    {"role": "user", "content": prompt}
+                ],
+                "temperature": 0.1,
+                "max_tokens": 256
+            }, timeout=30)
+
+            if resp.status_code != 200:
+                logger.warning("[品类匹配] LLM API 错误: %s", resp.status_code)
+                return None
             llm_result = resp.json()
-            llm_text = ""
             choices = llm_result.get("choices", [])
-            if choices:
-                llm_text = choices[0].get("message", {}).get("content", "")
-            
-            if llm_text:
-                logger.debug("[品类匹配] DeepSeek原始响应: %s", llm_text[:500])
-                # 解析 JSON（清理 markdown 包裹后直接 json.loads）
-                cleaned = llm_text.strip()
-                if cleaned.startswith("```"):
-                    cleaned = re.sub(r'^```(?:json)?\s*\n?', '', cleaned)
-                    cleaned = re.sub(r'\n?```$', '', cleaned)
-                try:
-                    parsed = json.loads(cleaned)
-                    category_id = parsed.get("category_id")
-                    reason = parsed.get("reason", "")
-                    logger.debug("[品类匹配] 解析结果: category_id=%s, reason=%s", category_id, reason)
-                    
-                    if category_id is not None:
-                        # 从树中递归查找品类节点，同时记录祖先路径
-                        def find_in_tree(nodes, target_id, ancestors=None):
-                            if ancestors is None:
-                                ancestors = []
-                            for node in nodes:
-                                node_id = _node_id(node)
-                                if str(node_id) == str(target_id):
-                                    return node, ancestors
-                                children = node.get("children", [])
-                                if children:
-                                    found, _ = find_in_tree(children, target_id, ancestors + [node])
-                                    if found:
-                                        return found, _
-                            return None, []
+            if not choices:
+                return None
+            llm_text = choices[0].get("message", {}).get("content", "")
+            cleaned = llm_text.strip()
+            if cleaned.startswith("```"):
+                cleaned = re.sub(r'^```(?:json)?\s*\n?', '', cleaned)
+                cleaned = re.sub(r'\n?```$', '', cleaned)
+            parsed = json.loads(cleaned)
+            chosen_id = parsed.get("category_id")
+            logger.debug("[品类匹配] LLM 选择: id=%s, reason=%s", chosen_id, parsed.get("reason", ""))
+            return chosen_id
+        except Exception as e:
+            logger.warning("[品类匹配] LLM 选择异常: %s", e)
+            return None
 
-                        found_node, ancestors = find_in_tree(tree, category_id)
-                        if found_node:
-                            # 构建路径（含翻译）。翻译缓存可能存完整路径，只取末段
-                            def _leaf_cn(cn_text):
-                                if not cn_text:
-                                    return ""
-                                return cn_text.split(" > ")[-1]
+    # 主循环：栈式回溯 — 当前层耗尽时自动返回上层尝试其他分支
+    frame_stack = [{
+        "nodes": tree,
+        "parent_path": [],
+        "tried_ids": set(),
+        "entry_id": None,
+        "llm_fails": 0
+    }]
 
-                            path_parts = []
-                            for a in ancestors + [found_node]:
-                                a_id = _node_id(a)
-                                a_name = _node_name(a)
-                                a_cn = _leaf_cn(translations.get(str(a_id), ""))
-                                if a_cn and a_cn != a_name:
-                                    path_parts.append(f"{a_name}（{a_cn}）")
-                                else:
-                                    path_parts.append(a_name)
-                            full_path = " > ".join(path_parts)
-                            best_match = {
-                                "id": _node_id(found_node),
-                                "name": _node_name(found_node),
-                                "path": full_path,
-                                "reason": reason
-                            }
-                            logger.debug("[品类匹配] 找到匹配: %s | 路径: %s", _node_name(found_node), full_path)
-                        else:
-                            logger.warning("[品类匹配] 品类ID %s 在树中未找到", category_id)
-                except json.JSONDecodeError as e:
-                    logger.warning("[品类匹配] JSON解析错误: %s", e)
-            else:
-                logger.warning("[品类匹配] DeepSeek返回为空")
+    # 用于叶子批量验证的关键词评分
+    title_lower = (product_title + " " + product_category).lower()
+    title_words = set(title_lower.split())
+
+    def _kw_score(c):
+        name_lower = c["name"].lower()
+        cn = c.get("cn", "").lower()
+        score = 0
+        for w in title_words:
+            if len(w) > 1 and w in name_lower:
+                score += 2
+            if len(w) > 1 and w in cn:
+                score += 1
+        return score
+
+    def _mark_branch_exhausted():
+        """当前帧的子节点全部耗尽时，把入口节点标记到父帧 tried_ids"""
+        if len(frame_stack) >= 2:
+            entry = frame_stack[-1].get("entry_id")
+            if entry:
+                frame_stack[-2]["tried_ids"].add(int(entry))
+
+    while frame_stack:
+        frame = frame_stack[-1]
+
+        # 构建当前层候选（过滤已排除 + 已尝试的叶子）
+        candidates = []
+        for node in frame["nodes"]:
+            nid = _node_id(node)
+            name = _node_name(node)
+            children = node.get("children", [])
+            is_leaf = len(children) == 0
+            # 属性 API 需要 description_category_id，type_id 叶子用父节点 ID 验证
+            dcid = node.get("description_category_id") or frame.get("entry_id")
+            if is_leaf and dcid and int(dcid) in excluded_ids:
+                continue
+            if int(nid) in frame["tried_ids"]:
+                continue
+            candidates.append({
+                "id": nid,
+                "name": name,
+                "cn": translations.get(str(nid), ""),
+                "is_leaf": is_leaf,
+                "node": node,
+                "validation_id": dcid  # 用于属性 API 验证的 ID
+            })
+
+        if not candidates:
+            logger.warning("[品类匹配] 第 %s 层无候选，回溯到上层", len(frame_stack) - 1)
+            _mark_branch_exhausted()
+            frame_stack.pop()
+            continue
+
+        depth = len(frame_stack) - 1
+        path_desc = " > ".join(p["name"] for p in frame["parent_path"]) if frame["parent_path"] else "根级品类"
+        n_excluded = len(frame["nodes"]) - len(candidates)
+        all_leaves = all(c["is_leaf"] for c in candidates)
+
+        # 叶子层且候选少 → 批量验证，按关键词排序，无需 LLM
+        if all_leaves and len(candidates) <= 20:
+            logger.info("[品类匹配] 第 %s 层: %s 个叶子候选，批量关键词验证%s",
+                        depth, len(candidates),
+                        f"（已过滤 {n_excluded} 个）" if n_excluded else "")
+            # 同层所有叶子共享同一 validation_id（父节点 description_category_id），只验证一次
+            first_c = candidates[0]
+            group_vid = first_c.get("validation_id") or first_c["id"]
+            group_tid = first_c["id"]
+            payload = {"description_category_id": group_vid}
+            if group_tid and str(group_tid) != str(group_vid):
+                payload["type_id"] = group_tid
+            logger.info("[品类匹配] 验证 category=%s + type=%s（%s 个候选共享）...", group_vid, group_tid, len(candidates))
+            result, err = _call_ozon_api(store_id, "/v1/description-category/attribute", payload)
+            if err:
+                logger.warning("[品类匹配] 验证失败，排除 description_category_id=%s", group_vid)
+                _mark_category_excluded(store_id, group_vid)
+                excluded_ids.add(int(group_vid))
+                for c in candidates:
+                    frame["tried_ids"].add(int(c["id"]))
+                logger.warning("[品类匹配] 所有叶子验证失败，回溯到上层")
+                _mark_branch_exhausted()
+                frame_stack.pop()
+                continue
+
+            sorted_candidates = sorted(candidates, key=_kw_score, reverse=True)
+            found = False
+            for c in sorted_candidates:
+                vid = c.get("validation_id") or c["id"]
+                logger.info("[品类匹配] 尝试验证 '%s'(ID=%s)...", c["name"], c["id"])
+
+                # 验证通过
+                frame["parent_path"].append({"id": c["id"], "name": c["name"], "node": c["node"]})
+                path_nodes = frame["parent_path"]
+
+                def _leaf_cn(cn_text):
+                    if not cn_text:
+                        return ""
+                    return cn_text.split(" > ")[-1]
+
+                path_parts = []
+                for p in path_nodes:
+                    p_cn = _leaf_cn(translations.get(str(p["id"]), ""))
+                    if p_cn and p_cn != p["name"]:
+                        path_parts.append(f"{p['name']}（{p_cn}）")
+                    else:
+                        path_parts.append(p["name"])
+
+                best_match = {
+                    "id": c.get("validation_id") or c["id"],
+                    "type_id": c["id"] if c["id"] != (c.get("validation_id") or c["id"]) else None,
+                    "name": c["name"],
+                    "path": " > ".join(path_parts),
+                    "reason": f"逐层匹配（共 {depth + 1} 层）→ {c['name']}（关键词验证）"
+                }
+                logger.info("[品类匹配] ✅ 验证通过: '%s'(ID=%s)", c["name"], c["id"])
+                found = True
+                break
+
+            if found:
+                break
+            # 全部叶子验证失败 → 回溯
+            logger.warning("[品类匹配] 所有叶子验证失败，回溯到上层")
+            _mark_branch_exhausted()
+            frame_stack.pop()
+            continue
+
+        # LLM 选择
+        logger.info("[品类匹配] 第 %s 层: %s 个候选（LLM 选择）%s", depth, len(candidates),
+                    f"（已过滤 {n_excluded} 个）" if n_excluded else "")
+        chosen_id = _llm_pick(candidates, f"可选品类（当前层级：{path_desc}）")
+
+        if chosen_id is None:
+            frame["llm_fails"] += 1
+            if frame["llm_fails"] < 2:
+                logger.warning("[品类匹配] LLM 未选出品类，重试（%s/2）", frame["llm_fails"])
+                continue
+            logger.warning("[品类匹配] LLM 连续 2 次未选出品类，回溯到上层")
+            _mark_branch_exhausted()
+            frame_stack.pop()
+            continue
+
+        chosen = next((c for c in candidates if str(c["id"]) == str(chosen_id)), None)
+        if not chosen:
+            frame["llm_fails"] += 1
+            if frame["llm_fails"] < 2:
+                logger.warning("[品类匹配] LLM 返回的 ID %s 不在候选列表中，重试（%s/2）", chosen_id, frame["llm_fails"])
+                continue
+            logger.warning("[品类匹配] LLM 连续 2 次返回无效 ID，回溯到上层")
+            _mark_branch_exhausted()
+            frame_stack.pop()
+            continue
+
+        if chosen["is_leaf"]:
+            # 叶子 → 验证 Ozon 属性可用性（需要同时传 description_category_id + type_id）
+            vid = chosen.get("validation_id") or chosen["id"]
+            tid = chosen["id"]
+            payload = {"description_category_id": vid}
+            if tid and str(tid) != str(vid):
+                payload["type_id"] = tid
+            logger.info("[品类匹配] 到达叶子 '%s'(ID=%s, 验证ID=%s+%s)，验证属性...", chosen["name"], chosen["id"], vid, tid)
+            result, err = _call_ozon_api(store_id, "/v1/description-category/attribute", payload)
+
+            if err:
+                logger.warning("[品类匹配] 叶子验证失败: %s，排除品类 %s（验证ID=%s）", err[:100], chosen["id"], vid)
+                _mark_category_excluded(store_id, vid)
+                excluded_ids.add(int(vid))
+                frame["tried_ids"].add(int(chosen["id"]))
+                continue  # 重试同层其他候选
+
+            # 验证通过，构建结果
+            frame["parent_path"].append({"id": chosen["id"], "name": chosen["name"], "node": chosen["node"]})
+            path_nodes = frame["parent_path"]
+
+            def _leaf_cn2(cn_text):
+                if not cn_text:
+                    return ""
+                return cn_text.split(" > ")[-1]
+
+            path_parts = []
+            for p in path_nodes:
+                p_cn = _leaf_cn2(translations.get(str(p["id"]), ""))
+                if p_cn and p_cn != p["name"]:
+                    path_parts.append(f"{p['name']}（{p_cn}）")
+                else:
+                    path_parts.append(p["name"])
+
+            best_match = {
+                "id": chosen.get("validation_id") or chosen["id"],
+                "type_id": chosen["id"] if chosen["id"] != (chosen.get("validation_id") or chosen["id"]) else None,
+                "name": chosen["name"],
+                "path": " > ".join(path_parts),
+                "reason": f"逐层匹配（共 {depth + 1} 层）→ {chosen['name']}"
+            }
+            logger.info("[品类匹配] ✅ 验证通过: '%s'(ID=%s)", chosen["name"], chosen["id"])
+            break
         else:
-            logger.warning("[品类匹配] DeepSeek API错误: %s %s", resp.status_code, resp.text[:500])
-    except Exception as e:
-        logger.error("[品类匹配] DeepSeek匹配异常: %s", e)
-    
+            # 非叶子 → 进入下一层
+            frame["parent_path"].append({"id": chosen["id"], "name": chosen["name"], "node": chosen["node"]})
+            children = chosen["node"].get("children", [])
+            logger.info("[品类匹配] 进入子层: '%s'(ID=%s) → %s 个子品类", chosen["name"], chosen["id"], len(children))
+            frame_stack.append({
+                "nodes": children,
+                "parent_path": list(frame["parent_path"]),
+                "tried_ids": set(),
+                "entry_id": chosen["id"],
+                "llm_fails": 0
+            })
+
+    elapsed = time.time() - t_start
+    logger.info("[品类匹配] 总耗时: %.1fs", elapsed)
+
     return jsonify({
         "success": True,
         "best_match": best_match,
-        "total_categories": total_nodes
+        "total_categories": 0
     })
+
 
 
 @app.route("/api/ozon/<store_id>/category-attributes", methods=["POST"])
 def ozon_category_attributes(store_id):
-    """获取 Ozon 品类属性列表（增加了根节点友好提示）"""
+    """获取 Ozon 品类属性列表"""
     data = request.get_json()
     category_id = data.get("description_category_id", 0)
-    
-    logger.info("[品类属性] 获取品类属性 | store=%s | category_id=%s", store_id, category_id)
-    
+    type_id = data.get("type_id")  # 可选：产品类型 ID
+
+    logger.info("[品类属性] 获取品类属性 | store=%s | category_id=%s | type_id=%s", store_id, category_id, type_id)
+
     if not category_id:
         logger.warning("[品类属性] ❌ category_id 为空")
         return jsonify({"error": "请提供 description_category_id"}), 400
-    
-    # 获取品类属性
-    result, err = _call_ozon_api(store_id, "/v1/description-category/attribute", {
-        "description_category_id": category_id
-    })
+
+    # 获取品类属性（同时传 description_category_id + type_id）
+    payload = {"description_category_id": category_id}
+    if type_id and str(type_id) != str(category_id):
+        payload["type_id"] = type_id
+    result, err = _call_ozon_api(store_id, "/v1/description-category/attribute", payload)
     
     if err:
         logger.error("[品类属性] ❌ API 调用失败: %s", err)
-        # 如果是 Ozon API 错误，检查是否是品类太宽泛的问题
+        # 如果是 Ozon API 错误，查找备选品类供前端展示
         if "Error 400" in err or "Error 404" in err or "not found" in err.lower():
-            logger.warning("[品类属性] 💡 可能是根节点品类，返回空属性")
+            logger.warning("[品类属性] 💡 品类 %s 无可用属性，加入排除缓存并查找备选品类", category_id)
+            _mark_category_excluded(store_id, category_id)
+            suggestions = []
+            tree, tree_err = _get_cached_category_tree(store_id)
+            if not tree_err and tree:
+                def _nid(n):
+                    return n.get("type_id") or n.get("description_category_id") or n.get("id")
+                def _nname(n):
+                    return n.get("type_name") or n.get("category_name") or n.get("name", "")
+
+                def find_node_and_parent(nodes, target_id, parent=None):
+                    for node in nodes:
+                        if str(_nid(node)) == str(target_id):
+                            return node, parent
+                        children = node.get("children", [])
+                        if children:
+                            found, _ = find_node_and_parent(children, target_id, node)
+                            if found:
+                                return found, _
+                    return None, None
+
+                current_node, parent_node = find_node_and_parent(tree, category_id)
+                if parent_node:
+                    for sibling in parent_node.get("children", []):
+                        sid = _nid(sibling)
+                        if str(sid) != str(category_id) and not sibling.get("disabled") and not sibling.get("children"):
+                            suggestions.append({"id": sid, "name": _nname(sibling)})
+                elif current_node is not None:
+                    # 是根级品类，从根节点的叶子后代中选
+                    def _leaf_siblings(nodes, exclude_id):
+                        result = []
+                        for n in nodes:
+                            nid = _nid(n)
+                            if str(nid) == str(exclude_id):
+                                continue
+                            if not n.get("disabled") and not n.get("children"):
+                                result.append({"id": nid, "name": _nname(n)})
+                            if n.get("children"):
+                                result.extend(_leaf_siblings(n["children"], exclude_id))
+                        return result
+                    suggestions = _leaf_siblings(tree, category_id)[:20]
+
+                if suggestions:
+                    suggestions = suggestions[:20]
+                    logger.info("[品类属性] 找到 %s 个备选品类", len(suggestions))
+
             return jsonify({
                 "success": True,
                 "description_category_id": category_id,
                 "attributes": [],
                 "is_leaf": False,
-                "warning": f"当前品类（ID: {category_id}）可能是根节点或父级品类，没有可配置的产品属性。请选择一个更具体的子品类。"
+                "warning": f"当前品类（ID: {category_id}）没有可用属性，请选择其他品类。",
+                "suggestions": suggestions
             })
         return jsonify({"error": err}), 500
     
@@ -2187,9 +2577,16 @@ def ozon_category_attributes(store_id):
         
         enriched.append(enriched_attr)
     
+    # 翻译属性名（带缓存）
+    if enriched:
+        attr_names = [a["name"] for a in enriched if a["name"]]
+        attr_trans = _translate_attr_names(store_id, attr_names)
+        for a in enriched:
+            a["name_cn"] = attr_trans.get(a["name"], "")
+
     is_leaf = len(enriched) > 0
     logger.info("[品类属性] ✅ 最终返回 %s 个属性, is_leaf=%s", len(enriched), is_leaf)
-    
+
     return jsonify({
         "success": True,
         "description_category_id": category_id,
@@ -2316,12 +2713,15 @@ SKC: {skc}
         if not response_text:
             return jsonify({"error": "模型未返回文本"}), 500
 
-        # 解析 JSON
-        json_match = re.search(r'\{[^{}]*\}', response_text, re.DOTALL)
-        if json_match:
-            parsed = json.loads(json_match.group())
+        # 解析 JSON（清理 markdown 包裹后直接 json.loads）
+        cleaned = response_text.strip()
+        if cleaned.startswith("```"):
+            cleaned = re.sub(r'^```(?:json)?\s*\n?', '', cleaned)
+            cleaned = re.sub(r'\n?```$', '', cleaned)
+        try:
+            parsed = json.loads(cleaned)
             mappings = parsed.get("mappings", [])
-        else:
+        except json.JSONDecodeError:
             mappings = []
 
         # 验证 mappings 格式
@@ -2343,6 +2743,115 @@ SKC: {skc}
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+# ==================== Ozon 产品创建 API ====================
+
+@app.route("/api/ozon/<store_id>/product/create", methods=["POST"])
+def ozon_product_create(store_id):
+    """调用 Ozon /v3/product/import 创建产品"""
+    data = request.get_json()
+    skc = data.get("skc", "")
+    name = data.get("name", "")
+    description = data.get("description", "")
+    price = data.get("price", "")
+    offer_id = data.get("offer_id", "")
+    barcode = data.get("barcode", "")
+    category_id = data.get("category_id", 0)
+    type_id = data.get("type_id")
+    attrs = data.get("attributes", [])
+    images = data.get("images", [])
+
+    logger.info("[产品创建] ========== 开始创建产品 ==========")
+    logger.info("[产品创建] skc=%s | name=%s | price=%s | offer_id=%s | category_id=%s | type_id=%s",
+                skc, name, price, offer_id, category_id, type_id)
+    logger.info("[产品创建] 属性数=%s | 图片数=%s", len(attrs), len(images))
+
+    if not name or not price or not offer_id:
+        logger.warning("[产品创建] ❌ 缺少必填字段")
+        return jsonify({"success": False, "error": "产品名称、价格、Offer ID 为必填项"}), 400
+
+    if not category_id:
+        logger.warning("[产品创建] ❌ 缺少品类ID")
+        return jsonify({"success": False, "error": "请先匹配产品品类"}), 400
+
+    # 格式化属性为 Ozon API 格式
+    ozon_attrs = []
+    for attr in attrs:
+        attr_id = attr.get("attribute_id")
+        value = attr.get("value", "")
+        attr_type = attr.get("type", "text")
+
+        if not attr_id:
+            continue
+
+        entry = {"id": int(attr_id), "values": []}
+        if attr_type == "dictionary":
+            try:
+                dict_val_id = int(value)
+                entry["values"].append({"dictionary_value_id": dict_val_id})
+            except (ValueError, TypeError):
+                entry["values"].append({"value": str(value)})
+        else:
+            entry["values"].append({"value": str(value)})
+        ozon_attrs.append(entry)
+
+    # 构建产品 payload
+    item = {
+        "name": name,
+        "offer_id": offer_id,
+        "price": price,
+        "currency_code": "CNY",
+        "description_category_id": int(category_id),
+        "attributes": ozon_attrs,
+        "vat": "0",
+    }
+
+    if type_id and str(type_id) != str(category_id):
+        item["type_id"] = int(type_id)
+
+    if description:
+        item["description"] = description[:2000]
+
+    if barcode:
+        item["barcode"] = barcode
+
+    # 仅传 URL 类型的图片（Ozon 需要可访问的 URL）
+    image_urls = [img.get("url", "") for img in images if img.get("url", "").startswith("http")]
+    if image_urls:
+        item["images"] = image_urls[:10]
+
+    logger.info("[产品创建] 📦 payload attributes 数量: %s", len(ozon_attrs))
+
+    payload = {"items": [item]}
+    result, err = _call_ozon_api(store_id, "/v3/product/import", payload)
+
+    if err:
+        logger.error("[产品创建] ❌ 创建失败: %s", err)
+        # 尝试解析 Ozon 错误消息
+        user_msg = err
+        try:
+            err_data = json.loads(err.replace("Ozon API Error 400: ", "").replace("Ozon API Error 500: ", ""))
+            if isinstance(err_data, dict):
+                if "message" in err_data:
+                    user_msg = err_data["message"]
+                elif "details" in err_data:
+                    details = err_data["details"]
+                    if isinstance(details, list) and details:
+                        user_msg = "; ".join(str(d.get("message", d)) for d in details[:3])
+        except:
+            pass
+        return jsonify({"success": False, "error": f"Ozon 上架失败: {user_msg}"}), 502
+
+    task_id = result.get("result", {}).get("task_id", "")
+    logger.info("[产品创建] ✅ 提交成功！task_id=%s", task_id)
+
+    return jsonify({
+        "success": True,
+        "task_id": task_id,
+        "skc": skc,
+        "message": f"产品已提交到 Ozon（任务ID: {task_id}），请稍后在 Ozon 后台查看上架状态。"
+    })
 
 
 # ==================== 产品图片 API ====================
