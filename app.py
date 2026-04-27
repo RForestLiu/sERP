@@ -2059,29 +2059,46 @@ def ozon_match_category(store_id):
                     logger.debug("[品类匹配] 解析结果: category_id=%s, reason=%s", category_id, reason)
                     
                     if category_id is not None:
-                        # 从树中查找对应的品类信息
-                        def find_in_tree(nodes, target_id):
+                        # 从树中递归查找品类节点，同时记录祖先路径
+                        def find_in_tree(nodes, target_id, ancestors=None):
+                            if ancestors is None:
+                                ancestors = []
                             for node in nodes:
                                 node_id = _node_id(node)
                                 if str(node_id) == str(target_id):
-                                    return node
+                                    return node, ancestors
                                 children = node.get("children", [])
                                 if children:
-                                    found = find_in_tree(children, target_id)
+                                    found, _ = find_in_tree(children, target_id, ancestors + [node])
                                     if found:
-                                        return found
-                            return None
-                        
-                        found_node = find_in_tree(tree, category_id)
+                                        return found, _
+                            return None, []
+
+                        found_node, ancestors = find_in_tree(tree, category_id)
                         if found_node:
-                            # 构建路径
+                            # 构建路径（含翻译）。翻译缓存可能存完整路径，只取末段
+                            def _leaf_cn(cn_text):
+                                if not cn_text:
+                                    return ""
+                                return cn_text.split(" > ")[-1]
+
+                            path_parts = []
+                            for a in ancestors + [found_node]:
+                                a_id = _node_id(a)
+                                a_name = _node_name(a)
+                                a_cn = _leaf_cn(translations.get(str(a_id), ""))
+                                if a_cn and a_cn != a_name:
+                                    path_parts.append(f"{a_name}（{a_cn}）")
+                                else:
+                                    path_parts.append(a_name)
+                            full_path = " > ".join(path_parts)
                             best_match = {
                                 "id": _node_id(found_node),
                                 "name": _node_name(found_node),
-                                "path": "",  # 前端可以自己构建路径
+                                "path": full_path,
                                 "reason": reason
                             }
-                            logger.debug("[品类匹配] 找到匹配: %s", _node_name(found_node))
+                            logger.debug("[品类匹配] 找到匹配: %s | 路径: %s", _node_name(found_node), full_path)
                         else:
                             logger.warning("[品类匹配] 品类ID %s 在树中未找到", category_id)
                 except json.JSONDecodeError as e:
