@@ -1,26 +1,39 @@
-# sERP - AI 图像批量处理工具
+# sERP — 跨境电商运营工具套件
 
-> 基于 Flask + AI API 的图像批量生成/编辑工具 + 电商产品数据采集工具
+> AI 图像批量处理 + 电商产品采集 + Ozon 品类管理 + 自动上架
+>
+> 基于 Flask + DeepSeek/Gemini API
 
 ---
 
-## 功能特性
+## 功能模块
 
-### 图片批量处理模块
-- ✅ **任务管理** - 创建、切换、重命名、删除任务
-- ✅ **批量上传** - 拖拽或点击上传多张图片
-- ✅ **JSON 导入** - 批量导入 Prompt 配置
-- ✅ **图片生成** - 调用 AI API 生成图片
-- ✅ **数据持久化** - 每个任务独立 JSON 文件存储
-- ✅ **实时保存** - 操作自动保存，刷新不丢失
-- ✅ **图片压缩** - 自动/手动压缩图片到 1.5MB 以下
+### 📷 图片批量处理
+- ✅ **任务管理** — 创建、切换、重命名、删除任务
+- ✅ **批量上传** — 拖拽或点击上传多张图片
+- ✅ **JSON 导入** — 批量导入 Prompt 配置
+- ✅ **AI 生图** — 调用 Gemini API 批量生成产品图
+- ✅ **图片压缩** — 自动/手动压缩到 1.5MB 以下
+- ✅ **数据持久化** — 每个任务独立文件夹 + JSON
 
-### 采集产品模块（开发中）
-- 🔄 **多平台支持** - Ozon、Wildberries、Amazon、Yandex
-- 🔄 **Crawl4AI 智能抓取** - 自动识别主图、SKU图、描述图
-- 🔄 **DeepSeek AI 分类** - 智能分类图片并重命名
-- 🔄 **异步并发下载** - 多线程下载 + Pillow 转 JPG
-- 🔄 **数据持久化** - 产品数据 JSON + 图片映射表
+### 📦 电商产品采集
+- ✅ **多平台支持** — Ozon、Wildberries、Amazon、Yandex
+- ✅ **Playwright + requests 双引擎** — 静态/动态页面自适应
+- ✅ **DeepSeek AI 图片分类** — 自动区分主图/SKU图/描述图
+- ✅ **异步并发下载** — 自动转 JPG，压缩优化
+- ✅ **SKC/SKU 自动生成** — 采集数据一键转正式产品
+
+### 🏪 Ozon 品类管理
+- ✅ **品类树拉取与缓存** — 全量 7998 个品类带本地缓存
+- ✅ **俄→中批量翻译** — DeepSeek 分批翻译，缓存复用
+- ✅ **AI 品类匹配** — 根据产品信息自动匹配 Ozon 品类
+- ✅ **品类属性获取** — 叶子节点属性 + 字典值加载
+- ⏳ **品类刷新翻译** — 异步后台分批翻译（待验证）
+
+### 📝 Ozon 上架
+- ✅ **属性自动填充** — DeepSeek 分析产品数据后填充属性
+- ✅ **上架草稿持久化** — 每个产品×店铺独立 JSON 存储
+- ✅ **店小秘自动填充** — 油猴脚本 + API 联动
 
 ---
 
@@ -28,22 +41,33 @@
 
 ```
 sERP/
-├── app.py              # Flask 后端主文件
-├── collector.py        # 采集产品模块（开发中）
-├── .env                # 环境变量（API Key 等）
-├── .env.example        # 环境变量示例
-├── README.md           # 项目说明
-├── requirements.txt    # Python 依赖
+├── main.py                  # ★ 项目唯一入口
+├── app.py                   # Flask 后端（所有 API 逻辑）
+├── collector.py             # 产品采集引擎
+├── requirements.txt         # Python 依赖
+├── .env                     # 环境变量（API Key 等）
+│
 ├── templates/
-│   └── index.html      # 前端页面（含导航栏 + 多模块）
-├── data/               # 数据存储（自动创建）
-│   ├── tasks.json      # 图片处理任务列表
-│   ├── task_*/         # 图片处理任务数据
-│   ├── collect_tasks.json  # 采集任务列表（开发中）
-│   └── collect_*/      # 采集任务数据（开发中）
+│   ├── index.html           # 主页面（图片处理+采集+产品管理）
+│   └── ozon_listing.html    # Ozon 上架页面
+│
+├── data/                    # 数据存储（自动创建）
+│   ├── products.json        # 正式产品数据
+│   ├── stores.json          # 店铺列表及 Ozon 凭证
+│   ├── tasks.json           # 图片处理任务列表
+│   ├── collect_tasks.json   # 采集任务持久化
+│   ├── ozon_cache/          # Ozon 品类树/翻译缓存
+│   └── task_*/collect_*/    # 任务数据目录
+│
 ├── docs/
-│   └── 需求文档.md     # 详细需求文档
-└── test_images/        # 测试图片
+│   ├── 交接文档.md           # 项目交接文档
+│   ├── 需求文档.md           # 详细需求文档
+│   ├── SKC-SKU规范.md        # 编码规范
+│   └── Ozon_Seller_API知识库.md  # Ozon API 参考
+│
+├── reference/               # 第三方页面参考
+├── scripts/                 # 浏览器油猴脚本
+└── test_images/             # 测试图片
 ```
 
 ---
@@ -53,81 +77,45 @@ sERP/
 ### 1. 安装依赖
 
 ```bash
-pip install flask flask-cors openai python-dotenv requests Pillow
+pip install -r requirements.txt
+# 关键依赖: Flask, requests, aiohttp, Pillow, BeautifulSoup4, python-dotenv
+# Playwright（可选，采集动态页面需要）:
+pip install playwright
+playwright install chromium
 ```
 
 ### 2. 配置环境变量
 
 ```bash
 cp .env.example .env
-# 编辑 .env 文件，填入你的 API Key
+# 编辑 .env，填入 API Key
 ```
 
 ### 3. 启动服务
 
 ```bash
-python app.py
+python main.py
+# 访问 http://localhost:5000
 ```
-
-### 4. 访问页面
-
-打开浏览器访问：`http://127.0.0.1:5000`
 
 ---
 
-## 使用说明
+## API 接口概览
 
-### 模块切换
-页面左侧导航栏支持模块切换：
-- 📦 **采集产品** - 电商产品数据采集
-- 📷 **图片批量处理** - AI 图片生成
-
-### 图片批量处理
-
-#### 新建任务
-点击左侧边栏的 **"+ 新建任务"** 按钮
-
-#### 批量上传图片
-将多张图片拖拽到右上角的 **"拖拽图片到此处"** 区域
-
-#### 导入 Prompt
-在 JSON 输入框中粘贴配置，点击 **"拆分提示词"**：
-```json
-[
-  {"image_name": "product1.jpg", "prompt": "生成一个红色钱包的产品图"},
-  {"image_name": "product2.jpg", "prompt": "生成一个蓝色钱包的产品图"}
-]
-```
-
-#### 生成图片
-点击卡片上的 **"执行生图"** 按钮生成图片
-
-#### 图片压缩
-- **自动压缩**（默认开启）：勾选工具栏的 **"自动压缩"** 复选框后，每次生成图片时自动压缩到 **1.5MB 以下**
-- **手动压缩**：点击工具栏的 **"🔽 压缩到1.5MB以下"** 按钮，批量压缩当前任务 `generated/` 目录中所有大于 1.5MB 的图片
-- 压缩算法：PNG/WebP 自动转为 JPEG，自适应质量（85→30），仍超标则降分辨率
-
-> ⚠️ **注意事项**
-> - 压缩功能依赖 `Pillow` 库，首次使用前请执行 `pip install Pillow`
-> - 自动压缩仅在生成图片时生效，对已存在的图片需点击手动压缩按钮
-> - 压缩后图片统一转为 `.jpg` 格式（原 PNG/WebP 的透明通道会丢失）
-> - 如果图片本身小于 1.5MB，不会进行压缩
-
----
-
-## API 接口
-
-| 方法 | 路径 | 功能 |
-|------|------|------|
-| GET | `/api/tasks` | 获取任务列表 |
-| POST | `/api/tasks` | 创建任务 |
-| GET | `/api/tasks/<id>` | 获取任务详情 |
-| PUT | `/api/tasks/<id>` | 更新任务 |
-| POST | `/api/tasks/<id>/upload_source_images` | 上传源图片 |
-| POST | `/api/generate` | 生成图片 |
-| POST | `/api/tasks/<id>/save_images` | 保存生成图片 |
-| POST | `/api/tasks/<id>/compress_images` | 压缩图片 |
-| POST | `/api/tasks/<id>/open_folder` | 打开文件夹 |
+| 模块 | 方法 | 路由 | 功能 |
+|------|------|------|------|
+| 图片 | `GET/POST/PUT` | `/api/tasks/*` | 任务 CRUD + 图片生成/压缩 |
+| 采集 | `POST` | `/api/collect` | 启动产品采集 |
+| 采集 | `GET` | `/api/collect/<id>/status` | 查询采集进度 |
+| 采集 | `GET` | `/api/collect/<id>/result` | 获取采集结果 |
+| 产品 | `GET/PUT` | `/api/products/*` | 产品管理 |
+| Ozon | `GET` | `/api/ozon/<id>/category-tree` | 品类树 |
+| Ozon | `POST` | `/api/ozon/<id>/match-category` | AI 品类匹配 |
+| Ozon | `POST` | `/api/ozon/<id>/category-attributes` | 品类属性 |
+| Ozon | `POST` | `/api/ozon/<id>/translate-categories` | 品类翻译 |
+| 上架 | `GET/PUT/DELETE` | `/api/listings/<skc>/<store>` | 上架草稿 |
+| 填充 | `POST` | `/api/auto-fill/analyze` | 店小秘填充分析 |
+| 填充 | `POST` | `/api/auto-fill/ozon-fields` | Ozon 属性填充 |
 
 ---
 
@@ -135,22 +123,48 @@ python app.py
 
 - **后端**: Python 3.10+ / Flask
 - **前端**: 原生 HTML/CSS/JavaScript
-- **AI API**: Gemini / 通义系列（兼容 OpenAI 接口）
-- **存储**: JSON 文件持久化
-- **采集**: Crawl4AI / BeautifulSoup（开发中）
+- **AI API**: DeepSeek (品类翻译/匹配/填充) + Gemini (图片生成)
+- **采集**: Playwright / requests + BeautifulSoup
 - **图片处理**: Pillow
+- **存储**: JSON 文件持久化
+- **并发**: aiohttp + asyncio
+
+---
+
+## 日志系统
+
+所有模块统一使用 Python `logging` 模块，格式：
+
+```
+HH:MM:SS | INFO | app | 消息内容
+HH:MM:SS | WARN | collector | 警告内容
+HH:MM:SS | ERROR | app | 错误内容
+```
+
+- **开发模式**：`python main.py`（默认 DEBUG 级别）
+- **生产模式**：修改 `main.py` 中的 `level=logging.INFO`
 
 ---
 
 ## 更新日志
 
+### v1.3.0 (2026-04-27)
+- ✨ 新增 `main.py` 统一入口，规范日志系统
+- ✨ `app.py` / `collector.py` 所有 `print()` 改为 `logger`
+- ✨ 更新交接文档，补充模块架构和日志说明
+- 🔧 修复 `collector.py` 文件结构损坏问题
+
+### v1.2.0 (2026-04-25)
+- ✨ Ozon 品类树缓存 + 逐批翻译
+- ✨ AI 品类匹配（全量发送，修复截断问题）
+- ✨ 品类属性 + 字典值加载
+- ✨ 上架草稿持久化 API
+- ✨ 店小秘自动填充 API
+
 ### v1.1.0 (2026-04-25)
 - ✨ 新增左侧导航栏，支持多模块切换
-- ✨ 新增"采集产品"模块（UI 框架）
-- ✨ 新增"图片批量处理"模块定义
-- 📝 更新项目文档
+- ✨ 新增"采集产品"模块
+- ✨ 新增"产品管理"模块
 
 ### v1.0.0 (2026-04-24)
-- 初始版本
-- 支持任务管理、批量上传、图片生成
-- 实现数据持久化（每任务独立 JSON 文件）
+- 初始版本：图片批量处理工作台

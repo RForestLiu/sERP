@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Ozon 产品上架</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: "Microsoft YaHei", sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .header {
+            background: white; border-radius: 10px; padding: 20px 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .header h1 { font-size: 20px; color: #333; }
+        .header .meta { font-size: 13px; color: #999; }
+        .header .meta span { margin-right: 16px; }
+        .header .save-status { font-size: 12px; color: #27ae60; }
+        
+        .section {
+            background: white; border-radius: 10px; padding: 20px 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 16px;
+        }
+        .section-title {
+            font-size: 15px; font-weight: bold; color: #333;
+            margin-bottom: 16px; padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+            display: flex; align-items: center; gap: 8px;
+        }
+        
+        /* 轮播图区域 */
+        .carousel-area {
+            display: flex; gap: 12px; overflow-x: auto; padding: 8px 0;
+        }
+        .carousel-item {
+            width: 120px; height: 120px; flex-shrink: 0;
+            border: 2px solid #e5e7eb; border-radius: 8px;
+            overflow: hidden; position: relative; cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .carousel-item:hover { border-color: #3498db; }
+        .carousel-item.active { border-color: #3498db; }
+        .carousel-item img { width: 100%; height: 100%; object-fit: cover; }
+        .carousel-item .order-badge {
+            position: absolute; top: 4px; left: 4px;
+            background: rgba(0,0,0,0.6); color: white;
+            font-size: 10px; padding: 1px 6px; border-radius: 3px;
+        }
+        .carousel-item .remove-btn {
+            position: absolute; top: 4px; right: 4px;
+            width: 20px; height: 20px; background: #e74c3c; color: white;
+            border: none; border-radius: 50%; font-size: 12px;
+            cursor: pointer; display: none; line-height: 20px; text-align: center;
+        }
+        .carousel-item:hover .remove-btn { display: block; }
+        .carousel-add {
+            width: 120px; height: 120px; flex-shrink: 0;
+            border: 2px dashed #ccc; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: #aaa; font-size: 13px; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .carousel-add:hover { border-color: #3498db; color: #3498db; }
+        
+        /* 表单 */
+        .form-row {
+            display: flex; align-items: flex-start; gap: 12px;
+            margin-bottom: 12px;
+        }
+        .form-row label {
+            width: 100px; flex-shrink: 0; font-size: 13px; color: #666;
+            padding-top: 8px; text-align: right;
+        }
+        .form-row label.required::after { content: " *"; color: #e74c3c; }
+        .form-row input, .form-row textarea, .form-row select {
+            flex: 1; padding: 8px 12px; font-size: 13px;
+            border: 1px solid #d1d5db; border-radius: 4px;
+            outline: none; transition: border-color 0.2s;
+            font-family: inherit;
+        }
+        .form-row input:focus, .form-row textarea:focus, .form-row select:focus {
+            border-color: #3498db; box-shadow: 0 0 0 2px rgba(52,152,219,0.15);
+        }
+        .form-row textarea { min-height: 80px; resize: vertical; }
+        .form-row .hint { font-size: 11px; color: #999; margin-top: 4px; }
+        
+        /* 属性区域 */
+        .attributes-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+        }
+        .attr-item {
+            display: flex; flex-direction: column; gap: 4px;
+        }
+        .attr-item label {
+            font-size: 12px; color: #666;
+        }
+        .attr-item label.required::after { content: " *"; color: #e74c3c; }
+        .attr-item input, .attr-item select {
+            padding: 6px 10px; font-size: 12px;
+            border: 1px solid #d1d5db; border-radius: 4px;
+            outline: none; transition: border-color 0.2s;
+        }
+        .attr-item input:focus, .attr-item select:focus {
+            border-color: #3498db;
+        }
+        
+        /* 按钮 */
+        .btn {
+            padding: 8px 20px; border: none; border-radius: 4px;
+            font-size: 13px; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-default { background: #6b7280; color: white; }
+        .btn-default:hover { background: #4b5563; }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-primary:hover { background: #2980b9; }
+        .btn-success { background: #27ae60; color: white; }
+        .btn-success:hover { background: #219a52; }
+        .btn-warning { background: #f39c12; color: white; }
+        .btn-warning:hover { background: #e67e22; }
+        .btn-danger { background: #e74c3c; color: white; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-purple { background: #8b5cf6; color: white; }
+        .btn-purple:hover { background: #7c3aed; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        .actions-bar {
+            display: flex; gap: 10px; align-items: center;
+            padding: 16px 0; flex-wrap: wrap;
+        }
+        
+        /* 消息 */
+        .message {
+            position: fixed; top: 20px; right: 20px;
+            background: #2ecc71; color: white; padding: 10px 20px;
+            border-radius: 4px; z-index: 1000; display: none;
+        }
+        .message.error { background: #e74c3c; }
+        
+        /* 加载动画 */
+        .spinner {
+            display: inline-block; width: 14px; height: 14px;
+            border: 2px solid currentColor; border-top: 2px solid transparent;
+            border-radius: 50%; animation: spin 0.8s linear infinite;
+            vertical-align: middle; margin-right: 4px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* 自动保存指示器 */
+        .auto-save-indicator {
+            font-size: 11px; color: #999;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .auto-save-indicator.saving { color: #f39c12; }
+        .auto-save-indicator.saved { color: #27ae60; }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .attributes-grid { grid-template-columns: 1fr; }
+            .form-row { flex-direction: column; }
+            .form-row label { width: auto; text-align: left; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1 id="page-title">Ozon 产品上架</h1>
+                <div class="meta">
+                    <span id="meta-skc">SKC: —</span>
+                    <span id="meta-store">店铺: —</span>
+                    <span id="meta-status" class="save-status">📝 草稿</span>
+                </div>
+            </div>
+            <div class="auto-save-indicator" id="save-indicator">💾 已保存</div>
+        </div>
+        
+        <!-- 轮播图 -->
+        <div class="section">
+            <div class="section-title">🖼 产品轮播图</div>
+            <div class="carousel-area" id="carousel-area">
+                <div class="carousel-add" id="carousel-add-btn">+ 添加图片</div>
+            </div>
+            <input type="file" id="image-upload-input" accept="image/*" multiple style="display:none">
+        </div>
+        
+        <!-- 基本信息 -->
+        <div class="section">
+            <div class="section-title">📝 基本信息</div>
+            
+            <div class="form-row">
+                <label class="required">产品名称</label>
+                <input type="text" id="field-name" placeholder="产品标题（必填）">
+            </div>
+            <div class="form-row">
+                <label>产品描述</label>
+                <textarea id="field-description" placeholder="产品详细描述（支持 HTML）"></textarea>
+            </div>
+            <div class="form-row">
+                <label class="required">价格</label>
+                <input type="text" id="field-price" placeholder="如 78.27">
+            </div>
+            <div class="form-row">
+                <label class="required">Offer ID</label>
+                <input type="text" id="field-offer-id" placeholder="如 WALLET-0001-SKU01">
+            </div>
+            <div class="form-row">
+                <label>条码</label>
+                <input type="text" id="field-barcode" placeholder="EAN / UPC / 留空">
+            </div>
+        </div>
+        
+        <!-- Ozon 品类选择 -->
+        <div class="section">
+            <div class="section-title">🏷 Ozon 品类</div>
+            <div id="category-idle" style="text-align:center;padding:20px;color:#999;">
+                <button class="btn btn-primary" id="btn-start-match-category" style="font-size:14px;padding:10px 24px;">🔄 自动匹配品类</button>
+                <button class="btn btn-default" id="btn-refresh-categories" style="font-size:12px;padding:6px 14px;margin-left:8px;">🔄 更新品类树</button>
+                <div style="margin-top:8px;font-size:12px;color:#aaa;">点击按钮自动匹配 Ozon 品类</div>
+            </div>
+            <!-- 品类树刷新状态 -->
+            <div id="category-refreshing" style="display:none;text-align:center;padding:20px;">
+                <span class="spinner"></span> <span id="refresh-status-text">正在更新品类树...</span>
+                <div style="margin-top:6px;font-size:12px;color:#999;">首次更新需要翻译所有品类名，可能耗时较长</div>
+            </div>
+            <div id="category-loading" style="display:none;text-align:center;padding:20px;color:#999;">
+                <span class="spinner"></span> 正在自动匹配品类...
+            </div>
+            <div id="category-matched" style="display:none">
+                <div class="form-row">
+                    <label>已匹配品类</label>
+                    <div style="flex:1">
+                        <div id="category-display" style="padding:8px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:4px;font-size:13px;color:#166534;">
+                            <span id="category-path"></span>
+                            <span id="category-id-badge" style="margin-left:8px;font-size:11px;color:#999;">ID: <span id="category-id-text"></span></span>
+                        </div>
+                        <div style="margin-top:6px;display:flex;gap:8px;align-items:center;">
+                            <button class="btn btn-primary" id="btn-change-category" style="font-size:12px;padding:4px 12px;">🔄 更换品类</button>
+                            <span id="category-match-info" style="font-size:11px;color:#999;"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="category-not-matched" style="display:none">
+                <div class="form-row">
+                    <label>品类匹配</label>
+                    <div style="flex:1">
+                        <div style="padding:8px 12px;background:#fef3c7;border:1px solid #fbbf24;border-radius:4px;font-size:13px;color:#92400e;">
+                            ⚠️ 未能自动匹配品类，请手动选择
+                        </div>
+                        <div style="margin-top:6px;">
+                            <button class="btn btn-primary" id="btn-manual-category" style="font-size:12px;padding:4px 12px;">📂 选择品类</button>
+                            <button class="btn btn-default" id="btn-retry-match-category" style="font-size:12px;padding:4px 12px;margin-left:6px;">🔄 重新匹配</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 品类树选择器（弹出层） -->
+            <div id="category-tree-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:2000;align-items:center;justify-content:center;">
+                <div style="background:white;border-radius:10px;width:600px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 4px 20px rgba(0,0,0,0.2);">
+                    <div style="padding:16px 20px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;">
+                        <h3 style="font-size:16px;">选择 Ozon 品类</h3>
+                        <button id="btn-close-category-modal" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999;">✕</button>
+                    </div>
+                    <div style="padding:12px 20px;border-bottom:1px solid #eee;">
+                        <input type="text" id="category-search-input" placeholder="搜索品类..." style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:4px;font-size:13px;">
+                    </div>
+                    <div id="category-tree-list" style="flex:1;overflow-y:auto;padding:8px 0;min-height:200px;">
+                        <div style="text-align:center;padding:20px;color:#999;">
+                            <span class="spinner"></span> 加载品类树...
+                        </div>
+                    </div>
+                    <div style="padding:12px 20px;border-top:1px solid #eee;text-align:right;">
+                        <button class="btn btn-primary" id="btn-confirm-category" disabled>确认选择</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Ozon 品类属性 -->
+        <div class="section" id="attributes-section" style="display:none;">
+            <div class="section-title">📋 品类属性</div>
+            <div id="attributes-loading" style="text-align:center;padding:20px;color:#999;">
+                <span class="spinner"></span> 正在加载品类属性...
+            </div>
+            <div class="attributes-grid" id="attributes-grid" style="display:none"></div>
+        </div>
+
+        
+        <!-- 操作按钮 -->
+        <div class="section">
+            <div class="actions-bar">
+                <button class="btn btn-purple" id="btn-auto-fill">🤖 LLM 大模型识别并填充</button>
+                <button class="btn btn-success" id="btn-submit">📤 提交到 Ozon</button>
+                <button class="btn btn-primary" id="btn-save-draft">💾 保存草稿</button>
+                <button class="btn btn-danger" id="btn-cancel">✕ 取消上架</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="message" id="message"></div>
+    
+    <script>
+        // ===== 全局状态 =====
+        const params = new URLSearchParams(window.location.search);
+        const skc = params.get("skc") || "";
+        const storeId = params.get("store_id") || "";
+        
+        let productData = null;      // 产品原始数据
+        let ozonAttributes = [];     // Ozon 品类属性列表
+        let listingDraft = {         // 上架草稿
+            status: "draft",
+            categories: {},
+            basic_fields: {},
+            attributes: [],
+            images: []
+        };
+        let autoSaveTimer = null;
+        let isDirty = false;
+        
+        // ===== DOM 引用 =====
+        const msgBox = document.getElementById("message");
+        const carouselArea = document.getElementById("carousel-area");
+        const carouselAddBtn = document.getElementById("carousel-add-btn");
+        const imageUploadInput = document.getElementById("image-upload-input");
+        const attributesGrid = document.getElementById("attributes-grid");
+        const attributesLoading = document.getElementById("attributes-loading");
+        
+        // 基本信息字段
+        const fieldName = document.getElementById("field-name");
+        const fieldDescription = document.getElementById("field-description");
+        const fieldPrice = document.getElementById("field-price");
+        const fieldOfferId = document.getElementById("field-offer-id");
+        const fieldBarcode = document.getElementById("field-barcode");
+        
+        // 按钮
+        const btnAutoFill = document.getElementById("btn-auto-fill");
+        const btnSubmit = document.getElementById("btn-submit");
+        const btnSaveDraft = document.getElementById("btn-save-draft");
+        const btnCancel = document.getElementById("btn-cancel");
+        const saveIndicator = document.getElementById("save-indicator");
+        
+        // ===== 工具函数 =====
+        function showMsg(text, isError = false) {
+            msgBox.textContent = text;
+            msgBox.className = "message" + (isError ? " error" : "");
+            msgBox.style.display = "block";
+            setTimeout(() => { msgBox.style.display = "none"; }, 3000);
+        }
+        
+        function setSaveIndicator(state) {
+            if (state === "saving") {
+                saveIndicator.className = "auto-save-indicator saving";
+                saveIndicator.innerHTML = '<span class="spinner"></span> 保存中...';
+            } else if (state === "saved") {
+                saveIndicator.className = "auto-save-indicator saved";
+                saveIndicator.innerHTML = '💾 已保存 ' + new Date().toLocaleTimeString();
+            } else {
+                saveIndicator.className = "auto-save-indicator";
+                saveIndicator.innerHTML = '💾 已保存';
+            }
+        }
+        
+        // ===== 品类相关状态 =====
+        let selectedCategoryId = null;   // 当前选中的品类 ID
+        let categoryTreeData = null;     // 品类树数据
+        let categoryTreeFlat = [];       // 展平的品类列表（用于搜索）
+        let categoryTranslations = {};   // 品类翻译缓存 {id -> 中文名}
+        let translationLoading = false;  // 翻译正在加载中
+        
+        // 品类树节点辅助函数（兼容 Ozon API 的不同字段名）
+        function _nodeId(node) { return node.type_id || node.description_category_id || node.id; }
+        function _nodeName(node) { return node.type_name || node.category_name || node.name; }
+        
+        // 获取品类的显示名（俄语 + 中文翻译）
+        function _displayName(node) {
+            const ru = _nodeName(node);
+            const id = _nodeId(node);
+            const cn = categoryTranslations[id] || node._name_cn || "";
+            if (cn && cn !== ru) {
+                return `${ru}（${cn}）`;
+            }
+            return ru;
+        }
+        
+        // ===== 品类 DOM 引用 =====
+        const categoryIdle = document.getElementById("category-idle");
+        const categoryRefreshing = document.getElementById("category-refreshing");
+        const refreshStatusText = document.getElementById("refresh-status-text");
+        const categoryLoading = document.getElementById("category-loading");
+        const categoryMatched = document.getElementById("category-matched");
+        const categoryNotMatched = document.getElementById("category-not-matched");
+        const categoryPath = document.getElementById("category-path");
+        const categoryIdText = document.getElementById("category-id-text");
+        const categoryMatchInfo = document.getElementById("category-match-info");
+        const attributesSection = document.getElementById("attributes-section");
+        const btnStartMatchCategory = document.getElementById("btn-start-match-category");
+        const btnRetryMatchCategory = document.getElementById("btn-retry-match-category");
+        const btnRefreshCategories = document.getElementById("btn-refresh-categories");
+        
+        // 品类选择器弹窗
+        const categoryModal = document.getElementById("category-tree-modal");
+        const categoryTreeList = document.getElementById("category-tree-list");
+        const categorySearchInput = document.getElementById("category-search-input");
+        const btnChangeCategory = document.getElementById("btn-change-category");
+        const btnManualCategory = document.getElementById("btn-manual-category");
+        const btnCloseCategoryModal = document.getElementById("btn-close-category-modal");
+        const btnConfirmCategory = document.getElementById("btn-confirm-category");
+        
+        // ===== 初始化 =====
+        async function init() {
+            if (!skc || !storeId) {
+                showMsg("❌ 缺少参数：skc 和 store_id 是必需的", true);
+                return;
+            }
+            
+            document.getElementById("meta-skc").textContent = `SKC: ${skc}`;
+            document.getElementById("meta-store").textContent = `店铺: ${storeId}`;
+            document.getElementById("page-title").textContent = `Ozon 上架 - ${skc}`;
+            
+            // 1. 加载产品数据
+            await loadProductData();
+            
+            // 2. 加载已有草稿
+            await loadDraft();
+            
+            // 3. 检查草稿中是否有品类 ID，有则直接恢复，无则显示空闲状态
+            if (listingDraft.category_id) {
+                selectedCategoryId = listingDraft.category_id;
+                showCategoryMatched(selectedCategoryId);
+                await loadCategoryAttributes(selectedCategoryId);
+            } else {
+                // 显示空闲状态（等待用户点击"自动匹配品类"按钮）
+                categoryIdle.style.display = "block";
+                categoryLoading.style.display = "none";
+                categoryMatched.style.display = "none";
+                categoryNotMatched.style.display = "none";
+            }
+            
+            // 4. 加载产品图片
+            await loadProductImages();
+            
+            // 5. 绑定自动保存
+            bindAutoSave();
+            
+            // 6. 绑定品类选择器事件
+            bindCategoryEvents();
+            
+            // 7. 绑定"自动匹配品类"按钮
+            btnStartMatchCategory.addEventListener("click", async () => {
+                categoryIdle.style.display = "none";
+                categoryLoading.style.display = "block";
+                await autoMatchCategory();
+            });
+            
+            // 8. 绑定"重新匹配"按钮
+            if (btnRetryMatchCategory) {
+                btnRetryMatchCategory.addEventListener("click", async () => {
+                    categoryNotMatched.style.display = "none";
+                    categoryLoading.style.display = "block";
+                    await autoMatchCategory();
+                });
+            }
+            
+            // 9. 绑定"更新品类树"按钮（异步 + 轮询进度）
+            if (btnRefreshCategories) {
+                let pollingTimer = null;
+                
+                // 停止轮询
+                function stopPolling() {
+                    if (pollingTimer) {
+                        clearInterval(pollingTimer);
+                        pollingTimer = null;
+                    }
+                }
+                
+                // 开始轮询进度
+                function startPolling() {
+                    stopPolling(); // 清除旧轮询
+                    pollingTimer = setInterval(async () => {
+                        try {
+                            const res = await fetch(`/api/ozon/${storeId}/refresh-categories/status`);
+                            const status = await res.json();
+                            
+                            if (status.exists) {
+                                if (status.status === "running") {
+                                    // 更新进度显示
+                                    const pct = status.progress;
+                                    let progressBar = document.getElementById("refresh-progress-bar");
+                                    let progressText = document.getElementById("refresh-progress-text");
+                                    
+                                    // 动态创建进度条（如果不存在）
+                                    if (!progressBar) {
+                                        const container = document.querySelector("#category-refreshing");
+                                        const barHtml = `<div style="margin-top:10px;background:#e0e0e0;border-radius:10px;height:16px;overflow:hidden;width:80%;margin-left:auto;margin-right:auto;">
+                                            <div id="refresh-progress-bar" style="height:100%;background:#1abc9c;border-radius:10px;width:0%;transition:width 0.5s;"></div>
+                                        </div>
+                                        <div id="refresh-progress-text" style="font-size:11px;color:#888;margin-top:4px;"></div>`;
+                                        container.insertAdjacentHTML("beforeend", barHtml);
+                                        progressBar = document.getElementById("refresh-progress-bar");
+                                        progressText = document.getElementById("refresh-progress-text");
+                                    }
+                                    
+                                    progressBar.style.width = `${pct}%`;
+                                    progressText.textContent = `${status.translated}/${status.need_translate} 个品类`;
+                                    refreshStatusText.textContent = status.message;
+                                    
+                                } else if (status.status === "completed") {
+                                    stopPolling();
+                                    
+                                    // 获取最终结果（需要再调一次 refresh-categories 获取完整品类树）
+                                    refreshStatusText.textContent = `✅ ${status.message}`;
+                                    showMsg(`✅ 品类树已更新（共 ${status.total_nodes} 个品类）`);
+                                    
+                                    // 获取更新后的品类树（含翻译）
+                                    try {
+                                        const treeRes = await fetch(`/api/ozon/${storeId}/category-tree?refresh=1`);
+                                        const treeData = await treeRes.json();
+                                        if (treeData.success && treeData.category_tree) {
+                                            // 重建翻译缓存
+                                            categoryTranslations = {};
+                                            categoryTreeData = null;
+                                            categoryTreeFlat = [];
+                                            
+                                            function extractTranslations(nodes) {
+                                                for (const node of nodes) {
+                                                    const id = _nodeId(node);
+                                                    const cn = node._name_cn || "";
+                                                    if (id && cn) {
+                                                        categoryTranslations[id] = cn;
+                                                    }
+                                                    const children = node.children || [];
+                                                    if (children.length > 0) {
+                                                        extractTranslations(children);
+                                                    }
+                                                }
+                                            }
+                                            extractTranslations(treeData.category_tree);
+                                        }
+                                    } catch (e) {
+                                        console.warn("获取品类树失败:", e);
+                                    }
+                                    
+                                    // 移除进度条
+                                    const barContainer = document.querySelector("#category-refreshing > div:last-child");
+                                    if (barContainer && barContainer.id !== "") {
+                                        // 简单隐藏：3 秒后恢复到空闲
+                                    }
+                                    
+                                    setTimeout(() => {
+                                        categoryRefreshing.style.display = "none";
+                                        categoryIdle.style.display = "block";
+                                        btnRefreshCategories.disabled = false;
+                                    }, 3000);
+                                    
+                                } else if (status.status === "error") {
+                                    stopPolling();
+                                    refreshStatusText.textContent = `❌ ${status.error || status.message}`;
+                                    showMsg("❌ 品类树更新失败: " + (status.error || status.message), true);
+                                    
+                                    setTimeout(() => {
+                                        categoryRefreshing.style.display = "none";
+                                        categoryIdle.style.display = "block";
+                                        btnRefreshCategories.disabled = false;
+                                    }, 5000);
+                                }
+                            }
+                        } catch (e) {
+                            // 轮询出错不中断
+                            console.warn("轮询进度失败:", e);
+                        }
+                    }, 2000); // 每 2 秒轮询一次
+                }
+                
+                btnRefreshCategories.addEventListener("click", async () => {
+                    // 显示刷新状态，隐藏空闲状态
+                    categoryIdle.style.display = "none";
+                    categoryRefreshing.style.display = "block";
+                    refreshStatusText.textContent = "正在启动品类树刷新...";
+                    btnRefreshCategories.disabled = true;
+                    
+                    // 移除旧的进度条 UI
+                    const oldProgressBar = document.getElementById("refresh-progress-bar");
+                    const oldProgressText = document.getElementById("refresh-progress-text");
+                    if (oldProgressBar) oldProgressBar.parentElement?.remove();
+                    if (oldProgressText) oldProgressText.remove();
+                    
+                    try {
+                        // 调用后端一键刷新接口（立即返回）
+                        const res = await fetch(`/api/ozon/${storeId}/refresh-categories`, {
+                            method: "POST"
+                        });
+                        
+                        if (!res.ok) {
+                            const errData = await res.json().catch(() => ({}));
+                            throw new Error(errData.error || `HTTP ${res.status}`);
+                        }
+                        
+                        const data = await res.json();
+                        
+                        if (data.success) {
+                            refreshStatusText.textContent = "品类树刷新任务已启动...";
+                            // 开始轮询进度
+                            startPolling();
+                        } else {
+                            throw new Error(data.error || "更新失败");
+                        }
+                    } catch (e) {
+                        stopPolling();
+                        refreshStatusText.textContent = `❌ 更新失败: ${e.message}`;
+                        showMsg("❌ 品类树更新失败: " + e.message, true);
+                        btnRefreshCategories.disabled = false;
+                        
+                        setTimeout(() => {
+                            categoryRefreshing.style.display = "none";
+                            categoryIdle.style.display = "block";
+                        }, 5000);
+                    }
+                });
+            }
+        }
+        
+        // ===== 自动匹配品类 =====
+        async function autoMatchCategory() {
+            // 如果草稿中已有品类 ID，直接使用
+            if (listingDraft.category_id) {
+                selectedCategoryId = listingDraft.category_id;
+                showCategoryMatched(selectedCategoryId);
+                await loadCategoryAttributes(selectedCategoryId);
+                return;
+            }
+            
+            if (!productData) {
+                categoryLoading.style.display = "none";
+                categoryNotMatched.style.display = "block";
+                return;
+            }
+            
+            try {
+                const res = await fetch(`/api/ozon/${storeId}/match-category`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        product_title: productData.title || "",
+                        product_category: productData.category || "",
+                        product_description: (productData.product_data?.about_item || "") + " " + (productData.product_data?.product_description || "")
+                    })
+                });
+                
+                if (!res.ok) {
+                    categoryLoading.style.display = "none";
+                    categoryNotMatched.style.display = "block";
+                    return;
+                }
+                
+                const data = await res.json();
+                
+                if (data.success && data.best_match && data.best_match.id) {
+                    selectedCategoryId = data.best_match.id;
+                    showCategoryMatched(selectedCategoryId, data.best_match.path, data.best_match.name, data.matches.length);
+                    await loadCategoryAttributes(selectedCategoryId);
+                } else {
+                    categoryLoading.style.display = "none";
+                    categoryNotMatched.style.display = "block";
+                }
+            } catch (e) {
+                console.error("品类匹配失败:", e);
+                categoryLoading.style.display = "none";
+                categoryNotMatched.style.display = "block";
+            }
+        }
+        
+        function showCategoryMatched(categoryId, path, name, matchCount) {
+            categoryLoading.style.display = "none";
+            categoryMatched.style.display = "block";
+            categoryNotMatched.style.display = "none";
+            
+            if (path) {
+                categoryPath.textContent = `✅ ${path}`;
+            } else {
+                categoryPath.textContent = `✅ 品类 ID: ${categoryId}`;
+            }
+            categoryIdText.textContent = categoryId;
+            
+            if (matchCount !== undefined) {
+                categoryMatchInfo.textContent = `（共匹配 ${matchCount} 个候选品类）`;
+            }
+        }
+        
+        // ===== 加载品类树（用于选择器） =====
+        async function loadCategoryTree() {
+            if (categoryTreeData) return; // 已缓存
+            
+            categoryTreeList.innerHTML = '<div style="text-align:center;padding:20px;color:#999;"><span class="spinner"></span> 加载品类树...</div>';
+            
+            try {
+                const res = await fetch(`/api/ozon/${storeId}/category-tree`);
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.error || `HTTP ${res.status}: 加载品类树失败`);
+                }
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error || "加载失败");
+                
+                categoryTreeData = data.category_tree || [];
+                if (!categoryTreeData || categoryTreeData.length === 0) {
+                    throw new Error("品类树为空，请检查 Ozon API 凭证是否有效");
+                }
+                
+                // 展平品类树（_nodeId / _nodeName 为全局函数）
+                categoryTreeFlat = [];
+                function flatten(nodes, path) {
+                    for (const node of nodes) {
+                        const nodeName = _nodeName(node);
+                        const currentPath = path ? path + " > " + nodeName : nodeName;
+                        const children = node.children || [];
+                        const nodeId = _nodeId(node);
+                        if (children.length > 0) {
+                            flatten(children, currentPath);
+                        } else {
+                            categoryTreeFlat.push({
+                                id: nodeId,
+                                name: nodeName,
+                                path: currentPath
+                            });
+                        }
+                    }
+                }
+                flatten(categoryTreeData, "");
+                
+                // 加载所有一级品类的翻译（渐进式：先翻译根节点）
+                await loadTranslationsForVisibleNodes(categoryTreeData);
+                
+                renderCategoryTree(categoryTreeData);
+            } catch (e) {
+                categoryTreeList.innerHTML = `<div style="text-align:center;padding:20px;color:#e74c3c;font-size:13px;">⚠️ 加载失败: ${e.message}</div>`;
+            }
+        }
+        
+        // 加载当前可见节点的翻译（渐进式）
+        async function loadTranslationsForVisibleNodes(nodes) {
+            if (translationLoading) return;
+            if (Object.keys(categoryTranslations).length > 100) return; // 已加载大部分
+            
+            translationLoading = true;
+            try {
+                // 收集所有需要翻译的节点
+                const toTranslate = [];
+                function collect(nodes, path) {
+                    for (const node of nodes) {
+                        const id = _nodeId(node);
+                        const name = _nodeName(node);
+                        const children = node.children || [];
+                        const currentPath = path ? path + " > " + name : name;
+                        if (id && !categoryTranslations[id]) {
+                            toTranslate.push({ id, name, path: currentPath });
+                        }
+                        if (children.length > 0) {
+                            collect(children, currentPath);
+                        }
+                    }
+                }
+                collect(nodes, "");
+                
+                if (toTranslate.length === 0) return;
+                
+                // 分批发送翻译请求（每次最多 80 个）
+                for (let i = 0; i < toTranslate.length; i += 80) {
+                    const batch = toTranslate.slice(i, i + 80);
+                    const resp = await fetch(`/api/ozon/${storeId}/translate-categories`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ categories: batch })
+                    });
+                    if (resp.ok) {
+                        const result = await resp.json();
+                        if (result.success) {
+                            for (const t of result.translations) {
+                                if (t.name_cn) {
+                                    categoryTranslations[t.id] = t.name_cn;
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn("品类翻译加载部分失败，不影响使用", e);
+            } finally {
+                translationLoading = false;
+            }
+        }
+        
+        function renderCategoryTree(nodes, depth) {
+            depth = depth || 0;
+            categoryTreeList.innerHTML = "";
+            
+            function renderNode(node, d) {
+                const div = document.createElement("div");
+                const padding = 16 + d * 20;
+                div.style.padding = `6px ${padding}px 6px 16px`;
+                div.style.cursor = "pointer";
+                div.style.display = "flex";
+                div.style.alignItems = "center";
+                div.style.gap = "6px";
+                div.style.borderLeft = d > 0 ? "1px solid #e5e7eb" : "none";
+                div.style.marginLeft = d > 0 ? "20px" : "0";
+                
+                const nodeName = _nodeName(node);
+                const nodeId = _nodeId(node);
+                const children = node.children || [];
+                const isLeaf = children.length === 0;
+                
+                const icon = document.createElement("span");
+                icon.textContent = isLeaf ? "📄" : (node._expanded ? "📂" : "📁");
+                icon.style.fontSize = "14px";
+                
+                const displayName = _displayName(node);
+                const nameSpan = document.createElement("span");
+                nameSpan.textContent = displayName;
+                nameSpan.style.fontSize = "13px";
+                nameSpan.style.color = isLeaf ? "#333" : "#555";
+                nameSpan.style.fontWeight = isLeaf ? "normal" : "500";
+                // 如果有中文翻译，加在 title 属性中显示
+                const cn = categoryTranslations[_nodeId(node)];
+                if (cn) nameSpan.title = cn;
+                
+                if (isLeaf) {
+                    // 叶子节点 - 可点击选择
+                    div.style.borderRadius = "4px";
+                    div.addEventListener("mouseenter", () => {
+                        if (!div.classList.contains("selected")) {
+                            div.style.background = "#f0f7ff";
+                        }
+                    });
+                    div.addEventListener("mouseleave", () => {
+                        if (!div.classList.contains("selected")) {
+                            div.style.background = "";
+                        }
+                    });
+                    div.addEventListener("click", () => {
+                        // 清除其他选中
+                        document.querySelectorAll("#category-tree-list .selected").forEach(el => {
+                            el.classList.remove("selected");
+                            el.style.background = "";
+                        });
+                        div.classList.add("selected");
+                        div.style.background = "#dbeafe";
+                        btnConfirmCategory.disabled = false;
+                        btnConfirmCategory.dataset.categoryId = nodeId;
+                        btnConfirmCategory.dataset.categoryName = nodeName;
+                        btnConfirmCategory.dataset.categoryPath = buildPath(node, categoryTreeData);
+                    });
+                } else {
+                    // 非叶子节点 - 点击展开/折叠
+                    div.addEventListener("click", () => {
+                        node._expanded = !node._expanded;
+                        renderCategoryTree(categoryTreeData);
+                    });
+                }
+                
+                div.appendChild(icon);
+                div.appendChild(nameSpan);
+                categoryTreeList.appendChild(div);
+                
+                // 递归渲染子节点
+                if (children.length > 0 && node._expanded) {
+                    children.forEach(child => renderNode(child, d + 1));
+                }
+            }
+            
+            nodes.forEach(node => renderNode(node, 0));
+        }
+        
+        function buildPath(node, tree) {
+            // 从树中查找节点的完整路径
+            const targetId = _nodeId(node);
+            function find(nodes, targetId, path) {
+                for (const n of nodes) {
+                    const nName = _nodeName(n);
+                    const nId = _nodeId(n);
+                    const currentPath = path ? path + " > " + nName : nName;
+                    if (nId === targetId) return currentPath;
+                    const children = n.children || [];
+                    if (children.length > 0) {
+                        const found = find(children, targetId, currentPath);
+                        if (found) return found;
+                    }
+                }
+                return null;
+            }
+            return find(tree, targetId, "");
+        }
+        
+        // ===== 品类选择器事件绑定 =====
+        function bindCategoryEvents() {
+            // 打开品类选择器
+            const openModal = () => {
+                categoryModal.style.display = "flex";
+                loadCategoryTree();
+            };
+            
+            btnChangeCategory.addEventListener("click", openModal);
+            btnManualCategory.addEventListener("click", openModal);
+            
+            // 关闭品类选择器
+            btnCloseCategoryModal.addEventListener("click", () => {
+                categoryModal.style.display = "none";
+            });
+            categoryModal.addEventListener("click", (e) => {
+                if (e.target === categoryModal) {
+                    categoryModal.style.display = "none";
+                }
+            });
+            
+            // 确认选择品类
+            btnConfirmCategory.addEventListener("click", async () => {
+                const newId = parseInt(btnConfirmCategory.dataset.categoryId);
+                const newName = btnConfirmCategory.dataset.categoryName;
+                const newPath = btnConfirmCategory.dataset.categoryPath;
+                
+                if (!newId) return;
+                
+                selectedCategoryId = newId;
+                categoryModal.style.display = "none";
+                
+                showCategoryMatched(newId, newPath || newName);
+                
+                // 保存到草稿
+                listingDraft.category_id = newId;
+                markDirty();
+                
+                // 重新加载品类属性
+                await loadCategoryAttributes(newId);
+            });
+            
+            // 搜索品类
+            let searchTimer = null;
+            categorySearchInput.addEventListener("input", () => {
+                if (searchTimer) clearTimeout(searchTimer);
+                searchTimer = setTimeout(() => {
+                    const query = categorySearchInput.value.trim().toLowerCase();
+                    if (!query) {
+                        renderCategoryTree(categoryTreeData);
+                        return;
+                    }
+                    
+                    // 搜索展平列表
+                    const results = categoryTreeFlat.filter(c => 
+                        c.name.toLowerCase().includes(query) || 
+                        c.path.toLowerCase().includes(query)
+                    );
+                    
+                    if (results.length === 0) {
+                        categoryTreeList.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">未找到匹配的品类</div>';
+                        return;
+                    }
+                    
+                    categoryTreeList.innerHTML = "";
+                    results.forEach(c => {
+                        const div = document.createElement("div");
+                        div.style.padding = "8px 16px";
+                        div.style.cursor = "pointer";
+                        div.style.borderRadius = "4px";
+                        div.style.fontSize = "13px";
+                        
+                        div.innerHTML = `<span style="color:#666;">📄</span> <strong>${c.name}</strong> <span style="color:#999;font-size:11px;margin-left:8px;">${c.path}</span>`;
+                        
+                        div.addEventListener("mouseenter", () => {
+                            if (!div.classList.contains("selected")) {
+                                div.style.background = "#f0f7ff";
+                            }
+                        });
+                        div.addEventListener("mouseleave", () => {
+                            if (!div.classList.contains("selected")) {
+                                div.style.background = "";
+                            }
+                        });
+                        div.addEventListener("click", () => {
+                            document.querySelectorAll("#category-tree-list .selected").forEach(el => {
+                                el.classList.remove("selected");
+                                el.style.background = "";
+                            });
+                            div.classList.add("selected");
+                            div.style.background = "#dbeafe";
+                            btnConfirmCategory.disabled = false;
+                            btnConfirmCategory.dataset.categoryId = c.id;
+                            btnConfirmCategory.dataset.categoryName = c.name;
+                            btnConfirmCategory.dataset.categoryPath = c.path;
+                        });
+                        
+                        categoryTreeList.appendChild(div);
+                    });
+                }, 300);
+            });
+        }
+        
+        // ===== 加载 Ozon 品类属性 =====
+        async function loadCategoryAttributes(categoryId) {
+            if (!categoryId) return;
+            
+            attributesSection.style.display = "block";
+            attributesLoading.style.display = "block";
+            attributesGrid.style.display = "none";
+            
+            try {
+                const res = await fetch(`/api/ozon/${storeId}/category-attributes`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ description_category_id: categoryId })
+                });
+                if (!res.ok) {
+                    attributesLoading.innerHTML = "⚠️ 加载品类属性失败，请检查 Ozon API 凭证配置";
+                    return;
+                }
+                const data = await res.json();
+                if (!data.success) {
+                    attributesLoading.innerHTML = "⚠️ " + (data.error || "加载失败");
+                    return;
+                }
+                
+                // 如果 API 返回 warning（如根节点无属性），显示提示
+                if (data.warning) {
+                    attributesLoading.innerHTML = `<div style="text-align:center;padding:20px;color:#92400e;background:#fef3c7;border:1px solid #fbbf24;border-radius:4px;font-size:13px;">⚠️ ${data.warning}</div>`;
+                    attributesGrid.style.display = "none";
+                    ozonAttributes = [];
+                    return;
+                }
+                
+                ozonAttributes = data.attributes || [];
+                renderAttributes();
+                
+                // 恢复已保存的属性值
+                if (listingDraft.attributes && listingDraft.attributes.length > 0) {
+                    listingDraft.attributes.forEach(attr => {
+                        const input = document.querySelector(`[data-attr-id="${attr.attribute_id}"]`);
+                        if (input) {
+                            input.value = attr.value || "";
+                        }
+                    });
+                }
+            } catch (e) {
+                attributesLoading.innerHTML = "⚠️ 加载品类属性出错: " + e.message;
+            }
+        }
+
+        
+        // ===== 加载产品数据 =====
+        async function loadProductData() {
+            try {
+                const res = await fetch("/api/products");
+                if (!res.ok) return;
+                const data = await res.json();
+                const products = data.products || [];
+                const p = products.find(p => p.skc === skc);
+                if (p) {
+                    productData = p;
+                    // 自动填充 Offer ID
+                    if (p.skus && p.skus.length > 0) {
+                        if (!listingDraft.basic_fields.offer_id) {
+                            fieldOfferId.value = p.skus[0];
+                        }
+                    }
+                    // 自动填充产品名称
+                    if (p.title && !listingDraft.basic_fields.name) {
+                        fieldName.value = p.title;
+                    }
+                }
+            } catch (e) {
+                console.error("加载产品数据失败:", e);
+            }
+        }
+        
+        // ===== 加载草稿 =====
+        async function loadDraft() {
+            try {
+                const res = await fetch(`/api/listings/${skc}/${storeId}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data.exists && data.listing) {
+                    listingDraft = data.listing;
+                    restoreDraft();
+                    showMsg("✅ 已恢复上次编辑的草稿");
+                }
+            } catch (e) {
+                console.error("加载草稿失败:", e);
+            }
+        }
+        
+        function restoreDraft() {
+            const bf = listingDraft.basic_fields || {};
+            if (bf.name) fieldName.value = bf.name;
+            if (bf.description) fieldDescription.value = bf.description;
+            if (bf.price) fieldPrice.value = bf.price;
+            if (bf.offer_id) fieldOfferId.value = bf.offer_id;
+            if (bf.barcode) fieldBarcode.value = bf.barcode;
+            
+            // 恢复图片
+            if (listingDraft.images && listingDraft.images.length > 0) {
+                renderCarouselImages(listingDraft.images);
+            }
+        }
+        
+        function renderAttributes() {
+
+            attributesLoading.style.display = "none";
+            attributesGrid.style.display = "grid";
+            attributesGrid.innerHTML = "";
+            
+            ozonAttributes.forEach(attr => {
+                const div = document.createElement("div");
+                div.className = "attr-item";
+                
+                const label = document.createElement("label");
+                label.className = attr.is_required ? "required" : "";
+                label.textContent = attr.name;
+                if (attr.description) {
+                    label.title = attr.description;
+                }
+                
+                let input;
+                if (attr.type === "dictionary" && attr.dictionary_values && attr.dictionary_values.length > 0) {
+                    input = document.createElement("select");
+                    input.dataset.attrId = attr.id;
+                    input.dataset.attrType = "dictionary";
+                    
+                    const emptyOpt = document.createElement("option");
+                    emptyOpt.value = "";
+                    emptyOpt.textContent = "-- 请选择 --";
+                    input.appendChild(emptyOpt);
+                    
+                    attr.dictionary_values.forEach(v => {
+                        const opt = document.createElement("option");
+                        opt.value = v.id || v.value || "";
+                        opt.textContent = v.value || v.info || "";
+                        input.appendChild(opt);
+                    });
+                } else {
+                    input = document.createElement("input");
+                    input.type = "text";
+                    input.dataset.attrId = attr.id;
+                    input.dataset.attrType = "text";
+                    input.placeholder = attr.description || "";
+                }
+                
+                div.appendChild(label);
+                div.appendChild(input);
+                attributesGrid.appendChild(div);
+            });
+        }
+        
+        // ===== 加载产品图片 =====
+        async function loadProductImages() {
+            try {
+                const res = await fetch(`/api/products/${skc}/images`);
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data.success && data.images && data.images.length > 0) {
+                    // 如果草稿中已有图片，不覆盖
+                    if (!listingDraft.images || listingDraft.images.length === 0) {
+                        const images = data.images.map((img, i) => ({
+                            source: img.source,
+                            url: img.url,
+                            local_path: img.local_path || "",
+                            order: i
+                        }));
+                        listingDraft.images = images;
+                        renderCarouselImages(images);
+                    }
+                }
+            } catch (e) {
+                console.error("加载产品图片失败:", e);
+            }
+        }
+        
+        // ===== 轮播图渲染 =====
+        function renderCarouselImages(images) {
+            // 移除所有 .carousel-item 和 .carousel-add，保留 carousel-add-btn
+            document.querySelectorAll(".carousel-item").forEach(el => el.remove());
+            
+            images.forEach((img, i) => {
+                const item = document.createElement("div");
+                item.className = "carousel-item" + (i === 0 ? " active" : "");
+                item.innerHTML = `
+                    <img src="${img.url}" alt="图片 ${i+1}" onerror="this.parentElement.innerHTML='<div style=\\'padding:40px 10px;text-align:center;color:#999;font-size:11px\\'>加载失败</div>'">
+                    <span class="order-badge">${i+1}</span>
+                    <button class="remove-btn" data-index="${i}">✕</button>
+                `;
+                item.querySelector(".remove-btn").addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    listingDraft.images.splice(i, 1);
+                    renderCarouselImages(listingDraft.images);
+                    markDirty();
+                });
+                carouselArea.insertBefore(item, carouselAddBtn);
+            });
+        }
+        
+        // 添加图片按钮
+        carouselAddBtn.addEventListener("click", () => {
+            imageUploadInput.click();
+        });
+        
+        imageUploadInput.addEventListener("change", (e) => {
+            const files = Array.from(e.target.files);
+            files.forEach((file, i) => {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const dataUrl = ev.target.result;
+                    listingDraft.images.push({
+                        source: "upload",
+                        url: dataUrl,
+                        local_path: "",
+                        order: listingDraft.images.length
+                    });
+                    renderCarouselImages(listingDraft.images);
+                    markDirty();
+                };
+                reader.readAsDataURL(file);
+            });
+            e.target.value = "";
+        });
+        
+        // ===== 自动保存 =====
+        function bindAutoSave() {
+            const fields = [fieldName, fieldDescription, fieldPrice, fieldOfferId, fieldBarcode];
+            fields.forEach(f => {
+                f.addEventListener("input", () => markDirty());
+                f.addEventListener("change", () => markDirty());
+            });
+        }
+        
+        function markDirty() {
+            isDirty = true;
+            if (autoSaveTimer) clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(() => saveDraft(), 1000);
+        }
+        
+        async function saveDraft() {
+            if (!isDirty) return;
+            setSaveIndicator("saving");
+            
+            // 收集基本信息
+            listingDraft.basic_fields = {
+                name: fieldName.value,
+                description: fieldDescription.value,
+                price: fieldPrice.value,
+                offer_id: fieldOfferId.value,
+                barcode: fieldBarcode.value
+            };
+            
+            // 收集属性值
+            listingDraft.attributes = [];
+            document.querySelectorAll("#attributes-grid input, #attributes-grid select").forEach(el => {
+                const attrId = parseInt(el.dataset.attrId);
+                const value = el.value.trim();
+                if (value) {
+                    listingDraft.attributes.push({
+                        attribute_id: attrId,
+                        value: value
+                    });
+                }
+            });
+            
+            try {
+                const res = await fetch(`/api/listings/${skc}/${storeId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(listingDraft)
+                });
+                if (!res.ok) throw new Error("保存失败");
+                isDirty = false;
+                setSaveIndicator("saved");
+            } catch (e) {
+                setSaveIndicator("saved");
+                console.error("自动保存失败:", e);
+            }
+        }
+        
+        // 页面关闭前保存
+        window.addEventListener("beforeunload", () => {
+            if (isDirty) {
+                saveDraft();
+            }
+        });
+        
+        // ===== 手动保存草稿 =====
+        btnSaveDraft.addEventListener("click", async () => {
+            isDirty = true;
+            await saveDraft();
+            showMsg("✅ 草稿已保存");
+        });
+        
+        // ===== LLM 自动填充 =====
+        btnAutoFill.addEventListener("click", async () => {
+            if (!productData) {
+                showMsg("❌ 产品数据未加载", true);
+                return;
+            }
+            
+            btnAutoFill.disabled = true;
+            btnAutoFill.innerHTML = '<span class="spinner"></span> LLM 识别中...';
+            
+            try {
+                const res = await fetch("/api/auto-fill/ozon-fields", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        skc: skc,
+                        product_title: productData.title || "",
+                        product_data: productData.product_data || {},
+                        manual_data: productData.manual_data || {},
+                        ozon_attributes: ozonAttributes
+                    })
+                });
+                
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || "LLM 识别失败");
+                }
+                
+                const data = await res.json();
+                const mappings = data.mappings || [];
+                
+                // 填充属性
+                mappings.forEach(m => {
+                    const input = document.querySelector(`[data-attr-id="${m.attribute_id}"]`);
+                    if (input && m.value) {
+                        input.value = m.value;
+                    }
+                });
+                
+                showMsg(`✅ LLM 识别完成，已填充 ${data.filled_attributes} 个属性`);
+                markDirty();
+            } catch (e) {
+                showMsg("❌ " + e.message, true);
+            } finally {
+                btnAutoFill.disabled = false;
+                btnAutoFill.innerHTML = "🤖 LLM 大模型识别并填充";
+            }
+        });
+        
+        // ===== 提交到 Ozon =====
+        btnSubmit.addEventListener("click", async () => {
+            if (!fieldName.value.trim()) {
+                showMsg("❌ 产品名称不能为空", true);
+                return;
+            }
+            if (!fieldPrice.value.trim()) {
+                showMsg("❌ 价格不能为空", true);
+                return;
+            }
+            if (!fieldOfferId.value.trim()) {
+                showMsg("❌ Offer ID 不能为空", true);
+                return;
+            }
+            
+            if (!confirm("确定要提交此产品到 Ozon 吗？")) return;
+            
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '<span class="spinner"></span> 提交中...';
+            
+            // 先保存草稿
+            isDirty = true;
+            await saveDraft();
+            
+            try {
+                // 构建 Ozon 产品数据
+                const ozonPayload = {
+                    skc: skc,
+                    store_id: storeId,
+                    name: fieldName.value,
+                    description: fieldDescription.value,
+                    price: fieldPrice.value,
+                    offer_id: fieldOfferId.value,
+                    barcode: fieldBarcode.value,
+                    attributes: listingDraft.attributes,
+                    images: listingDraft.images
+                };
+                
+                // TODO: 调用 Ozon API 提交产品
+                // const res = await fetch(`/api/ozon/${storeId}/product/create`, {
+                //     method: "POST",
+                //     headers: { "Content-Type": "application/json" },
+                //     body: JSON.stringify(ozonPayload)
+                // });
+                
+                // 模拟提交成功
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // 更新状态为「已上架」
+                await fetch(`/api/products/${skc}/store_status`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ store_id: storeId, status: "已上架" })
+                });
+                
+                // 删除草稿
+                await fetch(`/api/listings/${skc}/${storeId}`, { method: "DELETE" });
+                
+                showMsg(`✅ 产品 ${skc} 已成功提交到 ${storeId}！`);
+                setTimeout(() => window.close(), 2000);
+            } catch (e) {
+                showMsg("❌ 提交失败: " + e.message, true);
+            } finally {
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = "📤 提交到 Ozon";
+            }
+        });
+        
+        // ===== 取消上架 =====
+        btnCancel.addEventListener("click", async () => {
+            if (!confirm("确定要取消上架吗？已编辑的草稿将被删除。")) return;
+            
+            try {
+                // 删除草稿
+                await fetch(`/api/listings/${skc}/${storeId}`, { method: "DELETE" });
+                
+                // 恢复状态为「未上架」
+                await fetch(`/api/products/${skc}/store_status`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ store_id: storeId, status: "未上架" })
+                });
+                
+                showMsg("已取消上架");
+                setTimeout(() => window.close(), 1000);
+            } catch (e) {
+                showMsg("❌ 取消失败: " + e.message, true);
+            }
+        });
+        
+        // ===== 启动 =====
+        init();
+    </script>
+</body>
+</html>

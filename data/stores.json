@@ -1,0 +1,26 @@
+[
+  {
+    "id": "ozon_anling",
+    "name": "anling",
+    "platform": "ozon",
+    "label": "Ozon - anling",
+    "client_id": "2295764",
+    "api_key": "2fe2bad2-86ee-4c71-ae6b-2744c2e0520b"
+  },
+  {
+    "id": "ozon_anmei",
+    "name": "anmei",
+    "platform": "ozon",
+    "label": "Ozon - anmei",
+    "client_id": "",
+    "api_key": ""
+  },
+  {
+    "id": "ozon_anman",
+    "name": "anman",
+    "platform": "ozon",
+    "label": "Ozon - anman",
+    "client_id": "",
+    "api_key": ""
+  }
+]

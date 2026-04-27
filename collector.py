@@ -9,12 +9,15 @@ import os
 import json
 import re
 import asyncio
+import logging
 import aiohttp
 import aiofiles
 from datetime import datetime
 from urllib.parse import urlparse
 from PIL import Image
 import io
+
+logger = logging.getLogger(__name__)
 
 # ---------- 配置 ----------
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
@@ -53,6 +56,7 @@ def _get_collect_dir(task_id: str) -> str:
 
 import requests as sync_requests
 
+
 def _fetch_html_requests(url: str) -> str:
     """使用 requests 获取页面 HTML（快速模式）"""
     headers = {
@@ -88,18 +92,18 @@ async def _fetch_html_playwright(url: str) -> str:
                 locale="zh-CN",
             )
             page = await context.new_page()
-            
+
             # 设置超时
             page.set_default_timeout(25000)
-            
+
             try:
                 await page.goto(url, wait_until="domcontentloaded", timeout=30000)
                 # 等待页面加载完成（简短等待）
                 await page.wait_for_timeout(5000)  # 等待5秒让JS执行
             except Exception as e:
-                print(f"Playwright 页面加载超时，继续处理已有内容: {e}")
+                logger.warning("Playwright 页面加载超时，继续处理已有内容: %s", e)
                 await page.wait_for_timeout(3000)
-            
+
             html = await page.content()
             await browser.close()
             return html
@@ -112,15 +116,15 @@ async def _fetch_html(url: str) -> str:
     platform = _extract_platform(url)
     # 需要 JS 渲染的平台
     js_platforms = ['amazon', 'ozon', 'wildberries']
-    
+
     if platform in js_platforms:
-        print(f"使用 Playwright 抓取 (平台: {platform})")
+        logger.info("使用 Playwright 抓取 (平台: %s)", platform)
         return await _fetch_html_playwright(url)
-    
+
     try:
         return _fetch_html_requests(url)
     except Exception as e:
-        print(f"Requests 抓取失败，尝试 Playwright: {e}")
+        logger.warning("Requests 抓取失败，尝试 Playwright: %s", e)
         return await _fetch_html_playwright(url)
 
 
@@ -129,7 +133,7 @@ def _extract_from_html(html: str, url: str) -> dict:
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(html, 'lxml')
     platform = _extract_platform(url)
-    
+
     extracted = {
         "url": url,
         "platform": platform,
@@ -138,13 +142,13 @@ def _extract_from_html(html: str, url: str) -> dict:
         "currency": "",
         "attributes": {},
         "description": "",
-        "about_item": "",           # 关于该商品（Amazon feature bullet points）
-        "product_description": "",  # 商品描述（Amazon 产品详情）
+        "about_item": "",
+        "product_description": "",
         "image_urls": [],
         "reviews": [],
         "raw_text_length": len(html),
     }
-    
+
     # 提取标题
     for tag in ['h1', 'h2', 'title']:
         el = soup.find(tag)
@@ -153,7 +157,7 @@ def _extract_from_html(html: str, url: str) -> dict:
             if len(text) < 500:
                 extracted["title"] = text
                 break
-    
+
     # 提取价格
     price_patterns = [
         'span.a-price span.a-offscreen',
@@ -175,16 +179,15 @@ def _extract_from_html(html: str, url: str) -> dict:
                         break
             except:
                 pass
-    
+
     # ===== 图片提取（增强版） =====
     found_images = set()
-    
+
     # 1. 从 JSON-LD 结构化数据中提取
     for script in soup.find_all('script', type='application/ld+json'):
         try:
             data = json.loads(script.string)
             if isinstance(data, dict):
-                # 提取 image 字段
                 img_data = data.get('image', [])
                 if isinstance(img_data, str):
                     found_images.add(img_data)
@@ -194,7 +197,7 @@ def _extract_from_html(html: str, url: str) -> dict:
                             found_images.add(img)
         except:
             pass
-    
+
     # 2. 从 Open Graph 和 Twitter Card 元数据中提取
     for meta in soup.find_all('meta'):
         prop = (meta.get('property') or meta.get('name') or '').lower()
@@ -202,7 +205,7 @@ def _extract_from_html(html: str, url: str) -> dict:
         if content and ('image' in prop or 'photo' in prop):
             if content.startswith('http'):
                 found_images.add(content)
-    
+
     # 3. 从 Amazon 特定选择器提取
     amazon_selectors = [
         'div#imgTagWrapperId img',
@@ -229,7 +232,7 @@ def _extract_from_html(html: str, url: str) -> dict:
                         break
         except:
             pass
-    
+
     # 4. 从所有 img 标签提取（过滤小图标）
     for img in soup.find_all('img'):
         src = img.get('src') or img.get('data-src') or img.get('data-old-hires') or ''
@@ -243,14 +246,14 @@ def _extract_from_html(html: str, url: str) -> dict:
             parsed = urlparse(url)
             src = f"{parsed.scheme}://{parsed.netloc}{src}"
         found_images.add(src)
-    
+
     # 5. 从内联 CSS background-image 中提取
     for tag in soup.find_all(style=True):
         style = tag['style']
         bg_match = re.search(r'background(?:-image)?\s*:\s*url\([\'"]?(https?://[^\'")\s]+)[\'"]?\)', style)
         if bg_match:
             found_images.add(bg_match.group(1))
-    
+
     # 6. 从 data 属性中提取图片 URL
     for tag in soup.find_all(attrs={"data-a-dynamic-image": True}):
         try:
@@ -260,33 +263,28 @@ def _extract_from_html(html: str, url: str) -> dict:
                     found_images.add(url_key)
         except:
             pass
-    
+
     # 过滤：只保留包含图片扩展名或图片路径的URL
     filtered = []
     for src in found_images:
         src_lower = src.lower()
-        # 优先保留包含图片扩展名的
         if any(ext in src_lower for ext in ['.jpg', '.jpeg', '.png', '.webp', '.gif']):
             filtered.append(src)
-        # 其次保留包含图片路径关键词的
         elif any(kw in src_lower for kw in ['images', 'media', 'img', 'photo', 'picture']):
             filtered.append(src)
-    
+
     # 去重并限制数量
     extracted["image_urls"] = list(dict.fromkeys(filtered))[:50]
-    
+
     # ===== Amazon 专属：提取"关于该商品"和"商品描述" =====
     if platform == 'amazon':
-        # 提取 "关于该商品"（feature bullet points）
         bullets_el = soup.select_one('#feature-bullets')
         if bullets_el:
             items = bullets_el.select('li span.a-list-item')
             bullet_texts = [item.get_text(strip=True) for item in items if item.get_text(strip=True)]
             if bullet_texts:
                 extracted["about_item"] = '\n'.join(bullet_texts)
-        
-        # 提取 "商品描述"（产品详情描述）
-        # 尝试多个可能的 Amazon 描述区域
+
         desc_selectors = [
             '#productDescription',
             '#productDescription_feature_div',
@@ -301,10 +299,9 @@ def _extract_from_html(html: str, url: str) -> dict:
             if desc_el:
                 text = desc_el.get_text(strip=True)
                 if text and len(text) > 50:
-                    extracted["product_description"] = text[:5000]  # 限制长度
+                    extracted["product_description"] = text[:5000]
                     break
-        
-        # 如果上面没找到，尝试从 JSON-LD 中提取 description
+
         if not extracted["product_description"]:
             for script in soup.find_all('script', type='application/ld+json'):
                 try:
@@ -316,63 +313,56 @@ def _extract_from_html(html: str, url: str) -> dict:
                             break
                 except:
                     pass
-    
+
     return extracted
 
 
+# ==================== 爬虫主入口 ====================
+
 async def crawl_product(url: str) -> dict:
-    """
-    使用 requests/Playwright + BeautifulSoup 抓取商品页面
-    返回结构化数据
-    """
-    try:
-        html = await _fetch_html(url)
-        extracted = _extract_from_html(html, url)
-        return extracted
-    except Exception as e:
-        raise Exception(f"抓取失败: {str(e)}")
+    """抓取商品页面信息"""
+    html = await _fetch_html(url)
+    return _extract_from_html(html, url)
 
 
 # ==================== 第二层：决策层 (DeepSeek-V4) ====================
 
 async def classify_images_deepseek(image_urls: list, product_name: str, platform: str) -> list:
-    """
-    调用 DeepSeek API 对图片进行分类和重命名
-    返回: [{url, type, new_name}]
-    """
+    """使用 DeepSeek 对图片进行分类和重命名"""
     if not DEEPSEEK_API_KEY:
-        # 如果没有 API Key，使用默认命名规则
+        logger.warning("未配置 DEEPSEEK_API_KEY，使用默认分类")
         return _default_classify(image_urls, product_name, platform)
-    
-    # 限制发送给 AI 的图片数量（太多会导致超时）
-    ai_image_urls = image_urls[:20]
+
     short_name = _sanitize_filename(product_name[:20]) if product_name else "product"
-    
-    prompt = f"""你是一个电商产品图片分类专家。请分析以下产品图片URL列表，对每张图片进行分类并给出推荐文件名。
+    ai_image_urls = [{"url": url} for url in image_urls]
+
+    prompt = f"""你是一个电商产品图片分类专家。请对以下产品图片进行分类，并推荐文件名。
 
 产品名称: {product_name}
 平台: {platform}
 
-图片分类规则:
-- main: 产品主图（首图、展示图）
-- sku: SKU/变体图（不同颜色、角度、尺寸展示）
-- desc: 详情描述图（功能说明、细节展示、场景图）
+分类规则：
+- "main": 主图（产品正面/整体图，通常第一张）
+- "sku": 变体图（不同颜色/尺寸的展示）
+- "desc": 描述图（细节展示、尺寸说明等）
 
-请返回严格的JSON数组格式（不要markdown代码块标记），每个元素包含:
-- "url": 原图URL
-- "type": "main" 或 "sku" 或 "desc"
-- "new_name": 推荐文件名（格式: {platform}_{short_name}_NUM_{type}.jpg，其中NUM为两位数字序号）
+文件名格式: {platform}_{short_name}_NUM_type.jpg
+
+要求：
+- 每张图片返回一个分类结果
+- type 只能为 "main" 或 "sku" 或 "desc"
+- new_name 格式: {platform}_{short_name}_NUM_type.jpg，其中NUM为两位数字序号
 
 图片列表:
 {json.dumps(ai_image_urls, indent=2)}
 
 只返回JSON数组，不要其他文字说明。"""
-    
+
     headers = {
         "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
         "Content-Type": "application/json"
     }
-    
+
     payload = {
         "model": "deepseek-chat",
         "messages": [
@@ -382,31 +372,31 @@ async def classify_images_deepseek(image_urls: list, product_name: str, platform
         "temperature": 0.1,
         "max_tokens": 4096
     }
-    
+
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(DEEPSEEK_API_URL, json=payload, headers=headers, timeout=120) as resp:
                 if resp.status != 200:
                     text = await resp.text()
-                    print(f"DeepSeek API 错误 ({resp.status}): {text}")
+                    logger.error("DeepSeek API 错误 (%s): %s", resp.status, text)
                     return _default_classify(image_urls, product_name, platform)
-                
+
                 data = await resp.json()
                 content = data["choices"][0]["message"]["content"]
-                
+
                 # 清理响应内容，提取JSON
                 content = content.strip()
                 if content.startswith("```"):
                     content = re.sub(r'^```(?:json)?\s*', '', content)
                     content = re.sub(r'\s*```$', '', content)
-                
+
                 result = json.loads(content)
                 if isinstance(result, list):
                     return result
                 return _default_classify(image_urls, product_name, platform)
-                
+
     except Exception as e:
-        print(f"DeepSeek 调用失败: {e}")
+        logger.error("DeepSeek 调用失败: %s", e)
         return _default_classify(image_urls, product_name, platform)
 
 
@@ -414,7 +404,7 @@ def _default_classify(image_urls: list, product_name: str, platform: str) -> lis
     """默认分类逻辑（无AI时的降级方案）"""
     short_name = _sanitize_filename(product_name[:20]) if product_name else "product"
     result = []
-    
+
     for i, url in enumerate(image_urls):
         if i == 0:
             img_type = "main"
@@ -422,14 +412,14 @@ def _default_classify(image_urls: list, product_name: str, platform: str) -> lis
             img_type = "sku"
         else:
             img_type = "desc"
-        
+
         new_name = f"{platform}_{short_name}_{i+1:02d}_{img_type}.jpg"
         result.append({
             "url": url,
             "type": img_type,
             "new_name": new_name
         })
-    
+
     return result
 
 
@@ -440,21 +430,20 @@ async def download_image(semaphore: asyncio.Semaphore, session: aiohttp.ClientSe
     """下载单张图片并转换为JPG"""
     async with semaphore:
         try:
-            print(f"  [{index}/{total}] 下载中: {url[:60]}...")
+            logger.info("  [%s/%s] 下载中: %s...", index, total, url[:60])
             async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as resp:
                 if resp.status != 200:
                     return {"url": url, "success": False, "error": f"HTTP {resp.status}"}
-                
+
                 content_type = resp.headers.get("Content-Type", "")
                 if "image" not in content_type:
                     return {"url": url, "success": False, "error": f"非图片类型: {content_type}"}
-                
+
                 raw_data = await resp.read()
-                
+
                 # 使用 Pillow 转换为 JPG
                 try:
                     img = Image.open(io.BytesIO(raw_data))
-                    # 转换 RGBA/P 到 RGB
                     if img.mode in ('RGBA', 'LA', 'P'):
                         background = Image.new('RGB', img.size, (255, 255, 255))
                         if img.mode == 'P':
@@ -463,24 +452,23 @@ async def download_image(semaphore: asyncio.Semaphore, session: aiohttp.ClientSe
                         img = background
                     elif img.mode != 'RGB':
                         img = img.convert('RGB')
-                    
-                    # 保存为 JPG
+
                     os.makedirs(os.path.dirname(save_path), exist_ok=True)
                     img.save(save_path, 'JPEG', quality=85)
-                    
+
                     file_size = os.path.getsize(save_path)
-                    print(f"  [{index}/{total}] OK 已保存: {os.path.basename(save_path)} ({file_size/1024:.1f}KB)")
-                    
+                    logger.info("  [%s/%s] OK 已保存: %s (%.1fKB)", index, total, os.path.basename(save_path), file_size / 1024)
+
                     return {
                         "url": url,
                         "success": True,
                         "local": os.path.relpath(save_path, DATA_ROOT),
                         "size": file_size
                     }
-                    
+
                 except Exception as e:
                     return {"url": url, "success": False, "error": f"图片转换失败: {str(e)}"}
-                    
+
         except Exception as e:
             return {"url": url, "success": False, "error": str(e)}
 
@@ -491,14 +479,14 @@ async def download_images(classified_images: list, save_dir: str) -> list:
     返回: [{url, local, type, success, error}]
     """
     os.makedirs(save_dir, exist_ok=True)
-    
+
     semaphore = asyncio.Semaphore(CONCURRENT_DOWNLOADS)
     connector = aiohttp.TCPConnector(limit=CONCURRENT_DOWNLOADS + 5)
-    
+
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     }
-    
+
     results = []
     async with aiohttp.ClientSession(connector=connector, headers=headers) as session:
         tasks = []
@@ -506,9 +494,9 @@ async def download_images(classified_images: list, save_dir: str) -> list:
             save_path = os.path.join(save_dir, item["new_name"])
             task = download_image(semaphore, session, item["url"], save_path, i + 1, len(classified_images))
             tasks.append(task)
-        
+
         download_results = await asyncio.gather(*tasks)
-        
+
         for i, item in enumerate(classified_images):
             dr = download_results[i]
             results.append({
@@ -519,7 +507,7 @@ async def download_images(classified_images: list, save_dir: str) -> list:
                 "success": dr.get("success", False),
                 "error": dr.get("error", "")
             })
-    
+
     return results
 
 
@@ -536,19 +524,19 @@ async def run_collect_pipeline(url: str, task_id: str, status_callback=None) -> 
     def update_status(status, progress=0, message=""):
         if status_callback:
             status_callback(task_id, status, progress, message)
-    
+
     try:
         # 阶段1: 抓取
         update_status("crawling", 10, "正在抓取商品页面...")
-        print(f"[{task_id}] 开始抓取: {url}")
+        logger.info("[%s] 开始抓取: %s", task_id, url)
         product_data = await crawl_product(url)
-        print(f"[{task_id}] 抓取完成: 标题={product_data['title'][:30]}, 图片数={len(product_data['image_urls'])}")
-        
+        logger.info("[%s] 抓取完成: 标题=%s, 图片数=%s", task_id, product_data['title'][:30], len(product_data['image_urls']))
+
         if not product_data["image_urls"]:
             raise Exception("未找到任何产品图片")
-        
+
         update_status("classifying", 40, f"已抓取 {len(product_data['image_urls'])} 张图片，正在AI分类...")
-        
+
         # 阶段2: DeepSeek 分类
         product_name = product_data["title"] or "product"
         classified = await classify_images_deepseek(
@@ -556,37 +544,35 @@ async def run_collect_pipeline(url: str, task_id: str, status_callback=None) -> 
             product_name,
             product_data["platform"]
         )
-        print(f"[{task_id}] 分类完成: {len(classified)} 张图片已分类")
-        
+        logger.info("[%s] 分类完成: %s 张图片已分类", task_id, len(classified))
+
         update_status("downloading", 60, f"正在下载并转换图片 (共{len(classified)}张)...")
-        
+
         # 阶段3: 下载
         collect_dir = _get_collect_dir(task_id)
         images_dir = os.path.join(collect_dir, "images")
-        
+
         download_results = await download_images(classified, images_dir)
-        
+
         success_count = sum(1 for r in download_results if r["success"])
         fail_count = sum(1 for r in download_results if not r["success"])
-        
+
         update_status("saving", 90, f"下载完成 ({success_count}成功/{fail_count}失败)，正在保存数据...")
-        
+
         # 阶段4: 保存数据
         os.makedirs(collect_dir, exist_ok=True)
-        
-        # 保存 product_data.json
+
         product_data_path = os.path.join(collect_dir, "product_data.json")
         product_data["collected_at"] = datetime.now().isoformat()
         with open(product_data_path, "w", encoding="utf-8") as f:
             json.dump(product_data, f, ensure_ascii=False, indent=2)
-        
-        # 保存 images_mapping.json
+
         mapping_path = os.path.join(collect_dir, "images_mapping.json")
         with open(mapping_path, "w", encoding="utf-8") as f:
             json.dump(download_results, f, ensure_ascii=False, indent=2)
-        
+
         update_status("completed", 100, f"采集完成！{success_count}张图片已下载")
-        
+
         return {
             "task_id": task_id,
             "status": "completed",
@@ -602,12 +588,12 @@ async def run_collect_pipeline(url: str, task_id: str, status_callback=None) -> 
             "images_mapping": mapping_path,
             "images_dir": images_dir
         }
-        
+
     except Exception as e:
         error_msg = str(e)
-        print(f"[{task_id}] 采集失败: {error_msg}")
+        logger.error("[%s] 采集失败: %s", task_id, error_msg)
         update_status("error", 0, f"采集失败: {error_msg}")
-        
+
         return {
             "task_id": task_id,
             "status": "error",

@@ -907,6 +907,31 @@
             background: #fef9c3;
             color: #ca8a04;
         }
+        .matrix-cell .store-status.status-待发布 {
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+        .matrix-cell .listing-btn {
+            padding: 4px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            background: #3498db;
+            color: white;
+            transition: background 0.2s;
+            white-space: nowrap;
+            margin-top: 2px;
+        }
+        .matrix-cell .listing-btn:hover {
+            background: #2980b9;
+        }
+        .matrix-cell .listing-btn.pending {
+            background: #8b5cf6;
+        }
+        .matrix-cell .listing-btn.pending:hover {
+            background: #7c3aed;
+        }
         .product-empty {
             display: flex;
             align-items: center;
@@ -1979,10 +2004,14 @@
                 let matrixCells = "";
                 stores.forEach(s => {
                     const status = storeStatus[s.id] || "未上架";
+                    const isPending = status === "待发布";
                     matrixCells += `
-                        <div class="matrix-cell" data-skc="${p.skc}" data-store-id="${s.id}">
+                        <div class="matrix-cell" data-skc="${p.skc}" data-store-id="${s.id}" data-status="${status}">
                             <span class="store-name">${s.name}</span>
                             <span class="store-status status-${status}">${status}</span>
+                            <button class="listing-btn ${isPending ? 'pending' : ''}" data-action="listing">
+                                ${isPending ? '📋 继续上架' : '📤 上架'}
+                            </button>
                         </div>
                     `;
                 });
@@ -2025,6 +2054,10 @@
                         <div class="product-info-row manual">
                             <span class="row-label">规格</span>
                             <input type="text" class="manual-input" data-field="spec" value="${manual.spec || ''}" placeholder="如 大号/黑色">
+                        </div>
+                        <div class="product-info-row manual">
+                            <span class="row-label">成本价</span>
+                            <input type="text" class="manual-input" data-field="cost_price" value="${manual.cost_price || ''}" placeholder="元">
                         </div>
                         <div class="product-info-row manual">
                             <button class="save-manual-btn" data-skc="${p.skc}">💾 保存人工数据</button>
@@ -2239,12 +2272,58 @@
 
             // ===== 绑定店铺矩阵点击事件 =====
             document.querySelectorAll(".matrix-cell").forEach(cell => {
-                cell.addEventListener("click", async function() {
+                // 「上架」/「继续上架」按钮点击
+                const listingBtn = cell.querySelector(".listing-btn");
+                if (listingBtn) {
+                    listingBtn.addEventListener("click", async function(e) {
+                        e.stopPropagation();
+                        const skc = cell.dataset.skc;
+                        const storeId = cell.dataset.storeId;
+                        const statusEl = cell.querySelector(".store-status");
+                        
+                        // 设置状态为「待发布」
+                        try {
+                            const res = await fetch(`/api/products/${skc}/store_status`, {
+                                method: "PUT",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ store_id: storeId, status: "待发布" })
+                            });
+                            if (!res.ok) throw new Error("更新失败");
+                            
+                            statusEl.textContent = "待发布";
+                            statusEl.className = "store-status status-待发布";
+                            listingBtn.textContent = "📋 继续上架";
+                            listingBtn.classList.remove("pending");
+                            listingBtn.classList.add("pending");
+                            cell.dataset.status = "待发布";
+                        } catch (e) {
+                            showMsg("❌ 更新失败: " + e.message, true);
+                            return;
+                        }
+                        
+                        // 打开 Ozon 上架页面
+                        const url = `/ozon-listing?skc=${skc}&store_id=${storeId}`;
+                        window.open(url, "_blank");
+                    });
+                }
+                
+                // 点击矩阵单元格（非按钮区域）
+                cell.addEventListener("click", async function(e) {
+                    if (e.target.closest(".listing-btn")) return; // 按钮事件已处理
+                    
                     const skc = this.dataset.skc;
                     const storeId = this.dataset.storeId;
                     const statusEl = this.querySelector(".store-status");
                     const currentStatus = statusEl.textContent;
                     
+                    if (currentStatus === "待发布") {
+                        // 如果是待发布状态，直接跳转到上架页面继续编辑
+                        const url = `/ozon-listing?skc=${skc}&store_id=${storeId}`;
+                        window.open(url, "_blank");
+                        return;
+                    }
+                    
+                    // 其他状态循环切换
                     const statuses = ["未上架", "已上架", "下架回归中"];
                     const idx = statuses.indexOf(currentStatus);
                     const nextStatus = statuses[(idx + 1) % statuses.length];
