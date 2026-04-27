@@ -8,8 +8,10 @@ import uuid
 import subprocess
 import sys
 import io
+import random
 import logging
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from PIL import Image
 
 from flask import Flask, request, jsonify, render_template, send_from_directory
@@ -1237,12 +1239,15 @@ SKC: {skc}
         if not response_text:
             return jsonify({"error": "模型未返回文本"}), 500
 
-        # 解析 JSON
-        json_match = re.search(r'\{[^{}]*\}', response_text, re.DOTALL)
-        if json_match:
-            parsed = json.loads(json_match.group())
+        # 解析 JSON（清理 markdown 包裹后直接 json.loads）
+        cleaned = response_text.strip()
+        if cleaned.startswith("```"):
+            cleaned = re.sub(r'^```(?:json)?\s*\n?', '', cleaned)
+            cleaned = re.sub(r'\n?```$', '', cleaned)
+        try:
+            parsed = json.loads(cleaned)
             mappings = parsed.get("mappings", [])
-        else:
+        except json.JSONDecodeError:
             mappings = []
 
         # 验证 mappings 格式
@@ -1558,21 +1563,22 @@ def _batch_translate_categories(translations, untranslated, trans_path, store_id
             if choices:
                 llm_text = choices[0].get("message", {}).get("content", "")
                 logger.info("[%s] DeepSeek 返回长度: %s 字符", batch_label, len(llm_text))
-                json_match = re.search(r'\{[^{}]*\}', llm_text, re.DOTALL)
-                if json_match:
-                    try:
-                        parsed = json.loads(json_match.group())
-                        for t in parsed.get("translations", []):
-                            tid = str(t.get("id"))
-                            name_cn = t.get("name_cn", "")
-                            if name_cn:
-                                translations[tid] = name_cn
-                                translated_count += 1
-                        logger.info("[%s] ✅ 成功解析 %s 个翻译结果", batch_label, translated_count)
-                    except Exception as e:
-                        logger.error("[%s] ❌ JSON 解析错误: %s", batch_label, e)
-                else:
-                    logger.warning("[%s] ❌ DeepSeek 返回中未找到 JSON", batch_label)
+                # 解析 JSON（清理 markdown 包裹后直接 json.loads）
+                cleaned = llm_text.strip()
+                if cleaned.startswith("```"):
+                    cleaned = re.sub(r'^```(?:json)?\s*\n?', '', cleaned)
+                    cleaned = re.sub(r'\n?```$', '', cleaned)
+                try:
+                    parsed = json.loads(cleaned)
+                    for t in parsed.get("translations", []):
+                        tid = str(t.get("id"))
+                        name_cn = t.get("name_cn", "")
+                        if name_cn:
+                            translations[tid] = name_cn
+                            translated_count += 1
+                    logger.info("[%s] ✅ 成功解析 %s 个翻译结果", batch_label, translated_count)
+                except json.JSONDecodeError as e:
+                    logger.error("[%s] ❌ JSON 解析错误: %s", batch_label, e)
                     logger.warning("[%s] 返回内容前 200 字: %s", batch_label, llm_text[:200])
         else:
             logger.warning("[%s] ⚠️ DeepSeek API 调用失败: HTTP %s", batch_label, resp.status_code)
@@ -1756,34 +1762,61 @@ def _run_refresh_in_background(store_id):
             _refresh_tasks[store_id]["total_groups"] = total_groups
             _refresh_tasks[store_id]["message"] = f"开始翻译 0/{total_groups} 个大类..."
             
+            # ── 并发翻译（最多 3 线程，每批加入 1-2s 随机抖动缓冲） ──
+            trans_lock = threading.Lock()
             translated_count = 0
-            batch_index = 0
-            for tid in type_ids_sorted:
-                batch = groups[tid]
-                batch_index += 1
-                type_name = group_names[tid]
+            
+            def _translate_one_group(tid, batch, type_name, batch_index):
+                """在线程池中翻译一个分组"""
+                jitter = random.uniform(1.0, 2.0)
+                time.sleep(jitter)
+                
                 batch_label = f"品类刷新 第{batch_index}/{total_groups}批({type_name})"
+                logger.info("[并发] 第 %s/%s 批启动 | %s（共 %s 个品类）| jitter=%.2fs",
+                    batch_index, total_groups, type_name, len(batch), jitter)
                 
-                # 更新进度
-                _refresh_tasks[store_id].update({
-                    "current_group": batch_index,
-                    "message": f"正在翻译 {batch_index}/{total_groups} 个大类（{type_name}，共 {len(batch)} 个品类）..."
-                })
-                
-                logger.info("[品类刷新][后台] --- 第 %s/%s 批：%s（%s 个品类）---", batch_index, total_groups, type_name, len(batch))
+                # 使用本地 dict 收集翻译结果
+                local_trans = {}
                 trans_count, err_count = _batch_translate_categories(
-                    translations, batch, trans_path, store_id,
+                    local_trans, batch, trans_path, store_id,
                     batch_label=batch_label
                 )
-                translated_count += trans_count
                 
-                # 更新进度
-                progress_pct = int(batch_index / total_groups * 100)
-                _refresh_tasks[store_id].update({
-                    "progress": progress_pct,
-                    "translated": translated_count,
-                    "message": f"已翻译 {batch_index}/{total_groups} 个大类（{translated_count}/{need_translate} 个品类）"
-                })
+                # 线程安全地合并到全局 translations
+                with trans_lock:
+                    nonlocal translated_count
+                    translations.update(local_trans)
+                    translated_count += trans_count
+                    _save_translations(trans_path, translations)
+                
+                return trans_count, err_count
+            
+            with ThreadPoolExecutor(max_workers=3) as executor:
+                futures = {}
+                for batch_index, tid in enumerate(type_ids_sorted, 1):
+                    batch = groups[tid]
+                    type_name = group_names[tid]
+                    f = executor.submit(_translate_one_group, tid, batch, type_name, batch_index)
+                    futures[f] = batch_index
+                
+                # 逐批收集结果，更新前端进度
+                for f in as_completed(futures):
+                    idx = futures[f]
+                    try:
+                        cnt, _ = f.result()
+                        progress_pct = int(idx / total_groups * 100)
+                        _refresh_tasks[store_id].update({
+                            "current_group": idx,
+                            "progress": progress_pct,
+                            "translated": translated_count,
+                            "message": f"已翻译 {idx}/{total_groups} 个大类（{translated_count}/{need_translate} 个品类）"
+                        })
+                        logger.info("[并发] 批次 %s/%s 完成 | 本批翻译 %s 个", idx, total_groups, cnt)
+                    except Exception as e:
+                        logger.error("[并发] 批次 %s/%s 异常: %s", idx, total_groups, e)
+                        _refresh_tasks[store_id].update({
+                            "message": f"批次 {idx}/{total_groups} 翻译异常: {e}"
+                        })
         else:
             _refresh_tasks[store_id]["message"] = "所有品类已有翻译缓存，无需翻译"
         
@@ -2014,44 +2047,45 @@ def ozon_match_category(store_id):
             
             if llm_text:
                 logger.debug("[品类匹配] DeepSeek原始响应: %s", llm_text[:500])
-                json_match = re.search(r'\{[^{}]*\}', llm_text, re.DOTALL)
-                if json_match:
-                    try:
-                        parsed = json.loads(json_match.group())
-                        category_id = parsed.get("category_id")
-                        reason = parsed.get("reason", "")
-                        logger.debug("[品类匹配] 解析结果: category_id=%s, reason=%s", category_id, reason)
+                # 解析 JSON（清理 markdown 包裹后直接 json.loads）
+                cleaned = llm_text.strip()
+                if cleaned.startswith("```"):
+                    cleaned = re.sub(r'^```(?:json)?\s*\n?', '', cleaned)
+                    cleaned = re.sub(r'\n?```$', '', cleaned)
+                try:
+                    parsed = json.loads(cleaned)
+                    category_id = parsed.get("category_id")
+                    reason = parsed.get("reason", "")
+                    logger.debug("[品类匹配] 解析结果: category_id=%s, reason=%s", category_id, reason)
+                    
+                    if category_id is not None:
+                        # 从树中查找对应的品类信息
+                        def find_in_tree(nodes, target_id):
+                            for node in nodes:
+                                node_id = _node_id(node)
+                                if str(node_id) == str(target_id):
+                                    return node
+                                children = node.get("children", [])
+                                if children:
+                                    found = find_in_tree(children, target_id)
+                                    if found:
+                                        return found
+                            return None
                         
-                        if category_id is not None:
-                            # 从树中查找对应的品类信息
-                            def find_in_tree(nodes, target_id):
-                                for node in nodes:
-                                    node_id = _node_id(node)
-                                    if str(node_id) == str(target_id):
-                                        return node
-                                    children = node.get("children", [])
-                                    if children:
-                                        found = find_in_tree(children, target_id)
-                                        if found:
-                                            return found
-                                return None
-                            
-                            found_node = find_in_tree(tree, category_id)
-                            if found_node:
-                                # 构建路径
-                                best_match = {
-                                    "id": _node_id(found_node),
-                                    "name": _node_name(found_node),
-                                    "path": "",  # 前端可以自己构建路径
-                                    "reason": reason
-                                }
-                                logger.debug("[品类匹配] 找到匹配: %s", _node_name(found_node))
-                            else:
-                                logger.warning("[品类匹配] 品类ID %s 在树中未找到", category_id)
-                    except Exception as e:
-                        logger.warning("[品类匹配] JSON解析错误: %s", e)
-                else:
-                    logger.warning("[品类匹配] 返回中未找到JSON")
+                        found_node = find_in_tree(tree, category_id)
+                        if found_node:
+                            # 构建路径
+                            best_match = {
+                                "id": _node_id(found_node),
+                                "name": _node_name(found_node),
+                                "path": "",  # 前端可以自己构建路径
+                                "reason": reason
+                            }
+                            logger.debug("[品类匹配] 找到匹配: %s", _node_name(found_node))
+                        else:
+                            logger.warning("[品类匹配] 品类ID %s 在树中未找到", category_id)
+                except json.JSONDecodeError as e:
+                    logger.warning("[品类匹配] JSON解析错误: %s", e)
             else:
                 logger.warning("[品类匹配] DeepSeek返回为空")
         else:

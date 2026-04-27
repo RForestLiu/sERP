@@ -8,3 +8,13 @@ tasks/
 nohup.out
 error_log
 .DS_Store
+data/ozon_cache/
+data/collect_collect_*/
+data/task_*/
+data/collect_tasks.json
+data/products.json
+nul
+一级分类.txt
+一级分类统计.txt
+品类翻译_待翻译内容.txt
+品类翻译_按大类/
