@@ -559,9 +559,6 @@
                 <div class="inline-form-row" style="margin-bottom:14px;">
                     <span class="form-label-inline required">店铺</span>
                     <select id="field-store" style="padding:5px 10px;font-size:13px;border:1px solid #d9d9d9;border-radius:2px;font-family:inherit;min-width:180px;"></select>
-                    <span class="form-label-inline" style="margin-left:12px;">产品URL</span>
-                    <input type="text" id="field-url" placeholder="粘贴商品链接自动抓取" style="flex:1;min-width:220px;padding:5px 10px;font-size:13px;border:1px solid #d9d9d9;border-radius:2px;font-family:inherit;">
-                    <button class="btn" id="btn-fetch-url">🔍 抓取</button>
                 </div>
                 <!-- 品类选择区域 -->
                 <div class="info-box info" id="category-idle">
@@ -879,7 +876,6 @@
     const skuTableBody = document.getElementById("sku-table-body");
 
     const fieldStore = document.getElementById("field-store");
-    const fieldUrl = document.getElementById("field-url");
     const fieldName = document.getElementById("field-name");
     const fieldDescription = document.getElementById("field-description");
     const descPreview = document.getElementById("desc-preview");
