@@ -1,147 +1,112 @@
 # CLAUDE.md
 
-Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
+行为准则，基于 Andrej Karpathy 的四条核心原则整理。合并项目特定需求时按需调整。
 
-**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+权衡说明：这些准则偏向谨慎而非追求速度。对于琐碎任务（如修正笔误、简单的一行改动），可凭经验判断灵活处理。
 
-## 1. Think Before Coding
 
-**Don't assume. Don't hide confusion. Surface tradeoffs.**
+## 0. 文档先行
 
-Before implementing:
-- State your assumptions explicitly. If uncertain, ask.
-- If multiple interpretations exist, present them - don't pick silently.
-- If a simpler approach exists, say so. Push back when warranted.
-- If something is unclear, stop. Name what's confusing. Ask.
+在编写任何代码之前，先写一份简短的方案设计，以 inline 形式呈现给用户（不要单独创建 .md 文件，除非用户明确要求）。方案至少包含以下要点：
 
-## 2. Simplicity First
+- 现象：当前状态描述，或需求填补的空白（附具体文件路径或错误信息）
+- 影响：此问题或新功能带来的影响（量化更好）
+- 方案：一句话概括思路，明确改动边界和备选方案
+- 验收标准：表格形式，例如：
+    | 序号 | 标准 | 验证方式 |
+    |------|------|----------|
+    | 1    | ... | ...      |
+  从用户/业务视角出发
+- 路径图：分步骤执行计划，标注依赖关系和预计改动文件
 
-**Minimum code that solves the problem. Nothing speculative.**
 
-- No features beyond what was asked.
-- No abstractions for single-use code.
-- No "flexibility" or "configurability" that wasn't requested.
-- No error handling for impossible scenarios.
-- If you write 200 lines and it could be 50, rewrite it.
+## 1. 先思考，再编码
 
-Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+- 明确陈述你的假设——如果不确定，先问
+- 存在多种解读时，全部列出来——不要悄悄选一个
+- 如果有更简单的方案，主动提出来——该说不就说不
+- 遇到模糊不清的地方停下来，说明哪里不清楚，请求澄清
 
-## 3. Surgical Changes
 
-**Touch only what you must. Clean up only your own mess.**
+## 2. 极简优先
 
-When editing existing code:
-- Don't "improve" adjacent code, comments, or formatting.
-- Don't refactor things that aren't broken.
-- Match existing style, even if you'd do it differently.
-- If you notice unrelated dead code, mention it - don't delete it.
+- 只实现明确要求的功能
+- 不为单次使用的代码创建抽象层
+- 不要添加没有被要求的“灵活性”或“可配置性”
+- 不为不可能发生的场景写错误处理
+- 如果写了 200 行而实际 50 行就够了，就重写
 
-When your changes create orphans:
-- Remove imports/variables/functions that YOUR changes made unused.
-- Don't remove pre-existing dead code unless asked.
+自测标准：资深工程师会说“过度设计”吗？如果是，就简化。
 
-The test: Every changed line should trace directly to the user's request.
 
-## 4. Goal-Driven Execution
+## 3. 精准修改
 
-**Define success criteria. Loop until verified.**
+改动现有代码时：
+- 不要顺手“改进”相邻的代码、注释或格式
+- 不重构没坏的东西
+- 即使用户习惯和你不同，也要遵循现有风格
+- 发现无关的死代码，只提一句，但不要删
+- 自己改动产生的未用 import/变量/函数，必须一并清理
 
-Transform tasks into verifiable goals:
-- "Add validation" → "Write tests for invalid inputs, then make them pass"
-- "Fix the bug" → "Write a test that reproduces it, then make it pass"
-- "Refactor X" → "Ensure tests pass before and after"
+检验标准：每一行改动都应该能直接追溯到用户的请求。
 
-For multi-step tasks, state a brief plan:
-```
-1. [Step] → verify: [check]
-2. [Step] → verify: [check]
-3. [Step] → verify: [check]
-```
 
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+## 4. 目标驱动
 
----
+把任务转化为可验证的目标并循环执行：
+- “加个校验” → “先写针对非法输入的测试，再让它们通过”
+- “修个 bug” → “先写能复现问题的测试，再让它们通过”
+- “重构成分” → “确保重构前后的测试都通过”
 
-## 5. Task Path Log（任务路径记录）
+为多步骤任务写简版计划（示例）：
 
-**Every task maintains a step-by-step log, like `git commit -m` for each step.** This is a living record that gets updated as the task progresses — not a static diagram.
+    1. 步骤 A → 验证：检查点 X
+    2. 步骤 B → 验证：检查点 Y
+    3. 步骤 C → 验证：检查点 Z
 
-### 记录格式
 
-每个任务在 `docs/` 下写一个路径记录文件（或追加到交接文档中），格式如下：
+## 5. Git 分支自动化
 
-```
-## 任务：<一句话描述>
+- 分支管理：如果项目使用了 Git，自动切换到专用分支 ai/session（不存在则基于当前分支创建）。不要擅自合并到其他分支，除非用户明确要求。
+- 分阶段提交：在 ai/session 分支上，将代码修改按逻辑单元拆分（如：写完一个函数、修复一个小 bug、更新一段配置）。每完成一个独立单元就执行一次 Git 提交。
+- 提交信息格式：尽量清晰，如 feat: add error handling 或 fix: correct typo in config。
+- 通知用户：每次提交后可以顺便提醒“已在 ai/session 分支上提交：……”。用户满意时，会主动要求合并到 main、develop 等其他分支，届时再按指令执行。
 
-### 步骤 1 — 理解确认
-- 现象：<用户看到了什么>
-- 目标：<用户想要什么结果>
-- 结论：<确认后的方向>
 
-### 步骤 2 — 分析
-- 根因：<如果修 bug，根本原因是什么>
-- 影响范围：<会影响哪些功能/数据>
-- 方案：<怎么改，涉及哪些文件>
-- 验收标准：<怎么算做完>
-  | # | 标准 | 验证方式 |
-  |---|------|----------|
-  | 1 | ...  | ...      |
+## 附加说明（以下内容可在需要时按章节选择使用）
 
-### 步骤 3 — 实施
-- 改动清单：
-  - <文件>: <改了什么>
-- 遇到的问题：<中途踩的坑>
-- 方向调整：<如果中途变了方案，记录原因>
+### A. 问题报告格式（用于汇报 Bug 时）
 
-### 步骤 4 — 收尾
-- 已完成：<逐条对照验收标准>
-- 未完成/已知限制：<诚实列出>
-- 后续安排：<下一步做什么，谁来做，什么时候>
-```
+**问题分析**
+- 根因：一句话说明根本原因，指向具体代码位置
+- 关键代码路径：涉及的文件 + 行号，说明每个节点做了什么
+- 为何不能只改 X：解释看似更简单的方案为何不可靠
 
-### 使用规则
+**解决方案**
+- 策略：一句话概括思路
+- 具体改动：每个文件 + 行号 + 改动内容
+- 边界：明确哪些需要改动，哪些不需要
 
-- **每完成一个步骤就更新**，不要等全部做完再补
-- 步骤之间如果方向变了，**更新旧步骤的记录**，不要删掉（保留决策痕迹）
-- 记录放在 `docs/交接文档.md` 的对应章节，或在 `docs/` 下单独建文件
-- 路径记录的目的是：**将来自己或别人能看懂这条路是怎么走过来的、为什么这么走**
-
----
-
-## 6. Pre-Implementation Document (MANDATORY)
-
-**Before writing ANY code for a bug fix or feature, produce a brief analysis document.** Present it to the user for confirmation, then proceed. For trivial tasks (typos, single-line changes), skip this but still state what you're about to do.
-
-The document must have these 4 sections:
-
-### 现象
-- What the user actually sees / reports. User-facing symptoms only — not code-level root cause.
-
-### 会导致什么问题
-- Business/operational impact. What breaks, what data is lost, what workflows are blocked.
-
-### 解决方案
-- **策略**：一句话概括思路
-- **具体改动**：每个文件 + 行号 + 改什么
-- **需要/不需要改动的部分**：明确边界，避免 scope creep
-
-### 验收标准
-- 表格形式：`| # | 标准 | 验证方式 |`
+**验收标准**
+- 表格形式，例如：
+    | 序号 | 标准 | 验证方式 |
+    |------|------|----------|
+    | 1    | ... | ...      |
 - 每条标准必须可验证（观察什么行为、调用什么接口、检查什么返回值）
-- **从业务/用户视角出发**，不以代码实现为验收标准：
-  - ✅ 前端显示完整的品类路径 → ✅ 匹配结果可直接用于上传商品
-  - ❌ 日志出现 `[品类匹配] 第 0 层` → ❌ `py_compile` 通过
+- 从业务/用户视角出发，不以代码实现为验收标准
 - 覆盖：正常路径 + 边界情况 + 回归保护
 
-**反例**：看到现象直接写代码。**正例**：先写 4 段文档，用户确认后再改代码。
+### B. Git 分支与提交规范（详细扩展）
 
----
+- 分支命名：ai/session
+- 新建分支：git checkout -b ai/session
+- 切换分支：git checkout ai/session
+- 单次提交粒度：一个逻辑组件（函数、模块、配置项）
+- 提交信息格式：type: description，type 可选 feat / fix / docs / refactor / chore / test
+- 禁止操作：不自动执行 git push，不自动合并到 main / develop / master 等其他分支
+- 用户授权合并：仅当用户明确要求（如“请把 ai/session 合并到 main”）时执行
 
-## 7. Bug Reporting (Post-Mortem)
+### C. 参考选项
 
-**When reporting a bug that was found after the fact, use the same 4-section format above**, plus:
-
-- **根因**：一句话说明根本原因，指向具体代码位置
-- **关键代码路径**：列出涉及的文件 + 行号，说明每个节点做了什么
-- **为什么不只改 X**：如果存在看似更简单的方案，解释为什么它不可靠
-
+此行为准则的灵感源自 Andrej Karpathy 对 LLM 编码陷阱的观察，完整参考可查阅：
+https://github.com/forrestchang/andrej-karpathy-skills

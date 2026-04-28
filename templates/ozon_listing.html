@@ -17,11 +17,13 @@
         a { color: #428bca; text-decoration: none; }
         a:hover { color: #94c3e3; }
 
-        /* ===== Breadcrumb Bar ===== */
+        /* ===== Breadcrumb Bar (Sticky Top) ===== */
         .breadcrumb-bar {
+            position: sticky; top: 0; z-index: 100;
             background: #fff; border-bottom: 1px solid #e8e8e8;
             padding: 0 24px; height: 48px; display: flex;
             align-items: center; justify-content: space-between;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
         }
         .breadcrumb { font-size: 13px; color: #999; }
         .breadcrumb span { color: #333; }
@@ -126,32 +128,201 @@
         }
         .cat-id-badge { font-size: 11px; color: #999; margin-left: auto; white-space: nowrap; }
 
-        /* ===== Attributes Grid — 店小秘风格：单列布局，中文为主 ===== */
+        /* ===== Attributes Grid — 店小秘风格：单列布局，俄语(中文) 行内双语 ===== */
         .attributes-grid {
             display: flex; flex-direction: column;
-            gap: 12px;
+            gap: 8px;
         }
-        .attr-item { display: flex; flex-direction: column; gap: 3px; }
+        .attr-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 3px 0;
+        }
         .attr-item .attr-label {
-            font-size: 12px; color: #333; line-height: 1.4;
-            display: flex; align-items: baseline; gap: 4px; flex-wrap: wrap;
+            width: 220px; flex-shrink: 0;
+            font-size: 13px; color: #333; line-height: 1.4;
+            display: flex; align-items: baseline; gap: 2px; flex-wrap: wrap;
+            text-align: right;
         }
-        .attr-item .attr-label .attr-label-cn { color: #333; font-weight: 500; }
-        .attr-item .attr-label .attr-label-unit { color: #999; font-weight: 400; font-size: 11px; margin-left: 2px; }
-        .attr-item .attr-label .attr-label-ru {
-            color: #ccc; font-weight: 400; font-size: 11px;
-            transition: color 0.2s;
+        .attr-item .attr-label .attr-label-num {
+            color: #999; font-size: 11px; margin-right: 4px; font-weight: 400;
         }
-        .attr-item .attr-label:hover .attr-label-ru { color: #333; }
-        .attr-item .attr-label.required .attr-label-cn::before { content: '* '; color: #ff4d4f; }
+        .attr-item .attr-label .attr-label-ru { color: #333; font-weight: 400; }
+        .attr-item .attr-label .attr-label-cn { color: #999; font-weight: 400; font-size: 12px; }
+        .attr-item .attr-label.required .attr-label-ru::before { content: '* '; color: #ff4d4f; }
+        .attr-item .input-wrap {
+            flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px;
+        }
         .attr-item input, .attr-item select {
+            flex: 1; min-width: 0;
             padding: 5px 10px; font-size: 13px; border: 1px solid #d9d9d9;
-            border-radius: 4px; outline: none; font-family: inherit;
+            border-radius: 2px; outline: none; font-family: inherit;
             line-height: 1.4;
         }
         .attr-item input:focus, .attr-item select:focus {
             border-color: #428bca; box-shadow: 0 0 0 2px rgba(66,139,202,0.12);
         }
+        .attr-item .unit-suffix {
+            font-size: 12px; color: #999; white-space: nowrap; min-width: 32px;
+        }
+
+        /* ===== 2-Column Attributes Grid (wide screen) ===== */
+        @media (min-width: 1100px) {
+            .attributes-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 6px 24px;
+            }
+        }
+
+        /* ===== Image Upload Grid ===== */
+        .image-upload-section { margin-bottom: 12px; }
+        .image-upload-section-title {
+            font-size: 13px; font-weight: 500; color: #333; margin-bottom: 8px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .image-upload-section-title .hint { font-size: 11px; color: #999; font-weight: normal; }
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 104px);
+            gap: 10px;
+        }
+        .image-grid-item {
+            width: 104px; height: 104px; position: relative;
+            border: 1px solid #e8e8e8; border-radius: 2px;
+            overflow: hidden; cursor: grab;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .image-grid-item:hover { border-color: #428bca; }
+        .image-grid-item.dragging { opacity: 0.5; cursor: grabbing; }
+        .image-grid-item img { width: 100%; height: 100%; object-fit: cover; }
+        .image-grid-item .order-badge {
+            position: absolute; top: 2px; left: 2px;
+            background: rgba(0,0,0,0.55); color: #fff;
+            font-size: 10px; padding: 0 5px; border-radius: 2px;
+        }
+        .image-grid-item .img-actions {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            display: flex; justify-content: center; gap: 4px;
+            padding: 4px; background: rgba(0,0,0,0.45);
+            opacity: 0; transition: opacity 0.15s;
+        }
+        .image-grid-item:hover .img-actions { opacity: 1; }
+        .image-grid-item .img-action-btn {
+            color: #fff; font-size: 11px; cursor: pointer; padding: 2px 8px;
+            border-radius: 2px; border: none; background: rgba(255,255,255,0.2);
+            font-family: inherit;
+        }
+        .image-grid-item .img-action-btn:hover { background: rgba(255,255,255,0.4); }
+        .image-grid-item .img-action-btn.danger:hover { background: #ff4d4f; }
+        .image-upload-box {
+            width: 104px; height: 104px;
+            border: 1px dashed #d9d9d9; border-radius: 2px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: #999; font-size: 12px; cursor: pointer;
+            transition: all 0.2s; gap: 4px;
+        }
+        .image-upload-box:hover { border-color: #428bca; color: #428bca; }
+        .image-upload-box .plus { font-size: 24px; line-height: 1; }
+        .image-upload-box .sub { font-size: 10px; color: #bbb; }
+
+        /* ===== SKU Table ===== */
+        .sku-table-wrap { overflow-x: auto; }
+        .sku-table {
+            width: 100%; border-collapse: collapse; font-size: 13px;
+        }
+        .sku-table thead th {
+            background: #fafafa; padding: 8px 12px; text-align: left;
+            font-weight: 500; color: #666; border-bottom: 1px solid #e8e8e8;
+            white-space: nowrap; font-size: 12px;
+        }
+        .sku-table tbody td {
+            padding: 6px 12px; border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+        .sku-table tbody tr:hover { background: #fafafa; }
+        .sku-table .sku-thumb {
+            width: 32px; height: 32px; border-radius: 2px;
+            border: 1px solid #e8e8e8; object-fit: cover;
+            cursor: pointer; transition: border-color 0.2s;
+        }
+        .sku-table .sku-thumb:hover { border-color: #428bca; }
+        .sku-table input {
+            width: 100%; padding: 4px 8px; font-size: 13px;
+            border: 1px solid #d9d9d9; border-radius: 2px; outline: none;
+            text-align: right; font-family: inherit; min-width: 80px;
+        }
+        .sku-table input:focus { border-color: #428bca; }
+        .sku-table .sku-name-cell { font-size: 12px; color: #333; font-weight: 500; }
+        .sku-table .btn-delete-row {
+            background: none; border: none; color: #999; cursor: pointer;
+            font-size: 16px; padding: 0 4px; line-height: 1;
+        }
+        .sku-table .btn-delete-row:hover { color: #ff4d4f; }
+
+        /* Bulk edit toolbar */
+        .bulk-edit-bar {
+            display: flex; gap: 10px; align-items: center; padding: 8px 0;
+            flex-wrap: wrap; margin-bottom: 4px;
+        }
+        .bulk-edit-bar label { font-size: 12px; color: #666; white-space: nowrap; }
+        .bulk-edit-bar input {
+            width: 100px; padding: 4px 8px; font-size: 12px;
+            border: 1px solid #d9d9d9; border-radius: 2px; outline: none;
+            text-align: right; font-family: inherit;
+        }
+        .bulk-edit-bar input:focus { border-color: #428bca; }
+        .bulk-edit-bar .btn-sm {
+            font-size: 12px; padding: 3px 12px;
+        }
+
+        /* ===== Description Preview ===== */
+        .desc-preview {
+            min-height: 120px; padding: 10px 12px;
+            border: 1px solid #d9d9d9; border-radius: 2px;
+            background: #fafafa; font-size: 13px; line-height: 1.6;
+            display: none;
+        }
+        .desc-preview h1, .desc-preview h2 { font-size: 16px; margin: 8px 0 4px; }
+        .desc-preview ul, .desc-preview ol { padding-left: 20px; margin: 4px 0; }
+        .desc-preview p { margin: 4px 0; }
+        .desc-preview b, .desc-preview strong { font-weight: 600; }
+
+        /* ===== Modal: Cropper ===== */
+        .modal-sm { width: 480px; }
+        .cropper-container { direction: ltr; font-size: 0; line-height: 0; position: relative; user-select: none; }
+        .cropper-container img { display: block; min-width: 0 !important; max-width: none !important; min-height: 0 !important; max-height: none !important; }
+        .cropper-wrap-box, .cropper-canvas, .cropper-drag-box, .cropper-crop-box, .cropper-modal { position: absolute; top: 0; right: 0; bottom: 0; left: 0; }
+        .cropper-wrap-box, .cropper-canvas { overflow: hidden; }
+        .cropper-drag-box { opacity: 0; background-color: #fff; }
+        .cropper-modal { opacity: 0.5; background-color: #000; }
+        .cropper-view-box { display: block; overflow: hidden; width: 100%; height: 100%; outline: 1px solid #39f; outline-color: rgba(51,153,255,0.75); }
+        .cropper-dashed { position: absolute; display: block; opacity: 0.5; border: 0 dashed #eee; }
+        .cropper-dashed.dashed-h { top: 33.33%; left: 0; width: 100%; height: 33.33%; border-top-width: 1px; border-bottom-width: 1px; }
+        .cropper-dashed.dashed-v { top: 0; left: 33.33%; width: 33.33%; height: 100%; border-right-width: 1px; border-left-width: 1px; }
+        .cropper-center { position: absolute; top: 50%; left: 50%; display: block; width: 0; height: 0; opacity: 0.75; }
+        .cropper-center:before, .cropper-center:after { position: absolute; display: block; content: ' '; background-color: #eee; }
+        .cropper-center:before { top: 0; left: -3px; width: 7px; height: 1px; }
+        .cropper-center:after { top: -3px; left: 0; width: 1px; height: 7px; }
+        .cropper-face, .cropper-line, .cropper-point { position: absolute; display: block; width: 100%; height: 100%; opacity: 0.1; }
+        .cropper-face { background-color: #fff; }
+        .cropper-line { background-color: #39f; }
+        .cropper-line.line-e { top: 0; right: -3px; width: 5px; cursor: ew-resize; }
+        .cropper-line.line-n { top: -3px; left: 0; height: 5px; cursor: ns-resize; }
+        .cropper-line.line-w { top: 0; left: -3px; width: 5px; cursor: ew-resize; }
+        .cropper-line.line-s { bottom: -3px; left: 0; height: 5px; cursor: ns-resize; }
+        .cropper-point { width: 5px; height: 5px; opacity: 0.75; background-color: #39f; }
+        .cropper-point.point-e { top: 50%; right: -3px; margin-top: -3px; cursor: ew-resize; }
+        .cropper-point.point-n { top: -3px; left: 50%; margin-left: -3px; cursor: ns-resize; }
+        .cropper-point.point-w { top: 50%; left: -3px; margin-top: -3px; cursor: ew-resize; }
+        .cropper-point.point-s { bottom: -3px; left: 50%; margin-left: -3px; cursor: s-resize; }
+        .cropper-point.point-ne { top: -3px; right: -3px; cursor: nesw-resize; }
+        .cropper-point.point-nw { top: -3px; left: -3px; cursor: nwse-resize; }
+        .cropper-point.point-sw { bottom: -3px; left: -3px; cursor: nesw-resize; }
+        .cropper-point.point-se { right: -3px; bottom: -3px; width: 20px; height: 20px; cursor: nwse-resize; opacity: 1; }
+
+        /* ===== Inline Store + URL ===== */
+        .inline-form-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .inline-form-row .form-label-inline { font-size: 13px; color: #666; white-space: nowrap; }
 
         /* ===== Carousel ===== */
         .carousel-area {
@@ -256,6 +427,38 @@
         .info-box.info { background: #e6f7ff; border: 1px solid #91d5ff; color: #0050b3; }
         .info-box.success { background: #f6ffed; border: 1px solid #b7eb8f; color: #135200; }
 
+        /* ===== Product Summary Bar ===== */
+        .product-summary {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 16px; background: #fafafa;
+            border: 1px solid #e8e8e8; border-radius: 2px; margin-bottom: 16px;
+        }
+        .product-summary-thumb {
+            width: 48px; height: 48px; border-radius: 2px;
+            border: 1px solid #e8e8e8; object-fit: cover; flex-shrink: 0;
+        }
+        .product-summary-info { flex: 1; min-width: 0; }
+        .product-summary-sku { font-size: 12px; color: #666; }
+        .product-summary-title { font-size: 13px; color: #333; font-weight: 500;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .product-summary-title-en { font-size: 11px; color: #999;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* ===== Category Cascade Selects ===== */
+        .category-cascade { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .category-cascade select {
+            padding: 5px 10px; font-size: 13px; border: 1px solid #d9d9d9;
+            border-radius: 2px; outline: none; min-width: 160px; max-width: 240px;
+            font-family: inherit;
+        }
+        .category-cascade select:focus { border-color: #428bca; }
+        .category-cascade .cascade-sep { color: #bbb; font-size: 13px; }
+        .category-breadcrumb {
+            font-size: 12px; color: #52c41a; margin-top: 6px;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .category-breadcrumb .breadcrumb-arrow { color: #bbb; margin: 0 2px; }
+
         /* ===== Price Calculator ===== */
         .price-calc-icon {
             cursor: pointer; font-size: 16px; user-select: none;
@@ -336,12 +539,30 @@
     <!-- 主内容区 -->
     <div class="main-content" id="main-content">
 
+        <!-- ===== 已选产品摘要栏 ===== -->
+        <div class="product-summary" id="product-summary" style="display:none;">
+            <img class="product-summary-thumb" id="product-summary-thumb" src="" alt="">
+            <div class="product-summary-info">
+                <div class="product-summary-sku" id="product-summary-sku"></div>
+                <div class="product-summary-title" id="product-summary-title"></div>
+                <div class="product-summary-title-en" id="product-summary-title-en"></div>
+            </div>
+        </div>
+
         <!-- ===== Section: 基本信息 ===== -->
         <div class="form-card" id="basicInfo">
             <div class="form-card-header">
                 <h4 class="form-card-title">基本信息</h4>
             </div>
             <div class="form-card-content">
+                <!-- 店铺 + URL -->
+                <div class="inline-form-row" style="margin-bottom:14px;">
+                    <span class="form-label-inline required">店铺</span>
+                    <select id="field-store" style="padding:5px 10px;font-size:13px;border:1px solid #d9d9d9;border-radius:2px;font-family:inherit;min-width:180px;"></select>
+                    <span class="form-label-inline" style="margin-left:12px;">产品URL</span>
+                    <input type="text" id="field-url" placeholder="粘贴商品链接自动抓取" style="flex:1;min-width:220px;padding:5px 10px;font-size:13px;border:1px solid #d9d9d9;border-radius:2px;font-family:inherit;">
+                    <button class="btn" id="btn-fetch-url">🔍 抓取</button>
+                </div>
                 <!-- 品类选择区域 -->
                 <div class="info-box info" id="category-idle">
                     <button class="btn btn-primary" id="btn-start-match-category">🔄 自动匹配品类</button>
@@ -371,6 +592,16 @@
                         <button class="btn" id="btn-change-category">🔄 更换品类</button>
                         <span id="category-match-info" style="font-size:11px;color:#999;"></span>
                     </div>
+                    <!-- 三级级联下拉 — 更换品类时展开 -->
+                    <div class="category-cascade" id="category-cascade" style="display:none;margin-top:10px;">
+                        <select id="cascade-l1"><option value="">-- 一级品类 --</option></select>
+                        <span class="cascade-sep">›</span>
+                        <select id="cascade-l2" disabled><option value="">-- 二级品类 --</option></select>
+                        <span class="cascade-sep">›</span>
+                        <select id="cascade-l3" disabled><option value="">-- 三级品类 --</option></select>
+                        <button class="btn btn-primary btn-sm" id="btn-cascade-confirm" disabled>确认</button>
+                    </div>
+                    <div class="category-breadcrumb" id="category-breadcrumb" style="display:none;"></div>
                 </div>
 
                 <!-- 品类未匹配 -->
@@ -400,8 +631,12 @@
                 <div class="form-item">
                     <label class="form-label">产品描述</label>
                     <div class="form-control">
-                        <textarea id="field-description" placeholder="产品详细描述" rows="6"></textarea>
-                        <div class="form-hint"><span id="desc-count">0</span> / 6000</div>
+                        <textarea id="field-description" placeholder="产品详细描述（支持 HTML）" rows="6"></textarea>
+                        <div class="desc-preview" id="desc-preview"></div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                            <div class="form-hint"><span id="desc-count">0</span> / 6000</div>
+                            <button class="btn btn-sm" id="btn-toggle-preview" type="button">👁 预览</button>
+                        </div>
                     </div>
                 </div>
                 <div class="form-item">
@@ -454,6 +689,9 @@
                 <span class="form-card-title--desc">品类属性将决定产品在Ozon平台如何展示</span>
             </div>
             <div class="form-card-content">
+                <div class="info-box warning">
+                    ⚠️ 注意：本页面仅适用于 Ozon 平台，发布时根据平台要求编辑商品属性信息，必填项为编辑状态且未填写的属性。
+                </div>
                 <div style="margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
                     <button class="btn btn-purple" id="btn-auto-fill">🤖 LLM 大模型识别并填充</button>
                 </div>
@@ -468,18 +706,97 @@
         <div class="form-card" id="skuImageInfo">
             <div class="form-card-header">
                 <h4 class="form-card-title">产品图片</h4>
-                <span class="form-card-title--desc">第一张图片将作为产品主图</span>
+                <span class="form-card-title--desc">第一张图片将作为产品主图 · 支持拖拽排序</span>
             </div>
             <div class="form-card-content">
-                <div class="carousel-area" id="carousel-area">
-                    <div class="carousel-add" id="carousel-add-btn">+ 添加图片</div>
+                <div class="image-upload-section" id="main-images-section">
+                    <div class="image-upload-section-title">主图 <span class="hint">（拖拽图片到虚线框 / 点击上传，最多15张）</span></div>
+                    <div class="image-grid" id="main-image-grid">
+                        <div class="image-upload-box" id="main-upload-box">
+                            <span class="plus">+</span>
+                            <span class="sub">上传图片</span>
+                        </div>
+                    </div>
                 </div>
                 <input type="file" id="image-upload-input" accept="image/*" multiple style="display:none">
             </div>
         </div>
 
+        <!-- ===== Section: SKU 变种信息 ===== -->
+        <div class="form-card" id="skuVariantInfo" style="display:none;">
+            <div class="form-card-header">
+                <h4 class="form-card-title">变种信息 (SKU)</h4>
+                <span class="form-card-title--desc">管理不同规格的价格、库存、条码</span>
+                <button class="btn btn-sm" id="btn-add-variant" style="margin-left:auto;">+ 添加变种</button>
+            </div>
+            <div class="form-card-content">
+                <div class="bulk-edit-bar">
+                    <label>批量设置：</label>
+                    <label style="margin-left:4px;">价格</label>
+                    <input type="number" id="bulk-price" placeholder="如 78.27" step="0.01" min="0">
+                    <label style="margin-left:4px;">库存</label>
+                    <input type="number" id="bulk-stock" placeholder="如 100" step="1" min="0">
+                    <label style="margin-left:4px;">重量(g)</label>
+                    <input type="number" id="bulk-weight" placeholder="如 200" step="1" min="0">
+                    <button class="btn btn-sm" id="btn-bulk-apply">应用全部</button>
+                </div>
+                <div class="sku-table-wrap">
+                    <table class="sku-table" id="sku-table">
+                        <thead>
+                            <tr>
+                                <th style="width:44px;">图片</th>
+                                <th>SKU 名称</th>
+                                <th style="width:120px;">价格</th>
+                                <th style="width:100px;">库存</th>
+                                <th style="width:140px;">条码</th>
+                                <th style="width:100px;">重量(g)</th>
+                                <th style="width:44px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sku-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div><!-- /main-content -->
+
 </div><!-- /page-layout -->
+
+<!-- ===== 裁剪弹窗 ===== -->
+<div class="modal-overlay" id="cropper-modal">
+    <div class="modal-container modal-sm">
+        <div class="modal-header">
+            <h3 class="modal-title">裁剪图片</h3>
+            <button class="modal-close" id="btn-close-cropper">✕</button>
+        </div>
+        <div class="modal-body" style="padding:16px;text-align:center;">
+            <img id="cropper-image" style="max-width:100%;display:block;">
+        </div>
+        <div class="modal-footer">
+            <button class="btn" id="btn-cancel-crop">取消</button>
+            <button class="btn btn-primary" id="btn-confirm-crop">确认裁剪</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== SKU 图片选择器弹窗 ===== -->
+<div class="modal-overlay" id="sku-image-picker-modal">
+    <div class="modal-container modal-sm" style="max-width: 480px;">
+        <div class="modal-header">
+            <h3 class="modal-title">为变种选择图片</h3>
+            <button class="modal-close" id="btn-close-sku-picker">✕</button>
+        </div>
+        <div class="modal-body" style="padding:12px;">
+            <div style="display:flex;flex-wrap:wrap;gap:8px;" id="sku-picker-grid"></div>
+            <p style="color:#999;font-size:11px;margin-top:8px;">点击图片为该 SKU 变种设置独立展示图</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-sm" id="btn-clear-sku-image">清除选择</button>
+            <button class="btn btn-sm" id="btn-cancel-sku-picker">取消</button>
+        </div>
+    </div>
+</div>
 
 <!-- ===== 品类选择器弹窗 ===== -->
 <div class="modal-overlay" id="category-tree-modal">
@@ -505,10 +822,36 @@
 <div class="message" id="message"></div>
 
 <script>
+    console.log("[sERP] 脚本开始执行 " + new Date().toISOString());
+
+    // ===== 非阻塞加载可选 CDN 库 =====
+    (function loadOptionalLibs() {
+        var libs = [
+            {
+                url: "https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js",
+                test: "Sortable",
+                onload: function() { if (typeof initSortable === "function") initSortable(); }
+            },
+            {
+                url: "https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js",
+                test: "Cropper",
+                onload: function() { console.log("Cropper.js 已就绪"); }
+            }
+        ];
+        libs.forEach(function(lib) {
+            var s = document.createElement("script");
+            s.src = lib.url;
+            s.async = true;
+            s.onload = lib.onload;
+            s.onerror = function() { console.warn(lib.test + " CDN 加载失败，相关功能不可用"); };
+            document.head.appendChild(s);
+        });
+    })();
+
     // ===== 全局状态 =====
     const params = new URLSearchParams(window.location.search);
     const skc = params.get("skc") || "";
-    const storeId = params.get("store_id") || "";
+    let storeId = params.get("store_id") || "";
 
     let productData = null;
     let ozonAttributes = [];
@@ -521,18 +864,25 @@
     };
     let autoSaveTimer = null;
     let isDirty = false;
+    let cropperInstance = null;
+    let cropTargetIndex = null;
 
     // ===== DOM 引用 =====
     const msgBox = document.getElementById("message");
-    const carouselArea = document.getElementById("carousel-area");
-    const carouselAddBtn = document.getElementById("carousel-add-btn");
     const imageUploadInput = document.getElementById("image-upload-input");
+    const mainImageGrid = document.getElementById("main-image-grid");
+    const mainUploadBox = document.getElementById("main-upload-box");
     const attributesGrid = document.getElementById("attributes-grid");
     const attributesLoading = document.getElementById("attributes-loading");
     const attributesSection = document.getElementById("skuAttrInfo");
+    const skuVariantSection = document.getElementById("skuVariantInfo");
+    const skuTableBody = document.getElementById("sku-table-body");
 
+    const fieldStore = document.getElementById("field-store");
+    const fieldUrl = document.getElementById("field-url");
     const fieldName = document.getElementById("field-name");
     const fieldDescription = document.getElementById("field-description");
+    const descPreview = document.getElementById("desc-preview");
     const fieldPrice = document.getElementById("field-price");
     const fieldOfferId = document.getElementById("field-offer-id");
     const fieldBarcode = document.getElementById("field-barcode");
@@ -734,30 +1084,67 @@
 
     // ===== 初始化 =====
     async function init() {
-        if (!skc || !storeId) {
-            showMsg("缺少参数：skc 和 store_id 是必需的", true);
+        console.log("[init] 开始初始化...");
+        if (!skc) {
+            showMsg("缺少参数：skc 是必需的", true);
             return;
         }
 
         document.getElementById("meta-skc").textContent = "SKC: " + skc;
-        document.getElementById("meta-store").textContent = "店铺: " + storeId;
+        document.getElementById("meta-store").textContent = "店铺: " + (storeId || "未选择");
 
-        await loadProductData();
-        await loadDraft();
+        // 描述预览切换
+        document.getElementById("btn-toggle-preview").addEventListener("click", function() {
+            var preview = document.getElementById("desc-preview");
+            var textarea = document.getElementById("field-description");
+            var btn = document.getElementById("btn-toggle-preview");
+            if (preview.style.display === "block") {
+                preview.style.display = "none";
+                textarea.style.display = "";
+                btn.textContent = "👁 预览";
+            } else {
+                preview.innerHTML = textarea.value || "<span style='color:#999;'>暂无内容</span>";
+                preview.style.display = "block";
+                textarea.style.display = "none";
+                btn.textContent = "✏ 编辑";
+            }
+        });
 
-        if (listingDraft.category_id) {
-            selectedCategoryId = listingDraft.category_id;
-            selectedCategoryTypeId = listingDraft.category_type_id || null;
-            showCategoryMatched(selectedCategoryId, listingDraft.category_path, listingDraft.category_name);
-            await loadCategoryAttributes(selectedCategoryId, selectedCategoryTypeId);
-        } else {
-            categoryIdle.style.display = "block";
-            categoryLoading.style.display = "none";
-            categoryMatched.style.display = "none";
-            categoryNotMatched.style.display = "none";
+        // 描述字数统计
+        document.getElementById("field-description").addEventListener("input", function() {
+            document.getElementById("desc-count").textContent = this.value.length;
+        });
+
+        // 初始化图片网格
+        initImageGrid();
+        initImageModals();
+
+        // 加载店铺列表
+        await loadStores();
+        // 如果没有 storeId，选第一个
+        if (!storeId && fieldStore.value) {
+            storeId = fieldStore.value;
+            document.getElementById("meta-store").textContent = "店铺: " + storeId;
         }
 
-        await loadProductImages();
+        if (storeId) {
+            await loadProductData();
+            await loadDraft();
+
+            if (listingDraft.category_id) {
+                selectedCategoryId = listingDraft.category_id;
+                selectedCategoryTypeId = listingDraft.category_type_id || null;
+                showCategoryMatched(selectedCategoryId, listingDraft.category_path, listingDraft.category_name);
+                await loadCategoryAttributes(selectedCategoryId, selectedCategoryTypeId);
+            } else {
+                categoryIdle.style.display = "block";
+                categoryLoading.style.display = "none";
+                categoryMatched.style.display = "none";
+                categoryNotMatched.style.display = "none";
+            }
+
+            await loadProductImages();
+        }
         bindAutoSave();
         bindCategoryEvents();
 
@@ -778,9 +1165,6 @@
         // 标题字符统计
         fieldName.addEventListener("input", function() {
             document.getElementById("title-count").textContent = fieldName.value.length;
-        });
-        fieldDescription.addEventListener("input", function() {
-            document.getElementById("desc-count").textContent = fieldDescription.value.length;
         });
 
         // 品类树刷新
@@ -969,6 +1353,8 @@
         categoryLoading.style.display = "none";
         categoryMatched.style.display = "block";
         categoryNotMatched.style.display = "none";
+        // 隐藏级联下拉
+        document.getElementById("category-cascade").style.display = "none";
 
         if (path) {
             categoryPath.textContent = "✅ " + path;
@@ -1167,11 +1553,185 @@
         return find(tree, targetId, "");
     }
 
+    // ===== 三级级联下拉 =====
+    var cascadeL1 = document.getElementById("cascade-l1");
+    var cascadeL2 = document.getElementById("cascade-l2");
+    var cascadeL3 = document.getElementById("cascade-l3");
+    var btnCascadeConfirm = document.getElementById("btn-cascade-confirm");
+    var categoryBreadcrumb = document.getElementById("category-breadcrumb");
+
+    function initCascadeSelects() {
+        if (!categoryTreeData || categoryTreeData.length === 0) return;
+
+        // 重置
+        cascadeL1.innerHTML = '<option value="">-- 一级品类 --</option>';
+        cascadeL2.innerHTML = '<option value="">-- 二级品类 --</option>';
+        cascadeL2.disabled = true;
+        cascadeL3.innerHTML = '<option value="">-- 三级品类 --</option>';
+        cascadeL3.disabled = true;
+        btnCascadeConfirm.disabled = true;
+
+        // 填充一级
+        categoryTreeData.forEach(function(node) {
+            var id = _nodeId(node);
+            var name = _nodeName(node);
+            var cn = categoryTranslations[id] || "";
+            var display = cn && cn !== name ? name + ' (' + cn + ')' : name;
+            var opt = document.createElement("option");
+            opt.value = id;
+            opt.textContent = display;
+            cascadeL1.appendChild(opt);
+        });
+    }
+
+    cascadeL1.addEventListener("change", function() {
+        var l1Id = parseInt(cascadeL1.value);
+        cascadeL2.innerHTML = '<option value="">-- 二级品类 --</option>';
+        cascadeL3.innerHTML = '<option value="">-- 三级品类 --</option>';
+        cascadeL3.disabled = true;
+        btnCascadeConfirm.disabled = true;
+        categoryBreadcrumb.style.display = "none";
+
+        if (!l1Id) { cascadeL2.disabled = true; return; }
+
+        var l1Node = _findNodeById(categoryTreeData, l1Id);
+        if (!l1Node || !l1Node.children || l1Node.children.length === 0) {
+            cascadeL2.disabled = true;
+            // 一级就是叶子节点 — 直接可选
+            btnCascadeConfirm.disabled = false;
+            btnCascadeConfirm.dataset.categoryId = l1Id;
+            btnCascadeConfirm.dataset.categoryName = _nodeName(l1Node);
+            btnCascadeConfirm.dataset.categoryPath = _nodeName(l1Node);
+            return;
+        }
+
+        cascadeL2.disabled = false;
+        l1Node.children.forEach(function(node) {
+            var id = _nodeId(node);
+            var name = _nodeName(node);
+            var cn = categoryTranslations[id] || "";
+            var display = cn && cn !== name ? name + ' (' + cn + ')' : name;
+            var opt = document.createElement("option");
+            opt.value = id;
+            opt.textContent = display;
+            cascadeL2.appendChild(opt);
+        });
+    });
+
+    cascadeL2.addEventListener("change", function() {
+        var l2Id = parseInt(cascadeL2.value);
+        cascadeL3.innerHTML = '<option value="">-- 三级品类 --</option>';
+        btnCascadeConfirm.disabled = true;
+        categoryBreadcrumb.style.display = "none";
+
+        if (!l2Id) { cascadeL3.disabled = true; return; }
+
+        var l2Node = _findNodeById(categoryTreeData, l2Id);
+        if (!l2Node || !l2Node.children || l2Node.children.length === 0) {
+            cascadeL3.disabled = true;
+            btnCascadeConfirm.disabled = false;
+            btnCascadeConfirm.dataset.categoryId = l2Id;
+            btnCascadeConfirm.dataset.categoryName = _nodeName(l2Node);
+            btnCascadeConfirm.dataset.categoryPath = _buildPathForNode(l2Node);
+            return;
+        }
+
+        cascadeL3.disabled = false;
+        l2Node.children.forEach(function(node) {
+            var id = _nodeId(node);
+            var name = _nodeName(node);
+            var cn = categoryTranslations[id] || "";
+            var display = cn && cn !== name ? name + ' (' + cn + ')' : name;
+            var opt = document.createElement("option");
+            opt.value = id;
+            opt.textContent = display;
+            cascadeL3.appendChild(opt);
+        });
+    });
+
+    cascadeL3.addEventListener("change", function() {
+        var l3Id = parseInt(cascadeL3.value);
+        if (!l3Id) {
+            btnCascadeConfirm.disabled = true;
+            categoryBreadcrumb.style.display = "none";
+            return;
+        }
+        var l3Node = _findNodeById(categoryTreeData, l3Id);
+        if (l3Node) {
+            btnCascadeConfirm.disabled = false;
+            btnCascadeConfirm.dataset.categoryId = l3Id;
+            btnCascadeConfirm.dataset.categoryName = _nodeName(l3Node);
+            btnCascadeConfirm.dataset.categoryPath = _buildPathForNode(l3Node);
+        }
+    });
+
+    function _findNodeById(nodes, id) {
+        for (var i = 0; i < nodes.length; i++) {
+            var node = nodes[i];
+            if (_nodeId(node) == id) return node;
+            var children = node.children || [];
+            if (children.length > 0) {
+                var found = _findNodeById(children, id);
+                if (found) return found;
+            }
+        }
+        return null;
+    }
+
+    function _buildPathForNode(node) {
+        var parts = [];
+        function findPath(nodes, targetId, currentPath) {
+            for (var i = 0; i < nodes.length; i++) {
+                var n = nodes[i];
+                var name = _nodeName(n);
+                var p = currentPath ? currentPath.concat([name]) : [name];
+                if (_nodeId(n) == targetId) { parts = p; return true; }
+                var children = n.children || [];
+                if (children.length > 0 && findPath(children, targetId, p)) return true;
+            }
+            return false;
+        }
+        findPath(categoryTreeData, _nodeId(node), []);
+        return parts.join(" > ");
+    }
+
+    btnCascadeConfirm.addEventListener("click", async function() {
+        var newId = parseInt(btnCascadeConfirm.dataset.categoryId);
+        var newName = btnCascadeConfirm.dataset.categoryName;
+        var newPath = btnCascadeConfirm.dataset.categoryPath;
+        if (!newId) return;
+
+        selectedCategoryId = newId;
+        document.getElementById("category-cascade").style.display = "none";
+        document.getElementById("category-breadcrumb").style.display = "none";
+
+        showCategoryMatched(newId, newPath || newName, newName);
+
+        listingDraft.category_id = newId;
+        listingDraft.category_path = newPath || newName;
+        listingDraft.category_name = newName;
+        markDirty();
+
+        await loadCategoryAttributes(newId);
+    });
+
     // ===== 品类选择器事件绑定 =====
     function bindCategoryEvents() {
         function openModal() { categoryModal.style.display = "flex"; loadCategoryTree(); }
 
-        btnChangeCategory.addEventListener("click", openModal);
+        btnChangeCategory.addEventListener("click", function() {
+            var cascadeEl = document.getElementById("category-cascade");
+            var breadcrumbEl = document.getElementById("category-breadcrumb");
+            if (cascadeEl.style.display === "flex") {
+                cascadeEl.style.display = "none";
+                return;
+            }
+            loadCategoryTree().then(function() {
+                initCascadeSelects();
+                cascadeEl.style.display = "flex";
+                breadcrumbEl.style.display = "none";
+            });
+        });
         btnManualCategory.addEventListener("click", openModal);
         btnManualMatchCategory.addEventListener("click", openModal);
 
@@ -1363,6 +1923,19 @@
             var p = products.find(function(x) { return x.skc === skc; });
             if (p) {
                 productData = p;
+
+                // 产品摘要栏
+                var summaryEl = document.getElementById("product-summary");
+                summaryEl.style.display = "flex";
+                document.getElementById("product-summary-sku").textContent = "SKC: " + (p.skc || skc);
+                document.getElementById("product-summary-title").textContent = p.title || "";
+                var enTitle = (p.product_data && p.product_data.original_title) ? p.product_data.original_title : "";
+                document.getElementById("product-summary-title-en").textContent = enTitle;
+                // 缩略图：首张图片
+                if (p.images && p.images.length > 0) {
+                    document.getElementById("product-summary-thumb").src = p.images[0].url || p.images[0].local_path || "";
+                }
+
                 var pd = p.product_data || {};
                 var bf = listingDraft.basic_fields || {};
 
@@ -1423,7 +1996,12 @@
         if (bf.barcode) fieldBarcode.value = bf.barcode;
 
         if (listingDraft.images && listingDraft.images.length > 0) {
-            renderCarouselImages(listingDraft.images);
+            renderImageGrid();
+        }
+
+        // 还原 SKU 变种数据
+        if (listingDraft.sku_data || listingDraft.custom_skus) {
+            renderSkuTable();
         }
     }
 
@@ -1459,32 +2037,24 @@
         attributesGrid.style.display = "flex";
         attributesGrid.innerHTML = "";
 
-        ozonAttributes.forEach(function(attr) {
+        ozonAttributes.forEach(function(attr, index) {
             var div = document.createElement("div");
             div.className = "attr-item";
 
+            // 标签（右对齐，固定宽度）：序号 + 俄语 (中文)
             var label = document.createElement("label");
             var reqClass = attr.is_required ? " required" : "";
             label.className = "attr-label" + reqClass;
 
-            var cnName = (attr.name_cn && attr.name_cn !== attr.name) ? attr.name_cn : attr.name;
+            var cnName = (attr.name_cn && attr.name_cn !== attr.name) ? attr.name_cn : "";
             var ruName = attr.name;
+            var num = index + 1;
 
-            // 检测中文单位
-            var unit = _detectUnit(attr.name, attr.name_cn || '');
-
-            // 构建标签：中文名 [单位] + 俄文（低透明度）
-            var cnSpan = '<span class="attr-label-cn">' + _escHtml(cnName) + '</span>';
-            var unitSpan = unit ? '<span class="attr-label-unit">（' + unit + '）</span>' : '';
-
-            if (attr.name_cn && attr.name_cn !== attr.name) {
-                // 有中文翻译：中文为主，俄文淡化
-                var ruSpan = '<span class="attr-label-ru">' + _escHtml(ruName) + '</span>';
-                label.innerHTML = cnSpan + unitSpan + ruSpan;
-            } else {
-                // 没有中文翻译：只显示俄文（正常颜色）
-                label.innerHTML = cnSpan + unitSpan;
-            }
+            // 格式: 1. Русский (中文)
+            var numSpan = '<span class="attr-label-num">' + num + '.</span>';
+            var ruSpan = '<span class="attr-label-ru">' + _escHtml(ruName) + '</span>';
+            var cnSpan = cnName ? ' <span class="attr-label-cn">(' + _escHtml(cnName) + ')</span>' : '';
+            label.innerHTML = numSpan + ruSpan + cnSpan;
 
             if (attr.description) {
                 if (attr.description_cn) {
@@ -1493,6 +2063,10 @@
                     label.title = attr.description;
                 }
             }
+
+            // 输入框 + 单位后缀
+            var wrap = document.createElement("div");
+            wrap.className = "input-wrap";
 
             var input;
             if (attr.type === "dictionary" && attr.dictionary_values && attr.dictionary_values.length > 0) {
@@ -1512,7 +2086,6 @@
                     input.appendChild(opt);
                 });
             } else if (attr.type === "dictionary") {
-                // 字典类型但可选值未加载 → 文本输入 + 警告标记
                 input = document.createElement("input");
                 input.type = "text";
                 input.dataset.attrId = attr.id;
@@ -1526,8 +2099,19 @@
                 input.dataset.attrType = attr.type;
             }
 
+            wrap.appendChild(input);
+
+            // 单位显示在输入框右侧
+            var unit = _detectUnit(attr.name, attr.name_cn || '');
+            if (unit) {
+                var unitSpan = document.createElement("span");
+                unitSpan.className = "unit-suffix";
+                unitSpan.textContent = unit;
+                wrap.appendChild(unitSpan);
+            }
+
             div.appendChild(label);
-            div.appendChild(input);
+            div.appendChild(wrap);
             attributesGrid.appendChild(div);
         });
     }
@@ -1544,65 +2128,14 @@
                         return { source: img.source, url: img.url, local_path: img.local_path || "", order: i };
                     });
                     listingDraft.images = images;
-                    renderCarouselImages(images);
+                    renderImageGrid();
                 }
             }
         } catch (e) { console.error("加载产品图片失败:", e); }
     }
 
-    function renderCarouselImages(images) {
-        document.querySelectorAll(".carousel-item").forEach(function(el) { el.remove(); });
-
-        images.forEach(function(img, i) {
-            var item = document.createElement("div");
-            item.className = "carousel-item" + (i === 0 ? " active" : "");
-
-            var imgEl = document.createElement("img");
-            imgEl.src = img.url;
-            imgEl.alt = "图片 " + (i + 1);
-            imgEl.onerror = function() {
-                imgEl.parentElement.innerHTML = '<div style=\"padding:40px 10px;text-align:center;color:#999;font-size:11px\">加载失败</div>';
-            };
-            item.appendChild(imgEl);
-
-            var badge = document.createElement("span");
-            badge.className = "order-badge";
-            badge.textContent = i + 1;
-            item.appendChild(badge);
-
-            var removeBtn = document.createElement("button");
-            removeBtn.className = "remove-btn";
-            removeBtn.textContent = "✕";
-            removeBtn.addEventListener("click", function(e) {
-                e.stopPropagation();
-                listingDraft.images.splice(i, 1);
-                renderCarouselImages(listingDraft.images);
-                markDirty();
-            });
-            item.appendChild(removeBtn);
-
-            carouselArea.insertBefore(item, carouselAddBtn);
-        });
-    }
-
-    carouselAddBtn.addEventListener("click", function() { imageUploadInput.click(); });
-
-    imageUploadInput.addEventListener("change", function(e) {
-        var files = Array.from(e.target.files);
-        files.forEach(function(file) {
-            var reader = new FileReader();
-            reader.onload = function(ev) {
-                var dataUrl = ev.target.result;
-                listingDraft.images.push({ source: "upload", url: dataUrl, local_path: "", order: listingDraft.images.length });
-                renderCarouselImages(listingDraft.images);
-                markDirty();
-            };
-            reader.readAsDataURL(file);
-        });
-        e.target.value = "";
-    });
-
-    // ===== 自动保存 =====
+    // 旧版轮播图片已移除，图片渲染统一使用 renderImageGrid()
+    function renderCarouselImages(images) {}
     function bindAutoSave() {
         var fields = [fieldName, fieldDescription, fieldPrice, fieldOfferId, fieldBarcode];
         fields.forEach(function(f) {
@@ -1635,6 +2168,32 @@
             var value = el.value.trim();
             if (value) {
                 listingDraft.attributes.push({ attribute_id: attrId, value: value, type: el.dataset.attrType || "text" });
+            }
+        });
+
+        // 收集 SKU 变种数据
+        listingDraft.sku_data = {};
+        listingDraft.custom_skus = [];
+        var productSkuSet = (productData && productData.skus) ? productData.skus : [];
+        document.querySelectorAll("#sku-table-body tr").forEach(function(tr) {
+            var skuCode = tr.dataset.sku || "";
+            var row = { price: "", stock: "", barcode: "", weight: "", image: null };
+            tr.querySelectorAll("input").forEach(function(inp) {
+                if (inp.dataset.field === "sku_name") skuCode = inp.value.trim();
+                if (inp.dataset.field === "price") row.price = inp.value.trim();
+                if (inp.dataset.field === "stock") row.stock = inp.value.trim();
+                if (inp.dataset.field === "barcode") row.barcode = inp.value.trim();
+                if (inp.dataset.field === "weight") row.weight = inp.value.trim();
+            });
+            // 收集该 SKU 的独立图片
+            if (tr.dataset.skuImage) {
+                try { row.image = JSON.parse(tr.dataset.skuImage); } catch (e) {}
+            }
+            if (!skuCode) return;
+            listingDraft.sku_data[skuCode] = row;
+            // 不在产品 SKU 列表中的，记为自定义变种
+            if (productSkuSet.indexOf(skuCode) === -1) {
+                listingDraft.custom_skus.push({ name: skuCode, price: row.price, stock: row.stock, barcode: row.barcode, weight: row.weight });
             }
         });
 
@@ -1786,6 +2345,429 @@
             showMsg("已取消上架");
             setTimeout(function() { window.close(); }, 1000);
         } catch (e) { showMsg("❌ 取消失败: " + e.message, true); }
+    });
+
+    // ===== 店铺列表加载 =====
+    async function loadStores() {
+        try {
+            var res = await fetch("/api/stores");
+            if (!res.ok) return;
+            var data = await res.json();
+            // API 可能返回列表或 {stores: [...]}
+            var stores = Array.isArray(data) ? data : (data.stores || []);
+            fieldStore.innerHTML = '<option value="">-- 选择店铺 --</option>';
+            stores.forEach(function(s) {
+                var sid = s.id || s.store_id || "";
+                var sname = s.name || s.store_name || s.label || sid;
+                var opt = document.createElement("option");
+                opt.value = sid;
+                opt.textContent = sname;
+                if (sid === storeId) opt.selected = true;
+                fieldStore.appendChild(opt);
+            });
+        } catch (e) { console.error("加载店铺列表失败:", e); }
+    }
+
+    fieldStore.addEventListener("change", function() {
+        storeId = fieldStore.value;
+        if (storeId) {
+            document.getElementById("meta-store").textContent = "店铺: " + storeId;
+            var url = new URL(window.location);
+            url.searchParams.set("store_id", storeId);
+            window.history.replaceState({}, "", url);
+            window.location.reload();
+        }
+    });
+
+    // ===== 图片网格初始化 =====
+    var sortableInstance = null;
+    function initSortable() {
+        if (typeof Sortable === "undefined") return;
+        if (sortableInstance) return; // 已初始化
+        try {
+            sortableInstance = Sortable.create(mainImageGrid, {
+                animation: 150,
+                handle: ".image-grid-item",
+                filter: ".image-upload-box",
+                onEnd: function() {
+                    var items = mainImageGrid.querySelectorAll(".image-grid-item");
+                    var newOrder = [];
+                    items.forEach(function(item) {
+                        var idx = parseInt(item.dataset.index);
+                        if (!isNaN(idx) && listingDraft.images[idx]) {
+                            newOrder.push(listingDraft.images[idx]);
+                        }
+                    });
+                    listingDraft.images = newOrder;
+                    renderImageGrid();
+                    markDirty();
+                }
+            });
+        } catch (e) {
+            console.warn("SortableJS 初始化失败，拖拽排序不可用:", e);
+        }
+    }
+
+    function initImageGrid() {
+        // 尝试启用拖拽排序（库可能尚未加载，加载后会通过 initSortable 回调启用）
+        initSortable();
+
+        mainUploadBox.addEventListener("click", function() { imageUploadInput.click(); });
+
+        imageUploadInput.addEventListener("change", function(e) {
+            var files = Array.from(e.target.files);
+            files.forEach(function(file) {
+                var reader = new FileReader();
+                reader.onload = function(ev) {
+                    listingDraft.images.push({ source: "upload", url: ev.target.result, local_path: "", order: listingDraft.images.length });
+                    renderImageGrid();
+                    markDirty();
+                };
+                reader.readAsDataURL(file);
+            });
+            e.target.value = "";
+        });
+    }
+
+    function renderImageGrid() {
+        // 清除旧图片项
+        mainImageGrid.querySelectorAll(".image-grid-item").forEach(function(el) { el.remove(); });
+        listingDraft.images.forEach(function(img, i) {
+            var item = document.createElement("div");
+            item.className = "image-grid-item";
+            item.dataset.index = i;
+
+            var imgEl = document.createElement("img");
+            imgEl.src = img.url;
+            imgEl.alt = "图片 " + (i + 1);
+            imgEl.onerror = function() {
+                imgEl.src = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='104' height='104'><rect fill='%23f0f0f0' width='104' height='104'/><text x='52' y='52' text-anchor='middle' dy='.3em' fill='%23999' font-size='12'>加载失败</text></svg>";
+            };
+            item.appendChild(imgEl);
+
+            var badge = document.createElement("span");
+            badge.className = "order-badge";
+            badge.textContent = i + 1;
+            item.appendChild(badge);
+
+            var actions = document.createElement("div");
+            actions.className = "img-actions";
+            var cropBtn = document.createElement("button");
+            cropBtn.className = "img-action-btn";
+            cropBtn.textContent = "✂ 裁剪";
+            cropBtn.addEventListener("click", function(e) { e.stopPropagation(); openCropper(i); });
+            actions.appendChild(cropBtn);
+            var delBtn = document.createElement("button");
+            delBtn.className = "img-action-btn danger";
+            delBtn.textContent = "✕";
+            delBtn.addEventListener("click", function(e) {
+                e.stopPropagation();
+                listingDraft.images.splice(i, 1);
+                renderImageGrid();
+                markDirty();
+            });
+            actions.appendChild(delBtn);
+            item.appendChild(actions);
+
+            mainImageGrid.insertBefore(item, mainUploadBox);
+        });
+
+        // 更新 SKU 表格图片引用（如果有）
+        renderSkuTable();
+    }
+
+    // ===== 图片裁剪 =====
+    function openCropper(index) {
+        cropTargetIndex = index;
+        var img = listingDraft.images[index];
+        if (!img) return;
+
+        var cropperImg = document.getElementById("cropper-image");
+        cropperImg.src = img.url;
+        document.getElementById("cropper-modal").style.display = "flex";
+
+        if (cropperInstance) { try { cropperInstance.destroy(); } catch(e) {} }
+        if (typeof Cropper !== "undefined") {
+            try {
+                cropperInstance = new Cropper(cropperImg, {
+                    aspectRatio: NaN,
+                    viewMode: 1,
+                    autoCropArea: 0.9,
+                    responsive: true
+                });
+            } catch (e) {
+                console.warn("Cropper 初始化失败:", e);
+                cropperInstance = null;
+            }
+        }
+    }
+
+    function initImageModals() {
+        // 裁剪弹窗
+        document.getElementById("btn-close-cropper").addEventListener("click", closeCropper);
+        document.getElementById("btn-cancel-crop").addEventListener("click", closeCropper);
+        document.getElementById("cropper-modal").addEventListener("click", function(e) {
+            if (e.target === this) closeCropper();
+        });
+        document.getElementById("btn-confirm-crop").addEventListener("click", function() {
+            if (!cropperInstance || cropTargetIndex === null) return;
+            var canvas = cropperInstance.getCroppedCanvas({ maxWidth: 1600, maxHeight: 1600 });
+            var croppedUrl = canvas.toDataURL("image/jpeg", 0.92);
+            listingDraft.images[cropTargetIndex].url = croppedUrl;
+            listingDraft.images[cropTargetIndex].source = "edited";
+            renderImageGrid();
+            markDirty();
+            closeCropper();
+        });
+
+        function closeCropper() {
+            document.getElementById("cropper-modal").style.display = "none";
+            if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+            cropTargetIndex = null;
+        }
+
+        // 拖拽上传
+        mainImageGrid.addEventListener("dragover", function(e) { e.preventDefault(); });
+        mainImageGrid.addEventListener("drop", function(e) {
+            e.preventDefault();
+            var files = Array.from(e.dataTransfer.files).filter(function(f) { return f.type.startsWith("image/"); });
+            files.forEach(function(file) {
+                var reader = new FileReader();
+                reader.onload = function(ev) {
+                    listingDraft.images.push({ source: "upload", url: ev.target.result, local_path: "", order: listingDraft.images.length });
+                    renderImageGrid();
+                    markDirty();
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+    }
+
+    // ===== SKU 变种表格 =====
+    function _createSkuRow(skuCode, initialData) {
+        // initialData: { price, stock, barcode, weight } (optional, from restored draft)
+        var tr = document.createElement("tr");
+        tr.dataset.sku = skuCode;
+
+        // 图片 - 可点击选择该变种的独立图片
+        var tdImg = document.createElement("td");
+        var thumb = document.createElement("img");
+        thumb.className = "sku-thumb";
+        var skuImage = (initialData && initialData.image) ? initialData.image : null;
+        if (skuImage && skuImage.url) {
+            thumb.src = skuImage.url;
+            thumb.title = "当前图片: " + (skuImage.source || skuImage.local_path || "") + " — 点击更换";
+        } else {
+            thumb.src = (listingDraft.images && listingDraft.images.length > 0) ? listingDraft.images[0].url : "";
+            thumb.title = "点击选择图片";
+        }
+        thumb.alt = skuCode;
+        thumb.addEventListener("click", function() { openSkuImagePicker(tr); });
+        tdImg.appendChild(thumb);
+        tr.appendChild(tdImg);
+
+        // SKU 名称（对于自定义变种，可编辑）
+        var tdName = document.createElement("td");
+        tdName.className = "sku-name-cell";
+        var inpName = document.createElement("input");
+        inpName.type = "text";
+        inpName.placeholder = "变种名称，如 红色-M";
+        inpName.value = skuCode;
+        inpName.dataset.field = "sku_name";
+        inpName.style.textAlign = "left";
+        // 产品自带 SKU 不可改名
+        var isProductSku = (productData && productData.skus && productData.skus.indexOf(skuCode) !== -1);
+        if (isProductSku) {
+            inpName.readOnly = true;
+            inpName.style.background = "#f5f5f5";
+            inpName.style.cursor = "not-allowed";
+        }
+        inpName.addEventListener("input", function() {
+            tr.dataset.sku = inpName.value;
+            markDirty();
+        });
+        tdName.appendChild(inpName);
+        tr.appendChild(tdName);
+
+        // 价格
+        var tdPrice = document.createElement("td");
+        var inpPrice = document.createElement("input");
+        inpPrice.type = "number"; inpPrice.step = "0.01"; inpPrice.min = "0";
+        inpPrice.placeholder = "价格";
+        inpPrice.dataset.field = "price";
+        if (initialData && initialData.price) inpPrice.value = initialData.price;
+        inpPrice.addEventListener("input", function() { markDirty(); });
+        tdPrice.appendChild(inpPrice);
+        tr.appendChild(tdPrice);
+
+        // 库存
+        var tdStock = document.createElement("td");
+        var inpStock = document.createElement("input");
+        inpStock.type = "number"; inpStock.step = "1"; inpStock.min = "0";
+        inpStock.placeholder = "库存";
+        inpStock.dataset.field = "stock";
+        if (initialData && initialData.stock) inpStock.value = initialData.stock;
+        inpStock.addEventListener("input", function() { markDirty(); });
+        tdStock.appendChild(inpStock);
+        tr.appendChild(tdStock);
+
+        // 条码
+        var tdBarcode = document.createElement("td");
+        var inpBarcode = document.createElement("input");
+        inpBarcode.type = "text";
+        inpBarcode.placeholder = "条码";
+        inpBarcode.dataset.field = "barcode";
+        inpBarcode.style.textAlign = "left";
+        if (initialData && initialData.barcode) inpBarcode.value = initialData.barcode;
+        inpBarcode.addEventListener("input", function() { markDirty(); });
+        tdBarcode.appendChild(inpBarcode);
+        tr.appendChild(tdBarcode);
+
+        // 重量
+        var tdWeight = document.createElement("td");
+        var inpWeight = document.createElement("input");
+        inpWeight.type = "number"; inpWeight.step = "1"; inpWeight.min = "0";
+        inpWeight.placeholder = "克";
+        inpWeight.dataset.field = "weight";
+        if (initialData && initialData.weight) inpWeight.value = initialData.weight;
+        inpWeight.addEventListener("input", function() { markDirty(); });
+        tdWeight.appendChild(inpWeight);
+        tr.appendChild(tdWeight);
+
+        // 操作
+        var tdAction = document.createElement("td");
+        var btnDel = document.createElement("button");
+        btnDel.className = "btn-delete-row";
+        btnDel.textContent = "✕";
+        btnDel.title = "删除";
+        btnDel.addEventListener("click", function() { tr.remove(); markDirty(); });
+        tdAction.appendChild(btnDel);
+        tr.appendChild(tdAction);
+
+        return tr;
+    }
+
+    function renderSkuTable() {
+        skuTableBody.innerHTML = "";
+        var productSkus = (productData && productData.skus) ? productData.skus.slice() : [];
+        var customSkus = (listingDraft.custom_skus) ? listingDraft.custom_skus : [];
+
+        if (productSkus.length === 0 && customSkus.length === 0) return;
+        skuVariantSection.style.display = "block";
+
+        // 产品自带 SKU
+        productSkus.forEach(function(skuCode) {
+            var initialData = listingDraft.sku_data ? listingDraft.sku_data[skuCode] : null;
+            skuTableBody.appendChild(_createSkuRow(skuCode, initialData));
+        });
+
+        // 手动添加的变种
+        customSkus.forEach(function(sku) {
+            var skuCode = sku.name;
+            var initialData = listingDraft.sku_data ? listingDraft.sku_data[skuCode] : sku;
+            skuTableBody.appendChild(_createSkuRow(skuCode, initialData));
+        });
+    }
+
+    // 添加变种
+    document.getElementById("btn-add-variant").addEventListener("click", function() {
+        skuVariantSection.style.display = "block";
+        if (!listingDraft.custom_skus) listingDraft.custom_skus = [];
+        var newSku = { name: "新变种-" + (listingDraft.custom_skus.length + 1), price: "", stock: "", barcode: "", weight: "" };
+        listingDraft.custom_skus.push(newSku);
+        skuTableBody.appendChild(_createSkuRow(newSku.name, null));
+        markDirty();
+    });
+
+    // ===== SKU 图片选择器 =====
+    var _skuPickerTargetTr = null;
+
+    function openSkuImagePicker(tr) {
+        _skuPickerTargetTr = tr;
+        var grid = document.getElementById("sku-picker-grid");
+        grid.innerHTML = "";
+
+        var images = (listingDraft.images && listingDraft.images.length > 0)
+            ? listingDraft.images
+            : [];
+
+        if (images.length === 0) {
+            grid.innerHTML = "<p style='color:#999;font-size:12px;text-align:center;width:100%;'>暂无产品图片，请先在上方图片区上传</p>";
+        } else {
+            images.forEach(function(img, i) {
+                var card = document.createElement("div");
+                card.style.cssText = "width:72px;height:72px;border:2px solid #e8e8e8;border-radius:4px;cursor:pointer;overflow:hidden;transition:border-color 0.15s;";
+                var el = document.createElement("img");
+                el.src = img.url;
+                el.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;";
+                el.title = "图片 " + (i + 1) + " (序号 " + i + ")";
+                card.appendChild(el);
+
+                card.addEventListener("mouseenter", function() { card.style.borderColor = "#428bca"; });
+                card.addEventListener("mouseleave", function() { card.style.borderColor = "#e8e8e8"; });
+                card.addEventListener("click", function() {
+                    setSkuImage(tr, img);
+                    document.getElementById("sku-image-picker-modal").style.display = "none";
+                });
+                grid.appendChild(card);
+            });
+        }
+
+        document.getElementById("sku-image-picker-modal").style.display = "flex";
+    }
+
+    function setSkuImage(tr, img) {
+        var thumb = tr.querySelector(".sku-thumb");
+        if (thumb) {
+            thumb.src = img.url;
+            thumb.title = "当前图片: " + (img.source || img.local_path || img.url) + " — 点击更换";
+        }
+        // 存储图片引用到 tr dataset
+        tr.dataset.skuImage = JSON.stringify({
+            url: img.url || "",
+            source: img.source || "",
+            local_path: img.local_path || ""
+        });
+        markDirty();
+    }
+
+    function closeSkuImagePicker() {
+        document.getElementById("sku-image-picker-modal").style.display = "none";
+        _skuPickerTargetTr = null;
+    }
+
+    document.getElementById("btn-close-sku-picker").addEventListener("click", closeSkuImagePicker);
+    document.getElementById("btn-cancel-sku-picker").addEventListener("click", closeSkuImagePicker);
+    document.getElementById("sku-image-picker-modal").addEventListener("click", function(e) {
+        if (e.target === this) closeSkuImagePicker();
+    });
+    document.getElementById("btn-clear-sku-image").addEventListener("click", function() {
+        if (_skuPickerTargetTr) {
+            _skuPickerTargetTr.dataset.skuImage = "";
+            var thumb = _skuPickerTargetTr.querySelector(".sku-thumb");
+            if (thumb) {
+                thumb.src = (listingDraft.images && listingDraft.images.length > 0) ? listingDraft.images[0].url : "";
+                thumb.title = "点击选择图片";
+            }
+            markDirty();
+        }
+        closeSkuImagePicker();
+    });
+
+    // 批量设置
+    document.getElementById("btn-bulk-apply").addEventListener("click", function() {
+        var bulkPrice = document.getElementById("bulk-price").value;
+        var bulkStock = document.getElementById("bulk-stock").value;
+        var bulkWeight = document.getElementById("bulk-weight").value;
+        skuTableBody.querySelectorAll("tr").forEach(function(tr) {
+            var inputs = tr.querySelectorAll("input");
+            inputs.forEach(function(inp) {
+                if (inp.dataset.field === "price" && bulkPrice) inp.value = bulkPrice;
+                if (inp.dataset.field === "stock" && bulkStock) inp.value = bulkStock;
+                if (inp.dataset.field === "weight" && bulkWeight) inp.value = bulkWeight;
+            });
+        });
+        markDirty();
     });
 
     // ===== 启动 =====
