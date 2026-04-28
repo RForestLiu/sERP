@@ -741,7 +741,6 @@
                     <table class="sku-table" id="sku-table">
                         <thead>
                             <tr>
-                                <th style="width:140px;">图片</th>
                                 <th>SKU 名称</th>
                                 <th style="width:120px;">价格</th>
                                 <th style="width:100px;">库存</th>
@@ -2561,51 +2560,68 @@
     }
 
     // ===== SKU 变种表格 =====
-    function _createSkuRow(skuCode, initialData) {
-        // initialData: { price, stock, barcode, weight } (optional, from restored draft)
-        var tr = document.createElement("tr");
-        tr.dataset.sku = skuCode;
+    function _createSkuImageRow(tr, skuImages, skuCode) {
+        // 创建图片副行（colspan 横跨所有列）
+        var imgTr = document.createElement("tr");
+        imgTr.className = "sku-image-row";
+        var imgTd = document.createElement("td");
+        imgTd.colSpan = 6;  // 名称+价格+库存+条码+重量+操作
+        imgTd.style.cssText = "padding:4px 12px 10px 12px;border-top:none;background:#fafafa;";
 
-        // 图片 - 显示该变种的全部已选图片
-        var tdImg = document.createElement("td");
-        tdImg.style.padding = "4px 6px";
-        var imgRow = document.createElement("div");
-        imgRow.style.cssText = "display:flex;flex-wrap:wrap;gap:4px;align-items:center;";
-        imgRow.className = "sku-img-row";
-        var skuImages = (initialData && initialData.images && initialData.images.length > 0)
-            ? initialData.images
-            : (initialData && initialData.image ? [initialData.image] : []);
+        var container = document.createElement("div");
+        container.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start;";
 
-        function _renderSkuThumbs() {
-            imgRow.innerHTML = "";
+        function _renderImages() {
+            container.innerHTML = "";
             if (skuImages.length > 0) {
-                skuImages.forEach(function(img) {
+                skuImages.forEach(function(img, i) {
+                    var size = (i === 0) ? "80px" : "60px";
                     var t = document.createElement("img");
-                    t.className = "sku-thumb";
                     t.src = img.url;
-                    t.title = (img.source || img.local_path || img.url) + " — 点击编辑";
                     t.alt = skuCode;
-                    t.addEventListener("click", function(e) { e.stopPropagation(); openSkuImagePicker(tr); });
-                    imgRow.appendChild(t);
+                    t.title = (img.source || img.local_path || img.url) + " — 点击编辑";
+                    t.style.cssText = "width:" + size + ";height:" + size + ";object-fit:cover;border-radius:4px;border:1px solid #e0e0e0;cursor:pointer;flex-shrink:0;transition:border-color 0.15s;";
+                    t.addEventListener("mouseenter", function() { t.style.borderColor = "#428bca"; });
+                    t.addEventListener("mouseleave", function() { t.style.borderColor = "#e0e0e0"; });
+                    t.addEventListener("click", function() { openSkuImagePicker(tr); });
+                    container.appendChild(t);
                 });
             }
-            // 添加按钮（始终显示）
+            // "+" 添加按钮
             var addBtn = document.createElement("div");
-            addBtn.style.cssText = "width:32px;height:32px;border:1px dashed #d9d9d9;border-radius:2px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:#999;flex-shrink:0;";
-            addBtn.textContent = "+";
-            addBtn.title = "添加/编辑图片";
-            addBtn.addEventListener("click", function(e) { e.stopPropagation(); openSkuImagePicker(tr); });
-            imgRow.appendChild(addBtn);
+            var btnSize = skuImages.length === 0 ? "80px" : "60px";
+            addBtn.style.cssText = "width:" + btnSize + ";height:" + btnSize + ";border:1px dashed #d9d9d9;border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:22px;color:#bbb;flex-shrink:0;transition:border-color 0.15s,color 0.15s;";
+            addBtn.innerHTML = "+";
+            addBtn.title = "添加/编辑图片（可多选）";
+            addBtn.addEventListener("mouseenter", function() { addBtn.style.borderColor = "#428bca"; addBtn.style.color = "#428bca"; });
+            addBtn.addEventListener("mouseleave", function() { addBtn.style.borderColor = "#d9d9d9"; addBtn.style.color = "#bbb"; });
+            addBtn.addEventListener("click", function() { openSkuImagePicker(tr); });
+            container.appendChild(addBtn);
         }
-        _renderSkuThumbs();
-        // 保存渲染函数引用，供 applySkuImages 刷新
-        tr._renderSkuThumbs = _renderSkuThumbs;
+        _renderImages();
+
+        imgTd.appendChild(container);
+        imgTr.appendChild(imgTd);
+
+        // 保存引用
+        imgTr._renderImages = _renderImages;
+        tr._imageRow = imgTr;
         tr._skuImagesRef = skuImages;
         if (skuImages.length > 0) {
             tr.dataset.skuImages = JSON.stringify(skuImages);
         }
-        tdImg.appendChild(imgRow);
-        tr.appendChild(tdImg);
+
+        return imgTr;
+    }
+
+    function _createSkuRow(skuCode, initialData) {
+        // initialData: { price, stock, barcode, weight, images } (optional, from restored draft)
+        var tr = document.createElement("tr");
+        tr.dataset.sku = skuCode;
+
+        var skuImages = (initialData && initialData.images && initialData.images.length > 0)
+            ? initialData.images.slice()
+            : (initialData && initialData.image ? [initialData.image] : []);
 
         // SKU 名称（对于自定义变种，可编辑）
         var tdName = document.createElement("td");
@@ -2616,7 +2632,7 @@
         inpName.value = skuCode;
         inpName.dataset.field = "sku_name";
         inpName.style.textAlign = "left";
-        // 产品自带 SKU 不可改名
+        inpName.style.minWidth = "160px";
         var isProductSku = (productData && productData.skus && productData.skus.indexOf(skuCode) !== -1);
         if (isProductSku) {
             inpName.readOnly = true;
@@ -2681,11 +2697,24 @@
         btnDel.className = "btn-delete-row";
         btnDel.textContent = "✕";
         btnDel.title = "删除";
-        btnDel.addEventListener("click", function() { tr.remove(); markDirty(); });
+        btnDel.addEventListener("click", function() {
+            if (tr._imageRow) tr._imageRow.remove();
+            tr.remove();
+            markDirty();
+        });
         tdAction.appendChild(btnDel);
         tr.appendChild(tdAction);
 
-        return tr;
+        // 创建图片副行
+        var imgTr = _createSkuImageRow(tr, skuImages, skuCode);
+
+        return { main: tr, image: imgTr };
+    }
+
+    function _appendSkuRows(skuCode, initialData) {
+        var rows = _createSkuRow(skuCode, initialData);
+        skuTableBody.appendChild(rows.main);
+        skuTableBody.appendChild(rows.image);
     }
 
     function renderSkuTable() {
@@ -2699,14 +2728,14 @@
         // 产品自带 SKU
         productSkus.forEach(function(skuCode) {
             var initialData = listingDraft.sku_data ? listingDraft.sku_data[skuCode] : null;
-            skuTableBody.appendChild(_createSkuRow(skuCode, initialData));
+            _appendSkuRows(skuCode, initialData);
         });
 
         // 手动添加的变种
         customSkus.forEach(function(sku) {
             var skuCode = sku.name;
             var initialData = listingDraft.sku_data ? listingDraft.sku_data[skuCode] : sku;
-            skuTableBody.appendChild(_createSkuRow(skuCode, initialData));
+            _appendSkuRows(skuCode, initialData);
         });
     }
 
@@ -2716,7 +2745,7 @@
         if (!listingDraft.custom_skus) listingDraft.custom_skus = [];
         var newSku = { name: "新变种-" + (listingDraft.custom_skus.length + 1), price: "", stock: "", barcode: "", weight: "" };
         listingDraft.custom_skus.push(newSku);
-        skuTableBody.appendChild(_createSkuRow(newSku.name, null));
+        _appendSkuRows(newSku.name, null);
         markDirty();
     });
 
@@ -2794,10 +2823,11 @@
 
         var tr = _skuPickerTargetTr;
         tr.dataset.skuImages = selected.length > 0 ? JSON.stringify(selected) : "";
-        // 更新 SKU 图片引用并重新渲染缩略图行
-        tr._skuImagesRef.length = 0;
-        selected.forEach(function(img) { tr._skuImagesRef.push(img); });
-        if (tr._renderSkuThumbs) tr._renderSkuThumbs();
+        // 更新 SKU 图片引用并重新渲染图片副行
+        var ref = tr._skuImagesRef;
+        ref.length = 0;
+        selected.forEach(function(img) { ref.push(img); });
+        if (tr._imageRow && tr._imageRow._renderImages) tr._imageRow._renderImages();
         markDirty();
     }
 
