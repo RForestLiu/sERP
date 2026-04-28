@@ -10,15 +10,46 @@ import sys
 import io
 import random
 import logging
+import logging.config
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from PIL import Image
 
+# ★ 日志配置必须在此处（Flask reloader 子进程不会执行 main.py，只导入 app.py）
+# ★ 强制 stdout/stderr 使用 UTF-8，否则 Windows GBK 编码会导致 emoji 日志报错丢弃
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+except Exception:
+    pass
+
+logging.config.dictConfig({
+    'version': 1,
+    'formatters': {'default': {
+        'format': '%(asctime)s | %(levelname)-5s | %(name)s | %(message)s',
+        'datefmt': '%H:%M:%S',
+    }},
+    'handlers': {'console': {
+        'class': 'logging.StreamHandler',
+        'stream': 'ext://sys.stdout',
+        'formatter': 'default',
+    }},
+    'root': {'level': 'DEBUG', 'handlers': ['console']},
+    'loggers': {
+        'werkzeug': {'level': 'INFO', 'handlers': ['console'], 'propagate': False},
+    },
+    'disable_existing_loggers': False,
+})
+
 from flask import Flask, request, jsonify, render_template, send_from_directory
+from werkzeug.utils import secure_filename
 import requests
 
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
+logger.info("=" * 50)
+logger.info("sERP 启动中... | Flask %s | Debug=%s", app.name, app.debug)
+logger.info("=" * 50)
 
 # --------------- 配置 ---------------
 API_KEY = os.getenv("API_KEY", "")
@@ -1517,6 +1548,81 @@ def _save_attr_translations(store_id, translations):
         pass
 
 
+def _load_attr_desc_translations(store_id):
+    """加载属性描述翻译缓存"""
+    cache_path = os.path.join(OZON_CACHE_DIR, f"{store_id}_attr_desc_translations.json")
+    if os.path.exists(cache_path):
+        try:
+            with open(cache_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except:
+            pass
+    return {}
+
+
+def _save_attr_desc_translations(store_id, translations):
+    """保存属性描述翻译缓存"""
+    cache_path = os.path.join(OZON_CACHE_DIR, f"{store_id}_attr_desc_translations.json")
+    try:
+        with open(cache_path, "w", encoding="utf-8") as f:
+            json.dump(translations, f, indent=2, ensure_ascii=False)
+    except:
+        pass
+
+
+def _translate_attr_descriptions(store_id, descriptions):
+    """批量翻译属性描述（俄语→中文），带缓存。返回 {russian_description: chinese_description}"""
+    cached = _load_attr_desc_translations(store_id)
+    untranslated = [d for d in descriptions if d and d not in cached]
+
+    if not untranslated:
+        return cached
+
+    DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
+    DEEPSEEK_API_URL = os.getenv("DEEPSEEK_API_URL", "https://api.deepseek.com/v1/chat/completions")
+
+    if not DEEPSEEK_API_KEY:
+        return cached
+
+    logger.info("[描述翻译] 翻译 %s 个属性描述...", len(untranslated))
+
+    prompt = f"""翻译以下俄语电商属性描述为中文，返回 JSON 对象格式：{{"俄语描述": "中文翻译"}}
+只返回 JSON，不要其他内容。
+
+{json.dumps(untranslated, ensure_ascii=False)}"""
+
+    try:
+        resp = requests.post(DEEPSEEK_API_URL, headers={
+            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+            "Content-Type": "application/json"
+        }, json={
+            "model": "deepseek-chat",
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.1,
+            "max_tokens": 4096
+        }, timeout=60)
+
+        if resp.status_code == 200:
+            result = resp.json()
+            content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+            cleaned = content.strip()
+            if cleaned.startswith("```"):
+                cleaned = re.sub(r'^```(?:json)?\s*\n?', '', cleaned)
+                cleaned = re.sub(r'\n?```$', '', cleaned)
+            try:
+                new_trans = json.loads(cleaned)
+                if isinstance(new_trans, dict):
+                    cached.update(new_trans)
+                    _save_attr_desc_translations(store_id, cached)
+                    logger.info("[描述翻译] ✅ 翻译完成，新增 %s 条", len(new_trans))
+            except json.JSONDecodeError:
+                logger.warning("[描述翻译] ⚠️ JSON 解析失败: %s", content[:200])
+    except Exception as e:
+        logger.warning("[描述翻译] ⚠️ 翻译请求失败: %s", e)
+
+    return cached
+
+
 def _translate_attr_names(store_id, attr_names):
     """批量翻译属性名（俄语→中文），带缓存。返回 {russian_name: chinese_name}"""
     cached = _load_attr_translations(store_id)
@@ -2454,7 +2560,9 @@ def ozon_match_category(store_id):
     return jsonify({
         "success": True,
         "best_match": best_match,
-        "total_categories": 0
+        "total_categories": 0,
+        "elapsed": round(elapsed, 1),
+        "warning": "" if best_match else "已搜索全部品类树但未找到匹配品类，请手动选择或检查产品信息"
     })
 
 
@@ -2562,18 +2670,28 @@ def ozon_category_attributes(store_id):
         # 如果是字典类型，获取可选值
         if attr_type == "dictionary":
             try:
-                values_result, values_err = _call_ozon_api(store_id, "/v1/description-category/attribute/values", {
+                values_payload = {
                     "attribute_id": attr_id,
                     "description_category_id": category_id
-                })
+                }
+                # Ozon 某些字典属性要求传 type_id 才返回值列表
+                if type_id:
+                    values_payload["type_id"] = type_id
+                logger.info("[品类属性]   📋 获取属性 '%s'(ID=%s) 可选值... type_id=%s", attr_name, attr_id, type_id)
+                values_result, values_err = _call_ozon_api(store_id, "/v1/description-category/attribute/values", values_payload)
                 if not values_err and values_result:
                     dict_values = values_result.get("result", [])
+                    if not dict_values:
+                        # API 成功但无数据 — 可能响应格式变了
+                        logger.warning("[品类属性]   ⚠️ 属性 '%s'(ID=%s) 返回空值列表, 完整响应: %s",
+                                       attr_name, attr_id, json.dumps(values_result, ensure_ascii=False)[:500])
+                    else:
+                        logger.info("[品类属性]   ✅ 属性 '%s'(ID=%s) 加载了 %s 个可选值", attr_name, attr_id, len(dict_values))
                     enriched_attr["dictionary_values"] = dict_values
-                    logger.info("[品类属性]   属性 '%s'(ID=%s) 加载了 %s 个可选值", attr_name, attr_id, len(dict_values))
                 else:
-                    logger.warning("[品类属性]   属性 '%s'(ID=%s) 加载可选值失败: %s", attr_name, attr_id, values_err)
+                    logger.warning("[品类属性]   ❌ 属性 '%s'(ID=%s) 加载可选值失败: %s", attr_name, attr_id, values_err)
             except Exception as e:
-                logger.error("[品类属性]   属性 '%s'(ID=%s) 加载可选值异常: %s", attr_name, attr_id, e)
+                logger.error("[品类属性]   ❌ 属性 '%s'(ID=%s) 加载可选值异常: %s", attr_name, attr_id, e)
         
         enriched.append(enriched_attr)
     
@@ -2583,6 +2701,15 @@ def ozon_category_attributes(store_id):
         attr_trans = _translate_attr_names(store_id, attr_names)
         for a in enriched:
             a["name_cn"] = attr_trans.get(a["name"], "")
+
+    # 翻译属性描述（带缓存）
+    if enriched:
+        attr_descs = [a["description"] for a in enriched if a["description"]]
+        if attr_descs:
+            desc_trans = _translate_attr_descriptions(store_id, attr_descs)
+            for a in enriched:
+                if a.get("description"):
+                    a["description_cn"] = desc_trans.get(a["description"], "")
 
     is_leaf = len(enriched) > 0
     logger.info("[品类属性] ✅ 最终返回 %s 个属性, is_leaf=%s", len(enriched), is_leaf)
@@ -2596,11 +2723,249 @@ def ozon_category_attributes(store_id):
     })
 
 
+# ==================== 跨品类通用属性预设提示词库 ====================
+# 根据 Ozon 属性名称（俄语/翻译后的中文）匹配预设填充规则
+# 规则源自 Ozon 上架最佳实践
+
+COMMON_ATTRIBUTE_PRESETS = {
+    # ── 标题/名称类 ──
+    "title_name": {
+        "keywords": ["название", "наименование", "имя", "name", "title", "название товара",
+                     "名称", "标题", "наименование товара", "полное название"],
+        "instruction": """【标题填充 — 俄语优化规则】
+从产品数据提取核心信息生成俄语标题：
+1. 去除品牌名、删除商标符号（™®×•·）
+2. 结构：商品类型 + 关键特征1 + 关键特征2 + 适用对象
+3. 控制在 50~100 字符
+4. 仅填俄语文本""",
+    },
+    # ── 描述类 ──
+    "description": {
+        "keywords": ["описание", "description", "аннотация", "描述", "说明",
+                     "商品描述", "подробное описание", "описание товара"],
+        "instruction": """【描述填充 — 4+1 结构化框架】
+用俄语生成客观、信息型的结构化描述：
+① 功能用途（1-2句）— 产品是什么、做什么
+② 材质设计（1-2句）— 材料、工艺、结构
+③ 适用场景（1句）— 什么人、什么场合使用
+④ 优势特点（1-2句）— 差异化卖点
+要求：禁止品牌名和特殊符号（— × • ™ ®）、每段≤4句、自然流畅""",
+    },
+    # ── 标签/Hashtag类 ──
+    "hashtags": {
+        "keywords": ["hashtag", "хэштег", "тег", "тэг", "标签", "метка",
+                     "theme_tags", "поисковые теги", "ключевые слова"],
+        "instruction": """【Ozon标签 — 5步法生成】
+生成俄语标签（10~22个），每个≤28字符，#开头，空格分隔。
+① 提取核心词：材质、功能、规格
+② 对齐Ozon高频搜索词
+③ 分组排序：功能类 > 用户群体类 > 场景类 > 节日类(可选)
+④ 去重校验：不含品牌、不含特殊符号、独立有搜索意义
+⑤ 输出一行：#тег1 #тег2 #тег3 ...
+节日标签仅在距离节日≤2个月且产品适合送礼时加入1-3个""",
+    },
+    # ── 品牌类 ──
+    "brand": {
+        "keywords": ["brand", "бренд", "торговая марка", "марка", "品牌",
+                     "производитель", "brand_name", "логотип"],
+        "instruction": "从产品数据提取品牌名，无法确定时填「Нет бренда」。不编造品牌。",
+    },
+    # ── 材质类 ──
+    "material": {
+        "keywords": ["материал", "material", "состав", "材质", "材料", "ткань",
+                     "материал верха", "подкладка", "материал корпуса", "основной материал"],
+        "instruction": "从产品数据提取材质，翻译为俄语。dictionary类型从可选值中选最匹配的。常见：экокожа / натуральная кожа / полиуретан / силикон / металл / пластик / нейлон / полиэстер / хлопок / дерево",
+    },
+    # ── 颜色类 ──
+    "color": {
+        "keywords": ["цвет", "color", "colour", "颜色", "оттенок", "расцветка",
+                     "основной цвет", "цвет товара"],
+        "instruction": "从产品数据提取颜色，翻译为俄语。dictionary类型从可选值选最匹配的。常见：черный / белый / красный / синий / зеленый / коричневый / бежевый / серый / розовый / фиолетовый",
+    },
+    # ── 重量类 ──
+    "weight": {
+        "keywords": ["вес", "weight", "масса", "重量", "грамм", "килограмм",
+                     "вес товара", "вес нетто", "вес в упаковке"],
+        "instruction": "提取重量数值（克）。如果产品数据是kg则×1000转换。填入纯数字不含单位。优先使用人工登记数据中的 weight_g 字段。",
+    },
+    # ── 尺寸类 ──
+    "dimensions": {
+        "keywords": ["длина", "ширина", "высота", "глубина", "размер",
+                     "length", "width", "height", "depth", "size",
+                     "长度", "宽度", "高度", "深度", "尺寸", "габариты", "см"],
+        "instruction": "提取尺寸数值（厘米）。多维度分别填写对应的长/宽/高字段。填入纯数字不含单位。优先使用人工登记数据。",
+    },
+    # ── 性别/受众类 ──
+    "gender_audience": {
+        "keywords": ["пол", "gender", "sex", "性别", "целевая аудитория",
+                     "для кого", "мужской", "женский", "унисекс", "назначение"],
+        "instruction": "推断目标用户：мужской(男) / женский(女) / унисекс(通用) / детский(儿童)。dictionary类型从可选值中选。不确定选унисекс。",
+    },
+    # ── 原产国 ──
+    "country": {
+        "keywords": ["страна", "country", "国家", "原产国", "производства",
+                     "страна производства", "происхождения", "сделано в"],
+        "instruction": "提取制造国（俄语全称）。无法确定时填「Китай」。常见：Китай / Россия / Турция / Индия / Вьетнам。",
+    },
+    # ── 数量/套装 ──
+    "quantity": {
+        "keywords": ["количество", "quantity", "数量", "комплект", "набор",
+                     "в упаковке", "комплектация", "штук", "шт", "в наборе"],
+        "instruction": "提取包装内产品数量，纯数字。套装/多件装填实际数量，无法确定填 1。",
+    },
+    # ── 保修 ──
+    "warranty": {
+        "keywords": ["гарантия", "warranty", "保修", "гарантийный срок",
+                     "срок гарантии", "месяцев"],
+        "instruction": "提取保修月数。电子类通常12个月，其他品类有明确数据再填。填纯数字。",
+    },
+    # ── 年龄/18+ ──
+    "age": {
+        "keywords": ["18+", "возраст", "age", "年龄", "ограничение",
+                     "для взрослых", "возрастное ограничение"],
+        "instruction": "判断是否成人用品。普通产品填 false/Нет，成人用品填 true/Да。",
+    },
+    # ── 系列/型号 ──
+    "series_model": {
+        "keywords": ["серия", "collection", "series", "коллекция", "系列",
+                     "型号", "модель", "model", "линейка", "артикул"],
+        "instruction": "提取产品系列/型号名，去除品牌名，仅保留型号标识。无明确型号则留空。",
+    },
+    # ── 闭合/扣件 ──
+    "closure": {
+        "keywords": ["застежка", "замок", "closure", "fastener", "扣件",
+                     "闭合", "молния", "липучка", "кнопка", "тип застежки"],
+        "instruction": "提取闭合方式翻译为俄语。常见：молния(拉链) / липучка(魔术贴) / кнопка(按扣) / магнит(磁吸) / клапан(翻盖) / шнуровка(系带)。dictionary类型从可选值选最匹配的。",
+    },
+    # ── 包装类型 ──
+    "packaging": {
+        "keywords": ["упаковка", "packaging", "包装", "тип упаковки",
+                     "коробка", "пакет", "блистер", "вид упаковки"],
+        "instruction": "推断包装方式：коробка(盒装) / пакет(袋装) / блистер(吸塑) / термоусадочная пленка(热缩膜)。不确定则留空。dictionary类型从可选值选。",
+    },
+}
+
+# 非必填但跨品类通用的属性名称关键词 → 对应的 preset key
+# 这些属性在大多数品类都会出现，虽然不是必填，但填了能提升 listing 质量
+NON_REQUIRED_COMMON_ATTR_MAP = {
+    # 属性名关键词 → preset key
+    "hashtag": "hashtags",
+    "хэштег": "hashtags",
+    "тег": "hashtags",
+    "标签": "hashtags",
+    "коллекция": "series_model",
+    "серия": "series_model",
+    "系列": "series_model",
+    "гарантия": "warranty",
+    "保修": "warranty",
+    "упаковка": "packaging",
+    "包装": "packaging",
+    "количество": "quantity",
+    "комплект": "quantity",
+    "数量": "quantity",
+    "застежка": "closure",
+    "扣件": "closure",
+    "闭合": "closure",
+    "молния": "closure",
+    "возраст": "age",
+    "18+": "age",
+    "年龄": "age",
+    "страна": "country",
+    "原产": "country",
+    "пол": "gender_audience",
+    "性别": "gender_audience",
+    "для кого": "gender_audience",
+    "материал": "material",
+    "材质": "material",
+    "цвет": "color",
+    "颜色": "color",
+}
+
+
+def _match_attribute_presets(ozon_attributes):
+    """为每个 Ozon 属性匹配预设填充规则。
+    返回: (preset_map, non_required_presets)
+      - preset_map: {attr_id: instruction} — 所有匹配到的属性及其填充指令
+      - non_required_presets: {attr_id: instruction} — 仅非必填且匹配到的属性
+    """
+    preset_map = {}
+    non_required_presets = {}
+
+    for attr in ozon_attributes:
+        attr_id = attr.get("id")
+        attr_name = attr.get("name", "") or ""
+        attr_name_cn = attr.get("name_cn", "") or ""
+        is_required = attr.get("is_required", False)
+
+        instruction = None
+        preset_key = None
+
+        # 先做精确关键词匹配（中文翻译名优先于俄语名）
+        search_text = f"{attr_name_cn} {attr_name}".lower()
+        for key, preset in COMMON_ATTRIBUTE_PRESETS.items():
+            for kw in preset["keywords"]:
+                if kw.lower() in search_text:
+                    instruction = preset["instruction"]
+                    preset_key = key
+                    break
+            if instruction:
+                break
+
+        # 未匹配到完整 preset，但对非必填项尝试兜底匹配
+        if not instruction and not is_required:
+            for kw, preset_key in NON_REQUIRED_COMMON_ATTR_MAP.items():
+                if kw.lower() in search_text:
+                    instruction = COMMON_ATTRIBUTE_PRESETS.get(preset_key, {}).get("instruction", "")
+                    break
+
+        if instruction:
+            preset_map[attr_id] = instruction
+            if not is_required:
+                non_required_presets[attr_id] = instruction
+
+    return preset_map, non_required_presets
+
+
+def _prefill_deterministic(manual_data, product_data):
+    """从已有数据中提取可直接填入的确定值（不依赖 AI）。
+    返回 {value_key: value} 用于后续 AI prompt 中提示。
+    """
+    hints = {}
+
+    if manual_data:
+        weight = manual_data.get("weight_g", "")
+        if weight:
+            hints["weight_g"] = str(weight)
+        size_spec = manual_data.get("size_spec", "")
+        if size_spec:
+            hints["size_spec"] = str(size_spec)
+        spec = manual_data.get("spec", "")
+        if spec:
+            hints["spec"] = str(spec)
+
+    if product_data:
+        attrs = product_data.get("attributes", {}) or {}
+        if isinstance(attrs, dict):
+            for key, val in attrs.items():
+                if val and isinstance(val, str):
+                    kl = key.lower()
+                    if any(kw in kl for kw in ["color", "colour"]):
+                        hints["known_color"] = val
+                    elif any(kw in kl for kw in ["material"]):
+                        hints["known_material"] = val
+                    elif any(kw in kl for kw in ["brand"]) and "нет бренда" not in val.lower():
+                        hints["known_brand"] = val
+
+    return hints
+
+
 @app.route("/api/auto-fill/ozon-fields", methods=["POST"])
 def auto_fill_ozon_fields():
     """
     接收产品数据 + Ozon 品类属性列表，
-    调用 DeepSeek 分析并返回每个属性字段的填充建议。
+    分两批调用 DeepSeek 保证填写质量：
+      Batch 1: 重要属性（标题/描述/标签/富文本）— 专用详细 prompt
+      Batch 2: 常规属性（材质/颜色/重量等）— 通用 prompt
     """
     data = request.get_json()
     skc = data.get("skc", "")
@@ -2618,131 +2983,239 @@ def auto_fill_ozon_fields():
     if not DEEPSEEK_API_KEY:
         return jsonify({"error": "DEEPSEEK_API_KEY not configured"}), 500
 
+    # 1. 匹配预设填充规则
+    preset_map, non_required_presets = _match_attribute_presets(ozon_attributes)
+
+    # 2. 提取确定性数据
+    deterministic_hints = _prefill_deterministic(manual_data, product_data)
+
     # 构建产品信息摘要
     about_item = product_data.get("about_item", "")
     product_description = product_data.get("product_description", "")
-    description = product_data.get("description", "")
-    product_texts = [product_title, about_item, product_description, description]
+    description_text = product_data.get("description", "")
+    product_texts = [product_title, about_item, product_description, description_text]
     product_text = "\n".join(t for t in product_texts if t)
 
-    # 构建 Ozon 属性摘要
-    attrs_summary = []
+    # ── 3. 拆分属性：重要属性 → 单独批次，常规属性 → 批量处理 ──
+    IMPORTANT_KEYWORDS = [
+        # 标题/名称类
+        "название", "наименование", "name", "title", "名称", "标题", "полное название",
+        "название товара", "наименование товара",
+        # 描述类
+        "описание", "description", "描述", "说明", "аннотация", "описание товара",
+        # 标签类
+        "hashtag", "хэштег", "тег", "тэг", "标签", "метка", "поисковые теги",
+        "ключевые слова", "theme_tags",
+        # 富文本类
+        "rich", "showcase", "json", "富文本", "контент", "описание в формате",
+        "раShowcase", "витрина",
+    ]
+
+    important_attrs = []
+    regular_attrs = []
     for attr in ozon_attributes:
-        desc = f"  - ID:{attr.get('id')} 名称:{attr.get('name')} 类型:{attr.get('type')} 必填:{attr.get('is_required')}"
-        if attr.get("dictionary_values"):
-            vals = [v.get("value", "") for v in attr["dictionary_values"][:30]]
-            desc += f" 可选值: {', '.join(vals)}"
-        attrs_summary.append(desc)
-    
-    attrs_text = "\n".join(attrs_summary)
+        name_text = f"{attr.get('name', '')} {attr.get('name_cn', '')}".lower()
+        if any(kw in name_text for kw in IMPORTANT_KEYWORDS):
+            important_attrs.append(attr)
+        else:
+            regular_attrs.append(attr)
 
-    system_prompt = """你是一个 Ozon 商品上架助手。你的任务是根据产品数据，为 Ozon 品类属性字段提供填充值。
+    logger.info("[自动填充] 属性拆分 | 重要=%s | 常规=%s | skc=%s",
+                len(important_attrs), len(regular_attrs), skc)
 
-## 输入格式
-你将收到：
-1. 产品信息（标题、描述、属性等）
-2. Ozon 品类属性列表（每个属性包含 ID、名称、类型、可选值等）
-
-## 输出要求
-请分析每个 Ozon 属性，判断它对应产品数据中的哪个信息，然后给出填充值。
-
-### 字段匹配规则：
-- **产品名称/标题** → 匹配名称含"名称""标题""name""title"的属性
-- **产品描述** → 匹配名称含"描述""说明""description"的属性
-- **品牌** → 匹配名称含"品牌""brand"的属性
-- **颜色** → 匹配名称含"颜色""color""colour"的属性
-- **材质** → 匹配名称含"材质""材料""material"的属性
-- **重量** → 匹配名称含"重量""weight"的属性
-- **尺寸/长宽高** → 匹配名称含"尺寸""长""宽""高""size""dimension"的属性
-- **性别** → 匹配名称含"性别""sex""gender"的属性
-- **年龄** → 匹配名称含"年龄""age"的属性
-- **原产国** → 匹配名称含"国家""country""原产"的属性
-
-### 重要规则：
-1. 对于 dictionary 类型的属性，必须从提供的可选值列表中选取
-2. 如果某个属性无法匹配到产品数据中的任何信息，value 返回空字符串
-3. 所有值必须是字符串
-4. 不要编造数据，不确定的字段留空
-
-请严格按照以下 JSON 格式返回，不要包含其他内容：
-{"mappings": [{"attribute_id": 123, "value": "填充值"}, ...]}
-
-其中 attribute_id 是 Ozon 属性的 ID，value 是要填充的值。"""
-
-    user_prompt = f"""## 产品信息
-SKC: {skc}
-标题: {product_title}
-
-### 产品描述文本
-{product_text[:3000]}
-
-### 人工登记数据
-{json.dumps(manual_data, ensure_ascii=False, indent=2)}
-
-### Ozon 品类属性列表（共 {len(ozon_attributes)} 个属性）
-{attrs_text}
-
-请分析以上 Ozon 属性，为每个属性提供填充值。"""
-
-    payload = {
-        "model": "deepseek-chat",
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ],
-        "temperature": 0.1,
-        "max_tokens": 4096
-    }
-
-    headers = {
-        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
-        "Content-Type": "application/json"
-    }
-
-    try:
-        resp = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=60)
-        if resp.status_code != 200:
-            return jsonify({"error": f"DeepSeek API Error {resp.status_code}: {resp.text}"}), 500
-
-        result = resp.json()
-        response_text = ""
-        choices = result.get("choices", [])
-        if choices:
-            response_text = choices[0].get("message", {}).get("content", "")
-
-        if not response_text:
-            return jsonify({"error": "模型未返回文本"}), 500
-
-        # 解析 JSON（清理 markdown 包裹后直接 json.loads）
-        cleaned = response_text.strip()
-        if cleaned.startswith("```"):
-            cleaned = re.sub(r'^```(?:json)?\s*\n?', '', cleaned)
-            cleaned = re.sub(r'\n?```$', '', cleaned)
+    # ── 辅助函数：调用 DeepSeek 并解析返回 ──
+    def _call_deepseek_fill(sys_prompt, user_prompt, label="fill"):
+        payload = {
+            "model": "deepseek-chat",
+            "messages": [
+                {"role": "system", "content": sys_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            "temperature": 0.1,
+            "max_tokens": 16384
+        }
+        headers = {
+            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+            "Content-Type": "application/json"
+        }
         try:
+            resp = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=180)
+            if resp.status_code != 200:
+                logger.warning("[自动填充/%s] API Error %s: %s", label, resp.status_code, resp.text[:200])
+                return []
+            result = resp.json()
+            choices = result.get("choices", [])
+            if not choices:
+                return []
+            text = choices[0].get("message", {}).get("content", "")
+            if not text:
+                return []
+
+            cleaned = text.strip()
+            if cleaned.startswith("```"):
+                cleaned = re.sub(r'^```(?:json)?\s*\n?', '', cleaned)
+                cleaned = re.sub(r'\n?```$', '', cleaned)
+            start = cleaned.find('{')
+            end = cleaned.rfind('}')
+            if start != -1 and end != -1 and end > start:
+                cleaned = cleaned[start:end + 1]
+
             parsed = json.loads(cleaned)
             mappings = parsed.get("mappings", [])
+            validated = []
+            for m in mappings:
+                if isinstance(m, dict) and "attribute_id" in m:
+                    validated.append({
+                        "attribute_id": m.get("attribute_id"),
+                        "value": str(m.get("value", ""))
+                    })
+            logger.info("[自动填充/%s] ✅ 填充 %s 个属性", label, len(validated))
+            return validated
         except json.JSONDecodeError:
-            mappings = []
+            logger.warning("[自动填充/%s] JSON 解析失败: %s", label, text[:200] if 'text' in dir() else 'N/A')
+            return []
+        except Exception as e:
+            logger.error("[自动填充/%s] 异常: %s", label, e)
+            return []
 
-        # 验证 mappings 格式
-        validated_mappings = []
-        for m in mappings:
-            if isinstance(m, dict) and "attribute_id" in m:
-                validated_mappings.append({
-                    "attribute_id": m.get("attribute_id"),
-                    "value": m.get("value", "")
-                })
+    # ── 确定性数据提示 ──
+    hints_text = ""
+    if deterministic_hints:
+        hints_lines = [f"  - {k}: {v}" for k, v in deterministic_hints.items()]
+        hints_text = "\n### 已知确定数据（优先使用）\n" + "\n".join(hints_lines)
 
-        return jsonify({
-            "success": True,
-            "skc": skc,
-            "mappings": validated_mappings,
-            "total_attributes": len(ozon_attributes),
-            "filled_attributes": len(validated_mappings)
-        })
+    all_mappings = []
+    important_count = 0
+    regular_count = 0
 
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    # ── Batch 1: 重要属性（标题/描述/标签/富文本）专用 prompt ──
+    if important_attrs:
+        imp_summary = []
+        for attr in important_attrs:
+            label = f"ID:{attr.get('id')} 名称:{attr.get('name')}"
+            cn = attr.get('name_cn', '')
+            if cn:
+                label += f"（{cn}）"
+            label += f" 类型:{attr.get('type')} {'🔴必填' if attr.get('is_required') else '⚪选填'}"
+            if attr.get("dictionary_values"):
+                vals = [v.get("value", "") for v in attr["dictionary_values"][:30]]
+                label += f" 可选值: [{', '.join(vals)}]"
+            if attr.get("id") in preset_map:
+                label += f"\n    📋 专用指引: {preset_map[attr.get('id')]}"
+            imp_summary.append(label)
+
+        imp_system = """你是俄罗斯电商平台（Ozon/Wildberries）的资深内容优化专家。
+
+## 任务
+你正在处理的是**重要属性**（标题/描述/标签/富文本），这些属性直接影响商品的搜索排名和转化率。
+
+## 标题类属性填充规则
+- 俄语撰写，50~100字符
+- 结构：商品类型 + 关键特征（材质/功能） + 适用对象
+- 严禁品牌名和特殊符号（™®×•·）
+- 使用Ozon/WB平台高频搜索词
+
+## 描述类属性填充规则（4+1框架）
+- ① 功能用途 — 1~2句说明产品是什么、做什么
+- ② 材质设计 — 材料、工艺、结构
+- ③ 适用场景 — 什么人、什么场合
+- ④ 优势特点 — 差异化卖点
+- ⑤（可选）使用提示
+- 客观语气，每段≤4句，俄语撰写
+
+## 标签/Hashtag类属性填充规则（5步法）
+- ① 提取核心词（材质、功能、规格）
+- ② 对齐Ozon高频搜索词
+- ③ 分组排序：功能类 > 用户群体类 > 场景类 > 节日类(可选)
+- ④ 每个标签≤28字符，#开头，不含品牌
+- ⑤ 10~22个标签，一行空格分隔
+- 节日标签：仅距离节日≤2个月且产品适合送礼时加1-3个
+
+## 富文本/JSON类属性填充规则
+- 如属性为raShowcase JSON格式，生成标准 {"version": 0.3, "content": [...]} 结构
+- 所有文字俄语，自然流畅
+
+## 通用约束
+- dictionary类型必须从可选值中精确选取
+- 不确定的字段可留空，不编造
+- 返回 JSON: {"mappings": [{"attribute_id": 123, "value": "填充值"}, ...]}"""
+
+        imp_user = f"""## 产品信息
+SKC: {skc}
+标题: {product_title}
+产品文本: {product_text[:3000]}
+{hints_text}
+人工登记: {json.dumps(manual_data, ensure_ascii=False, indent=2)}
+
+## 重要属性列表（共 {len(important_attrs)} 个，请逐一高质量填充）
+{chr(10).join(imp_summary)}
+
+请为以上每个属性提供高质量填充值。"""
+
+        batch1 = _call_deepseek_fill(imp_system, imp_user, label="重要属性")
+        all_mappings.extend(batch1)
+        important_count = len(batch1)
+
+    # ── Batch 2: 常规属性（材质/颜色/重量/尺寸等）通用 prompt ──
+    if regular_attrs:
+        reg_summary = []
+        for attr in regular_attrs:
+            label = f"ID:{attr.get('id')} 名称:{attr.get('name')}"
+            cn = attr.get('name_cn', '')
+            if cn:
+                label += f"（{cn}）"
+            label += f" 类型:{attr.get('type')} {'🔴必填' if attr.get('is_required') else '⚪选填'}"
+            if attr.get("dictionary_values"):
+                vals = [v.get("value", "") for v in attr["dictionary_values"][:30]]
+                label += f" 可选值: [{', '.join(vals)}]"
+            if attr.get("id") in preset_map:
+                label += f"\n    📋 指引: {preset_map[attr.get('id')]}"
+            reg_summary.append(label)
+
+        reg_system = """你是 Ozon/Wildberries 商品上架助手，负责填充常规属性。
+
+## 规则
+1. dictionary类型：从可选值中精确选取
+2. 材质/颜色：翻译为俄语，dictionary则从列表中选
+3. 重量/尺寸：填纯数字不含单位，优先用人工登记数据
+4. 原产国：默认"Китай"
+5. 不确定的字段留空，不编造
+
+返回 JSON: {"mappings": [{"attribute_id": 123, "value": "填充值"}, ...]}"""
+
+        reg_user = f"""## 产品信息
+SKC: {skc}
+标题: {product_title}
+产品文本: {product_text[:3000]}
+{hints_text}
+人工登记: {json.dumps(manual_data, ensure_ascii=False, indent=2)}
+
+## 常规属性列表（共 {len(regular_attrs)} 个）
+{chr(10).join(reg_summary)}
+
+请为以上每个属性提供填充值。"""
+
+        batch2 = _call_deepseek_fill(reg_system, reg_user, label="常规属性")
+        all_mappings.extend(batch2)
+        regular_count = len(batch2)
+
+    # ── 汇总返回 ──
+    logger.info("[自动填充] 完成 | skc=%s | 重要=%s/%s | 常规=%s/%s | 合计=%s",
+                skc, important_count, len(important_attrs),
+                regular_count, len(regular_attrs), len(all_mappings))
+
+    return jsonify({
+        "success": True,
+        "skc": skc,
+        "mappings": all_mappings,
+        "total_attributes": len(ozon_attributes),
+        "filled_attributes": len(all_mappings),
+        "important_count": len(important_attrs),
+        "regular_count": len(regular_attrs),
+        "preset_matched": len(preset_map),
+        "non_required_presets": len(non_required_presets),
+        "deterministic_hints": list(deterministic_hints.keys())
+    })
 
 
 # ==================== Ozon 产品创建 API ====================
@@ -2911,6 +3384,274 @@ def serve_product_image(skc, filename):
             if images_dir and os.path.exists(images_dir):
                 return send_from_directory(images_dir, filename)
     return "", 404
+
+
+@app.route("/api/products/<skc>/image-sets", methods=["GET"])
+def get_product_image_sets(skc):
+    """获取产品的图片集。首次访问时自动创建默认"采集图片"集。"""
+    products_data = _load_products()
+    product_list = products_data.get("产品列表", [])
+
+    for p in product_list:
+        if p["skc"] == skc:
+            if "image_sets" not in p:
+                p["image_sets"] = {}
+                default_set = []
+                idx = 0
+
+                # 1. 从 images_dir 扫描本地文件
+                images_dir = p.get("images_dir", "")
+                if images_dir and os.path.exists(images_dir):
+                    for fname in sorted(os.listdir(images_dir)):
+                        ext = os.path.splitext(fname)[1].lower()
+                        if ext in ('.jpg', '.jpeg', '.png', '.webp', '.bmp'):
+                            default_set.append({"filename": fname, "index": idx})
+                            idx += 1
+
+                # 2. 添加远程 URL（去重：跳过已有本地文件的）
+                pd = p.get("product_data", {})
+                image_urls = pd.get("image_urls", [])
+                existing_fns = {e["filename"] for e in default_set}
+                for url in image_urls:
+                    url_basename = url.split('/')[-1].split('?')[0]
+                    if len(url_basename) < 10:
+                        continue
+                    # 跳过已有本地文件的 URL
+                    represented = any(
+                        url_basename.split('.')[0][:15] in fn
+                        for fn in existing_fns
+                    )
+                    if not represented:
+                        default_set.append({"url": url, "filename": "", "index": idx})
+                        idx += 1
+
+                p["image_sets"]["采集图片"] = default_set
+                _save_products(products_data)
+
+            return jsonify({
+                "success": True,
+                "skc": skc,
+                "image_sets": p["image_sets"]
+            })
+
+    return jsonify({"error": "产品不存在"}), 404
+
+
+@app.route("/api/products/<skc>/image-sets", methods=["PUT"])
+def update_product_image_sets(skc):
+    """保存整个 image_sets（重排、跨集移动、删除），并物理删除游离图片文件。"""
+    data = request.get_json(silent=True) or {}
+    products_data = _load_products()
+    product_list = products_data.get("产品列表", [])
+
+    for p in product_list:
+        if p["skc"] == skc:
+            p["image_sets"] = data.get("image_sets", {})
+
+            # 收集所有被引用的 filename
+            referenced = set()
+            for entries in p["image_sets"].values():
+                for entry in entries:
+                    fn = entry.get("filename", "")
+                    if fn:
+                        referenced.add(fn)
+
+            # 删除 images_dir 中未被任何集合引用的物理文件
+            images_dir = p.get("images_dir", "")
+            deleted_count = 0
+            if images_dir and os.path.exists(images_dir):
+                valid_exts = {'.jpg', '.jpeg', '.png', '.webp', '.bmp'}
+                for fname in os.listdir(images_dir):
+                    if os.path.splitext(fname)[1].lower() in valid_exts:
+                        if fname not in referenced:
+                            try:
+                                os.remove(os.path.join(images_dir, fname))
+                                deleted_count += 1
+                            except OSError:
+                                logger.warning(f"删除图片文件失败: {fname}")
+
+            _save_products(products_data)
+            return jsonify({"success": True, "deleted_files": deleted_count})
+
+    return jsonify({"error": "产品不存在"}), 404
+
+
+@app.route("/api/products/<skc>/images/upload", methods=["POST"])
+def upload_product_image(skc):
+    """上传图片到产品的 images_dir，并添加到指定图片集。"""
+    if 'file' not in request.files:
+        return jsonify({"error": "未提供文件"}), 400
+
+    file = request.files['file']
+    set_name = request.form.get('set_name', '采集图片')
+
+    if not file.filename:
+        return jsonify({"error": "文件名为空"}), 400
+
+    products_data = _load_products()
+    product_list = products_data.get("产品列表", [])
+
+    for p in product_list:
+        if p["skc"] == skc:
+            images_dir = p.get("images_dir", "")
+            if not images_dir or not os.path.exists(images_dir):
+                return jsonify({"error": "产品图片目录不存在"}), 400
+
+            safe_name = secure_filename(file.filename)
+            filepath = os.path.join(images_dir, safe_name)
+            file.save(filepath)
+
+            if "image_sets" not in p:
+                p["image_sets"] = {}
+            if set_name not in p["image_sets"]:
+                p["image_sets"][set_name] = []
+
+            new_index = len(p["image_sets"][set_name])
+            entry = {"filename": safe_name, "index": new_index}
+            p["image_sets"][set_name].append(entry)
+            _save_products(products_data)
+
+            return jsonify({
+                "success": True,
+                "entry": entry,
+                "url": f"/product_images/{skc}/{safe_name}"
+            })
+
+    return jsonify({"error": "产品不存在"}), 404
+
+
+# ==================== 物流模板 API ====================
+
+LOGISTICS_TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), "data", "logistics_templates")
+
+
+@app.route("/api/logistics/templates", methods=["GET"])
+def logistics_templates():
+    """列出所有物流模板"""
+    templates = []
+    if os.path.isdir(LOGISTICS_TEMPLATES_DIR):
+        for fname in os.listdir(LOGISTICS_TEMPLATES_DIR):
+            if fname.endswith(".json"):
+                path = os.path.join(LOGISTICS_TEMPLATES_DIR, fname)
+                try:
+                    with open(path, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                    templates.append({
+                        "id": data["id"],
+                        "name": data["name"],
+                        "description": data.get("description", ""),
+                        "default_for_ozon": data.get("default_for_ozon", False),
+                        "channel_count": len(data.get("channels", []))
+                    })
+                except Exception as e:
+                    logger.error(f"加载物流模板失败: {fname} - {e}")
+    return jsonify({"templates": templates})
+
+
+@app.route("/api/logistics/calculate", methods=["POST"])
+def logistics_calculate():
+    """计算运费 — 匹配最佳物流渠道"""
+    data = request.get_json(silent=True) or {}
+    template_id = data.get("template_id", "xingyuan_intl")
+    weight_g = float(data.get("weight_g", 0))
+    length_cm = float(data.get("length_cm", 0))
+    width_cm = float(data.get("width_cm", 0))
+    height_cm = float(data.get("height_cm", 0))
+    value_rub = float(data.get("value_rub", 0))
+
+    if weight_g <= 0:
+        return jsonify({"error": "重量必须大于 0"}), 400
+
+    # 加载模板
+    template_path = os.path.join(LOGISTICS_TEMPLATES_DIR, f"{template_id}.json")
+    if not os.path.exists(template_path):
+        if os.path.isdir(LOGISTICS_TEMPLATES_DIR):
+            for fname in os.listdir(LOGISTICS_TEMPLATES_DIR):
+                if fname.endswith(".json"):
+                    with open(os.path.join(LOGISTICS_TEMPLATES_DIR, fname), "r", encoding="utf-8") as f:
+                        d = json.load(f)
+                    if d.get("id") == template_id:
+                        template_path = os.path.join(LOGISTICS_TEMPLATES_DIR, fname)
+                        break
+        if not os.path.exists(template_path):
+            return jsonify({"error": f"物流模板不存在: {template_id}"}), 404
+
+    with open(template_path, "r", encoding="utf-8") as f:
+        template = json.load(f)
+
+    channels = template.get("channels", [])
+    matched = []
+
+    for ch in channels:
+        # 重量筛选
+        if weight_g < ch.get("min_weight_g", 0) or weight_g > ch.get("max_weight_g", float("inf")):
+            continue
+        # 货值筛选 (0 表示不限制)
+        min_v = ch.get("min_value_rub", 0)
+        max_v = ch.get("max_value_rub", float("inf"))
+        if value_rub > 0:
+            if min_v > 0 and value_rub < min_v:
+                continue
+            if max_v < float("inf") and value_rub > max_v:
+                continue
+        # 尺寸筛选
+        if length_cm > 0 and width_cm > 0 and height_cm > 0:
+            max_side = max(length_cm, width_cm, height_cm)
+            sum_sides = length_cm + width_cm + height_cm
+            if max_side > ch.get("max_side_cm", float("inf")):
+                continue
+            if sum_sides > ch.get("max_sum_sides_cm", float("inf")):
+                continue
+
+        # 计算运费
+        billing_type = ch.get("billing_type", "actual_weight")
+        if billing_type == "volumetric" and length_cm > 0 and width_cm > 0 and height_cm > 0:
+            vol_weight = length_cm * width_cm * height_cm / 12000
+            billing_weight = max(weight_g, vol_weight)
+            formula = f"max({weight_g:.0f}g, {length_cm:.0f}×{width_cm:.0f}×{height_cm:.0f}/12000={vol_weight:.0f}g) = {billing_weight:.0f}g"
+        else:
+            billing_weight = weight_g
+            formula = f"{weight_g:.0f}g"
+
+        cost = ch["base_fee"] + ch["per_gram_fee"] * billing_weight
+
+        matched.append({
+            "channel_id": ch["id"],
+            "channel_name": ch["name"],
+            "category_cn": ch["category_cn"],
+            "mode": ch["mode"],
+            "mode_cn": ch["mode_cn"],
+            "delivery": ch["delivery"],
+            "delivery_cn": ch["delivery_cn"],
+            "cost": round(cost, 2),
+            "formula": f"¥{ch['base_fee']:.2f} + ¥{ch['per_gram_fee']:.4f}/g × {formula}",
+            "transit_days": ch.get("transit_days", ""),
+            "billing_type": billing_type
+        })
+
+    if not matched:
+        return jsonify({
+            "matched": False,
+            "message": "没有匹配的物流渠道，请检查重量、货值或尺寸参数",
+            "channels": []
+        })
+
+    # 排序：优先 Economy > Standard，优先 PUDO > Courier，价格从低到高
+    mode_order = {"Standard": 0, "Economy": 1}
+    delivery_order = {"PUDO": 0, "Courier": 1}
+    matched.sort(key=lambda m: (
+        mode_order.get(m.get("mode", ""), 99),
+        delivery_order.get(m.get("delivery", ""), 99),
+        m["cost"]
+    ))
+
+    best = matched[0]
+    return jsonify({
+        "matched": True,
+        "best": best,
+        "channels": matched,
+        "template_name": template["name"]
+    })
 
 
 # ==================== Ozon 上架页面路由 ====================
