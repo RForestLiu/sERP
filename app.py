@@ -3360,6 +3360,113 @@ def ozon_product_create(store_id):
     })
 
 
+@app.route("/api/ozon/<store_id>/sync-products", methods=["POST"])
+def ozon_sync_products(store_id):
+    """从 Ozon 店铺同步产品状态到正式产品库"""
+    logger.info("[产品同步] ========== 开始同步 ==========")
+    logger.info("[产品同步] store_id=%s", store_id)
+
+    # Step 1: 分页拉取 Ozon 全量产品列表
+    all_ozon_items = []
+    last_id = ""
+    page = 0
+    while True:
+        page += 1
+        payload = {"limit": 100}
+        if last_id:
+            payload["last_id"] = last_id
+
+        result, err = _call_ozon_api(store_id, "/v3/product/list", payload)
+        if err:
+            logger.error("[产品同步] ❌ 获取产品列表失败 (第%s页): %s", page, err)
+            return jsonify({"success": False, "error": f"获取 Ozon 产品列表失败: {err}"}), 502
+
+        items = (result or {}).get("result", {}).get("items", [])
+        total = (result or {}).get("result", {}).get("total", 0)
+        all_ozon_items.extend(items)
+        logger.info("[产品同步] 第%s页: 获取 %s 个产品 | 累计: %s/%s", page, len(items), len(all_ozon_items), total)
+
+        last_id = (result or {}).get("result", {}).get("last_id", "")
+        if not last_id or len(items) == 0:
+            break
+
+    if not all_ozon_items:
+        logger.info("[产品同步] ⚠️ 店铺无产品")
+        return jsonify({
+            "success": True,
+            "total_ozon_products": 0,
+            "matched": 0, "new_skus": 0, "updated": 0,
+            "synced_products": [],
+            "message": "店铺暂无产品"
+        })
+
+    logger.info("[产品同步] 共获取 %s 个 Ozon 产品，正在匹配...", len(all_ozon_items))
+
+    # Step 2: 加载本地产品数据，建立 offer_id → (skc, idx) 索引
+    products_data = _load_products()
+    product_list = products_data.get("产品列表", [])
+
+    # offer_id → {skc, sku_idx}
+    offer_index = {}
+    for pi, p in enumerate(product_list):
+        for sku in (p.get("skus") or []):
+            offer_index[sku] = {"skc": p["skc"], "idx": pi}
+
+    # Step 3: 匹配 & 更新
+    matched = 0
+    new_skus = 0
+    updated = 0
+    synced = []
+
+    for item in all_ozon_items:
+        offer_id = item.get("offer_id", "")
+        product_id = item.get("product_id", 0)
+        name = item.get("name", "")
+        status = item.get("status", "unknown")
+        if not offer_id:
+            continue
+
+        entry = offer_index.get(offer_id)
+        if entry:
+            # 匹配到现有产品 → 更新 store_status
+            skc = entry["skc"]
+            p = product_list[entry["idx"]]
+            if "store_status" not in p:
+                p["store_status"] = {}
+            old_status = p["store_status"].get(store_id, "")
+            p["store_status"][store_id] = "已上架" if status in ("published", "imported") else status
+            if old_status != p["store_status"][store_id]:
+                updated += 1
+            matched += 1
+            synced.append({
+                "skc": skc, "offer_id": offer_id, "product_id": product_id,
+                "name": name[:60], "status": p["store_status"][store_id], "match": "matched"
+            })
+        else:
+            # 未匹配 → 作为新 SKU 记录（暂不自动注册 SKC）
+            new_skus += 1
+            synced.append({
+                "skc": "", "offer_id": offer_id, "product_id": product_id,
+                "name": name[:60], "status": status, "match": "new"
+            })
+
+    # Step 4: 保存
+    _save_products(products_data)
+
+    logger.info("[产品同步] ✅ 完成! 总数=%s | 匹配=%s | 更新状态=%s | 新SKU=%s",
+                len(all_ozon_items), matched, updated, new_skus)
+
+    return jsonify({
+        "success": True,
+        "total_ozon_products": len(all_ozon_items),
+        "matched": matched,
+        "new_skus": new_skus,
+        "updated": updated,
+        "synced_products": synced,
+        "message": f"同步完成：{matched} 个匹配，{updated} 个状态更新，{new_skus} 个新SKU待注册"
+    })
+
+
 # ==================== 产品图片 API ====================
 
 @app.route("/api/products/<skc>/images", methods=["GET"])
