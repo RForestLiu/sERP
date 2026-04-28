@@ -779,18 +779,19 @@
 
 <!-- ===== SKU 图片选择器弹窗 ===== -->
 <div class="modal-overlay" id="sku-image-picker-modal">
-    <div class="modal-container modal-sm" style="max-width: 480px;">
+    <div class="modal-container modal-sm" style="max-width: 520px;">
         <div class="modal-header">
-            <h3 class="modal-title">为变种选择图片</h3>
+            <h3 class="modal-title">为变种选择图片（可多选）</h3>
             <button class="modal-close" id="btn-close-sku-picker">✕</button>
         </div>
         <div class="modal-body" style="padding:12px;">
             <div style="display:flex;flex-wrap:wrap;gap:8px;" id="sku-picker-grid"></div>
-            <p style="color:#999;font-size:11px;margin-top:8px;">点击图片为该 SKU 变种设置独立展示图</p>
+            <p style="color:#999;font-size:11px;margin-top:8px;">点击图片切换选中状态，蓝色边框表示已选。已选 <span id="sku-picker-count">0</span> 张</p>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-sm" id="btn-clear-sku-image">清除选择</button>
+            <button class="btn btn-sm" id="btn-clear-sku-image">清除全部</button>
             <button class="btn btn-sm" id="btn-cancel-sku-picker">取消</button>
+            <button class="btn btn-sm btn-primary" id="btn-confirm-sku-picker">确认选择</button>
         </div>
     </div>
 </div>
@@ -2173,7 +2174,7 @@
         var productSkuSet = (productData && productData.skus) ? productData.skus : [];
         document.querySelectorAll("#sku-table-body tr").forEach(function(tr) {
             var skuCode = tr.dataset.sku || "";
-            var row = { price: "", stock: "", barcode: "", weight: "", image: null };
+            var row = { price: "", stock: "", barcode: "", weight: "", images: [] };
             tr.querySelectorAll("input").forEach(function(inp) {
                 if (inp.dataset.field === "sku_name") skuCode = inp.value.trim();
                 if (inp.dataset.field === "price") row.price = inp.value.trim();
@@ -2181,9 +2182,9 @@
                 if (inp.dataset.field === "barcode") row.barcode = inp.value.trim();
                 if (inp.dataset.field === "weight") row.weight = inp.value.trim();
             });
-            // 收集该 SKU 的独立图片
-            if (tr.dataset.skuImage) {
-                try { row.image = JSON.parse(tr.dataset.skuImage); } catch (e) {}
+            // 收集该 SKU 的独立图片（多张）
+            if (tr.dataset.skuImages) {
+                try { row.images = JSON.parse(tr.dataset.skuImages); } catch (e) {}
             }
             if (!skuCode) return;
             listingDraft.sku_data[skuCode] = row;
@@ -2279,6 +2280,25 @@
         await saveDraft();
 
         try {
+            // 收集 SKU 数据用于批量上传
+            var skus = [];
+            document.querySelectorAll("#sku-table-body tr").forEach(function(tr) {
+                var skuCode = tr.dataset.sku || "";
+                var row = { name: skuCode, price: "", stock: "", barcode: "", weight: "", images: [] };
+                tr.querySelectorAll("input").forEach(function(inp) {
+                    if (inp.dataset.field === "sku_name") row.name = inp.value.trim();
+                    if (inp.dataset.field === "price") row.price = inp.value.trim();
+                    if (inp.dataset.field === "stock") row.stock = inp.value.trim();
+                    if (inp.dataset.field === "barcode") row.barcode = inp.value.trim();
+                    if (inp.dataset.field === "weight") row.weight = inp.value.trim();
+                });
+                if (!row.name) return;
+                if (tr.dataset.skuImages) {
+                    try { row.images = JSON.parse(tr.dataset.skuImages); } catch(e) {}
+                }
+                skus.push(row);
+            });
+
             var ozonPayload = {
                 skc: skc,
                 name: fieldName.value,
@@ -2289,7 +2309,8 @@
                 category_id: selectedCategoryId,
                 type_id: selectedCategoryTypeId,
                 attributes: listingDraft.attributes,
-                images: listingDraft.images
+                images: listingDraft.images,
+                skus: skus
             };
 
             var res = await fetch('/api/ozon/' + storeId + '/product/create', {
@@ -2545,14 +2566,17 @@
         var tr = document.createElement("tr");
         tr.dataset.sku = skuCode;
 
-        // 图片 - 可点击选择该变种的独立图片
+        // 图片 - 可点击选择该变种的多张独立图片
         var tdImg = document.createElement("td");
+        tdImg.style.position = "relative";
         var thumb = document.createElement("img");
         thumb.className = "sku-thumb";
-        var skuImage = (initialData && initialData.image) ? initialData.image : null;
-        if (skuImage && skuImage.url) {
-            thumb.src = skuImage.url;
-            thumb.title = "当前图片: " + (skuImage.source || skuImage.local_path || "") + " — 点击更换";
+        var skuImages = (initialData && initialData.images && initialData.images.length > 0)
+            ? initialData.images
+            : (initialData && initialData.image ? [initialData.image] : []);
+        if (skuImages.length > 0) {
+            thumb.src = skuImages[0].url;
+            thumb.title = "已选 " + skuImages.length + " 张图片 — 点击编辑";
         } else {
             thumb.src = (listingDraft.images && listingDraft.images.length > 0) ? listingDraft.images[0].url : "";
             thumb.title = "点击选择图片";
@@ -2560,6 +2584,14 @@
         thumb.alt = skuCode;
         thumb.addEventListener("click", function() { openSkuImagePicker(tr); });
         tdImg.appendChild(thumb);
+        // 图片数量角标
+        var badge = document.createElement("span");
+        badge.className = "sku-img-count";
+        badge.style.cssText = "display:" + (skuImages.length > 1 ? "flex" : "none") + ";position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#428bca;color:#fff;font-size:10px;font-weight:600;align-items:center;justify-content:center;line-height:1;pointer-events:none;";
+        badge.textContent = skuImages.length;
+        tdImg.appendChild(badge);
+        // 存储角标引用
+        tr._skuBadge = badge;
         tr.appendChild(tdImg);
 
         // SKU 名称（对于自定义变种，可编辑）
@@ -2675,11 +2707,22 @@
         markDirty();
     });
 
-    // ===== SKU 图片选择器 =====
+    // ===== SKU 图片选择器（多选） =====
     var _skuPickerTargetTr = null;
+    var _skuPickerSelected = {};  // { index: {url, source, local_path} }
 
     function openSkuImagePicker(tr) {
         _skuPickerTargetTr = tr;
+        _skuPickerSelected = {};
+
+        // 解析当前 SKU 已有的图片
+        try {
+            var existing = JSON.parse(tr.dataset.skuImages || "[]");
+            existing.forEach(function(img) {
+                _skuPickerSelected[img._idx] = img;
+            });
+        } catch(e) {}
+
         var grid = document.getElementById("sku-picker-grid");
         grid.innerHTML = "";
 
@@ -2691,63 +2734,93 @@
             grid.innerHTML = "<p style='color:#999;font-size:12px;text-align:center;width:100%;'>暂无产品图片，请先在上方图片区上传</p>";
         } else {
             images.forEach(function(img, i) {
+                img._idx = i;  // 标记索引用于匹配
+                var isSelected = !!_skuPickerSelected[i];
+
                 var card = document.createElement("div");
-                card.style.cssText = "width:72px;height:72px;border:2px solid #e8e8e8;border-radius:4px;cursor:pointer;overflow:hidden;transition:border-color 0.15s;";
+                card.style.cssText = "width:72px;height:72px;border:2px solid " + (isSelected ? "#428bca" : "#e8e8e8") + ";border-radius:4px;cursor:pointer;overflow:hidden;position:relative;transition:border-color 0.15s;";
                 var el = document.createElement("img");
                 el.src = img.url;
                 el.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;";
-                el.title = "图片 " + (i + 1) + " (序号 " + i + ")";
+                el.title = "图片 " + (i + 1);
                 card.appendChild(el);
 
-                card.addEventListener("mouseenter", function() { card.style.borderColor = "#428bca"; });
-                card.addEventListener("mouseleave", function() { card.style.borderColor = "#e8e8e8"; });
+                // 选中标记 ✓
+                var check = document.createElement("div");
+                check.style.cssText = "display:" + (isSelected ? "flex" : "none") + ";position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:50%;background:#428bca;color:#fff;font-size:11px;font-weight:bold;align-items:center;justify-content:center;pointer-events:none;";
+                check.textContent = "✓";
+                card.appendChild(check);
+                card._checkEl = check;
+
                 card.addEventListener("click", function() {
-                    setSkuImage(tr, img);
-                    document.getElementById("sku-image-picker-modal").style.display = "none";
+                    var idx = img._idx;
+                    if (_skuPickerSelected[idx]) {
+                        delete _skuPickerSelected[idx];
+                        card.style.borderColor = "#e8e8e8";
+                        check.style.display = "none";
+                    } else {
+                        _skuPickerSelected[idx] = { url: img.url || "", source: img.source || "", local_path: img.local_path || "", _idx: idx };
+                        card.style.borderColor = "#428bca";
+                        check.style.display = "flex";
+                    }
+                    document.getElementById("sku-picker-count").textContent = Object.keys(_skuPickerSelected).length;
                 });
                 grid.appendChild(card);
             });
         }
 
+        document.getElementById("sku-picker-count").textContent = Object.keys(_skuPickerSelected).length;
         document.getElementById("sku-image-picker-modal").style.display = "flex";
     }
 
-    function setSkuImage(tr, img) {
+    function applySkuImages() {
+        if (!_skuPickerTargetTr) return;
+        var selected = Object.values(_skuPickerSelected);
+        // 按 _idx 排序保持图片顺序
+        selected.sort(function(a, b) { return (a._idx || 0) - (b._idx || 0); });
+
+        var tr = _skuPickerTargetTr;
+        tr.dataset.skuImages = selected.length > 0 ? JSON.stringify(selected) : "";
+
         var thumb = tr.querySelector(".sku-thumb");
-        if (thumb) {
-            thumb.src = img.url;
-            thumb.title = "当前图片: " + (img.source || img.local_path || img.url) + " — 点击更换";
+        var badge = tr._skuBadge;
+        if (thumb && selected.length > 0) {
+            thumb.src = selected[0].url;
+            thumb.title = "已选 " + selected.length + " 张图片 — 点击编辑";
+        } else if (thumb) {
+            thumb.src = (listingDraft.images && listingDraft.images.length > 0) ? listingDraft.images[0].url : "";
+            thumb.title = "点击选择图片";
         }
-        // 存储图片引用到 tr dataset
-        tr.dataset.skuImage = JSON.stringify({
-            url: img.url || "",
-            source: img.source || "",
-            local_path: img.local_path || ""
-        });
+        if (badge) {
+            badge.style.display = selected.length > 1 ? "flex" : "none";
+            badge.textContent = selected.length;
+        }
         markDirty();
     }
 
     function closeSkuImagePicker() {
         document.getElementById("sku-image-picker-modal").style.display = "none";
         _skuPickerTargetTr = null;
+        _skuPickerSelected = {};
     }
 
     document.getElementById("btn-close-sku-picker").addEventListener("click", closeSkuImagePicker);
     document.getElementById("btn-cancel-sku-picker").addEventListener("click", closeSkuImagePicker);
+    document.getElementById("btn-confirm-sku-picker").addEventListener("click", function() {
+        applySkuImages();
+        closeSkuImagePicker();
+    });
     document.getElementById("sku-image-picker-modal").addEventListener("click", function(e) {
         if (e.target === this) closeSkuImagePicker();
     });
     document.getElementById("btn-clear-sku-image").addEventListener("click", function() {
-        if (_skuPickerTargetTr) {
-            _skuPickerTargetTr.dataset.skuImage = "";
-            var thumb = _skuPickerTargetTr.querySelector(".sku-thumb");
-            if (thumb) {
-                thumb.src = (listingDraft.images && listingDraft.images.length > 0) ? listingDraft.images[0].url : "";
-                thumb.title = "点击选择图片";
-            }
-            markDirty();
-        }
-        closeSkuImagePicker();
+        _skuPickerSelected = {};
+        var cards = document.querySelectorAll("#sku-picker-grid > div");
+        cards.forEach(function(card) {
+            card.style.borderColor = "#e8e8e8";
+            if (card._checkEl) card._checkEl.style.display = "none";
+        });
+        document.getElementById("sku-picker-count").textContent = "0";
     });
 
     // 批量设置

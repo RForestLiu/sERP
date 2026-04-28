@@ -3222,7 +3222,7 @@ SKC: {skc}
 
 @app.route("/api/ozon/<store_id>/product/create", methods=["POST"])
 def ozon_product_create(store_id):
-    """调用 Ozon /v3/product/import 创建产品"""
+    """调用 Ozon /v3/product/import 创建产品（支持多变种批量上传）"""
     data = request.get_json()
     skc = data.get("skc", "")
     name = data.get("name", "")
@@ -3234,21 +3234,21 @@ def ozon_product_create(store_id):
     type_id = data.get("type_id")
     attrs = data.get("attributes", [])
     images = data.get("images", [])
+    skus = data.get("skus", [])
 
     logger.info("[产品创建] ========== 开始创建产品 ==========")
-    logger.info("[产品创建] skc=%s | name=%s | price=%s | offer_id=%s | category_id=%s | type_id=%s",
-                skc, name, price, offer_id, category_id, type_id)
-    logger.info("[产品创建] 属性数=%s | 图片数=%s", len(attrs), len(images))
+    logger.info("[产品创建] skc=%s | name=%s | price=%s | category_id=%s | type_id=%s | SKU数=%s",
+                skc, name, price, category_id, type_id, len(skus))
 
-    if not name or not price or not offer_id:
+    if not name or not price:
         logger.warning("[产品创建] ❌ 缺少必填字段")
-        return jsonify({"success": False, "error": "产品名称、价格、Offer ID 为必填项"}), 400
+        return jsonify({"success": False, "error": "产品名称、价格为必填项"}), 400
 
     if not category_id:
         logger.warning("[产品创建] ❌ 缺少品类ID")
         return jsonify({"success": False, "error": "请先匹配产品品类"}), 400
 
-    # 格式化属性为 Ozon API 格式
+    # 格式化属性为 Ozon API 格式（所有 SKU 共用）
     ozon_attrs = []
     for attr in attrs:
         attr_id = attr.get("attribute_id")
@@ -3269,39 +3269,71 @@ def ozon_product_create(store_id):
             entry["values"].append({"value": str(value)})
         ozon_attrs.append(entry)
 
-    # 构建产品 payload
-    item = {
-        "name": name,
-        "offer_id": offer_id,
-        "price": price,
-        "currency_code": "CNY",
-        "description_category_id": int(category_id),
-        "attributes": ozon_attrs,
-        "vat": "0",
-    }
+    # 公共图片（base64 或本地路径会被过滤，仅传 http URL）
+    base_image_urls = [img.get("url", "") for img in images if img.get("url", "").startswith("http")]
+    base_image_urls = base_image_urls[:10] if base_image_urls else []
 
-    if type_id and str(type_id) != str(category_id):
-        item["type_id"] = int(type_id)
+    def _build_item(sku_price, sku_offer_id, sku_barcode, sku_images):
+        """构建单个 Ozon product import item"""
+        item = {
+            "name": name,
+            "offer_id": sku_offer_id,
+            "price": sku_price or price,
+            "currency_code": "CNY",
+            "description_category_id": int(category_id),
+            "attributes": ozon_attrs,
+            "vat": "0",
+        }
+        if type_id and str(type_id) != str(category_id):
+            item["type_id"] = int(type_id)
+        if description:
+            item["description"] = description[:2000]
+        if sku_barcode:
+            item["barcode"] = sku_barcode
 
-    if description:
-        item["description"] = description[:2000]
+        # SKU 独立图片优先，否则用公共图片
+        sku_urls = [img.get("url", "") for img in sku_images if img.get("url", "").startswith("http")]
+        item_images = sku_urls[:10] if sku_urls else base_image_urls
+        if item_images:
+            item["images"] = item_images
 
-    if barcode:
-        item["barcode"] = barcode
+        logger.info("[产品创建]   子产品: offer_id=%s | price=%s | images=%s", sku_offer_id, item["price"], len(item_images))
+        return item
 
-    # 仅传 URL 类型的图片（Ozon 需要可访问的 URL）
-    image_urls = [img.get("url", "") for img in images if img.get("url", "").startswith("http")]
-    if image_urls:
-        item["images"] = image_urls[:10]
+    # 构建 items 数组
+    items = []
+    if skus:
+        # 多变种模式：每个 SKU 生成一个 item
+        for sku in skus:
+            sku_price = sku.get("price", "")
+            sku_barcode_val = sku.get("barcode", "")
+            sku_images = sku.get("images", [])
+            sku_offer_id = sku.get("name", "") or offer_id
 
-    logger.info("[产品创建] 📦 payload attributes 数量: %s", len(ozon_attrs))
+            if not sku_offer_id:
+                logger.warning("[产品创建] ⚠️ 跳过空 offer_id 的 SKU")
+                continue
 
-    payload = {"items": [item]}
+            item = _build_item(sku_price, sku_offer_id, sku_barcode_val, sku_images)
+            items.append(item)
+    else:
+        # 单产品模式（向后兼容）
+        if not offer_id:
+            logger.warning("[产品创建] ❌ 缺少 offer_id")
+            return jsonify({"success": False, "error": "Offer ID 为必填项"}), 400
+        items.append(_build_item(price, offer_id, barcode, []))
+
+    if not items:
+        logger.warning("[产品创建] ❌ 没有可提交的产品")
+        return jsonify({"success": False, "error": "没有可提交的产品变种"}), 400
+
+    logger.info("[产品创建] 📦 共 %s 个 item，attributes=%s", len(items), len(ozon_attrs))
+
+    payload = {"items": items}
     result, err = _call_ozon_api(store_id, "/v3/product/import", payload)
 
     if err:
         logger.error("[产品创建] ❌ 创建失败: %s", err)
-        # 尝试解析 Ozon 错误消息
         user_msg = err
         try:
             err_data = json.loads(err.replace("Ozon API Error 400: ", "").replace("Ozon API Error 500: ", ""))
@@ -3317,13 +3349,14 @@ def ozon_product_create(store_id):
         return jsonify({"success": False, "error": f"Ozon 上架失败: {user_msg}"}), 502
 
     task_id = result.get("result", {}).get("task_id", "")
-    logger.info("[产品创建] ✅ 提交成功！task_id=%s", task_id)
+    logger.info("[产品创建] ✅ 提交成功！task_id=%s | items=%s", task_id, len(items))
 
     return jsonify({
         "success": True,
         "task_id": task_id,
         "skc": skc,
-        "message": f"产品已提交到 Ozon（任务ID: {task_id}），请稍后在 Ozon 后台查看上架状态。"
+        "item_count": len(items),
+        "message": f"已提交 {len(items)} 个产品变种到 Ozon（任务ID: {task_id}），请稍后在 Ozon 后台查看上架状态。"
     })
 
 
