@@ -518,7 +518,6 @@
     </div>
     <div class="btn-bar">
         <span class="auto-save-indicator" id="save-indicator" style="font-size:12px;color:#999;margin-right:8px;">💾 已保存</span>
-        <button class="btn btn-sm" id="btn-sync-products" style="background:#f0f5ff;color:#428bca;border:1px solid #d6e4ff;" title="从Ozon店铺同步产品状态到正式产品库">🔄 同步产品</button>
         <button class="btn btn-orange" id="btn-save-draft">💾 保存草稿</button>
         <button class="btn btn-green" id="btn-submit">📤 发布</button>
         <button class="btn btn-danger" id="btn-cancel">✕ 取消</button>
@@ -980,7 +979,6 @@
     const btnSubmit = document.getElementById("btn-submit");
     const btnSaveDraft = document.getElementById("btn-save-draft");
     const btnCancel = document.getElementById("btn-cancel");
-    const btnSyncProducts = document.getElementById("btn-sync-products");
     const saveIndicator = document.getElementById("save-indicator");
 
     // ===== 工具函数 =====
@@ -2344,40 +2342,6 @@
         } finally {
             btnSubmit.disabled = false;
             btnSubmit.innerHTML = "📤 发布";
-        }
-    });
-
-    // ===== 同步产品 =====
-    btnSyncProducts.addEventListener("click", async function() {
-        if (!storeId) { showMsg("❌ 请先选择店铺", true); return; }
-        if (!confirm("将从 Ozon 店铺同步产品状态到正式产品库。\n\n已匹配的SKU将更新上架状态，未匹配的SKU将被记录。\n\n确定继续？")) return;
-
-        btnSyncProducts.disabled = true;
-        btnSyncProducts.textContent = "⏳ 同步中...";
-        showMsg("⏳ 正在从 Ozon 同步产品数据...");
-
-        try {
-            var res = await fetch('/api/ozon/' + storeId + '/sync-products', { method: "POST" });
-            var result = await res.json();
-
-            if (!result.success) {
-                showMsg("❌ " + (result.error || "同步失败"), true);
-                return;
-            }
-
-            var info = [];
-            if (result.total_ozon_products > 0) info.push("店铺共 " + result.total_ozon_products + " 个产品");
-            if (result.matched > 0) info.push(result.matched + " 个已匹配");
-            if (result.updated > 0) info.push(result.updated + " 个状态已更新");
-            if (result.new_skus > 0) info.push(result.new_skus + " 个新SKU待注册");
-
-            showMsg("✅ 同步完成：" + (info.length > 0 ? info.join("，") : "无变化"));
-            console.log("[同步] 详情:", result.synced_products);
-        } catch (e) {
-            showMsg("❌ 同步失败: " + e.message, true);
-        } finally {
-            btnSyncProducts.disabled = false;
-            btnSyncProducts.textContent = "🔄 同步产品";
         }
     });
 

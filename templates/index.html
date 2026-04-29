@@ -605,6 +605,21 @@
         }
 
         /* ===== 产品管理模块 ===== */
+        .sync-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+        .sync-toolbar-label {
+            font-size: 13px;
+            color: #666;
+            white-space: nowrap;
+        }
         .product-manage-panel {
             flex: 1;
             display: flex;
@@ -1104,6 +1119,14 @@
         <!-- 产品管理模块 -->
         <div class="module-panel" id="module-product-manage">
             <div class="product-manage-panel" id="product-manage-panel">
+                <div class="sync-toolbar">
+                    <span class="sync-toolbar-label">店铺同步：</span>
+                    <select id="sync-store-select" style="padding:5px 10px;font-size:13px;border:1px solid #d9d9d9;border-radius:2px;min-width:160px;">
+                        <option value="">-- 选择店铺 --</option>
+                    </select>
+                    <button class="btn btn-sm" id="btn-sync-products" style="background:#f0f5ff;color:#428bca;border:1px solid #d6e4ff;">🔄 同步产品</button>
+                    <span id="sync-status" style="font-size:12px;color:#999;margin-left:8px;"></span>
+                </div>
                 <div class="product-empty" id="product-empty">暂无正式产品，请先在"采集产品"模块中保存产品</div>
                 <div id="product-cards-container"></div>
             </div>
@@ -2068,16 +2091,78 @@
         const productEmpty = document.getElementById("product-empty");
 
         // 加载产品列表
+        let _storesCache = [];
         async function loadProducts() {
             try {
                 const res = await fetch("/api/products");
                 if (!res.ok) return;
                 const data = await res.json();
-                renderProducts(data.products, data.stores);
+                _storesCache = data.stores || [];
+                populateSyncStores(_storesCache);
+                renderProducts(data.products, _storesCache);
             } catch (e) {
                 console.error("加载产品列表失败:", e);
             }
         }
+
+        // 填充同步店铺下拉
+        function populateSyncStores(stores) {
+            var sel = document.getElementById("sync-store-select");
+            if (!sel) return;
+            var currentVal = sel.value;
+            sel.innerHTML = '<option value="">-- 选择店铺 --</option>';
+            (stores || []).forEach(function(s) {
+                var sid = s.id || s.store_id || "";
+                var sname = s.name || s.store_name || s.label || sid;
+                sel.innerHTML += '<option value="' + sid + '">' + sname + '</option>';
+            });
+            if (currentVal) sel.value = currentVal;
+        }
+
+        // 同步产品按钮
+        document.getElementById("btn-sync-products").addEventListener("click", async function() {
+            var btn = this;
+            var sel = document.getElementById("sync-store-select");
+            var statusEl = document.getElementById("sync-status");
+            var storeId = sel.value;
+
+            if (!storeId) { statusEl.textContent = "请先选择店铺"; statusEl.style.color = "#ff4d4f"; return; }
+            if (!confirm("将从 Ozon 店铺同步产品状态到正式产品库。\n\n已匹配的SKU将更新上架状态，未匹配的SKU将被记录。\n\n确定继续？")) return;
+
+            btn.disabled = true;
+            btn.textContent = "⏳ 同步中...";
+            statusEl.textContent = "正在从 Ozon 拉取产品数据...";
+            statusEl.style.color = "#999";
+
+            try {
+                var res = await fetch('/api/ozon/' + storeId + '/sync-products', { method: "POST" });
+                var result = await res.json();
+
+                if (!result.success) {
+                    statusEl.textContent = result.error || "同步失败";
+                    statusEl.style.color = "#ff4d4f";
+                    return;
+                }
+
+                var parts = [];
+                if (result.total_ozon_products > 0) parts.push("店铺共 " + result.total_ozon_products + " 个产品");
+                if (result.matched > 0) parts.push(result.matched + " 个已匹配");
+                if (result.updated > 0) parts.push(result.updated + " 个状态已更新");
+                if (result.new_skus > 0) parts.push(result.new_skus + " 个新SKU待注册");
+                statusEl.textContent = "✅ " + (parts.length > 0 ? parts.join("，") : "无变化");
+                statusEl.style.color = "#52c41a";
+                console.log("[同步] 详情:", result.synced_products);
+
+                // 重新加载产品列表以反映状态变化
+                await loadProducts();
+            } catch (e) {
+                statusEl.textContent = "同步失败: " + e.message;
+                statusEl.style.color = "#ff4d4f";
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "🔄 同步产品";
+            }
+        });
 
         // 渲染产品卡片（单列布局 + 画中画 + 大模型识别）
         function renderProducts(products, stores) {
