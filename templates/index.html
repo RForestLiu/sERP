@@ -1583,12 +1583,13 @@
         });
 
         // ---------- 模块切换 ----------
-        function switchModule(moduleName) {
-            // 更新导航栏高亮
+        function switchModule(moduleName, updateHash) {
+            if (updateHash !== false) {
+                window.location.hash = moduleName;
+            }
             document.querySelectorAll(".nav-item").forEach(item => {
                 item.classList.toggle("active", item.dataset.module === moduleName);
             });
-            // 切换模块面板
             document.querySelectorAll(".module-panel").forEach(panel => {
                 panel.classList.toggle("active", panel.id === "module-" + moduleName);
             });
@@ -1597,9 +1598,32 @@
         // 导航栏点击事件
         document.querySelectorAll(".nav-item").forEach(item => {
             item.addEventListener("click", () => {
-                const moduleName = item.dataset.module;
-                switchModule(moduleName);
+                switchModule(item.dataset.module);
             });
+        });
+
+        function _onModuleActivated(moduleName) {
+            if (moduleName === "product-manage") loadProducts();
+        }
+
+        // 页面加载时根据 URL hash 恢复模块
+        (function initModuleFromHash() {
+            var hash = window.location.hash.replace("#", "");
+            var validModules = ["collect-product", "image-batch", "product-manage"];
+            if (hash && validModules.indexOf(hash) !== -1) {
+                switchModule(hash, false);
+                _onModuleActivated(hash);
+            }
+        })();
+
+        // 浏览器前进/后退时同步切换
+        window.addEventListener("hashchange", function() {
+            var hash = window.location.hash.replace("#", "");
+            var validModules = ["collect-product", "image-batch", "product-manage"];
+            if (hash && validModules.indexOf(hash) !== -1) {
+                switchModule(hash, false);
+                _onModuleActivated(hash);
+            }
         });
 
         // ---------- 恢复历史采集任务 ----------
@@ -2776,7 +2800,7 @@
 
         // 切换到产品管理模块时加载数据
         document.querySelector('.nav-item[data-module="product-manage"]').addEventListener("click", () => {
-            loadProducts();
+            _onModuleActivated("product-manage");
         });
     </script>
 </body>
