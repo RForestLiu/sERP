@@ -2115,17 +2115,39 @@
     // ===== 加载产品图片 =====
     async function loadProductImages() {
         try {
-            var res = await fetch('/api/products/' + skc + '/images');
+            var res = await fetch('/api/products/' + skc + '/image-sets');
             if (!res.ok) return;
             var data = await res.json();
-            if (data.success && data.images && data.images.length > 0) {
-                if (!listingDraft.images || listingDraft.images.length === 0) {
-                    var images = data.images.map(function(img, i) {
-                        return { source: img.source, url: img.url, local_path: img.local_path || "", order: i };
-                    });
-                    listingDraft.images = images;
-                    renderImageGrid();
-                }
+            if (!data.success || !data.image_sets) return;
+
+            // 合并所有图片集的图片（产品管理→图片管理 的图片）
+            var merged = [];
+            Object.keys(data.image_sets).forEach(function(setName) {
+                var entries = data.image_sets[setName] || [];
+                entries.forEach(function(entry) {
+                    if (entry.filename) {
+                        // 本地文件
+                        merged.push({
+                            source: "product_mgmt",
+                            url: "/product_images/" + skc + "/" + entry.filename,
+                            local_path: entry.filename,
+                            order: merged.length
+                        });
+                    } else if (entry.url && entry.url.startsWith("http")) {
+                        // 远程 URL（已在图片管理中保留）
+                        merged.push({
+                            source: "url",
+                            url: entry.url,
+                            local_path: "",
+                            order: merged.length
+                        });
+                    }
+                });
+            });
+
+            if (merged.length > 0 && (!listingDraft.images || listingDraft.images.length === 0)) {
+                listingDraft.images = merged;
+                renderImageGrid();
             }
         } catch (e) { console.error("加载产品图片失败:", e); }
     }
