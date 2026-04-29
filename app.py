@@ -3372,7 +3372,7 @@ def ozon_sync_products(store_id):
     page = 0
     while True:
         page += 1
-        payload = {"limit": 100}
+        payload = {"limit": 100, "filter": {"visibility": "ALL"}}
         if last_id:
             payload["last_id"] = last_id
 
