@@ -11,7 +11,6 @@ import re
 import asyncio
 import logging
 import aiohttp
-import aiofiles
 from datetime import datetime
 from urllib.parse import urlparse
 from PIL import Image
@@ -71,7 +70,8 @@ def _fetch_html_requests(url: str) -> str:
 
 
 async def _fetch_html_playwright(url: str) -> str:
-    """使用 Playwright 获取页面 HTML（支持 JS 渲染）"""
+    """使用 Playwright 获取页面 HTML（支持 JS 渲染，含反爬措施）"""
+    import random as _random
     try:
         from playwright.async_api import async_playwright
         async with async_playwright() as p:
@@ -83,6 +83,7 @@ async def _fetch_html_playwright(url: str) -> str:
                     '--disable-dev-shm-usage',
                     '--disable-accelerated-2d-canvas',
                     '--disable-gpu',
+                    '--disable-blink-features=AutomationControlled',
                 ]
             )
             context = await browser.new_context(
@@ -90,25 +91,55 @@ async def _fetch_html_playwright(url: str) -> str:
                           "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
                 viewport={"width": 1920, "height": 1080},
                 locale="zh-CN",
+                timezone_id="Asia/Shanghai",
             )
             page = await context.new_page()
 
-            # 设置超时
+            # 隐藏自动化特征
+            await page.add_init_script("""
+                Object.defineProperty(navigator, 'webdriver', { get: () => false });
+                Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+                Object.defineProperty(navigator, 'languages', { get: () => ['zh-CN', 'zh', 'en'] });
+            """)
+
             page.set_default_timeout(25000)
 
             try:
                 await page.goto(url, wait_until="domcontentloaded", timeout=30000)
-                # 等待页面加载完成（简短等待）
-                await page.wait_for_timeout(5000)  # 等待5秒让JS执行
+                # 模拟人类浏览：随机等待 2-5 秒
+                await page.wait_for_timeout(2000 + int(_random.random() * 3000))
             except Exception as e:
                 logger.warning("Playwright 页面加载超时，继续处理已有内容: %s", e)
                 await page.wait_for_timeout(3000)
 
             html = await page.content()
+
+            # 检测是否遇到验证页面
+            if _is_blocked(html):
+                logger.error("检测到反爬验证页面 (CAPTCHA/block)")
+                raise Exception("遇到反爬验证页面，请稍后重试或更换 IP")
+
             await browser.close()
             return html
     except Exception as e:
+        if "反爬验证" in str(e):
+            raise
         raise Exception(f"Playwright 抓取失败: {str(e)}")
+
+
+def _is_blocked(html: str) -> bool:
+    """检测是否被反爬拦截"""
+    blockers = [
+        'Type the characters you see in this image',
+        'Enter the characters you see below',
+        'robot check',
+        'g-recaptcha',
+        'captcha',
+        'To discuss automated access',
+        'Sorry, we just need to make sure',
+    ]
+    lower = html.lower()
+    return any(b.lower() in lower for b in blockers)
 
 
 async def _fetch_html(url: str) -> str:
@@ -126,6 +157,345 @@ async def _fetch_html(url: str) -> str:
     except Exception as e:
         logger.warning("Requests 抓取失败，尝试 Playwright: %s", e)
         return await _fetch_html_playwright(url)
+
+
+def _extract_amazon_variant_images(soup) -> dict:
+    """从 Amazon 页面提取按变体（颜色/尺寸）分组的图片集。
+
+    主要数据源：<script> 标签中的 colorImages JavaScript 对象。
+    结构：{ 'colorImages': { 'initial': [...], 'Black': [...], 'Blue': [...] } }
+    辅以 colorAsin 映射 ASIN→颜色名。
+    """
+    variant_images = {}
+
+    for script in soup.find_all('script'):
+        text = script.string or ''
+        if 'colorImages' not in text:
+            continue
+
+        # 定位 colorImages 对象
+        match = re.search(r'["\']colorImages["\']\s*:\s*\{', text)
+        if not match:
+            continue
+
+        # 括号匹配提取完整 JSON 对象
+        start = match.end() - 1
+        depth = 0
+        end = start
+        in_string = False
+        escape = False
+        for i in range(start, len(text)):
+            c = text[i]
+            if escape:
+                escape = False
+                continue
+            if c == '\\':
+                escape = True
+                continue
+            if c == '"' or c == "'":
+                if not in_string:
+                    in_string = c
+                elif in_string == c:
+                    in_string = False
+                continue
+            if in_string:
+                continue
+            if c == '{':
+                depth += 1
+            elif c == '}':
+                depth -= 1
+                if depth == 0:
+                    end = i + 1
+                    break
+
+        json_str = text[start:end]
+
+        try:
+            data = json.loads(json_str)
+        except json.JSONDecodeError:
+            continue
+
+        # 提取 colorAsin 映射（ASIN → 颜色名）
+        color_asin = {}
+        asin_match = re.search(r'["\']colorAsin["\']\s*:\s*\{', text)
+        if asin_match:
+            as_start = asin_match.end() - 1
+            depth2 = 0
+            as_end = as_start
+            in_string2 = False
+            escape2 = False
+            for i in range(as_start, min(len(text), as_start + 5000)):
+                c = text[i]
+                if escape2:
+                    escape2 = False
+                    continue
+                if c == '\\':
+                    escape2 = True
+                    continue
+                if c == '"' or c == "'":
+                    if not in_string2:
+                        in_string2 = c
+                    elif in_string2 == c:
+                        in_string2 = False
+                    continue
+                if in_string2:
+                    continue
+                if c == '{':
+                    depth2 += 1
+                elif c == '}':
+                    depth2 -= 1
+                    if depth2 == 0:
+                        as_end = i + 1
+                        break
+            try:
+                color_asin = json.loads(text[as_start:as_end])
+            except json.JSONDecodeError:
+                pass
+
+        # 构建变体名→图片URL列表
+        for variant_name, images in data.items():
+            if variant_name == 'initial':
+                continue
+            urls = []
+            for img in images:
+                if isinstance(img, dict):
+                    url = img.get('hiRes') or img.get('large') or ''
+                    if not url and isinstance(img.get('main'), dict):
+                        url = img['main'].get('url', '')
+                    if url and url.startswith('http'):
+                        urls.append(url)
+            if urls:
+                name = variant_name.strip()
+                # 如果是 ASIN，尝试映射为颜色名
+                if name.startswith('B0') and name in color_asin:
+                    continue  # ASIN 键由颜色名键覆盖
+                # 反向：用 colorAsin 的值匹配
+                for cname, casin in color_asin.items():
+                    if casin == name:
+                        name = cname
+                        break
+                variant_images[name] = urls
+
+        if variant_images:
+            break
+
+    # 回退：从 swatch 元素提取
+    if not variant_images:
+        variant_images = _extract_swatch_images(soup)
+
+    return variant_images
+
+
+def _extract_swatch_images(soup) -> dict:
+    """从色板/swatch DOM 元素提取变体图片（回退方案）"""
+    variant_images = {}
+
+    # Amazon swatch 选择器
+    swatch_selectors = [
+        'li[data-dp-url]',
+        'li.imageSwatch img',
+        '#twisterContainer li img',
+        '#variation_color_name li img',
+        '.swatchAvailable img',
+        'img.imgSwatch',
+    ]
+    seen_urls = set()
+    for selector in swatch_selectors:
+        for el in soup.select(selector):
+            src = el.get('src') or el.get('data-src') or ''
+            alt = (el.get('alt') or el.get('title') or '').strip()
+            if src and src.startswith('http'):
+                src_base = _normalize_img_url(src)
+                if src_base in seen_urls:
+                    continue
+                seen_urls.add(src_base)
+                name = alt or f"variant_{len(variant_images) + 1}"
+                # 提取颜色描述
+                for prefix in ['选择 ', 'Select ', 'Click to select ', 'Color: ']:
+                    name = name.replace(prefix, '')
+                variant_images.setdefault(name, []).append(src)
+
+    return variant_images
+
+
+def _extract_wildberries_variants(html: str, soup) -> dict:
+    """从 Wildberries 页面提取变体图片。
+
+    数据通常在 __NUXT__ 或 __APP__ JS 变量中，或 <script type=application/ld+json>。
+    """
+    variant_images = {}
+
+    # 方法1: 从 JSON-LD 提取 (schema.org/Product)
+    for script in soup.find_all('script', type='application/ld+json'):
+        try:
+            data = json.loads(script.string)
+            if isinstance(data, dict):
+                # 变体数据可能在 offers 中
+                offers = data.get('offers', [])
+                if isinstance(offers, dict):
+                    offers = [offers]
+                for offer in offers:
+                    color = offer.get('color', '') or offer.get('name', '')
+                    img = offer.get('image', '')
+                    if color and img:
+                        variant_images.setdefault(color, []).append(img)
+                if variant_images:
+                    return variant_images
+        except:
+            pass
+
+    # 方法2: 从 __NUXT__ / __APP__ 提取
+    for pattern in [r'window\.__NUXT__\s*=\s*(\{.*?\});', r'window\.__APP__\s*=\s*(\{.*?\});']:
+        match = re.search(pattern, html, re.DOTALL)
+        if match:
+            try:
+                data = json.loads(match.group(1))
+                # 遍历查找含 variant/images 的结构
+                _walk_wb_variants(data, variant_images)
+                if variant_images:
+                    return variant_images
+            except:
+                continue
+
+    # 方法3: 从色板/选项 DOM 元素提取
+    # WB 颜色选择器通常在 .j-color-list 或 .color-list 中
+    wb_swatch_selectors = [
+        '.j-color-list .j-img',
+        '.color-list img',
+        '#colorpicker img',
+        '.product-options img',
+        '[data-color] img',
+    ]
+    for selector in wb_swatch_selectors:
+        for el in soup.select(selector):
+            src = el.get('src') or el.get('data-src') or ''
+            color = (el.get('alt') or el.get('title') or
+                     el.parent.get('data-color', '') if el.parent else '')
+            if src and 'http' in src:
+                color = color.strip() or f"variant_{len(variant_images) + 1}"
+                variant_images.setdefault(color, []).append(_normalize_img_url(src))
+
+    return variant_images
+
+
+def _walk_wb_variants(data, out: dict):
+    """递归遍历 Wildberries 数据对象，提取变体图片信息。"""
+    if isinstance(data, dict):
+        # 查找 nomenclatures / products / variants 等关键字段
+        for key in ('nomenclatures', 'products', 'variants', 'colors', 'colorVariants'):
+            items = data.get(key)
+            if isinstance(items, list):
+                for item in items:
+                    if isinstance(item, dict):
+                        name = item.get('name', '') or item.get('color', '') or item.get('colorName', '')
+                        images = item.get('images', []) or item.get('photos', [])
+                        if isinstance(images, list) and name:
+                            urls = []
+                            for img in images:
+                                if isinstance(img, dict):
+                                    u = img.get('url', '') or img.get('big', '') or img.get('original', '')
+                                    if u:
+                                        urls.append(u)
+                                elif isinstance(img, str):
+                                    urls.append(img)
+                            if urls:
+                                out[name.strip()] = urls
+        # 递归子对象
+        for v in data.values():
+            _walk_wb_variants(v, out)
+    elif isinstance(data, list):
+        for item in data:
+            _walk_wb_variants(item, out)
+
+
+def _normalize_img_url(url: str) -> str:
+    """标准化图片 URL：去掉查询参数和尺寸后缀，便于比较。"""
+    if url.startswith('//'):
+        url = 'https:' + url
+    # 去掉 ? 后参数
+    url = url.split('?')[0]
+    return url
+
+
+def _is_noise_image(src: str) -> bool:
+    """判断图片是否为无关噪声（图标/badge/像素/spacer/缩略图等）。"""
+    src_lower = src.lower()
+    noise_patterns = [
+        # 功能性图标
+        'icon', 'avatar', 'logo', 'spacer', 'pixel', '1x1', 'flag',
+        'badge', 'transparent', 'blank', 'grey', 'placeholder',
+        'sprite', 'dot', 'loading', 'ajax-loader', 'spinner',
+        'star', 'rating', 'review', 'vote',
+        # SVG 图标
+        '.svg',
+        # 色板/缩略图
+        'swatch', 'color-picker',
+        # 亚马逊尺寸标识（小图：后缀含 _SR / _SS / _UL + 数字）
+        '_SR75', '_SR100', '_SR166', '_SR200',
+        '_SS40_', '_SS50_', '_SS60_', '_SS70_', '_SS75_', '_SS100_', '_SS180_',
+        '_AC_SR', '_AC_SS', '_AC_UL',
+        # WB 缩略图标识
+        '_thumbnail', '_small', '__small',
+        # 亚马逊 A+ 内容装饰图
+        'aplus-media-library',
+        # 低质量标识
+        'QL70_ML2', 'QL75_ML2',
+        # 无关域名
+        'fls-na.amazon.com', 'pixel.quantserve',
+        'bat.bing.com', 'google-analytics',
+        # icon 前缀
+        'icon_', '_icon', 'thumb-', '-thumb',
+    ]
+    return any(p in src_lower for p in noise_patterns)
+
+
+def _filter_image_urls(raw_urls: list) -> list:
+    """过滤无关图片：去噪、去重（保留高清版）。"""
+    # 1. 去噪
+    cleaned = []
+    for url in raw_urls:
+        if not _is_noise_image(url):
+            cleaned.append(url)
+
+    # 2. 提取 Amazon 图片 ID：URL 中 /images/I/{ID}._{SUFFIX}_  → ID 是第一个 ._ 之前的部分
+    def _img_id(u):
+        u = _normalize_img_url(u)
+        fn = u.split('/')[-1]
+        # Amazon: IMGID._AC_SX679_.jpg → IMGID
+        idx = fn.find('._')
+        if idx > 0:
+            return fn[:idx]
+        return fn
+
+    def _img_resolution(u):
+        """估算图片尺寸（从 Amazon URL 后缀提取）。"""
+        # 匹配 _SX679, _SY450, _SL1500, _SR165,165, _US40, _UL116 等
+        dims = re.findall(r'_[A-Z]{2,3}(\d+(?:,\d+)?)', u)
+        total = 0
+        for d in dims:
+            nums = [int(x) for x in d.split(',')[:2]]
+            total += max(nums)
+        return total if total > 0 else 0
+
+    # 3. 按图片 ID 去重，保留分辨率最大的版本
+    groups = {}
+    for url in cleaned:
+        key = _img_id(url)
+        if key not in groups:
+            groups[key] = url
+        else:
+            if _img_resolution(url) > _img_resolution(groups[key]):
+                groups[key] = url
+
+    # 4. 过滤低分辨率（< 200px 通常不是产品图）
+    result = []
+    for url in groups.values():
+        res = _img_resolution(url)
+        # 0 = 无法识别分辨率（非Amazon URL），保留
+        if res == 0 or res >= 200:
+            result.append(url)
+
+    return sorted(result, key=lambda u: _img_resolution(u), reverse=True)
 
 
 def _extract_from_html(html: str, url: str) -> dict:
@@ -180,7 +550,7 @@ def _extract_from_html(html: str, url: str) -> dict:
             except:
                 pass
 
-    # ===== 图片提取（增强版） =====
+    # ===== 图片提取（增强版 — 反爬 + 去噪 + 变体分组） =====
     found_images = set()
 
     # 1. 从 JSON-LD 结构化数据中提取
@@ -206,39 +576,58 @@ def _extract_from_html(html: str, url: str) -> dict:
             if content.startswith('http'):
                 found_images.add(content)
 
-    # 3. 从 Amazon 特定选择器提取
-    amazon_selectors = [
-        'div#imgTagWrapperId img',
-        'div.imgTagWrapper img',
-        '#landingImage',
-        '#imgBlkFront',
-        '.a-dynamic-image',
-        'div#imageBlock img',
-        'img[data-old-hires]',
-        'img[data-a-dynamic-image]',
-        'li.image img',
-        '.imageThumbnail img',
-        'div[data-component="imageBlock"] img',
-    ]
-    for selector in amazon_selectors:
-        try:
-            for img in soup.select(selector):
-                for attr in ['src', 'data-src', 'data-old-hires']:
-                    src = img.get(attr, '')
-                    if src and 'icon' not in src.lower():
+    # 3. 从平台特定选择器提取
+    if platform == 'amazon':
+        amazon_selectors = [
+            'div#imgTagWrapperId img',
+            'div.imgTagWrapper img',
+            '#landingImage',
+            '#imgBlkFront',
+            '.a-dynamic-image',
+            'div#imageBlock img',
+            'img[data-old-hires]',
+            'img[data-a-dynamic-image]',
+            'li.image img',
+            '.imageThumbnail img',
+            'div[data-component="imageBlock"] img',
+        ]
+        for selector in amazon_selectors:
+            try:
+                for img in soup.select(selector):
+                    for attr in ['src', 'data-src', 'data-old-hires']:
+                        src = img.get(attr, '')
+                        if src and not _is_noise_image(src):
+                            if src.startswith('//'):
+                                src = 'https:' + src
+                            found_images.add(src)
+                            break
+            except:
+                pass
+    elif platform == 'wildberries':
+        wb_selectors = [
+            '.j-zoom-image',
+            '.product-page__gallery img',
+            '.swiper-zoom-container img',
+            '.j- product-photo img',
+            'img.j-product-photo',
+        ]
+        for selector in wb_selectors:
+            try:
+                for img in soup.select(selector):
+                    src = img.get('src') or img.get('data-src') or img.get('data-original') or ''
+                    if src and not _is_noise_image(src):
                         if src.startswith('//'):
                             src = 'https:' + src
                         found_images.add(src)
-                        break
-        except:
-            pass
+            except:
+                pass
 
-    # 4. 从所有 img 标签提取（过滤小图标）
+    # 4. 从所有 img 标签提取（使用增强的噪声过滤）
     for img in soup.find_all('img'):
-        src = img.get('src') or img.get('data-src') or img.get('data-old-hires') or ''
+        src = img.get('src') or img.get('data-src') or img.get('data-old-hires') or img.get('data-original') or ''
         if not src:
             continue
-        if any(x in src.lower() for x in ['icon', 'avatar', 'logo', 'spacer', 'pixel', '1x1', 'flag', 'badge']):
+        if _is_noise_image(src):
             continue
         if src.startswith('//'):
             src = 'https:' + src
@@ -254,7 +643,7 @@ def _extract_from_html(html: str, url: str) -> dict:
         if bg_match:
             found_images.add(bg_match.group(1))
 
-    # 6. 从 data 属性中提取图片 URL
+    # 6. 从 data 属性中提取图片 URL（Amazon 特有：含全分辨率映射）
     for tag in soup.find_all(attrs={"data-a-dynamic-image": True}):
         try:
             dynamic_data = json.loads(tag["data-a-dynamic-image"])
@@ -264,17 +653,22 @@ def _extract_from_html(html: str, url: str) -> dict:
         except:
             pass
 
-    # 过滤：只保留包含图片扩展名或图片路径的URL
-    filtered = []
-    for src in found_images:
-        src_lower = src.lower()
-        if any(ext in src_lower for ext in ['.jpg', '.jpeg', '.png', '.webp', '.gif']):
-            filtered.append(src)
-        elif any(kw in src_lower for kw in ['images', 'media', 'img', 'photo', 'picture']):
-            filtered.append(src)
+    # 统一过滤 + 去重 + 保留高清版本
+    raw_list = list(found_images)
+    image_urls = _filter_image_urls(raw_list)
+    extracted["image_urls"] = image_urls[:50]
 
-    # 去重并限制数量
-    extracted["image_urls"] = list(dict.fromkeys(filtered))[:50]
+    # ===== 变体图片分组 =====
+    variant_images = {}
+    if platform == 'amazon':
+        variant_images = _extract_amazon_variant_images(soup)
+    elif platform == 'wildberries':
+        variant_images = _extract_wildberries_variants(html, soup)
+
+    # 如果提取到变体图片，存储分组结果
+    if variant_images:
+        extracted["variant_images"] = variant_images
+        logger.info("提取到 %s 个变体图片组: %s", len(variant_images), list(variant_images.keys()))
 
     # ===== Amazon 专属：提取"关于该商品"和"商品描述" =====
     if platform == 'amazon':

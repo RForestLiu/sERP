@@ -3528,7 +3528,7 @@ def serve_product_image(skc, filename):
 
 @app.route("/api/products/<skc>/image-sets", methods=["GET"])
 def get_product_image_sets(skc):
-    """获取产品的图片集。首次访问时自动创建默认"采集图片"集。"""
+    """获取产品的图片集。首次访问时自动创建默认图片集，含变体分组。"""
     products_data = _load_products()
     product_list = products_data.get("产品列表", [])
 
@@ -3556,7 +3556,6 @@ def get_product_image_sets(skc):
                     url_basename = url.split('/')[-1].split('?')[0]
                     if len(url_basename) < 10:
                         continue
-                    # 跳过已有本地文件的 URL
                     represented = any(
                         url_basename.split('.')[0][:15] in fn
                         for fn in existing_fns
@@ -3566,6 +3565,31 @@ def get_product_image_sets(skc):
                         idx += 1
 
                 p["image_sets"]["采集图片"] = default_set
+
+                # 3. 从 variant_images 创建变体分组图片集
+                variant_images = pd.get("variant_images", {})
+                if variant_images:
+                    local_fns = {e["filename"] for e in default_set}
+                    for variant_name, urls in variant_images.items():
+                        variant_set = []
+                        vi = 0
+                        for url in urls:
+                            # 尝试匹配本地文件
+                            url_bn = url.split('/')[-1].split('?')[0]
+                            matched_fn = None
+                            for fn in local_fns:
+                                if url_bn.split('.')[0][:15] in fn or fn.split('.')[0][:15] in url_bn:
+                                    matched_fn = fn
+                                    break
+                            if matched_fn:
+                                variant_set.append({"filename": matched_fn, "index": vi})
+                            else:
+                                variant_set.append({"url": url, "filename": "", "index": vi})
+                            vi += 1
+                        if variant_set:
+                            p["image_sets"][variant_name] = variant_set
+                    logger.info("产品 %s 创建了 %s 个变体图片集", skc, len(variant_images))
+
                 _save_products(products_data)
 
             return jsonify({
