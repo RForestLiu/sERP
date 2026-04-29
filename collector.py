@@ -23,6 +23,8 @@ DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
 DEEPSEEK_API_URL = os.getenv("DEEPSEEK_API_URL", "https://api.deepseek.com/v1/chat/completions")
 CONCURRENT_DOWNLOADS = 5  # 并发下载数
 DATA_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+PROXY_URL = os.getenv("PROXY", "http://127.0.0.1:7890")  # Clash 本地代理地址
+PROXY_ENABLED = os.getenv("PROXY_ENABLED", "true").lower() == "true"
 
 # ---------- 工具函数 ----------
 
@@ -51,6 +53,20 @@ def _get_collect_dir(task_id: str) -> str:
     return os.path.join(DATA_ROOT, f"collect_{task_id}")
 
 
+def _get_proxy_dict() -> dict | None:
+    """获取 requests 格式的代理配置。"""
+    if not PROXY_ENABLED or not PROXY_URL:
+        return None
+    return {"http": PROXY_URL, "https": PROXY_URL}
+
+
+def _get_proxy_server() -> str | None:
+    """获取 Playwright/aiohttp 格式的代理地址。"""
+    if not PROXY_ENABLED or not PROXY_URL:
+        return None
+    return PROXY_URL
+
+
 # ==================== 第一层：抓取层 (Playwright + requests 双引擎) ====================
 
 import requests as sync_requests
@@ -64,7 +80,8 @@ def _fetch_html_requests(url: str) -> str:
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
     }
-    resp = sync_requests.get(url, headers=headers, timeout=30, allow_redirects=True)
+    proxies = _get_proxy_dict()
+    resp = sync_requests.get(url, headers=headers, timeout=30, allow_redirects=True, proxies=proxies)
     resp.raise_for_status()
     return resp.text
 
@@ -74,25 +91,32 @@ async def _fetch_html_playwright(url: str) -> str:
     import random as _random
     try:
         from playwright.async_api import async_playwright
+        proxy_server = _get_proxy_server()
         async with async_playwright() as p:
+            launch_args = [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-accelerated-2d-canvas',
+                '--disable-gpu',
+                '--disable-blink-features=AutomationControlled',
+            ]
+            if proxy_server:
+                launch_args.append(f'--proxy-server={proxy_server}')
             browser = await p.chromium.launch(
                 headless=True,
-                args=[
-                    '--no-sandbox',
-                    '--disable-setuid-sandbox',
-                    '--disable-dev-shm-usage',
-                    '--disable-accelerated-2d-canvas',
-                    '--disable-gpu',
-                    '--disable-blink-features=AutomationControlled',
-                ]
+                args=launch_args,
             )
-            context = await browser.new_context(
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                          "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                viewport={"width": 1920, "height": 1080},
-                locale="zh-CN",
-                timezone_id="Asia/Shanghai",
-            )
+            context_options = {
+                "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                            "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "viewport": {"width": 1920, "height": 1080},
+                "locale": "zh-CN",
+                "timezone_id": "Asia/Shanghai",
+            }
+            if proxy_server:
+                context_options["proxy"] = {"server": proxy_server}
+            context = await browser.new_context(**context_options)
             page = await context.new_page()
 
             # 隐藏自动化特征
@@ -143,15 +167,35 @@ def _is_blocked(html: str) -> bool:
 
 
 async def _fetch_html(url: str) -> str:
-    """智能获取页面 HTML：Amazon 等动态页面用 Playwright，其他用 requests"""
+    """智能获取页面 HTML。
+
+    引擎选择策略：
+    - Amazon: requests 优先（反爬较轻，Playwright 易触发 CAPTCHA）
+    - Wildberries/Ozon: Playwright（JS 渲染必需）
+    - 其他: requests 优先
+    - 任何引擎失败后尝试另一个
+    """
     platform = _extract_platform(url)
-    # 需要 JS 渲染的平台
-    js_platforms = ['amazon', 'ozon', 'wildberries']
 
-    if platform in js_platforms:
-        logger.info("使用 Playwright 抓取 (平台: %s)", platform)
-        return await _fetch_html_playwright(url)
+    # Amazon 用 requests 优先（Playwright headless 极易触发 CAPTCHA）
+    if platform == 'amazon':
+        try:
+            logger.info("使用 requests 抓取 (Amazon 优先)")
+            return _fetch_html_requests(url)
+        except Exception as e:
+            logger.warning("Requests 抓取 Amazon 失败，尝试 Playwright: %s", e)
+            return await _fetch_html_playwright(url)
 
+    # Wildberries/Ozon 需要 JS 渲染
+    if platform in ('wildberries', 'ozon'):
+        try:
+            logger.info("使用 Playwright 抓取 (平台: %s)", platform)
+            return await _fetch_html_playwright(url)
+        except Exception as e:
+            logger.warning("Playwright 抓取失败，尝试 requests: %s", e)
+            return _fetch_html_requests(url)
+
+    # 其他平台：requests 优先
     try:
         return _fetch_html_requests(url)
     except Exception as e:
@@ -768,7 +812,8 @@ async def classify_images_deepseek(image_urls: list, product_name: str, platform
     }
 
     try:
-        async with aiohttp.ClientSession() as session:
+        proxy_url = _get_proxy_server()
+        async with aiohttp.ClientSession(proxy=proxy_url) as session:
             async with session.post(DEEPSEEK_API_URL, json=payload, headers=headers, timeout=120) as resp:
                 if resp.status != 200:
                     text = await resp.text()
@@ -881,8 +926,10 @@ async def download_images(classified_images: list, save_dir: str) -> list:
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     }
 
+    proxy_url = _get_proxy_server()
+
     results = []
-    async with aiohttp.ClientSession(connector=connector, headers=headers) as session:
+    async with aiohttp.ClientSession(connector=connector, headers=headers, proxy=proxy_url) as session:
         tasks = []
         for i, item in enumerate(classified_images):
             save_path = os.path.join(save_dir, item["new_name"])
