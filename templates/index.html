@@ -440,6 +440,62 @@
         .collect-card-progress-bar.error {
             background: #ef4444;
         }
+        .collect-card-preview {
+            margin-top: 10px;
+            display: none;
+        }
+        .collect-card-preview.active {
+            display: block;
+        }
+        .collect-variant-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+        .collect-variant-tag {
+            background: #ede9fe;
+            color: #7c3aed;
+            padding: 3px 10px;
+            border-radius: 12px;
+            white-space: nowrap;
+        }
+        .collect-thumbnails {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .collect-thumb {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 2px solid #e5e7eb;
+            cursor: pointer;
+            transition: border-color 0.2s, transform 0.15s;
+            background: #f9fafb;
+        }
+        .collect-thumb:hover {
+            border-color: #3b82f6;
+            transform: scale(1.05);
+        }
+        .collect-thumb-more {
+            width: 100px;
+            height: 100px;
+            border-radius: 6px;
+            background: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: #6b7280;
+            cursor: pointer;
+            border: 2px dashed #d1d5db;
+        }
+        .collect-thumb-more:hover {
+            background: #e5e7eb;
+        }
 
         /* 数据查看弹窗 */
         .data-modal-overlay {
@@ -1693,6 +1749,7 @@
                             <div class="collect-result-item">🖼️ 图片: <span>${t.downloaded || 0}/${t.image_count || 0} 张已下载</span></div>
                             <div class="collect-result-item">❌ 失败: <span>${t.failed || 0} 张</span></div>
                         </div>
+                        <div class="collect-card-preview" id="collect-preview-${t.task_id}"></div>
                         <div class="collect-card-actions" style="display:flex">
                             <button class="collect-btn-open-folder" onclick="openCollectFolder('${t.task_id}')">📂 打开文件夹</button>
                             <button class="collect-btn-view-data" onclick="showDataModal('${t.task_id}')">📋 查看数据</button>
@@ -1700,6 +1757,9 @@
                         </div>
                     `;
                     collectCardsContainer.appendChild(card);
+                    if (t.status === "completed") {
+                        loadCollectPreview(t.task_id);
+                    }
                 });
             } catch (e) {
                 console.error("恢复采集任务失败:", e);
@@ -1809,6 +1869,7 @@
                     <div class="collect-card-progress-bar" id="collect-progress-bar-${taskId}" style="width: 0%"></div>
                 </div>
                 <div class="collect-card-result" id="collect-result-${taskId}" style="display:none"></div>
+                <div class="collect-card-preview" id="collect-preview-${taskId}"></div>
                 <div class="collect-card-actions" id="collect-actions-${taskId}" style="display:none">
                     <button class="collect-btn-open-folder" onclick="openCollectFolder('${taskId}')">📂 打开文件夹</button>
                     <button class="collect-btn-view-data" onclick="showDataModal('${taskId}')">📋 查看数据</button>
@@ -1868,6 +1929,52 @@
                 if (titleEl) titleEl.textContent = "采集失败";
             }
         }
+
+        // 加载采集卡片预览（缩略图 + 变种标签）
+        async function loadCollectPreview(taskId) {
+            const previewEl = document.getElementById(`collect-preview-${taskId}`);
+            if (!previewEl) return;
+            try {
+                const res = await fetch(`/api/collect/${taskId}/result`);
+                if (!res.ok) return;
+                const data = await res.json();
+                let html = "";
+                // 变种标签
+                if (data.variant_groups && Object.keys(data.variant_groups).length > 0) {
+                    html += '<div class="collect-variant-info">';
+                    for (const [vname, count] of Object.entries(data.variant_groups)) {
+                        html += `<span class="collect-variant-tag">${vname}: ${count}张</span>`;
+                    }
+                    html += '</div>';
+                }
+                // 缩略图
+                if (data.thumbnail_urls && data.thumbnail_urls.length > 0) {
+                    html += '<div class="collect-thumbnails">';
+                    data.thumbnail_urls.forEach((url, i) => {
+                        html += `<img class="collect-thumb" src="${url}" alt="缩略图${i+1}" loading="lazy" onclick="viewCollectImage('${url}')" title="点击查看大图">`;
+                    });
+                    // 如果图片数超过缩略图数，显示"+N"提示
+                    if (data.summary && data.summary.image_count > data.thumbnail_urls.length) {
+                        const remaining = data.summary.image_count - data.thumbnail_urls.length;
+                        html += `<div class="collect-thumb-more" onclick="alert('共${data.summary.image_count}张图片，其中${data.summary.downloaded || data.summary.image_count}张已下载')">+${remaining}</div>`;
+                    }
+                    html += '</div>';
+                }
+                previewEl.innerHTML = html;
+                previewEl.classList.add("active");
+            } catch (e) {
+                console.error("加载采集预览失败:", e);
+            }
+        }
+
+        // 查看采集大图
+        window.viewCollectImage = function(url) {
+            const overlay = document.createElement("div");
+            overlay.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer;";
+            overlay.innerHTML = `<img src="${url}" style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:4px;">`;
+            overlay.onclick = () => overlay.remove();
+            document.body.appendChild(overlay);
+        };
 
         // 删除采集卡片（含后端数据和文件夹）
         window.deleteCollectCard = async function(taskId) {
@@ -2081,11 +2188,12 @@
             });
         };
 
-        // 重写 updateCollectCard，在完成时也检查保存状态
+        // 重写 updateCollectCard，在完成时也检查保存状态 + 加载预览
         const _originalUpdate = updateCollectCard;
         updateCollectCard = function(taskId, status, progress, message) {
             _originalUpdate.call(this, taskId, status, progress, message);
             if (status === "completed") {
+                loadCollectPreview(taskId);
                 // 延迟一点检查保存状态，确保按钮已渲染
                 setTimeout(() => checkProductStatus(taskId), 500);
             }
