@@ -107,15 +107,6 @@ def serve_task_image(task_id, filename):
     folder = task_folder(task_id)
     return send_from_directory(folder, filename)
 
-
-@app.route("/collect_images/<task_id>/<path:filename>")
-def serve_collect_image(task_id, filename):
-    """提供采集任务的图片文件（用于卡片缩略图预览）。"""
-    from collector import _get_collect_dir
-    images_dir = os.path.join(_get_collect_dir(task_id), "images")
-    return send_from_directory(images_dir, filename)
-
-
 # --------------- API ---------------
 @app.route("/api/tasks", methods=["GET"])
 def get_tasks():
@@ -708,26 +699,11 @@ def get_collect_result(task_id):
         except:
             pass
     
-    # 构建缩略图 URL 列表
-    thumbnail_urls = []
-    for img in images_mapping:
-        if img.get("success") and img.get("new_name"):
-            thumbnail_urls.append(f"/collect_images/{task_id}/{img['new_name']}")
-
-    # 提取变体图片组信息
-    variant_groups = {}
-    vi = product_data.get("variant_images", {})
-    if vi:
-        for vname, urls in vi.items():
-            variant_groups[vname] = len(urls)
-
     return jsonify({
         "task_id": task_id,
         "summary": result,
         "product_data": product_data,
-        "images_mapping": images_mapping,
-        "thumbnail_urls": thumbnail_urls[:12],  # 最多 12 张缩略图
-        "variant_groups": variant_groups,
+        "images_mapping": images_mapping
     })
 
 
@@ -879,40 +855,6 @@ def save_collect_product(task_id):
         "category": category_cn,
         "message": f"产品已保存为 {skc}"
     })
-
-
-@app.route("/api/collect/import-har", methods=["POST"])
-def import_har():
-    """上传店小秘 HAR 文件，导入采集数据"""
-    import os as _os
-    import tempfile
-
-    if "file" not in request.files:
-        return jsonify({"error": "请上传 HAR 文件"}), 400
-
-    file = request.files["file"]
-    if not file.filename or not file.filename.endswith(".har"):
-        return jsonify({"error": "请上传 .har 格式的文件"}), 400
-
-    # 保存到临时文件
-    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".har")
-    try:
-        file.save(tmp.name)
-        tmp.close()
-
-        # 调用导入逻辑
-        from import_dianxiaomi import import_from_har
-        result = import_from_har(tmp.name)
-
-        if result:
-            return jsonify({"success": True, **result})
-        else:
-            return jsonify({"error": "未能从 HAR 文件中提取产品数据，请确认文件包含完整的请求内容"}), 400
-    finally:
-        try:
-            _os.unlink(tmp.name)
-        except:
-            pass
 
 
 # ==================== 产品管理模块 API ====================
