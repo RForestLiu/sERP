@@ -1170,6 +1170,11 @@
                     <label class="collect-label">采集网址：</label>
                     <input type="text" class="collect-url-input" id="collect-url" placeholder="请输入需要采集的产品网址..." />
                     <button class="collect-btn" id="collect-start-btn">开始采集</button>
+                    <span style="color:#9ca3af;margin:0 4px 0 8px;">|</span>
+                    <label class="collect-btn" id="import-har-btn" style="cursor:pointer;font-size:13px;padding:6px 14px;background:#f0fdf4;border:1px dashed #4ade80;color:#16a34a;border-radius:6px;" title="从店小秘 Chrome DevTools 导出的 HAR 文件导入采集数据">
+                        📥 导入HAR
+                        <input type="file" id="har-file-input" accept=".har" style="display:none;">
+                    </label>
                 </div>
                 <div class="collect-content" id="collect-content">
                     <div class="collect-cards-container" id="collect-cards-container"></div>
@@ -2113,6 +2118,36 @@
                 collectStartBtn.click();
             }
         });
+
+        // HAR 文件导入
+        const harFileInput = document.getElementById("har-file-input");
+        if (harFileInput) {
+            harFileInput.addEventListener("change", async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const formData = new FormData();
+                formData.append("file", file);
+                try {
+                    collectStartBtn.disabled = true;
+                    collectStartBtn.textContent = "导入中...";
+                    const res = await fetch("/api/collect/import-har", { method: "POST", body: formData });
+                    const data = await res.json();
+                    if (data.success) {
+                        alert(`✅ 导入成功!\n标题: ${data.product_data?.title || "未知"}\n图片: ${data.downloaded_count}/${data.images_count} 张`);
+                        // 重新加载采集卡片
+                        await restoreCollectTasks();
+                    } else {
+                        alert(`❌ 导入失败: ${data.error}`);
+                    }
+                } catch (err) {
+                    alert(`❌ 导入出错: ${err.message}`);
+                } finally {
+                    collectStartBtn.disabled = false;
+                    collectStartBtn.textContent = "开始采集";
+                    harFileInput.value = "";
+                }
+            });
+        }
 
         // ==================== 保存为正式产品 ====================
 
