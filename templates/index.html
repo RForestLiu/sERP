@@ -711,6 +711,32 @@
             text-align: center; color: #ccc; font-size: 14px;
             padding: 40px 0; user-select: none; width: 100%;
         }
+        .img-mgmt-subset-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-left: 24px; padding: 4px 10px 2px 10px;
+            border-left: 2px solid #e0e7ff;
+        }
+        .img-mgmt-subset-images {
+            margin-left: 24px;
+        }
+        .img-mgmt-create-subset {
+            margin-left: 24px; margin-top: 4px; padding: 4px 10px;
+            font-size: 11px; color: #8b5cf6; cursor: pointer;
+            border: 1px dashed #d1d5db; border-radius: 4px;
+            display: inline-block; user-select: none;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .img-mgmt-create-subset:hover { background: #f5f3ff; border-color: #8b5cf6; }
+        .subset-dropdown {
+            position: absolute; background: white; border: 1px solid #e5e7eb;
+            border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            z-index: 20; min-width: 160px; overflow: hidden;
+        }
+        .subset-dd-item {
+            padding: 8px 14px; font-size: 12px; cursor: pointer;
+            white-space: nowrap; transition: background 0.1s;
+        }
+        .subset-dd-item:hover { background: #f0f4ff; }
 
         /* ===== 产品管理模块 ===== */
         .sync-toolbar {
@@ -2805,7 +2831,8 @@
 
         let currentImgSkc = null;
         let imageSets = {};
-        let _uploadTargetSet = null; // which set the next upload goes to
+        let imageSubsets = {};
+        let _uploadTargetSet = null;
 
         async function openImageMgmt(skc) {
             currentImgSkc = skc;
@@ -2815,6 +2842,7 @@
                 if (!res.ok) { showMsg("加载图片集失败", true); return; }
                 const data = await res.json();
                 imageSets = data.image_sets || {};
+                imageSubsets = data.image_subsets || {};
             } catch (e) {
                 showMsg("加载图片集出错: " + e.message, true);
                 return;
@@ -2829,6 +2857,7 @@
             imgMgmtOverlay.classList.remove("active");
             currentImgSkc = null;
             imageSets = {};
+            imageSubsets = {};
             _uploadTargetSet = null;
         }
 
@@ -2957,6 +2986,73 @@
                 });
 
                 card.appendChild(imagesRow);
+
+                // --- Subsets display (indented) ---
+                const subs = imageSubsets[name] || {};
+                const subNames = Object.keys(subs).sort();
+                subNames.forEach(function(subName) {
+                    const subEntries = subs[subName] || [];
+                    const subHeader = document.createElement("div");
+                    subHeader.className = "img-mgmt-subset-header";
+                    subHeader.innerHTML = `<span class="img-mgmt-set-name">📄 ${subName} (${subEntries.length}张)</span>`;
+
+                    const subActions = document.createElement("div");
+                    subActions.className = "img-mgmt-set-actions";
+                    const delSubBtn = document.createElement("button");
+                    delSubBtn.className = "btn-delete";
+                    delSubBtn.title = "删除子集";
+                    delSubBtn.textContent = "🗑️";
+                    delSubBtn.addEventListener("click", function() {
+                        if (confirm("确定删除子集「" + subName + "」？")) {
+                            delete imageSubsets[name][subName];
+                            renderAllSets();
+                            imgMgmtSaveStatus.textContent = "(未保存)";
+                        }
+                    });
+                    subActions.appendChild(delSubBtn);
+                    subHeader.appendChild(subActions);
+                    card.appendChild(subHeader);
+
+                    const subRow = document.createElement("div");
+                    subRow.className = "img-mgmt-set-images img-mgmt-subset-images";
+                    subRow.dataset.set = name;
+                    subRow.dataset.subset = subName;
+                    subEntries.sort(function(a, b) { return (a.index || 0) - (b.index || 0); });
+                    subEntries.forEach(function(entry, idx) {
+                        const item = createImageItem(entry, idx, name + "::" + subName);
+                        subRow.appendChild(item);
+                    });
+                    card.appendChild(subRow);
+                });
+
+                // --- "创建图片子集" button ---
+                const createSubBtn = document.createElement("div");
+                createSubBtn.className = "img-mgmt-create-subset";
+                createSubBtn.textContent = "+ 创建图片子集";
+                createSubBtn.addEventListener("click", function(e) {
+                    e.stopPropagation();
+                    // Toggle dropdown
+                    const existing = card.querySelector(".subset-dropdown");
+                    if (existing) { existing.remove(); return; }
+                    const dd = document.createElement("div");
+                    dd.className = "subset-dropdown";
+                    dd.innerHTML = '<div class="subset-dd-item" data-action="batch-process">🖼️ 图片批量处理</div>';
+                    dd.querySelector("[data-action='batch-process']").addEventListener("click", function(ev) {
+                        ev.stopPropagation();
+                        dd.remove();
+                        window.open("/image-batch/" + currentImgSkc, "_blank");
+                    });
+                    card.appendChild(dd);
+                    // Close dropdown on outside click
+                    setTimeout(function() {
+                        document.addEventListener("click", function closeDD(ev2) {
+                            if (!dd.contains(ev2.target)) { dd.remove(); }
+                            document.removeEventListener("click", closeDD);
+                        }, { once: true });
+                    }, 0);
+                });
+                card.appendChild(createSubBtn);
+
                 imgMgmtBody.appendChild(card);
             });
 
@@ -3096,7 +3192,7 @@
                 const res = await fetch(`/api/products/${currentImgSkc}/image-sets`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ image_sets: imageSets })
+                    body: JSON.stringify({ image_sets: imageSets, image_subsets: imageSubsets })
                 });
                 if (!res.ok) throw new Error("保存失败");
                 const rdata = await res.json();

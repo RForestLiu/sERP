@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片批量处理 - {{ skc }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f6fa; color: #333; }
+        .topbar {
+            background: white; border-bottom: 1px solid #e5e7eb; padding: 10px 20px;
+            display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 10;
+        }
+        .topbar h1 { font-size: 16px; }
+        .topbar .skc { font-size: 12px; color: #999; }
+        .main { display: flex; height: calc(100vh - 50px); }
+        .sidebar {
+            width: 260px; background: white; border-right: 1px solid #e5e7eb;
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        .sidebar-header {
+            padding: 10px 14px; font-size: 13px; font-weight: 600;
+            border-bottom: 1px solid #e5e7eb; color: #555;
+        }
+        .set-list { flex: 1; overflow-y: auto; padding: 6px 0; }
+        .set-item {
+            padding: 8px 14px; cursor: pointer; font-size: 13px;
+            display: flex; align-items: center; gap: 6px;
+            transition: background 0.1s; user-select: none;
+        }
+        .set-item:hover { background: #f0f4ff; }
+        .set-item.active { background: #e0e7ff; color: #3730a3; font-weight: 600; }
+        .set-item .count { margin-left: auto; font-size: 11px; color: #999; }
+        .canvas-area {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            background: #e9ecf1; position: relative; overflow: hidden;
+        }
+        .canvas-placeholder { color: #bbb; font-size: 14px; text-align: center; }
+        .canvas-placeholder .icon { font-size: 48px; margin-bottom: 8px; }
+        .thumb-strip {
+            background: white; border-top: 1px solid #e5e7eb; padding: 8px 14px;
+            display: flex; gap: 6px; overflow-x: auto; min-height: 90px; align-items: center;
+        }
+        .thumb-strip img {
+            width: 70px; height: 70px; object-fit: cover; border-radius: 4px;
+            border: 1px solid #e5e7eb; cursor: pointer; flex-shrink: 0; transition: border-color 0.15s;
+        }
+        .thumb-strip img:hover { border-color: #3498db; }
+        .thumb-strip img.selected { border-color: #3498db; box-shadow: 0 0 0 2px rgba(52,152,219,0.3); }
+        .toolbar {
+            padding: 8px 14px; border-bottom: 1px solid #e5e7eb; background: #fafbfc;
+            display: flex; gap: 6px; flex-wrap: wrap;
+        }
+        .toolbar button {
+            padding: 4px 12px; font-size: 12px; border: 1px solid #d1d5db;
+            border-radius: 4px; background: white; cursor: pointer; transition: background 0.15s;
+        }
+        .toolbar button:hover { background: #f0f0f0; }
+        .statusbar {
+            padding: 6px 14px; font-size: 11px; color: #999;
+            border-top: 1px solid #e5e7eb; background: white; display: flex; gap: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h1>🖼️ 图片批量处理</h1>
+        <span class="skc">{{ skc }}</span>
+        <span style="flex:1"></span>
+        <span style="font-size:12px;color:#999;">{{ title }}</span>
+    </div>
+    <div class="main">
+        <div class="sidebar">
+            <div class="sidebar-header">📁 图片集</div>
+            <div class="toolbar">
+                <button onclick="selectAll()">全选</button>
+                <button onclick="deselectAll()">取消全选</button>
+                <button onclick="saveAsSubset()" style="background:#8b5cf6;color:white;border-color:#8b5cf6;">💾 保存为子集</button>
+            </div>
+            <div class="set-list" id="set-list">
+                <div class="canvas-placeholder" style="padding:20px;">
+                    <div class="icon">📂</div>
+                    加载中...
+                </div>
+            </div>
+            <div class="statusbar">
+                <span id="sel-count">已选: 0</span>
+                <span id="total-count">总计: 0</span>
+            </div>
+        </div>
+        <div class="canvas-area" id="canvas">
+            <div class="canvas-placeholder">
+                <div class="icon">🖼️</div>
+                <div>选择左侧图片集开始处理</div>
+                <div style="font-size:11px;color:#ccc;margin-top:4px;">批量裁剪 / 缩放 / 加水印 / 调色</div>
+            </div>
+        </div>
+    </div>
+    <div class="thumb-strip" id="thumb-strip"></div>
+
+    <script>
+        const skc = "{{ skc }}";
+        let allSets = {};
+        let allSubsets = {};
+        let currentSet = null;
+        let selectedImages = new Set();
+
+        async function loadImages() {
+            try {
+                const res = await fetch(`/api/products/${skc}/image-sets`);
+                if (!res.ok) throw new Error("加载失败");
+                const data = await res.json();
+                allSets = data.image_sets || {};
+                allSubsets = data.image_subsets || {};
+                renderSetList();
+            } catch(e) {
+                document.getElementById("set-list").innerHTML =
+                    '<div class="canvas-placeholder" style="padding:20px;color:#e74c3c;">加载失败: ' + e.message + '</div>';
+            }
+        }
+
+        function renderSetList() {
+            const container = document.getElementById("set-list");
+            let h = "";
+            let total = 0;
+            const names = Object.keys(allSets).sort();
+            names.forEach(name => {
+                const entries = allSets[name] || [];
+                total += entries.length;
+                h += `<div class="set-item" data-set="${name}" onclick="selectSet('${name}')">📁 ${name}<span class="count">${entries.length}</span></div>`;
+                // subsets
+                const subs = allSubsets[name] || {};
+                Object.keys(subs).sort().forEach(subName => {
+                    const subEntries = subs[subName] || [];
+                    total += subEntries.length;
+                    h += `<div class="set-item" data-set="${name}" data-subset="${subName}" onclick="selectSubset('${name}','${subName}')" style="padding-left:30px;">📄 ${subName}<span class="count">${subEntries.length}</span></div>`;
+                });
+            });
+            if (!h) h = '<div class="canvas-placeholder" style="padding:20px;">暂无图片集</div>';
+            container.innerHTML = h;
+            document.getElementById("total-count").textContent = "总计: " + total;
+        }
+
+        function selectSet(name) {
+            currentSet = { set: name, subset: null };
+            highlightActive();
+            renderThumbStrip(allSets[name] || []);
+        }
+
+        function selectSubset(setName, subName) {
+            currentSet = { set: setName, subset: subName };
+            highlightActive();
+            const subs = allSubsets[setName] || {};
+            renderThumbStrip(subs[subName] || []);
+        }
+
+        function highlightActive() {
+            document.querySelectorAll(".set-item").forEach(el => el.classList.remove("active"));
+            if (!currentSet) return;
+            const sel = currentSet.subset
+                ? document.querySelector(`.set-item[data-set="${currentSet.set}"][data-subset="${currentSet.subset}"]`)
+                : document.querySelector(`.set-item[data-set="${currentSet.set}"]:not([data-subset])`);
+            if (sel) sel.classList.add("active");
+        }
+
+        function renderThumbStrip(entries) {
+            selectedImages.clear();
+            const strip = document.getElementById("thumb-strip");
+            if (!entries || entries.length === 0) {
+                strip.innerHTML = '<span style="color:#ccc;font-size:12px;">无图片</span>';
+                updateSelCount();
+                return;
+            }
+            let h = "";
+            entries.sort((a,b) => (a.index||0) - (b.index||0)).forEach((entry, i) => {
+                const src = entry.filename
+                    ? `/product_images/${skc}/${entry.filename}`
+                    : (entry.url || "");
+                h += `<img src="${src}" data-idx="${i}" onclick="toggleSelect(this)" title="${entry.filename || entry.url || ''}">`;
+            });
+            strip.innerHTML = h;
+            updateSelCount();
+        }
+
+        function toggleSelect(img) {
+            const idx = img.dataset.idx;
+            if (selectedImages.has(idx)) {
+                selectedImages.delete(idx);
+                img.classList.remove("selected");
+            } else {
+                selectedImages.add(idx);
+                img.classList.add("selected");
+            }
+            updateSelCount();
+        }
+
+        function selectAll() {
+            document.querySelectorAll("#thumb-strip img").forEach(img => {
+                selectedImages.add(img.dataset.idx);
+                img.classList.add("selected");
+            });
+            updateSelCount();
+        }
+
+        function deselectAll() {
+            selectedImages.clear();
+            document.querySelectorAll("#thumb-strip img").forEach(img => img.classList.remove("selected"));
+            updateSelCount();
+        }
+
+        function updateSelCount() {
+            document.getElementById("sel-count").textContent = "已选: " + selectedImages.size;
+        }
+
+        async function saveAsSubset() {
+            if (!currentSet) { alert("请先选择左侧图片集"); return; }
+            if (selectedImages.size === 0) { alert("请先在底部缩略图选择图片"); return; }
+            const subName = prompt("输入子集名称:", "已处理");
+            if (!subName) return;
+
+            // Collect selected entries
+            const sourceEntries = currentSet.subset
+                ? (allSubsets[currentSet.set] || {})[currentSet.subset] || []
+                : (allSets[currentSet.set] || []);
+            const sorted = sourceEntries.slice().sort((a,b) => (a.index||0) - (b.index||0));
+            const subsetEntries = [];
+            selectedImages.forEach(idx => {
+                const i = parseInt(idx);
+                if (i >= 0 && i < sorted.length) subsetEntries.push({...sorted[i], index: subsetEntries.length});
+            });
+
+            // Save via API
+            try {
+                const res = await fetch(`/api/products/${skc}/image-sets`);
+                const data = await res.json();
+                const allSubs = data.image_subsets || {};
+                if (!allSubs[currentSet.set]) allSubs[currentSet.set] = {};
+                allSubs[currentSet.set][subName] = subsetEntries;
+
+                const saveRes = await fetch(`/api/products/${skc}/image-sets`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ image_sets: data.image_sets || {}, image_subsets: allSubs })
+                });
+                if (!saveRes.ok) throw new Error("保存失败");
+                alert("✅ 子集「" + subName + "」已保存 (" + subsetEntries.length + "张)");
+                // Reload
+                allSubsets = allSubs;
+                renderSetList();
+            } catch(e) {
+                alert("❌ 保存失败: " + e.message);
+            }
+        }
+
+        loadImages();
+    </script>
+</body>
+</html>

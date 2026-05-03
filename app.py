@@ -4318,10 +4318,15 @@ def get_product_image_sets(skc):
 
                 _save_products(products_data)
 
+            # Ensure image_subsets exists
+            if "image_subsets" not in p:
+                p["image_subsets"] = {}
+
             return jsonify({
                 "success": True,
                 "skc": skc,
-                "image_sets": p["image_sets"]
+                "image_sets": p["image_sets"],
+                "image_subsets": p["image_subsets"]
             })
 
     return jsonify({"error": "产品不存在"}), 404
@@ -4337,8 +4342,9 @@ def update_product_image_sets(skc):
     for p in product_list:
         if p["skc"] == skc:
             p["image_sets"] = data.get("image_sets", {})
+            p["image_subsets"] = data.get("image_subsets", {})
 
-            # 收集所有被引用的文件（可能是 "01.jpg" 或 "01_Blue/01.jpg"）
+            # 收集所有被引用的文件（image_sets + image_subsets）
             referenced = set()
             referenced_basenames = set()
             for entries in p["image_sets"].values():
@@ -4347,6 +4353,13 @@ def update_product_image_sets(skc):
                     if fn:
                         referenced.add(fn)
                         referenced_basenames.add(os.path.basename(fn))
+            for set_subs in p["image_subsets"].values():
+                for entries in set_subs.values():
+                    for entry in entries:
+                        fn = entry.get("filename", "")
+                        if fn:
+                            referenced.add(fn)
+                            referenced_basenames.add(os.path.basename(fn))
 
             # 递归删除 images_dir 中未被引用的物理文件
             images_dir = p.get("images_dir", "")
@@ -4430,6 +4443,34 @@ def upload_product_image(skc):
             })
 
     return jsonify({"error": "产品不存在"}), 404
+
+
+# ==================== 图片批量处理页面 ====================
+
+@app.route("/image-batch/<skc>")
+def image_batch_page(skc):
+    """图片批量处理页面 — 新标签页打开，自动加载产品图片"""
+    products_data = _load_products()
+    product_list = products_data.get("产品列表", [])
+
+    product = None
+    for p in product_list:
+        if p["skc"] == skc:
+            product = p
+            break
+
+    if not product:
+        return "产品不存在", 404
+
+    # 确保 image_sets 已初始化
+    if "image_sets" not in product:
+        # Trigger initialization by calling get logic inline
+        pass
+
+    return render_template("image_batch.html",
+                           skc=skc,
+                           title=product.get("title", skc),
+                           platform=product.get("platform", ""))
 
 
 # ==================== 物流模板 API ====================
