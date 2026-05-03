@@ -98,18 +98,18 @@
           ".desktop-media-mainView .item.image:not(.a-hidden) [data-old-hires]," +
           "#imageBlock [data-old-hires]"
         );
-        var hasEnough = items.length >= 3;
         var elapsed = Date.now() - start;
 
-        if (hasEnough && oldFingerprint) {
-          // Verify images actually changed from before the click
+        if (oldFingerprint) {
+          // Fingerprint change is the strongest signal — resolve regardless of count
           var curFp = getImageFingerprint();
           if (curFp && curFp !== oldFingerprint) {
             clearInterval(timer);
             resolve(true);
             return;
           }
-        } else if (hasEnough) {
+        } else if (items.length >= 3) {
+          // No old fingerprint (first variant) — just need enough elements
           clearInterval(timer);
           resolve(true);
           return;
@@ -273,14 +273,20 @@
 
     clickVariant: function (type, value) {
       if (type === "color") {
-        // NEW: click the swatch li or button (NOT the hidden submit input)
+        // NEW: inline-twister-row-color_name
+        // Must click a child INSIDE .a-button-toggle (e.g., img or .a-button-inner),
+        // NOT the li itself. Amazon's a-button-group handler on the ul uses
+        // event.target.closest('.a-button-toggle') which searches UP the tree.
+        // If we click the li, closest() never finds .a-button-toggle (it's a descendant).
         var lis = $$("#inline-twister-row-color_name li[data-asin]");
         for (var i = 0; i < lis.length; i++) {
           var img = $("img", lis[i]);
           var name = (img ? attr(img, "alt") : text(lis[i])).trim();
           if (name === value) {
-            // Click the li element, which has Amazon's JS handler attached
-            lis[i].click();
+            // Click the image or the .a-button-inner span inside the li
+            var clickTarget = img || $(".a-button-inner", lis[i]);
+            if (clickTarget) clickTarget.click();
+            else lis[i].click();
             return true;
           }
         }
@@ -289,7 +295,12 @@
         for (var j = 0; j < items.length; j++) {
           var oimg = $("img", items[j]);
           var oname = (oimg ? attr(oimg, "alt") : text(items[j])).trim();
-          if (oname === value) { items[j].click(); return true; }
+          if (oname === value) {
+            var oTarget = oimg || $("a, button, input", items[j]);
+            if (oTarget) oTarget.click();
+            else items[j].click();
+            return true;
+          }
         }
       } else if (type === "size") {
         // NEW: size li
