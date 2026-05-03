@@ -840,6 +840,63 @@
     });
   }
 
+  /** Fetch a variant ASIN page and extract images + price from HTML */
+  function fetchVariantData(asin) {
+    var base = window.location.origin;
+    return fetch(base + "/dp/" + asin).then(function (res) {
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.text();
+    }).then(function (html) {
+      var seen = {};
+      var images = [];
+
+      // Extract image IDs from data-a-dynamic-image attributes in the HTML
+      var dynRe = /data-a-dynamic-image="([^"]+)"/g;
+      var dynMatch;
+      while ((dynMatch = dynRe.exec(html)) !== null) {
+        try {
+          var jsonStr = dynMatch[1].replace(/&quot;/g, '"');
+          var dyn = JSON.parse(jsonStr);
+          Object.keys(dyn).forEach(function (imgUrl) {
+            var idm = imgUrl.match(/\/images\/I\/([A-Za-z0-9+%_-]+?)(?:\._|$)/);
+            if (idm && !seen[idm[1]]) {
+              seen[idm[1]] = true;
+              images.push("https://m.media-amazon.com/images/I/" + decodeURIComponent(idm[1]) + "._SL1500_.jpg");
+            }
+          });
+        } catch (e) { /* skip malformed entries */ }
+      }
+
+      // Extract variant-specific price from hidden JSON
+      var price = "";
+      var priceRe = /"priceToPay"\s*:\s*"([^"]+)"/;
+      var priceMatch = priceRe.exec(html);
+      if (priceMatch) price = priceMatch[1];
+
+      // Also try apexPrice
+      if (!price) {
+        var apexRe = /"apexPrice"\s*:\s*"([^"]+)"/;
+        var apexMatch = apexRe.exec(html);
+        if (apexMatch) price = apexMatch[1];
+      }
+
+      return { images: images, price: price };
+    });
+  }
+
+  /** Get color-name → ASIN mapping from the current page DOM */
+  function getColorToAsinFromDOM() {
+    var map = {};
+    var lis = $$("#inline-twister-row-color_name li[data-asin]");
+    lis.forEach(function (li) {
+      var asin = attr(li, "data-asin");
+      var img = $("img", li);
+      var name = (img ? attr(img, "alt") : text(li)).trim();
+      if (name && asin) map[name] = asin;
+    });
+    return map;
+  }
+
   function collectAllVariants() {
     var variants = X.extractAll().variants;
     var stack = [];
@@ -866,68 +923,110 @@
 
     var allVariants = [];
 
-    function run(idx) {
-      if (UI.cancelled || idx >= stack.length) {
-        // All collected — send one batch
-        var batch = buildPayload();
-        batch.variantData = allVariants;
+    // idx 0: collect current variant from live DOM (already loaded)
+    var currentData = buildPayload();
+    allVariants.push({
+      variantName: stack[0].value,
+      url: window.location.href,
+      price: currentData.price,
+      images: currentData.images,
+      variantInfo: stack[0],
+      currentVariant: currentData.currentVariant
+    });
+    setStatus("变体 1/" + UI.total + ": " + stack[0].value + " ✓");
+    console.log("[sERP] variant 1/" + UI.total + " (current):", stack[0].value, "(" + currentData.images.length + " images)");
 
-        console.log("[sERP Collector] Sending batch:", UI.total, "variants");
-        sendToSERP(batch).then(function (result) {
-          if (result && result.status === "ok") {
-            showToast("已采集 " + UI.total + " 个变体");
-            setStatus("完成 " + UI.total + " 变体 ✓");
-          } else {
-            setStatus("失败", true);
-          }
-          UI.collecting = false;
-          setButtons(true);
-        }).catch(function () {
-          showToast("sERP 未运行", true);
-          setStatus("sERP 未运行", true);
-          UI.collecting = false;
-          setButtons(true);
-        });
-        return;
-      }
-
-      setStatus("变体 " + (idx + 1) + "/" + UI.total + ": " + stack[idx].value);
-
-      // Capture image fingerprint BEFORE clicking (to detect actual change)
-      var oldFp = null;
-      if (idx > 0) {
-        oldFp = getImageFingerprint();
-        console.log("[sERP] collectAllVariants idx=" + idx + " oldFp:", oldFp.slice(0, 80));
-        X.clickVariant(stack[idx].type, stack[idx].value);
-      }
-
-      waitForUpdate(3000).then(function () {
-        console.log("[sERP] waitForUpdate resolved for idx=" + idx);
-        return waitForImageData(5000, oldFp);
-      }).then(function (changed) {
-        console.log("[sERP] waitForImageData resolved for idx=" + idx + " changed=" + changed);
-        if (idx > 0) console.log("[sERP]   curFp:", getImageFingerprint().slice(0, 80));
-        if (idx > 0 && !changed) {
-          console.warn("[sERP Collector] Images may not have changed for:", stack[idx].value);
-        }
-        var data = buildPayload();
-        var entry = {
-          variantName: stack[idx].value,
-          url: window.location.href,
-          price: data.price,
-          images: data.images,
-          variantInfo: stack[idx],
-          currentVariant: data.currentVariant,
-        };
-        allVariants.push(entry);
-        console.log("[sERP Collector] Variant " + (idx + 1) + "/" + UI.total + ":", entry.variantName, "(" + entry.images.length + " images)");
-
-        setTimeout(function () { run(idx + 1); }, 600);
+    if (UI.total <= 1) {
+      // Only one variant — send immediately
+      var batch = buildPayload();
+      batch.variantData = allVariants;
+      sendToSERP(batch).then(function () {
+        showToast("已采集 1 个变体");
+        setStatus("完成 ✓");
+        UI.collecting = false;
+        setButtons(true);
       });
+      return;
     }
 
-    showToast("采集全部 " + UI.total + " 个变体...");
-    run(0);
+    // Fetch remaining variants via XHR
+    var colorToAsin = getColorToAsinFromDOM();
+    console.log("[sERP] colorToAsin mapping:", JSON.stringify(colorToAsin));
+
+    var pending = [];
+    for (var i = 1; i < stack.length; i++) {
+      var variantName = stack[i].value;
+      var asin = colorToAsin[variantName];
+
+      if (!asin) {
+        console.warn("[sERP] No ASIN found for variant:", variantName);
+        continue;
+      }
+
+      setStatus("变体 " + (i + 1) + "/" + UI.total + ": 请求 " + variantName + "...");
+
+      var promise = fetchVariantData(asin).then(function (data) {
+        allVariants.push({
+          variantName: variantName,
+          url: window.location.origin + "/dp/" + asin,
+          price: data.price,
+          images: data.images,
+          variantInfo: { type: "color", value: variantName }
+        });
+        setStatus("变体 " + (allVariants.length) + "/" + UI.total + ": " + variantName + " ✓ (" + data.images.length + " images)");
+        console.log("[sERP] variant " + (allVariants.length) + "/" + UI.total + " (fetched):", variantName, "(" + data.images.length + " images)");
+      }).catch(function (err) {
+        console.error("[sERP] Failed to fetch variant", variantName, ":", err.message);
+        // Fallback: re-use current page images as placeholder
+        allVariants.push({
+          variantName: variantName,
+          url: window.location.href,
+          price: "",
+          images: [],
+          variantInfo: { type: "color", value: variantName },
+          _error: err.message
+        });
+        setStatus("变体 " + (allVariants.length) + "/" + UI.total + ": " + variantName + " (获取失败)");
+      });
+
+      pending.push(promise);
+    }
+
+    Promise.all(pending).then(function () {
+      // Sort by original stack order
+      allVariants.sort(function (a, b) {
+        var ai = stack.findIndex(function (s) { return s.value === a.variantName; });
+        var bi = stack.findIndex(function (s) { return s.value === b.variantName; });
+        return ai - bi;
+      });
+
+      // Send batch
+      var batch = buildPayload();
+      batch.variantData = allVariants;
+      batch.images = [];  // Top-level images are per-variant now
+
+      console.log("[sERP] Sending batch:", allVariants.length, "variants");
+      sendToSERP(batch).then(function (result) {
+        if (result && result.status === "ok") {
+          showToast("已采集 " + allVariants.length + " 个变体 ✓");
+          setStatus("完成 " + allVariants.length + " 变体 ✓");
+        } else {
+          setStatus("失败", true);
+        }
+        UI.collecting = false;
+        setButtons(true);
+      }).catch(function () {
+        showToast("sERP 未运行", true);
+        setStatus("sERP 未运行", true);
+        UI.collecting = false;
+        setButtons(true);
+      });
+    }).catch(function (err) {
+      console.error("[sERP] Batch fetch error:", err);
+      UI.collecting = false;
+      setButtons(true);
+      setStatus("采集出错", true);
+    });
   }
 
   // ==================== MAIN ====================
