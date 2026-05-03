@@ -41,6 +41,8 @@ logging.config.dictConfig({
     'disable_existing_loggers': False,
 })
 
+from urllib.parse import quote
+
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import cross_origin
 from werkzeug.utils import secure_filename
@@ -1393,9 +1395,13 @@ def save_collect_product(task_id):
     images_dir = result.get("images_dir", "")
     thumbnail = ""
     if images_dir and os.path.exists(images_dir):
-        for fname in sorted(os.listdir(images_dir)):
-            if os.path.splitext(fname)[1].lower() in ('.jpg', '.jpeg', '.png', '.webp', '.bmp'):
-                thumbnail = f"/product_images/{skc}/{fname}"
+        for root, _dirs, files in os.walk(images_dir):
+            for fname in sorted(files):
+                if os.path.splitext(fname)[1].lower() in ('.jpg', '.jpeg', '.png', '.webp', '.bmp'):
+                    rel = os.path.relpath(os.path.join(root, fname), images_dir).replace('\\', '/')
+                    thumbnail = f"/product_images/{skc}/{rel}"
+                    break
+            if thumbnail:
                 break
 
     product_entry = {
@@ -1472,9 +1478,13 @@ def get_products():
         if not p.get("thumbnail"):
             images_dir = p.get("images_dir", "")
             if images_dir and os.path.exists(images_dir):
-                for fname in sorted(os.listdir(images_dir)):
-                    if os.path.splitext(fname)[1].lower() in ('.jpg', '.jpeg', '.png', '.webp', '.bmp'):
-                        p["thumbnail"] = f"/product_images/{p['skc']}/{fname}"
+                for root, _dirs, files in os.walk(images_dir):
+                    for fname in sorted(files):
+                        if os.path.splitext(fname)[1].lower() in ('.jpg', '.jpeg', '.png', '.webp', '.bmp'):
+                            rel = os.path.relpath(os.path.join(root, fname), images_dir).replace('\\', '/')
+                            p["thumbnail"] = f"/product_images/{p['skc']}/{rel}"
+                            break
+                    if p.get("thumbnail"):
                         break
         if not p.get("thumbnail"):
             p["thumbnail"] = ""
@@ -4079,42 +4089,66 @@ def get_product_images(skc):
     """获取产品的正式图片列表"""
     products_data = _load_products()
     product_list = products_data.get("产品列表", [])
-    
+
     for p in product_list:
         if p["skc"] == skc:
             images = []
-            
-            # 1. 从 product_data.image_urls 获取
+            seen_urls = set()
+
             pd = p.get("product_data", {})
-            image_urls = pd.get("images", [])
-            for url in image_urls:
-                images.append({
-                    "source": "url",
-                    "url": url,
-                    "order": len(images)
-                })
-            
-            # 2. 从 images_dir 获取本地图片
             images_dir = p.get("images_dir", "")
+
+            # 1. 从 images_dir 递归扫描本地图片（优先：已下载到本地的更可靠）
             if images_dir and os.path.exists(images_dir):
-                for fname in sorted(os.listdir(images_dir)):
-                    ext = os.path.splitext(fname)[1].lower()
-                    if ext in ('.jpg', '.jpeg', '.png', '.webp', '.bmp'):
-                        # 检查是否已存在（避免重复）
-                        if not any(img.get("local_path", "").endswith(fname) for img in images):
+                local_files = []
+                for root, _dirs, files in os.walk(images_dir):
+                    for fname in sorted(files):
+                        ext = os.path.splitext(fname)[1].lower()
+                        if ext in ('.jpg', '.jpeg', '.png', '.webp', '.bmp'):
+                            full = os.path.join(root, fname)
+                            rel = os.path.relpath(full, images_dir).replace('\\', '/')
+                            local_files.append((rel, full))
+                local_files.sort(key=lambda x: x[0])
+                for rel, full in local_files:
+                    images.append({
+                        "source": "local",
+                        "local_path": full,
+                        "url": f"/product_images/{skc}/{rel}",
+                        "order": len(images)
+                    })
+
+            # 2. 从 product_data 提取图片URL（仅当本地无图时，避免重复）
+            if not images:
+                top_images = pd.get("images", [])
+                if isinstance(top_images, list) and top_images:
+                    for url in top_images:
+                        if url not in seen_urls:
+                            seen_urls.add(url)
                             images.append({
-                                "source": "local",
-                                "local_path": os.path.join(images_dir, fname),
-                                "url": f"/product_images/{skc}/{fname}",
+                                "source": "url",
+                                "url": f"/api/img_proxy?url={quote(url, safe='')}",
                                 "order": len(images)
                             })
-            
+
+                variant_data = pd.get("variantData", [])
+                if isinstance(variant_data, list):
+                    for v in variant_data:
+                        v_imgs = v.get("images", []) if isinstance(v, dict) else []
+                        for url in v_imgs:
+                            if url not in seen_urls:
+                                seen_urls.add(url)
+                                images.append({
+                                    "source": "url",
+                                    "url": f"/api/img_proxy?url={quote(url, safe='')}",
+                                    "order": len(images)
+                                })
+
             return jsonify({
                 "success": True,
                 "skc": skc,
                 "images": images
             })
-    
+
     return jsonify({"error": "产品不存在"}), 404
 
 
@@ -4129,6 +4163,56 @@ def serve_product_image(skc, filename):
             if images_dir and os.path.exists(images_dir):
                 return send_from_directory(images_dir, filename)
     return "", 404
+
+
+# 允许代理的图片域名
+_IMG_PROXY_ALLOWED = {
+    "m.media-amazon.com", "images-na.ssl-images-amazon.com",
+    "images-eu.ssl-images-amazon.com", "images-fe.ssl-images-amazon.com",
+    "img.alicdn.com", "cbu01.alicdn.com",
+    "images.wbstatic.net", "basket.wildberries.ru",
+    "cdn1.ozonusercontent.com", "cdn2.ozonusercontent.com",
+}
+
+
+@app.route("/api/img_proxy")
+def img_proxy():
+    """代理外部图片，绕过 CORS/Referer 限制"""
+    url = request.args.get("url", "")
+    if not url:
+        return "", 400
+
+    from urllib.parse import urlparse
+    domain = urlparse(url).hostname or ""
+    if domain not in _IMG_PROXY_ALLOWED:
+        return "", 403
+
+    referer_map = {
+        "amazon": "https://www.amazon.com/",
+        "alicdn": "https://detail.1688.com/",
+        "wildberries": "https://www.wildberries.ru/",
+        "ozon": "https://www.ozon.ru/",
+    }
+    referer = "https://www.amazon.com/"
+    for key, ref in referer_map.items():
+        if key in domain:
+            referer = ref
+            break
+
+    try:
+        resp = requests.get(url, headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Referer": referer,
+        }, timeout=15)
+        if resp.status_code == 200:
+            content_type = resp.headers.get("Content-Type", "image/jpeg")
+            return resp.content, 200, {
+                "Content-Type": content_type,
+                "Cache-Control": "public, max-age=86400",
+            }
+    except Exception:
+        pass
+    return "", 502
 
 
 @app.route("/api/products/<skc>/image-sets", methods=["GET"])
