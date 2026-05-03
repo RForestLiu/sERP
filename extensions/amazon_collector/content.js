@@ -847,33 +847,63 @@
       if (!res.ok) throw new Error("HTTP " + res.status);
       return res.text();
     }).then(function (html) {
+      // Parse response into a DOM to use targeted selectors (avoids capturing
+      // unrelated images from sponsored products / colorImages JSON / etc.)
+      var doc = new DOMParser().parseFromString(html, "text/html");
+
       var seen = {};
       var images = [];
 
-      // Extract image IDs from data-a-dynamic-image attributes in the HTML
-      var dynRe = /data-a-dynamic-image="([^"]+)"/g;
-      var dynMatch;
-      while ((dynMatch = dynRe.exec(html)) !== null) {
-        try {
-          var jsonStr = dynMatch[1].replace(/&quot;/g, '"');
-          var dyn = JSON.parse(jsonStr);
-          Object.keys(dyn).forEach(function (imgUrl) {
-            var idm = imgUrl.match(/\/images\/I\/([A-Za-z0-9+%_-]+?)(?:\._|$)/);
-            if (idm && !seen[idm[1]]) {
-              seen[idm[1]] = true;
-              images.push("https://m.media-amazon.com/images/I/" + decodeURIComponent(idm[1]) + "._SL1500_.jpg");
-            }
-          });
-        } catch (e) { /* skip malformed entries */ }
+      function addById(url) {
+        if (!url) return;
+        var m = url.match(/\/images\/I\/([A-Za-z0-9+%_-]+?)(?:\._|$)/);
+        if (!m) return;
+        var id = decodeURIComponent(m[1]);
+        if (!seen[id]) {
+          seen[id] = true;
+          images.push("https://m.media-amazon.com/images/I/" + id + "._SL1500_.jpg");
+        }
       }
 
-      // Extract variant-specific price from hidden JSON
+      // 1. Main view items (same logic as extractImages on live DOM)
+      var mainItems = doc.querySelectorAll(".desktop-media-mainView [data-a-dynamic-image]");
+      for (var i = 0; i < mainItems.length; i++) {
+        var dyn = mainItems[i].getAttribute("data-a-dynamic-image");
+        if (dyn) {
+          try {
+            Object.keys(JSON.parse(dyn)).forEach(function (url) { addById(url); });
+          } catch (e) {}
+        }
+      }
+
+      // 2. Fallback: data-old-hires on main view
+      if (images.length === 0) {
+        var oldHires = doc.querySelectorAll(".desktop-media-mainView [data-old-hires]");
+        for (var j = 0; j < oldHires.length; j++) {
+          addById(oldHires[j].getAttribute("data-old-hires"));
+        }
+      }
+
+      // 3. Landing image
+      var landing = doc.getElementById("landingImage");
+      if (landing) {
+        addById(landing.getAttribute("data-old-hires"));
+        addById(landing.getAttribute("src"));
+      }
+
+      // 4. Last resort: altImages thumbnails
+      if (images.length === 0) {
+        var altImgs = doc.querySelectorAll("#altImages img");
+        for (var k = 0; k < altImgs.length; k++) {
+          addById(altImgs[k].getAttribute("src"));
+        }
+      }
+
+      // Extract variant-specific price
       var price = "";
       var priceRe = /"priceToPay"\s*:\s*"([^"]+)"/;
       var priceMatch = priceRe.exec(html);
       if (priceMatch) price = priceMatch[1];
-
-      // Also try apexPrice
       if (!price) {
         var apexRe = /"apexPrice"\s*:\s*"([^"]+)"/;
         var apexMatch = apexRe.exec(html);
