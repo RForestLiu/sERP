@@ -1775,8 +1775,8 @@
                 // 隐藏占位符
                 collectPlaceholder.style.display = "none";
 
-                // 按时间降序排列（task_id 含时间戳，字母序≈时间序）
-                tasks.sort((a, b) => b.task_id.localeCompare(a.task_id));
+                // 按时间升序排列（createCollectCard prepend，升序→最新置顶）
+                tasks.sort((a, b) => (a.created_at || "").localeCompare(b.created_at || ""));
 
                 tasks.forEach(t => {
                     const card = createCollectCard(t.task_id, t.url);
