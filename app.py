@@ -4086,67 +4086,91 @@ def ozon_sync_products(store_id):
 
 @app.route("/api/products/<skc>/images", methods=["GET"])
 def get_product_images(skc):
-    """获取产品的正式图片列表"""
+    """获取产品的正式图片列表（含图片集分组）"""
     products_data = _load_products()
     product_list = products_data.get("产品列表", [])
 
     for p in product_list:
         if p["skc"] == skc:
             images = []
+            image_sets = []  # [{name, label, images: [{url, order}]}]
             seen_urls = set()
 
             pd = p.get("product_data", {})
             images_dir = p.get("images_dir", "")
 
-            # 1. 从 images_dir 递归扫描本地图片（优先：已下载到本地的更可靠）
+            # 1. 从 images_dir 递归扫描本地图片
             if images_dir and os.path.exists(images_dir):
-                local_files = []
+                set_map = {}  # subdir_name → [image dicts]
                 for root, _dirs, files in os.walk(images_dir):
                     for fname in sorted(files):
                         ext = os.path.splitext(fname)[1].lower()
                         if ext in ('.jpg', '.jpeg', '.png', '.webp', '.bmp'):
                             full = os.path.join(root, fname)
                             rel = os.path.relpath(full, images_dir).replace('\\', '/')
-                            local_files.append((rel, full))
-                local_files.sort(key=lambda x: x[0])
-                for rel, full in local_files:
-                    images.append({
-                        "source": "local",
-                        "local_path": full,
-                        "url": f"/product_images/{skc}/{rel}",
-                        "order": len(images)
+                            parts = rel.split('/')
+                            set_name = parts[0] if len(parts) > 1 else ''
+                            img = {
+                                "source": "local",
+                                "local_path": full,
+                                "url": f"/product_images/{skc}/{rel}",
+                                "order": len(images)
+                            }
+                            images.append(img)
+                            if set_name:
+                                set_map.setdefault(set_name, []).append(img)
+
+                # Build image_sets from set_map, preserving subdir order
+                for set_name in sorted(set_map):
+                    imgs = set_map[set_name]
+                    # Derive label: strip numeric prefix (e.g. "01_Blue" → "Blue (7张)")
+                    label = re.sub(r'^\d+_', '', set_name)
+                    image_sets.append({
+                        "name": set_name,
+                        "label": f"{label} ({len(imgs)}张)",
+                        "images": imgs
                     })
 
-            # 2. 从 product_data 提取图片URL（仅当本地无图时，避免重复）
+            # 2. 从 product_data 提取图片URL（仅当本地无图时）
             if not images:
                 top_images = pd.get("images", [])
                 if isinstance(top_images, list) and top_images:
+                    proxy_imgs = []
                     for url in top_images:
                         if url not in seen_urls:
                             seen_urls.add(url)
-                            images.append({
-                                "source": "url",
-                                "url": f"/api/img_proxy?url={quote(url, safe='')}",
-                                "order": len(images)
-                            })
+                            img = {"source": "url", "url": f"/api/img_proxy?url={quote(url, safe='')}", "order": len(images)}
+                            images.append(img)
+                            proxy_imgs.append(img)
+                    if proxy_imgs:
+                        image_sets.append({"name": "", "label": f"图片 ({len(proxy_imgs)}张)", "images": proxy_imgs})
 
                 variant_data = pd.get("variantData", [])
                 if isinstance(variant_data, list):
                     for v in variant_data:
                         v_imgs = v.get("images", []) if isinstance(v, dict) else []
+                        if not v_imgs:
+                            continue
+                        vname = v.get("variantName", "") if isinstance(v, dict) else ""
+                        set_imgs = []
                         for url in v_imgs:
                             if url not in seen_urls:
                                 seen_urls.add(url)
-                                images.append({
-                                    "source": "url",
-                                    "url": f"/api/img_proxy?url={quote(url, safe='')}",
-                                    "order": len(images)
-                                })
+                                img = {"source": "url", "url": f"/api/img_proxy?url={quote(url, safe='')}", "order": len(images)}
+                                images.append(img)
+                                set_imgs.append(img)
+                        if set_imgs:
+                            image_sets.append({
+                                "name": vname,
+                                "label": f"{vname} ({len(set_imgs)}张)" if vname else f"变体 ({len(set_imgs)}张)",
+                                "images": set_imgs
+                            })
 
             return jsonify({
                 "success": True,
                 "skc": skc,
-                "images": images
+                "images": images,
+                "image_sets": image_sets
             })
 
     return jsonify({"error": "产品不存在"}), 404

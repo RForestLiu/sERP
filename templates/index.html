@@ -789,8 +789,8 @@
             align-items: flex-start;
         }
         .prod-thumb {
-            width: 40px;
-            height: 40px;
+            width: 100px;
+            height: 100px;
             border-radius: 3px;
             object-fit: cover;
             flex-shrink: 0;
@@ -2670,17 +2670,23 @@
                 const res = await fetch(`/api/products/${skc}/images`);
                 if (!res.ok) { galleryEl.innerHTML = '<span style="font-size:10px;color:#ccc;">无图片</span>'; return; }
                 const data = await res.json();
-                const images = data.images || [];
-                if (images.length === 0) {
+                const imageSets = data.image_sets || [];
+                if (imageSets.length === 0) {
                     galleryEl.innerHTML = '<span style="font-size:10px;color:#ccc;">无图片</span>';
                     return;
                 }
                 let h = "";
-                images.forEach(img => {
-                    const url = img.url || "";
-                    if (url) h += `<img src="${url}" loading="lazy" onclick="event.stopPropagation(); viewProductImage('${url}')" title="点击查看大图">`;
+                imageSets.forEach(function(set) {
+                    h += '<div class="collect-gallery-variant">';
+                    h += `<div class="collect-gallery-vname">${set.label}</div>`;
+                    h += '<div class="collect-gallery-thumbs">';
+                    (set.images || []).forEach(function(img) {
+                        const url = img.url || "";
+                        if (url) h += `<img class="collect-gallery-thumb" src="${url}" loading="lazy" onclick="event.stopPropagation(); viewProductImage('${url}')" title="点击查看大图">`;
+                    });
+                    h += '</div></div>';
                 });
-                galleryEl.innerHTML = h || '<span style="font-size:10px;color:#ccc;">无图片</span>';
+                galleryEl.innerHTML = h;
             } catch (e) {
                 galleryEl.innerHTML = '<span style="font-size:10px;color:#ccc;">加载失败</span>';
             }
