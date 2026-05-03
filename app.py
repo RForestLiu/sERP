@@ -4086,7 +4086,7 @@ def get_product_images(skc):
             
             # 1. 从 product_data.image_urls 获取
             pd = p.get("product_data", {})
-            image_urls = pd.get("image_urls", [])
+            image_urls = pd.get("images", [])
             for url in image_urls:
                 images.append({
                     "source": "url",
@@ -4155,7 +4155,7 @@ def get_product_image_sets(skc):
 
                 # 2. 添加远程 URL（去重：跳过已有本地文件的）
                 pd = p.get("product_data", {})
-                image_urls = pd.get("image_urls", [])
+                image_urls = pd.get("images", [])
                 existing_fns = {e["filename"] for e in default_set}
                 for url in image_urls:
                     url_basename = url.split('/')[-1].split('?')[0]
