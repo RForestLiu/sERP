@@ -4249,59 +4249,72 @@ def get_product_image_sets(skc):
         if p["skc"] == skc:
             if "image_sets" not in p:
                 p["image_sets"] = {}
-                default_set = []
-                idx = 0
-
-                # 1. 从 images_dir 扫描本地文件
                 images_dir = p.get("images_dir", "")
-                if images_dir and os.path.exists(images_dir):
-                    for fname in sorted(os.listdir(images_dir)):
-                        ext = os.path.splitext(fname)[1].lower()
-                        if ext in ('.jpg', '.jpeg', '.png', '.webp', '.bmp'):
-                            default_set.append({"filename": fname, "index": idx})
-                            idx += 1
 
-                # 2. 添加远程 URL（去重：跳过已有本地文件的）
+                # 1. 递归扫描 images_dir：子目录 → 独立图片集，根文件 → "采集图片"
+                root_files = []
+                subdir_sets = {}  # {set_name: [{filename, index}]}
+                if images_dir and os.path.exists(images_dir):
+                    for root, _dirs, files in os.walk(images_dir):
+                        rel = os.path.relpath(root, images_dir)
+                        if rel == '.':
+                            for fname in sorted(files):
+                                ext = os.path.splitext(fname)[1].lower()
+                                if ext in ('.jpg', '.jpeg', '.png', '.webp', '.bmp'):
+                                    root_files.append({"filename": fname, "index": len(root_files)})
+                        else:
+                            # 子目录 → 图片集名称（去掉数字前缀如 "01_Blue" → "Blue"）
+                            set_name = re.sub(r'^\d+_', '', rel.replace('\\', '/'))
+                            sdir_entries = []
+                            for fname in sorted(files):
+                                ext = os.path.splitext(fname)[1].lower()
+                                if ext in ('.jpg', '.jpeg', '.png', '.webp', '.bmp'):
+                                    sdir_entries.append({"filename": os.path.join(rel, fname).replace('\\', '/'), "index": len(sdir_entries)})
+                            if sdir_entries:
+                                subdir_sets[set_name] = sdir_entries
+
+                # 2. 从 variantData 补充远程 URL（当本地已无对应文件时）
                 pd = p.get("product_data", {})
+                all_local_fns = set()
+                for e in root_files:
+                    all_local_fns.add(e["filename"])
+                for entries in subdir_sets.values():
+                    for e in entries:
+                        all_local_fns.add(os.path.basename(e["filename"]))
+
+                # Top-level images
                 image_urls = pd.get("images", [])
-                existing_fns = {e["filename"] for e in default_set}
                 for url in image_urls:
                     url_basename = url.split('/')[-1].split('?')[0]
                     if len(url_basename) < 10:
                         continue
-                    represented = any(
-                        url_basename.split('.')[0][:15] in fn
-                        for fn in existing_fns
-                    )
-                    if not represented:
-                        default_set.append({"url": url, "filename": "", "index": idx})
-                        idx += 1
+                    if not any(url_basename.split('.')[0][:15] in fn for fn in all_local_fns):
+                        root_files.append({"url": url, "filename": "", "index": len(root_files)})
 
-                p["image_sets"]["采集图片"] = default_set
+                if root_files:
+                    p["image_sets"]["采集图片"] = root_files
 
-                # 3. 从 variant_images 创建变体分组图片集
-                variant_images = pd.get("variant_images", {})
-                if variant_images:
-                    local_fns = {e["filename"] for e in default_set}
-                    for variant_name, urls in variant_images.items():
+                # variantData → 子集（仅当本地无对应子目录时）
+                variant_data = pd.get("variantData", [])
+                if isinstance(variant_data, list):
+                    for v in variant_data:
+                        vname = v.get("variantName", "") if isinstance(v, dict) else ""
+                        if not vname:
+                            continue
+                        v_imgs = v.get("images", []) if isinstance(v, dict) else []
+                        if not v_imgs:
+                            continue
+                        # 跳过已有本地子目录的变体
+                        if vname in subdir_sets:
+                            continue
                         variant_set = []
-                        vi = 0
-                        for url in urls:
-                            # 尝试匹配本地文件
-                            url_bn = url.split('/')[-1].split('?')[0]
-                            matched_fn = None
-                            for fn in local_fns:
-                                if url_bn.split('.')[0][:15] in fn or fn.split('.')[0][:15] in url_bn:
-                                    matched_fn = fn
-                                    break
-                            if matched_fn:
-                                variant_set.append({"filename": matched_fn, "index": vi})
-                            else:
-                                variant_set.append({"url": url, "filename": "", "index": vi})
-                            vi += 1
+                        for vi, url in enumerate(v_imgs):
+                            variant_set.append({"url": url, "filename": "", "index": vi})
                         if variant_set:
-                            p["image_sets"][variant_name] = variant_set
-                    logger.info("产品 %s 创建了 %s 个变体图片集", skc, len(variant_images))
+                            subdir_sets[vname] = variant_set
+
+                for sname, entries in subdir_sets.items():
+                    p["image_sets"][sname] = entries
 
                 _save_products(products_data)
 
@@ -4325,27 +4338,39 @@ def update_product_image_sets(skc):
         if p["skc"] == skc:
             p["image_sets"] = data.get("image_sets", {})
 
-            # 收集所有被引用的 filename
+            # 收集所有被引用的文件（可能是 "01.jpg" 或 "01_Blue/01.jpg"）
             referenced = set()
+            referenced_basenames = set()
             for entries in p["image_sets"].values():
                 for entry in entries:
                     fn = entry.get("filename", "")
                     if fn:
                         referenced.add(fn)
+                        referenced_basenames.add(os.path.basename(fn))
 
-            # 删除 images_dir 中未被任何集合引用的物理文件
+            # 递归删除 images_dir 中未被引用的物理文件
             images_dir = p.get("images_dir", "")
             deleted_count = 0
             if images_dir and os.path.exists(images_dir):
                 valid_exts = {'.jpg', '.jpeg', '.png', '.webp', '.bmp'}
-                for fname in os.listdir(images_dir):
-                    if os.path.splitext(fname)[1].lower() in valid_exts:
-                        if fname not in referenced:
-                            try:
-                                os.remove(os.path.join(images_dir, fname))
-                                deleted_count += 1
-                            except OSError:
-                                logger.warning(f"删除图片文件失败: {fname}")
+                for root, _dirs, files in os.walk(images_dir, topdown=False):
+                    for fname in files:
+                        if os.path.splitext(fname)[1].lower() in valid_exts:
+                            rel = os.path.relpath(os.path.join(root, fname), images_dir).replace('\\', '/')
+                            if rel not in referenced and fname not in referenced_basenames:
+                                try:
+                                    os.remove(os.path.join(root, fname))
+                                    deleted_count += 1
+                                except OSError:
+                                    logger.warning(f"删除图片文件失败: {rel}")
+                    # 清理空子目录
+                    if root != images_dir:
+                        try:
+                            remaining = [f for f in os.listdir(root) if os.path.splitext(f)[1].lower() in valid_exts]
+                            if not remaining:
+                                os.rmdir(root)
+                        except OSError:
+                            pass
 
             _save_products(products_data)
             return jsonify({"success": True, "deleted_files": deleted_count})
@@ -4375,7 +4400,17 @@ def upload_product_image(skc):
                 return jsonify({"error": "产品图片目录不存在"}), 400
 
             safe_name = secure_filename(file.filename)
-            filepath = os.path.join(images_dir, safe_name)
+
+            # 保存到 set 专属子目录：采集图片 → images_dir/，其他 → images_dir/<set_name>/
+            if set_name == "采集图片":
+                dest_dir = images_dir
+                rel_name = safe_name
+            else:
+                dest_dir = os.path.join(images_dir, set_name)
+                os.makedirs(dest_dir, exist_ok=True)
+                rel_name = f"{set_name}/{safe_name}"
+
+            filepath = os.path.join(dest_dir, safe_name)
             file.save(filepath)
 
             if "image_sets" not in p:
@@ -4384,14 +4419,14 @@ def upload_product_image(skc):
                 p["image_sets"][set_name] = []
 
             new_index = len(p["image_sets"][set_name])
-            entry = {"filename": safe_name, "index": new_index}
+            entry = {"filename": rel_name, "index": new_index}
             p["image_sets"][set_name].append(entry)
             _save_products(products_data)
 
             return jsonify({
                 "success": True,
                 "entry": entry,
-                "url": f"/product_images/{skc}/{safe_name}"
+                "url": f"/product_images/{skc}/{rel_name}"
             })
 
     return jsonify({"error": "产品不存在"}), 404
