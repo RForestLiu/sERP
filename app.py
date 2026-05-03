@@ -42,6 +42,7 @@ logging.config.dictConfig({
 })
 
 from flask import Flask, request, jsonify, render_template, send_from_directory
+from flask_cors import cross_origin
 from werkzeug.utils import secure_filename
 import requests
 
@@ -106,6 +107,14 @@ def index():
 def serve_task_image(task_id, filename):
     folder = task_folder(task_id)
     return send_from_directory(folder, filename)
+
+
+@app.route("/collect_images/<task_id>/<path:filename>")
+def serve_collect_image(task_id, filename):
+    """服务采集任务的图片文件"""
+    folder = os.path.join(DATA_ROOT, f"collect_{task_id}")
+    return send_from_directory(folder, filename)
+
 
 # --------------- API ---------------
 @app.route("/api/tasks", methods=["GET"])
@@ -582,9 +591,10 @@ def _run_collect_in_thread(url, task_id):
         "status": "pending",
         "progress": 0,
         "message": "等待开始...",
-        "result": None
+        "result": None,
+        "created_at": datetime.now().isoformat()
     }
-    
+
     try:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -623,7 +633,8 @@ def get_collect_tasks():
                 "platform": result.get("platform", ""),
                 "downloaded": result.get("downloaded", 0),
                 "image_count": result.get("image_count", 0),
-                "failed": result.get("failed", 0)
+                "failed": result.get("failed", 0),
+                "created_at": task.get("created_at", "")
             })
     return jsonify(tasks)
 
@@ -651,6 +662,297 @@ def start_collect():
         "status": "pending",
         "message": "任务已创建，正在启动..."
     })
+
+
+@app.route("/api/collect/amazon_capture", methods=["POST"])
+@cross_origin()
+def amazon_capture():
+    """接收 Chrome 扩展从 Amazon 页面提取的产品数据"""
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "no data"}), 400
+
+    title = data.get("title", "").strip()
+    if not title:
+        return jsonify({"error": "no title"}), 400
+
+    task_id = "amz_" + uuid_lib.uuid4().hex[:8]
+    images = data.get("images", [])
+    price = data.get("price", "")
+    product_url = data.get("url", "")
+
+    # 创建采集目录
+    data_dir = os.path.join(DATA_ROOT, f"collect_{task_id}")
+    images_dir = os.path.join(data_dir, "images")
+    os.makedirs(images_dir, exist_ok=True)
+
+    # 保存产品数据
+    product_data_file = os.path.join(data_dir, "product_data.json")
+    with open(product_data_file, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+    collect_tasks[task_id] = {
+        "status": "completed",
+        "progress": 100,
+        "message": f"Amazon 采集 — {title[:40]}",
+        "created_at": datetime.now().isoformat(),
+        "result": {
+            "task_id": task_id,
+            "status": "completed",
+            "url": product_url,
+            "platform": "amazon",
+            "title": title,
+            "price": price,
+            "image_count": len(images),
+            "downloaded": 0,
+            "failed": 0,
+            "data_dir": data_dir,
+            "product_data": product_data_file.replace("\\", "/"),
+            "images_mapping": None,
+            "images_dir": images_dir,
+            "source": "amazon_extension",
+        },
+    }
+    _save_collect_tasks()
+
+    # 后台下载图片
+    if images:
+        thread = threading.Thread(
+            target=_download_amazon_images,
+            args=(task_id, images, images_dir),
+            daemon=True,
+        )
+        thread.start()
+
+    logger.info(f"[amazon_capture] {title} (图片={len(images)})")
+    return jsonify({
+        "status": "ok",
+        "task_id": task_id,
+        "title": title,
+        "image_count": len(images),
+    }), 200
+
+
+def _download_amazon_images(task_id, image_urls, images_dir):
+    """后台下载 Amazon 图片并更新 mapping"""
+    import requests as req_lib
+
+    downloaded = 0
+    failed = 0
+    images_mapping = []
+    session = req_lib.Session()
+    session.headers.update({
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+        "Referer": "https://www.amazon.com/",
+    })
+
+    for idx, img_url in enumerate(image_urls):
+        try:
+            resp = session.get(img_url, timeout=30)
+            if resp.status_code == 200:
+                ext = os.path.splitext(img_url.split("?")[0])[1] or ".jpg"
+                if ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"):
+                    ext = ".jpg"
+                filename = f"{idx+1:02d}{ext}"
+                filepath = os.path.join(images_dir, filename)
+                with open(filepath, "wb") as f:
+                    f.write(resp.content)
+                images_mapping.append({"index": idx, "url": img_url, "file": filename})
+                downloaded += 1
+            else:
+                failed += 1
+        except Exception:
+            failed += 1
+
+    # 更新结果
+    if task_id in collect_tasks:
+        collect_tasks[task_id]["result"]["downloaded"] = downloaded
+        collect_tasks[task_id]["result"]["failed"] = failed
+        collect_tasks[task_id]["message"] += f" ({downloaded}图已下载)"
+
+    # 保存 mapping
+    if images_mapping:
+        mapping_file = os.path.join(os.path.dirname(images_dir), "images_mapping.json")
+        with open(mapping_file, "w", encoding="utf-8") as f:
+            json.dump(images_mapping, f, indent=2, ensure_ascii=False)
+        if task_id in collect_tasks:
+            collect_tasks[task_id]["result"]["images_mapping"] = mapping_file.replace("\\", "/")
+
+    _save_collect_tasks()
+    logger.info(f"[amazon_capture] {task_id}: {downloaded} downloaded, {failed} failed")
+
+
+# ==================== 通用浏览器采集端点 ====================
+
+PLATFORM_PREFIX = {
+    "amazon": "amz",
+    "1688": "1688",
+    "wildberries": "wb",
+    "ozon": "ozn",
+}
+
+PLATFORM_REFERER = {
+    "amazon": "https://www.amazon.com/",
+    "1688": "https://detail.1688.com/",
+    "wildberries": "https://www.wildberries.ru/",
+    "ozon": "https://www.ozon.ru/",
+}
+
+
+@app.route("/api/collect/browser_capture", methods=["POST"])
+@cross_origin()
+def browser_capture():
+    """接收 Chrome 扩展从多平台提取的产品数据（支持批量变体）"""
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "no data"}), 400
+
+    title = data.get("title", "").strip()
+    if not title:
+        return jsonify({"error": "no title"}), 400
+
+    platform = data.get("platform", "unknown")
+    prefix = PLATFORM_PREFIX.get(platform, "unk")
+    task_id = prefix + "_" + uuid_lib.uuid4().hex[:8]
+
+    images = data.get("images", [])
+    price = data.get("price", "")
+    product_url = data.get("url", "")
+    variant_data = data.get("variantData")  # 批量变体采集时传入
+    variant_count = len(variant_data) if variant_data else 0
+
+    data_dir = os.path.join(DATA_ROOT, f"collect_{task_id}")
+    images_dir = os.path.join(data_dir, "images")
+    os.makedirs(images_dir, exist_ok=True)
+
+    product_data_file = os.path.join(data_dir, "product_data.json")
+    with open(product_data_file, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+    # 计算总图片数
+    total_image_count = len(images)
+    if variant_data:
+        for v in variant_data:
+            total_image_count += len(v.get("images", []))
+
+    collect_tasks[task_id] = {
+        "status": "completed",
+        "progress": 100,
+        "message": f"{platform} 采集 — {title[:40]}" + (f" ({variant_count}变体)" if variant_count else ""),
+        "created_at": datetime.now().isoformat(),
+        "result": {
+            "task_id": task_id,
+            "status": "completed",
+            "url": product_url,
+            "platform": platform,
+            "title": title,
+            "price": price,
+            "image_count": len(images),
+            "variant_count": variant_count,
+            "total_image_count": total_image_count,
+            "downloaded": 0,
+            "failed": 0,
+            "data_dir": data_dir,
+            "product_data": product_data_file.replace("\\", "/"),
+            "images_mapping": None,
+            "images_dir": images_dir,
+            "source": "browser_extension",
+            "variants": variant_data,
+        },
+    }
+    _save_collect_tasks()
+
+    # 所有产品统一变体结构：单规格 → 01_default，多规格 → 01_Color/02_Color...
+    if not variant_data:
+        variant_data = [{"variantName": "default", "price": price, "images": images, "url": product_url}]
+        images = []  # 图片归入变体子目录，根 images/ 不再放文件
+
+    if variant_data:
+        thread = threading.Thread(
+            target=_download_variant_images,
+            args=(task_id, variant_data, images_dir, platform),
+            daemon=True,
+        )
+        thread.start()
+
+    logger.info(f"[browser_capture] [{platform}] {title} (变体={variant_count}, 图片={total_image_count})")
+    return jsonify({
+        "status": "ok",
+        "task_id": task_id,
+        "title": title,
+        "platform": platform,
+        "variant_count": variant_count,
+        "image_count": total_image_count,
+    }), 200
+
+
+def _download_variant_images(task_id, variant_data, images_dir, platform):
+    """下载各变体图片到子目录: images/01_Name/, images/02_Name/..."""
+    import requests as req_lib
+
+    referer = PLATFORM_REFERER.get(platform, "https://www.amazon.com/")
+    session = req_lib.Session()
+    session.headers.update({
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+        "Referer": referer,
+    })
+
+    def _download_one(url, idx, dest_dir):
+        try:
+            resp = session.get(url, timeout=30)
+            if resp.status_code == 200:
+                ext = os.path.splitext(url.split("?")[0])[1] or ".jpg"
+                if ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"):
+                    ext = ".jpg"
+                fname = f"{idx+1:02d}{ext}"
+                fpath = os.path.join(dest_dir, fname)
+                with open(fpath, "wb") as f:
+                    f.write(resp.content)
+                return True, fname
+        except Exception:
+            pass
+        return False, None
+
+    total_downloaded = 0
+    total_failed = 0
+    all_mappings = {}
+
+    # 各变体图片 → images/{idx+1:02d}_{variantName}/
+    for vi, variant in enumerate(variant_data):
+        vname = variant.get("variantName", f"variant_{vi}")
+        safe_name = re.sub(r'[<>:"/\\|?*]', "_", vname)[:50]
+        vdir = os.path.join(images_dir, f"{vi+1:02d}_{safe_name}")
+        os.makedirs(vdir, exist_ok=True)
+
+        vimgs = variant.get("images", [])
+        mappings = []
+        for i2, url in enumerate(vimgs):
+            ok, fname = _download_one(url, i2, vdir)
+            if ok:
+                mappings.append({"index": i2, "url": url, "file": fname, "subdir": os.path.basename(vdir)})
+                total_downloaded += 1
+            else:
+                total_failed += 1
+        if mappings:
+            all_mappings[variant.get("variantName", f"variant_{vi}")] = mappings
+
+    # 更新结果
+    if task_id in collect_tasks:
+        collect_tasks[task_id]["result"]["downloaded"] = total_downloaded
+        collect_tasks[task_id]["result"]["failed"] = total_failed
+        collect_tasks[task_id]["message"] += f" ({total_downloaded}图已下载)"
+
+    if all_mappings:
+        mapping_file = os.path.join(os.path.dirname(images_dir), "images_mapping.json")
+        with open(mapping_file, "w", encoding="utf-8") as f:
+            json.dump(all_mappings, f, indent=2, ensure_ascii=False)
+        if task_id in collect_tasks:
+            collect_tasks[task_id]["result"]["images_mapping"] = mapping_file.replace("\\", "/")
+
+    _save_collect_tasks()
+    logger.info(f"[browser_capture] {task_id} [{platform}]: {total_downloaded} downloaded, {total_failed} failed ({len(variant_data)} variants)")
 
 
 @app.route("/api/collect/dxm_capture", methods=["POST"])
@@ -714,6 +1016,7 @@ def _create_dxm_task(product_data):
         "status": "completed",
         "progress": 100,
         "message": f"店小秘截获 — {title[:40]}",
+        "created_at": datetime.now().isoformat(),
         "result": {
             "title": title,
             "platform": platform,
@@ -891,16 +1194,16 @@ def get_collect_status(task_id):
 
 @app.route("/api/collect/<task_id>/result", methods=["GET"])
 def get_collect_result(task_id):
-    """获取采集结果数据"""
+    """获取采集结果数据（含缩略图 URL）"""
     task = collect_tasks.get(task_id)
     if not task:
         return jsonify({"error": "任务不存在"}), 404
-    
+
     if task["status"] != "completed":
         return jsonify({"error": "任务尚未完成", "status": task["status"]}), 400
-    
+
     result = task["result"]
-    
+
     # 读取 product_data.json
     product_data = {}
     if result and result.get("product_data"):
@@ -909,7 +1212,7 @@ def get_collect_result(task_id):
                 product_data = json.load(f)
         except:
             pass
-    
+
     # 读取 images_mapping.json
     images_mapping = []
     if result and result.get("images_mapping"):
@@ -918,12 +1221,55 @@ def get_collect_result(task_id):
                 images_mapping = json.load(f)
         except:
             pass
-    
+
+    # 扫描实际图片文件生成 thumbnail_urls 和 variant_groups
+    thumbnail_urls = []
+    variant_groups = {}
+    images_dir = result.get("images_dir", "")
+    base_url = f"/collect_images/{task_id}"
+
+    if images_dir and os.path.isdir(images_dir):
+        # 查找子目录（变体结构: images/01_Name/）
+        try:
+            subdirs = sorted([
+                d for d in os.listdir(images_dir)
+                if os.path.isdir(os.path.join(images_dir, d))
+            ])
+            for sd in subdirs:
+                sd_path = os.path.join(images_dir, sd)
+                files = sorted([
+                    f for f in os.listdir(sd_path)
+                    if f.lower().endswith((".jpg", ".jpeg", ".png", ".webp"))
+                ])
+                if files:
+                    # 变体名: "01_Apricot" → "Apricot"
+                    variant_name = sd.split("_", 1)[-1] if "_" in sd else sd
+                    variant_groups[variant_name] = len(files)
+                    for f in files[:6]:  # 每个变体最多取6张缩略图
+                        rel_path = os.path.relpath(os.path.join(sd_path, f), os.path.dirname(images_dir))
+                        thumbnail_urls.append(f"{base_url}/{rel_path.replace(os.sep, '/')}")
+        except Exception:
+            pass
+
+        # 如果没有子目录，直接扫描 images/ 下的文件
+        if not thumbnail_urls:
+            try:
+                files = sorted([
+                    f for f in os.listdir(images_dir)
+                    if f.lower().endswith((".jpg", ".jpeg", ".png", ".webp"))
+                ])[:12]
+                for f in files:
+                    thumbnail_urls.append(f"{base_url}/images/{f}")
+            except Exception:
+                pass
+
     return jsonify({
         "task_id": task_id,
         "summary": result,
         "product_data": product_data,
-        "images_mapping": images_mapping
+        "images_mapping": images_mapping,
+        "thumbnail_urls": thumbnail_urls,
+        "variant_groups": variant_groups,
     })
 
 
@@ -1027,21 +1373,19 @@ def save_collect_product(task_id):
         except:
             pass
     
-    # 从图片分类中提取 SKU 变体
+    # 从图片映射中提取 SKU 变体
     skus = []
-    seen_variants = set()
-    for img in images_mapping:
-        if img.get("success") and img.get("type") == "sku":
-            # 从文件名中提取变体特征
-            fname = img.get("new_name", "")
-            # 简单处理：每个成功的 sku 图片作为一个变体
-            variant = fname.split("_")[-1].replace(".jpg", "").upper() if "_" in fname else f"V{len(skus)+1:02d}"
-            if variant not in seen_variants:
-                seen_variants.add(variant)
-                sku = f"{skc}-{variant}"
-                skus.append(sku)
-    
-    # 如果没有 SKU 变体，至少创建一个默认 SKU
+    if isinstance(images_mapping, dict):
+        # 变体格式: {"Red": [{"index":0,...},...], "Blue": [...]}
+        for variant_name in sorted(images_mapping.keys()):
+            variant = variant_name.strip().upper()
+            variant_slug = re.sub(r'[^A-Z0-9]', '', variant) or f"V{len(skus)+1:02d}"
+            sku = f"{skc}-{variant_slug}"
+            skus.append(sku)
+    elif isinstance(images_mapping, list) and len(images_mapping) > 0:
+        # 简单格式（无变体），创建一个带编号的 SKU
+        skus.append(f"{skc}-01")
+
     if not skus:
         skus.append(f"{skc}-DEFAULT")
     
