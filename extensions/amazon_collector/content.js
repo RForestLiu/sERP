@@ -273,20 +273,17 @@
 
     clickVariant: function (type, value) {
       if (type === "color") {
-        // NEW: inline-twister-row-color_name
-        // Must click a child INSIDE .a-button-toggle (e.g., img or .a-button-inner),
-        // NOT the li itself. Amazon's a-button-group handler on the ul uses
-        // event.target.closest('.a-button-toggle') which searches UP the tree.
-        // If we click the li, closest() never finds .a-button-toggle (it's a descendant).
+        // Click the swatch image (img.swatch-image) inside the li.
+        // Amazon's a-button-group uses event delegation on the ul:
+        //   event.target.closest('.a-button-toggle')
+        // The img is inside .a-button-toggle → closest() finds it.
+        // We do NOT click the li directly (closest goes UP, not down).
         var lis = $$("#inline-twister-row-color_name li[data-asin]");
         for (var i = 0; i < lis.length; i++) {
           var img = $("img", lis[i]);
           var name = (img ? attr(img, "alt") : text(lis[i])).trim();
           if (name === value) {
-            // Click the image or the .a-button-inner span inside the li
-            var clickTarget = img || $(".a-button-inner", lis[i]);
-            if (clickTarget) clickTarget.click();
-            else lis[i].click();
+            img.click();
             return true;
           }
         }
@@ -295,12 +292,7 @@
         for (var j = 0; j < items.length; j++) {
           var oimg = $("img", items[j]);
           var oname = (oimg ? attr(oimg, "alt") : text(items[j])).trim();
-          if (oname === value) {
-            var oTarget = oimg || $("a, button, input", items[j]);
-            if (oTarget) oTarget.click();
-            else items[j].click();
-            return true;
-          }
+          if (oname === value) { items[j].click(); return true; }
         }
       } else if (type === "size") {
         // NEW: size li
@@ -905,12 +897,16 @@
       var oldFp = null;
       if (idx > 0) {
         oldFp = getImageFingerprint();
+        console.log("[sERP] collectAllVariants idx=" + idx + " oldFp:", oldFp.slice(0, 80));
         X.clickVariant(stack[idx].type, stack[idx].value);
       }
 
       waitForUpdate(3000).then(function () {
+        console.log("[sERP] waitForUpdate resolved for idx=" + idx);
         return waitForImageData(5000, oldFp);
       }).then(function (changed) {
+        console.log("[sERP] waitForImageData resolved for idx=" + idx + " changed=" + changed);
+        if (idx > 0) console.log("[sERP]   curFp:", getImageFingerprint().slice(0, 80));
         if (idx > 0 && !changed) {
           console.warn("[sERP Collector] Images may not have changed for:", stack[idx].value);
         }
