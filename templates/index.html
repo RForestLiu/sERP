@@ -778,6 +778,28 @@
             border-bottom: 1px solid #f5f5f5;
             vertical-align: middle;
         }
+        .product-row td:first-child {
+            position: relative;
+        }
+        .prod-delete-top {
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            width: 18px;
+            height: 18px;
+            line-height: 18px;
+            text-align: center;
+            font-size: 12px;
+            color: #ccc;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: color 0.15s, background 0.15s;
+            z-index: 1;
+        }
+        .prod-delete-top:hover {
+            color: white;
+            background: #e74c3c;
+        }
         .product-row.expanded td {
             border-bottom: none;
         }
@@ -2427,13 +2449,14 @@
                 html += `<tr class="product-row" data-skc="${p.skc}">`;
                 // 产品信息单元格
                 html += '<td>';
+                html += `<span class="prod-delete-top" data-action="delete-product" data-skc="${p.skc}" title="删除产品">✕</span>`;
                 html += '<div class="prod-info">';
                 html += p.thumbnail ? `<img class="prod-thumb" src="${p.thumbnail}" alt="">` : '<div class="prod-thumb prod-thumb-empty"></div>';
                 html += '<div class="prod-info-right">';
                 html += `<div class="prod-info-top"><span class="prod-skc">${p.skc}</span><span class="prod-cat">${p.category || '其他'}</span><span class="prod-toggle" data-action="toggle-detail">📋 ▾</span></div>`;
                 html += `<div class="prod-title">${p.title || '未命名产品'}</div>`;
                 html += `<div class="prod-meta"><span>📎 ${p.platform || '未知平台'}</span><span>💰 ${p.price || '—'}</span><span>🕐 ${createdDate}</span><span>📦 ${(p.skus || []).length} SKU</span></div>`;
-                html += `<div class="prod-actions"><button class="btn-row-sm btn-row-img" data-action="img-mgmt" data-skc="${p.skc}">🖼️ 图片</button><button class="btn-row-sm btn-row-del" data-action="delete-product" data-skc="${p.skc}">✕ 删除</button></div>`;
+                html += `<div class="prod-actions"><button class="btn-row-sm btn-row-img" data-action="img-mgmt" data-skc="${p.skc}">🖼️ 图片</button></div>`;
                 html += '</div></div></td>';
                 // 店铺状态单元格
                 stores.forEach(s => {
