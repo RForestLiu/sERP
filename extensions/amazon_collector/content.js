@@ -985,15 +985,13 @@
 
     var pending = [];
     for (var i = 1; i < stack.length; i++) {
-      var variantName = stack[i].value;
-      var asin = colorToAsin[variantName];
-
+      (function (variantName, asin, idx) {
       if (!asin) {
         console.warn("[sERP] No ASIN found for variant:", variantName);
-        continue;
+        return;
       }
 
-      setStatus("变体 " + (i + 1) + "/" + UI.total + ": 请求 " + variantName + "...");
+      setStatus("变体 " + (idx + 1) + "/" + UI.total + ": 请求 " + variantName + "...");
 
       var promise = fetchVariantData(asin).then(function (data) {
         allVariants.push({
@@ -1007,7 +1005,6 @@
         console.log("[sERP] variant " + (allVariants.length) + "/" + UI.total + " (fetched):", variantName, "(" + data.images.length + " images)");
       }).catch(function (err) {
         console.error("[sERP] Failed to fetch variant", variantName, ":", err.message);
-        // Fallback: re-use current page images as placeholder
         allVariants.push({
           variantName: variantName,
           url: window.location.href,
@@ -1020,6 +1017,7 @@
       });
 
       pending.push(promise);
+      })(stack[i].value, colorToAsin[stack[i].value], i);
     }
 
     Promise.all(pending).then(function () {
