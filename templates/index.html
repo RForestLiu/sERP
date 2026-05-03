@@ -916,11 +916,27 @@
             gap: 14px;
         }
         .detail-left {
-            flex: 1;
-            min-width: 0;
+            width: 300px;
+            flex-shrink: 0;
             display: flex;
             flex-direction: column;
             gap: 5px;
+        }
+        .detail-mid {
+            width: 300px;
+            flex-shrink: 0;
+        }
+        .ro-info {
+            background: #fafbfc;
+            border: 1px solid #eef0f2;
+            border-radius: 4px;
+        }
+        .ro-info .row-value {
+            font-weight: 500;
+        }
+        .ro-info .row-value.empty {
+            color: #ccc;
+            font-weight: 400;
         }
         .edit-toggle {
             font-size: 12px;
@@ -936,8 +952,8 @@
             gap: 5px;
         }
         .detail-right {
-            width: 270px;
-            flex-shrink: 0;
+            flex: 1;
+            min-width: 0;
         }
         .detail-gallery {
             display: flex;
@@ -2437,9 +2453,20 @@
                 html += `<tr class="detail-row" data-skc-detail="${p.skc}" style="display:none">`;
                 html += `<td colspan="${colSpan}">`;
                 html += '<div class="detail-content">';
-                // 左侧：编辑按钮 + 可折叠编辑区
+                // 左侧 300px：产品登记信息
                 html += '<div class="detail-left">';
-                html += `<div class="edit-toggle" data-action="toggle-edit" data-skc="${p.skc}">✏️ 编辑登记信息 ▾</div>`;
+                // 只读基础信息
+                const wv = manual.weight_g ? manual.weight_g + 'g' : (collectedWeight || '');
+                const sv = manual.size_spec || collectedSize || '';
+                const spv = manual.spec || '';
+                const cpv = manual.cost_price ? '¥' + manual.cost_price : '';
+                html += `<div class="product-info-row ro-info" data-ro-field="weight_g"><span class="row-label">重量</span><span class="row-value${wv ? '' : ' empty'}">${wv || '—'}</span></div>`;
+                html += `<div class="product-info-row ro-info" data-ro-field="size_spec"><span class="row-label">尺寸</span><span class="row-value${sv ? '' : ' empty'}">${sv || '—'}</span></div>`;
+                html += `<div class="product-info-row ro-info" data-ro-field="spec"><span class="row-label">规格</span><span class="row-value${spv ? '' : ' empty'}">${spv || '—'}</span></div>`;
+                html += `<div class="product-info-row ro-info" data-ro-field="cost_price"><span class="row-label">成本价</span><span class="row-value${cpv ? '' : ' empty'}">${cpv || '—'}</span></div>`;
+                // 编辑按钮
+                html += `<div class="edit-toggle" data-action="toggle-edit" data-skc="${p.skc}">✏️ 编辑 ▾</div>`;
+                // 编辑区（默认隐藏）
                 html += `<div class="edit-section" id="edit-${p.skc}" style="display:none">`;
                 html += `<div class="collected-pip-trigger" data-skc="${p.skc}" data-weight="${collectedWeight}" data-size="${collectedSize}"><span class="pip-icon">📖</span><span class="pip-label">采集原始数据</span><span class="pip-hint">悬停查看</span></div>`;
                 html += '<div class="paste-extract-area">';
@@ -2450,9 +2477,11 @@
                 html += `<div class="product-info-row manual"><span class="row-label">尺寸规格</span><input type="text" class="manual-input" data-field="size_spec" value="${manual.size_spec || ''}" placeholder="如 20×10×3cm"></div>`;
                 html += `<div class="product-info-row manual"><span class="row-label">规格</span><input type="text" class="manual-input" data-field="spec" value="${manual.spec || ''}" placeholder="如 大号/黑色"></div>`;
                 html += `<div class="product-info-row manual"><span class="row-label">成本价</span><input type="text" class="manual-input" data-field="cost_price" value="${manual.cost_price || ''}" placeholder="元"></div>`;
-                html += `<div class="product-info-row manual"><button class="save-manual-btn" data-skc="${p.skc}">💾 保存人工数据</button></div>`;
+                html += `<div class="product-info-row manual ro-save-row"><button class="save-manual-btn" data-skc="${p.skc}">💾 保存人工数据</button></div>`;
                 html += '</div>'; // end edit-section
                 html += '</div>'; // end detail-left
+                // 中间 300px：预留
+                html += '<div class="detail-mid"></div>';
                 // 右侧：图片集
                 html += `<div class="detail-right"><div class="detail-gallery" id="gallery-${p.skc}"><span style="font-size:10px;color:#999;">加载中...</span></div></div>`;
                 html += '</div></td></tr>';
@@ -2513,15 +2542,24 @@
                 toggle.addEventListener("click", function(e) {
                     e.stopPropagation();
                     const skc = this.dataset.skc;
+                    const detailLeft = this.closest(".detail-left");
                     const editSection = document.getElementById(`edit-${skc}`);
                     if (!editSection) return;
                     const isVisible = editSection.style.display !== "none";
                     if (isVisible) {
                         editSection.style.display = "none";
-                        this.textContent = "✏️ 编辑登记信息 ▾";
+                        this.textContent = "✏️ 编辑 ▾";
+                        // 恢复只读行显示
+                        if (detailLeft) {
+                            detailLeft.querySelectorAll(".ro-info").forEach(el => el.style.display = "");
+                        }
                     } else {
                         editSection.style.display = "";
-                        this.textContent = "✏️ 编辑登记信息 ▴";
+                        this.textContent = "✏️ 编辑 ▴";
+                        // 隐藏只读行
+                        if (detailLeft) {
+                            detailLeft.querySelectorAll(".ro-info").forEach(el => el.style.display = "none");
+                        }
                     }
                 });
             });
@@ -2599,6 +2637,17 @@
                         const res = await fetch(`/api/products/${skc}/manual`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
                         if (!res.ok) throw new Error("保存失败");
                         this.classList.remove("saving"); this.classList.add("saved"); this.textContent = "✅ 已保存";
+                        // 更新只读显示
+                        detailRow.querySelectorAll(".ro-info").forEach(row => {
+                            const field = row.dataset.roField;
+                            const val = data[field] || "";
+                            const valEl = row.querySelector(".row-value");
+                            if (valEl) {
+                                const display = field === "cost_price" && val ? "¥" + val : (field === "weight_g" && val ? val + "g" : val);
+                                valEl.textContent = display || "—";
+                                valEl.className = "row-value" + (display ? "" : " empty");
+                            }
+                        });
                         showMsg(`✅ ${skc} 人工数据已保存`);
                     } catch (e) {
                         this.classList.remove("saving"); this.textContent = "💾 保存人工数据"; this.disabled = false;
