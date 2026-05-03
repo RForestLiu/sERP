@@ -757,6 +757,16 @@
             flex-shrink: 0;
             background: #f0f0f0;
         }
+        .product-card-thumb-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ccc;
+            font-size: 20px;
+        }
+        .product-card-thumb-empty::after {
+            content: '📦';
+        }
         .product-card-header {
             /* no extra padding — card padding handles it */
         }
@@ -794,6 +804,18 @@
             transition: all 0.2s;
         }
         .btn-img-mgmt:hover { color: #fff; background: #8b5cf6; }
+        .btn-product-delete {
+            font-size: 11px;
+            padding: 2px 8px;
+            color: #e74c3c;
+            border-color: #e74c3c;
+            cursor: pointer;
+            background: #fff;
+            border: 1px solid #e74c3c;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+        .btn-product-delete:hover { color: #fff; background: #e74c3c; }
         .product-card-header .product-title {
             font-size: 13px;
             color: #333;
@@ -2471,13 +2493,14 @@
                 });
 
                 card.innerHTML = `
-                    <img class="product-card-thumb" src="${p.thumbnail || ''}" alt="" onerror="this.style.display='none'">
+                    ${p.thumbnail ? `<img class="product-card-thumb" src="${p.thumbnail}" alt="">` : `<div class="product-card-thumb product-card-thumb-empty"></div>`}
                     <div class="product-card-body">
                         <div class="product-card-header">
                             <div class="skc-row">
                                 <span class="skc-badge">${p.skc}</span>
                                 <span class="category-tag">${p.category || '其他'}</span>
                                 <button class="btn btn-img-mgmt" data-action="img-mgmt" data-skc="${p.skc}">🖼️ 图片管理</button>
+                                <button class="btn btn-product-delete" data-action="delete-product" data-skc="${p.skc}">✕ 删除</button>
                             </div>
                             <div class="product-title">${p.title || '未命名产品'}</div>
                             <div class="product-meta">
@@ -2815,6 +2838,27 @@
             });
         }
 
+        // 删除产品卡片
+        async function deleteProductCard(skc) {
+            if (!confirm(`确定要删除产品 ${skc} 吗？此操作不可恢复。`)) return;
+            try {
+                const res = await fetch(`/api/products/${skc}`, { method: "DELETE" });
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || "删除失败");
+                }
+                const card = document.querySelector(`.product-card[data-skc="${skc}"]`);
+                if (card) card.remove();
+                showMsg(`✅ 产品 ${skc} 已删除`);
+                // 如果没有剩余产品，显示空状态
+                if (!document.querySelector(".product-card")) {
+                    document.getElementById("product-empty").style.display = "flex";
+                }
+            } catch (e) {
+                showMsg("❌ 删除失败: " + e.message, true);
+            }
+        }
+
         // ==================== 产品图片管理模块 ====================
 
         const imgMgmtOverlay = document.getElementById("img-mgmt-overlay");
@@ -2864,11 +2908,15 @@
             }
         });
 
-        // 事件委托：产品卡中的图片管理按钮
+        // 事件委托：产品卡中的按钮
         document.getElementById("product-cards-container").addEventListener("click", function(e) {
             if (e.target.closest("[data-action='img-mgmt']")) {
                 e.stopPropagation();
                 openImageMgmt(e.target.closest("[data-action='img-mgmt']").dataset.skc);
+            }
+            if (e.target.closest("[data-action='delete-product']")) {
+                e.stopPropagation();
+                deleteProductCard(e.target.closest("[data-action='delete-product']").dataset.skc);
             }
         });
 

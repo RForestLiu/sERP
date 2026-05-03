@@ -1390,6 +1390,14 @@ def save_collect_product(task_id):
         skus.append(f"{skc}-DEFAULT")
     
     # 构建正式产品数据
+    images_dir = result.get("images_dir", "")
+    thumbnail = ""
+    if images_dir and os.path.exists(images_dir):
+        for fname in sorted(os.listdir(images_dir)):
+            if os.path.splitext(fname)[1].lower() in ('.jpg', '.jpeg', '.png', '.webp', '.bmp'):
+                thumbnail = f"/product_images/{skc}/{fname}"
+                break
+
     product_entry = {
         "skc": skc,
         "skus": skus,
@@ -1402,7 +1410,8 @@ def save_collect_product(task_id):
         "price": result.get("price", ""),
         "created_at": datetime.now().isoformat(),
         "product_data": product_data,
-        "images_dir": result.get("images_dir", ""),
+        "images_dir": images_dir,
+        "thumbnail": thumbnail,
         "downloaded": result.get("downloaded", 0),
         "image_count": result.get("image_count", 0),
     }
@@ -1459,16 +1468,16 @@ def get_products():
             sid = s["id"]
             if sid not in p["store_status"]:
                 p["store_status"][sid] = "未上架"
-        # 缩略图：取 images_dir 第一张图片
-        if not p.get("thumbnail"):
+        # 旧数据回填缩略图
+        if "thumbnail" not in p:
             images_dir = p.get("images_dir", "")
             if images_dir and os.path.exists(images_dir):
                 for fname in sorted(os.listdir(images_dir)):
                     if os.path.splitext(fname)[1].lower() in ('.jpg', '.jpeg', '.png', '.webp', '.bmp'):
                         p["thumbnail"] = f"/product_images/{p['skc']}/{fname}"
                         break
-        if not p.get("thumbnail"):
-            p["thumbnail"] = ""
+            if "thumbnail" not in p:
+                p["thumbnail"] = ""
 
     return jsonify({
         "products": product_list,
@@ -1519,6 +1528,28 @@ def update_product_store_status(skc):
             return jsonify({"success": True, "skc": skc, "store_id": store_id, "status": new_status})
     
     return jsonify({"error": "产品不存在"}), 404
+
+
+@app.route("/api/products/<skc>", methods=["DELETE"])
+def delete_product(skc):
+    """删除正式产品"""
+    products_data = _load_products()
+    product_list = products_data.get("产品列表", [])
+
+    target = None
+    for i, p in enumerate(product_list):
+        if p["skc"] == skc:
+            target = product_list.pop(i)
+            break
+
+    if not target:
+        return jsonify({"error": "产品不存在"}), 404
+
+    if skc in products_data.get("已注册编号", {}):
+        del products_data["已注册编号"][skc]
+
+    _save_products(products_data)
+    return jsonify({"success": True, "skc": skc})
 
 
 @app.route("/api/products/<skc>/auto_extract", methods=["POST"])
