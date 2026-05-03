@@ -653,6 +653,226 @@ def start_collect():
     })
 
 
+@app.route("/api/collect/dxm_capture", methods=["POST"])
+def dxm_capture():
+    """接收 Chrome 扩展截获的店小秘采集 API 数据"""
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "no data"}), 400
+
+    url = data.get("url", "")
+    page_url = data.get("pageUrl", "")
+
+    # 提取响应体 (page injection 方式) 或请求体 (webRequest 方式)
+    resp_body = data.get("responseBody") or data.get("responseText") or {}
+    if isinstance(resp_body, str):
+        try:
+            resp_body = json.loads(resp_body)
+        except (json.JSONDecodeError, ValueError):
+            resp_body = {}
+
+    req_body = data.get("requestBody") or {}
+
+    # 保存调试日志
+    _log_dxm_capture(data, resp_body or req_body)
+
+    # 先尝试从响应体中提取产品数据
+    product_data = _extract_dxm_product(resp_body, url, page_url)
+
+    if product_data:
+        # 有完整产品数据 → 直接创建任务
+        _create_dxm_task(product_data)
+        return jsonify({"status": "ok", "task_id": "dxm_created", "title": product_data.get("title")}), 200
+
+    # 没有响应体 → 尝试从请求体中提取目标 URL 并触发 sERP 采集
+    target_url = _extract_collect_url(req_body, url, page_url)
+    if target_url:
+        logger.info(f"[dxm_capture] 触发自主采集: {target_url}")
+        task_id = "collect_" + uuid_lib.uuid4().hex[:8]
+        thread = threading.Thread(target=_run_collect_in_thread, args=(target_url, task_id), daemon=True)
+        thread.start()
+        return jsonify({"status": "ok", "task_id": task_id, "message": "已触发自主采集"}), 200
+
+    return jsonify({"status": "ignored", "reason": "no product data found"}), 200
+
+
+def _create_dxm_task(product_data):
+    """创建店小秘截获产品任务"""
+    task_id = "dxm_" + uuid_lib.uuid4().hex[:8]
+    title = product_data.get("title", "店小秘采集")
+    platform = product_data.get("platform", "unknown")
+    image_count = product_data.get("image_count", 0)
+
+    data_dir = os.path.join(DATA_ROOT, f"collect_{task_id}")
+    os.makedirs(data_dir, exist_ok=True)
+
+    product_data_file = os.path.join(data_dir, "product_data.json")
+    with open(product_data_file, "w", encoding="utf-8") as f:
+        json.dump(product_data, f, indent=2, ensure_ascii=False)
+
+    collect_tasks[task_id] = {
+        "status": "completed",
+        "progress": 100,
+        "message": f"店小秘截获 — {title[:40]}",
+        "result": {
+            "title": title,
+            "platform": platform,
+            "url": product_data.get("url", ""),
+            "image_count": image_count,
+            "downloaded": 0,
+            "failed": 0,
+            "product_data": product_data_file.replace("\\", "/"),
+            "images_mapping": None,
+            "source": "mitm_dianxiaomi",
+        },
+    }
+    _save_collect_tasks()
+    logger.info(f"[dxm_capture] 店小秘采集: {title} (平台={platform}, 图片={image_count})")
+
+
+def _extract_collect_url(req_body, api_url="", page_url=""):
+    """从请求体中提取目标采集 URL"""
+    if not isinstance(req_body, dict):
+        return None
+
+    # 常见字段: url, sourceUrl, productUrl, link, targetUrl
+    for key in ("url", "sourceUrl", "productUrl", "link", "targetUrl", "originUrl"):
+        val = req_body.get(key, "")
+        if isinstance(val, str) and val.startswith("http"):
+            return val
+
+    # 嵌套: data.url
+    data = req_body.get("data")
+    if isinstance(data, dict):
+        for key in ("url", "sourceUrl", "productUrl"):
+            val = data.get(key, "")
+            if isinstance(val, str) and val.startswith("http"):
+                return val
+
+    return None
+
+
+def _log_dxm_capture(data, resp_body):
+    """记录所有截获的请求到调试日志文件"""
+    log_file = os.path.join(DATA_ROOT, "dxm_debug.jsonl")
+    try:
+        entry = {
+            "timestamp": data.get("timestamp", ""),
+            "url": data.get("url", ""),
+            "method": data.get("method", ""),
+            "status": data.get("status", ""),
+            "pageUrl": data.get("pageUrl", ""),
+            "response_type": type(resp_body).__name__,
+            "response_preview": (
+                resp_body if isinstance(resp_body, (dict, list))
+                else str(resp_body)[:2000]
+            ),
+        }
+        # 只记录可能包含产品数据的响应 (dict/list 有内容的)
+        if isinstance(resp_body, dict) and resp_body:
+            with open(log_file, "a", encoding="utf-8") as f:
+                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        elif isinstance(resp_body, list) and resp_body:
+            with open(log_file, "a", encoding="utf-8") as f:
+                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+
+
+def _safe_get(obj, key, default=None):
+    """Safe dict.get that works on non-dict types"""
+    if isinstance(obj, dict):
+        return obj.get(key, default)
+    return default
+
+
+def _extract_dxm_product(response_data, api_url: str = "", page_url: str = "") -> dict | None:
+    """从店小秘 API 响应中提取产品数据"""
+    if not isinstance(response_data, dict):
+        return None
+
+    # 尝试多种嵌套路径找产品数据
+    data = response_data.get("data")
+    result = response_data.get("result")
+
+    candidates = [response_data]
+    for v in [data, result]:
+        if isinstance(v, dict):
+            candidates.append(v)
+            for sub_key in ("list", "rows", "records", "items", "products", "goods", "offers"):
+                sub = v.get(sub_key)
+                if isinstance(sub, list) and sub and isinstance(sub[0], dict):
+                    candidates.append(sub[0])
+                elif isinstance(sub, dict):
+                    candidates.append(sub)
+        elif isinstance(v, list) and v and isinstance(v[0], dict):
+            candidates.append(v[0])
+
+    for candidate in candidates:
+        title = (
+            candidate.get("title")
+            or candidate.get("productTitle")
+            or candidate.get("productName")
+            or candidate.get("goodsName")
+            or candidate.get("name")
+        )
+        if not title:
+            continue
+
+        platform = "unknown"
+        if candidate.get("platform"):
+            platform = str(candidate["platform"]).lower()
+        else:
+            for key in ("ozonProductId", "ozon_product_id", "offer_id", "ozonItemId"):
+                if key in candidate:
+                    platform = "ozon"
+                    break
+            for key in ("wbProductId", "wildberries_product_id", "nmId"):
+                if key in candidate:
+                    platform = "wildberries"
+                    break
+            for key in ("asin", "amazonProductId"):
+                if key in candidate:
+                    platform = "amazon"
+                    break
+
+        images = []
+        for img_key in ("images", "imageList", "productImages", "mainImages", "detailImages", "pics", "pictures"):
+            imgs = candidate.get(img_key, [])
+            if isinstance(imgs, list) and imgs:
+                images = [i if isinstance(i, str) else i.get("url", "") for i in imgs]
+                break
+        if not images:
+            for img_key in ("mainImage", "mainImg", "coverImage", "coverImg", "image", "pic"):
+                img = candidate.get(img_key, "")
+                if isinstance(img, str) and img.startswith("http"):
+                    images = [img]
+                    break
+
+        product_url = (
+            candidate.get("sourceUrl")
+            or candidate.get("originUrl")
+            or candidate.get("productUrl")
+            or candidate.get("url")
+            or api_url
+            or page_url
+            or ""
+        )
+
+        return {
+            "title": str(title),
+            "platform": platform,
+            "url": str(product_url),
+            "image_count": len(images),
+            "images": images,
+            "price": str(candidate.get("price") or candidate.get("productPrice") or ""),
+            "sku": str(candidate.get("sku") or candidate.get("productSku") or ""),
+            "raw_response": response_data,
+        }
+
+    return None
+
+
 @app.route("/api/collect/<task_id>/status", methods=["GET"])
 def get_collect_status(task_id):
     """查询采集任务状态"""
