@@ -188,6 +188,57 @@ def upload_source_images(task_id):
         })
     return jsonify({"saved": saved})
 
+
+@app.route("/api/tasks/<task_id>/import_images", methods=["POST"])
+def import_images_to_task(task_id):
+    """将产品图片复制到任务 source_images 目录 — 从图片管理弹窗拖拽导入"""
+    data = request.get_json()
+    skc = data.get("skc", "")
+    entries = data.get("entries", [])
+
+    products_data = _load_products()
+    product_list = products_data.get("产品列表", [])
+    product = None
+    for p in product_list:
+        if p["skc"] == skc:
+            product = p
+            break
+    if not product:
+        return jsonify({"error": "产品不存在"}), 404
+
+    images_dir = product.get("images_dir", "")
+    if not images_dir or not os.path.exists(images_dir):
+        return jsonify({"error": "产品图片目录不存在"}), 404
+
+    source_dir = os.path.join(task_folder(task_id), "source_images")
+    os.makedirs(source_dir, exist_ok=True)
+
+    saved = []
+    for entry in entries:
+        filename = entry.get("filename", "")
+        if not filename:
+            continue
+        src_path = os.path.join(images_dir, filename)
+        if not os.path.exists(src_path):
+            continue
+        safe_name = os.path.basename(filename)
+        dest_name = safe_name
+        dest_path = os.path.join(source_dir, dest_name)
+        name_parts = os.path.splitext(safe_name)
+        counter = 1
+        while os.path.exists(dest_path):
+            dest_name = f"{name_parts[0]}_{counter}{name_parts[1]}"
+            dest_path = os.path.join(source_dir, dest_name)
+            counter += 1
+        shutil.copy2(src_path, dest_path)
+        saved.append({
+            "original_name": safe_name,
+            "relative_path": f"source_images/{dest_name}"
+        })
+
+    return jsonify({"saved": saved})
+
+
 # ── 图片压缩函数 ───────────────────────────────────────────────
 def compress_image(image_data, max_size=1.5*1024*1024):
     """

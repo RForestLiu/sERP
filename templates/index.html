@@ -692,6 +692,27 @@
             padding: 8px; border-top: 1px solid #f0f0f0; flex-shrink: 0;
         }
 
+        /* Task area in sidebar */
+        .img-mgmt-task-area {
+            border-top: 1px solid #e5e7eb; flex-shrink: 0; max-height: 200px;
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        .img-mgmt-task-header {
+            padding: 8px 14px; font-size: 11px; font-weight: 600;
+            color: #888; background: #fafbfc; flex-shrink: 0;
+        }
+        .img-mgmt-task-list { overflow-y: auto; padding: 4px 0; }
+        .img-mgmt-task-item {
+            margin: 2px 8px; padding: 6px 10px; font-size: 12px;
+            border: 1px dashed #d1d5db; border-radius: 4px;
+            cursor: default; user-select: none;
+            transition: border-color 0.15s, background 0.15s;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .img-mgmt-task-item.drag-over { border-color: #8b5cf6; background: #f5f3ff; }
+        .img-mgmt-task-item .task-dot { width: 6px; height: 6px; border-radius: 50%; background: #8b5cf6; flex-shrink: 0; }
+        .img-mgmt-task-empty { padding: 8px 14px; font-size: 11px; color: #bbb; text-align: center; }
+
         /* Workspace */
         .img-mgmt-workspace {
             flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0;
@@ -1388,6 +1409,12 @@
                     <div class="img-mgmt-set-list" id="img-mgmt-set-list"></div>
                     <div class="img-mgmt-sidebar-footer">
                         <button class="btn" id="img-mgmt-new-set-btn" style="width:100%;border:2px dashed #ddd;color:#999;background:none;cursor:pointer;padding:8px;font-size:12px;">+ 新建图片集</button>
+                    </div>
+                    <div class="img-mgmt-task-area" id="img-mgmt-task-area">
+                        <div class="img-mgmt-task-header">📋 批量处理任务</div>
+                        <div class="img-mgmt-task-list" id="img-mgmt-task-list">
+                            <div class="img-mgmt-task-empty">加载中...</div>
+                        </div>
                     </div>
                 </div>
                 <!-- Workspace -->
@@ -2940,6 +2967,7 @@
             }
             if (Object.keys(imageSets).length === 0) { imageSets["采集图片"] = []; }
             _updateSidebar();
+            _renderTaskBar();
             _showManageMode();
             imgMgmtOverlay.classList.add("active");
             imgMgmtSaveStatus.textContent = "";
@@ -2991,7 +3019,7 @@
                 const entries = imageSets[name] || [];
                 total += entries.length;
                 const isActive = currentSetName === name && !currentSubsetName;
-                h += `<div class="img-mgmt-set-item${isActive ? " active" : ""}" data-set="${name}" data-type="set">`;
+                h += `<div class="img-mgmt-set-item${isActive ? " active" : ""}" data-set="${name}" data-type="set" draggable="true">`;
                 h += `📁 ${name}<span class="mgmt-count">${entries.length}</span>`;
                 h += `<span class="mgmt-actions">`;
                 h += `<button class="act-rename" title="重命名" data-action="rename-set" data-set="${name}">✏️</button>`;
@@ -3005,7 +3033,7 @@
                     const subEntries = subs[subName] || [];
                     total += subEntries.length;
                     const isSubActive = currentSetName === name && currentSubsetName === subName;
-                    h += `<div class="img-mgmt-set-item${isSubActive ? " active" : ""}" data-set="${name}" data-subset="${subName}" data-type="subset" style="padding-left:28px;">`;
+                    h += `<div class="img-mgmt-set-item${isSubActive ? " active" : ""}" data-set="${name}" data-subset="${subName}" data-type="subset" style="padding-left:28px;" draggable="true">`;
                     h += `📄 ${subName}<span class="mgmt-count">${subEntries.length}</span>`;
                     h += `<span class="mgmt-actions">`;
                     h += `<button class="act-delete" title="删除子集" data-action="delete-subset" data-set="${name}" data-subset="${subName}">🗑️</button>`;
@@ -3034,6 +3062,30 @@
             var subName = item.dataset.subset;
             if (subName) selectSubset(setName, subName);
             else selectSet(setName);
+        });
+
+        // Sidebar dragstart — set items become draggable
+        _byId("img-mgmt-set-list").addEventListener("dragstart", function(e) {
+            var item = e.target.closest(".img-mgmt-set-item");
+            if (!item) return;
+            var setName = item.dataset.set || "";
+            var subName = item.dataset.subset || "";
+            var countEl = item.querySelector(".mgmt-count");
+            var count = countEl ? parseInt(countEl.textContent) || 0 : 0;
+            e.dataTransfer.setData("text/plain", JSON.stringify({
+                type: "image-set",
+                setName: setName,
+                subName: subName,
+                count: count
+            }));
+            e.dataTransfer.effectAllowed = "copy";
+            item.style.opacity = "0.5";
+        });
+        _byId("img-mgmt-set-list").addEventListener("dragend", function(e) {
+            var item = e.target.closest(".img-mgmt-set-item");
+            if (item) item.style.opacity = "";
+            var taskItems = document.querySelectorAll(".img-mgmt-task-item");
+            taskItems.forEach(function(ti) { ti.classList.remove("drag-over"); });
         });
 
         // Sidebar cross-set drag-drop targets
@@ -3447,6 +3499,120 @@
             selectedImages.clear();
             _refreshCurrentView();
             imgMgmtSaveStatus.textContent = "(未保存)";
+        }
+
+        // ============ Task bar (drag image set → import to task) ============
+
+        async function _renderTaskBar() {
+            var container = _byId("img-mgmt-task-list");
+            if (!container) return;
+            try {
+                var res = await fetch("/api/tasks");
+                if (!res.ok) throw new Error("加载失败");
+                var tasks = await res.json();
+                if (!tasks || tasks.length === 0) {
+                    container.innerHTML = '<div class="img-mgmt-task-empty">暂无任务，请先在"图片批量处理"模块创建</div>';
+                    return;
+                }
+                var h = "";
+                tasks.forEach(function(t) {
+                    h += '<div class="img-mgmt-task-item" data-task-id="' + t.id + '">';
+                    h += '<span class="task-dot"></span>';
+                    h += t.name;
+                    h += '</div>';
+                });
+                container.innerHTML = h;
+            } catch(e) {
+                container.innerHTML = '<div class="img-mgmt-task-empty">加载任务失败</div>';
+            }
+        }
+
+        // Task list drag-drop delegation
+        _byId("img-mgmt-task-list").addEventListener("dragover", function(e) {
+            var targetItem = e.target.closest(".img-mgmt-task-item");
+            if (!targetItem) return;
+            e.preventDefault();
+            targetItem.classList.add("drag-over");
+        });
+        _byId("img-mgmt-task-list").addEventListener("dragleave", function(e) {
+            var targetItem = e.target.closest(".img-mgmt-task-item");
+            if (!targetItem) return;
+            var related = e.relatedTarget;
+            if (!related || !targetItem.contains(related)) {
+                targetItem.classList.remove("drag-over");
+            }
+        });
+        _byId("img-mgmt-task-list").addEventListener("drop", function(e) {
+            var targetItem = e.target.closest(".img-mgmt-task-item");
+            if (!targetItem) return;
+            e.preventDefault();
+            targetItem.classList.remove("drag-over");
+            var taskId = targetItem.dataset.taskId;
+            try {
+                var payload = JSON.parse(e.dataTransfer.getData("text/plain"));
+                if (payload.type === "image-set") {
+                    _importSetToTask(taskId, payload.setName, payload.subName);
+                }
+            } catch (ex) {}
+        });
+
+        async function _importSetToTask(taskId, setName, subName) {
+            var entries;
+            if (subName) {
+                var subs = imageSubsets[setName] || {};
+                entries = (subs[subName] || []).slice();
+            } else {
+                entries = (imageSets[setName] || []).slice();
+            }
+            if (entries.length === 0) { showMsg("该图片集无图片", true); return; }
+
+            try {
+                var res = await fetch("/api/tasks/" + taskId + "/import_images", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ skc: currentImgSkc, entries: entries })
+                });
+                if (!res.ok) { var err = await res.json(); showMsg("导入失败: " + err.error, true); return; }
+                var data = await res.json();
+                if (!data.saved || data.saved.length === 0) { showMsg("没有文件被导入", true); return; }
+
+                // Fetch current task data and merge cards
+                var taskRes = await fetch("/api/tasks/" + taskId);
+                var task = await taskRes.json();
+                var taskData = task.data || { text1: "", cards: [] };
+
+                var matched = 0, created = 0;
+                data.saved.forEach(function(item) {
+                    var existingCard = taskData.cards.find(function(c) { return c.image_name === item.original_name; });
+                    if (existingCard) {
+                        existingCard.source_image = item.relative_path;
+                        matched++;
+                    } else {
+                        taskData.cards.push({
+                            id: genId(),
+                            image_name: item.original_name,
+                            prompt: "",
+                            source_image: item.relative_path,
+                            generated_draft: "",
+                            generated_final: ""
+                        });
+                        created++;
+                    }
+                });
+
+                // Save merged task data
+                var saveRes = await fetch("/api/tasks/" + taskId, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ data: taskData })
+                });
+                if (!saveRes.ok) throw new Error("保存任务数据失败");
+
+                var label = subName ? (setName + "/" + subName) : setName;
+                showMsg("已导入 " + label + " → " + task.name + " (" + data.saved.length + "张, " + matched + " 匹配 " + created + " 新建)");
+            } catch(e) {
+                showMsg("导入出错: " + e.message, true);
+            }
         }
 
         // ============ Toolbar button bindings ============
