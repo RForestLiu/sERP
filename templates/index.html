@@ -923,6 +923,19 @@
             flex-direction: column;
             gap: 5px;
         }
+        .edit-toggle {
+            font-size: 12px;
+            color: #8b5cf6;
+            cursor: pointer;
+            user-select: none;
+            padding: 3px 0;
+        }
+        .edit-toggle:hover { color: #7c3aed; }
+        .edit-section {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
         .detail-right {
             width: 270px;
             flex-shrink: 0;
@@ -2427,8 +2440,10 @@
                 html += `<tr class="detail-row" data-skc-detail="${p.skc}" style="display:none">`;
                 html += `<td colspan="${colSpan}">`;
                 html += '<div class="detail-content">';
-                // 左侧：采集数据 + 手动字段
+                // 左侧：编辑按钮 + 可折叠编辑区
                 html += '<div class="detail-left">';
+                html += `<div class="edit-toggle" data-action="toggle-edit" data-skc="${p.skc}">✏️ 编辑登记信息 ▾</div>`;
+                html += `<div class="edit-section" id="edit-${p.skc}" style="display:none">`;
                 html += `<div class="collected-pip-trigger" data-skc="${p.skc}" data-weight="${collectedWeight}" data-size="${collectedSize}"><span class="pip-icon">📖</span><span class="pip-label">采集原始数据</span><span class="pip-hint">悬停查看</span></div>`;
                 html += '<div class="paste-extract-area">';
                 html += '<textarea class="paste-textarea" placeholder="粘贴产品描述文本，点击下方按钮用 AI 自动识别并转换为国际单位..."></textarea>';
@@ -2439,7 +2454,8 @@
                 html += `<div class="product-info-row manual"><span class="row-label">规格</span><input type="text" class="manual-input" data-field="spec" value="${manual.spec || ''}" placeholder="如 大号/黑色"></div>`;
                 html += `<div class="product-info-row manual"><span class="row-label">成本价</span><input type="text" class="manual-input" data-field="cost_price" value="${manual.cost_price || ''}" placeholder="元"></div>`;
                 html += `<div class="product-info-row manual"><button class="save-manual-btn" data-skc="${p.skc}">💾 保存人工数据</button></div>`;
-                html += '</div>';
+                html += '</div>'; // end edit-section
+                html += '</div>'; // end detail-left
                 // 右侧：图片集
                 html += `<div class="detail-right"><div class="detail-gallery" id="gallery-${p.skc}"><span style="font-size:10px;color:#999;">加载中...</span></div></div>`;
                 html += '</div></td></tr>';
@@ -2491,6 +2507,24 @@
                         detailRow.style.display = "";
                         this.textContent = "📋 ▴";
                         loadProductGallery(skc);
+                    }
+                });
+            });
+
+            // --- 编辑区二次展开/收起 ---
+            document.querySelectorAll(".edit-toggle").forEach(toggle => {
+                toggle.addEventListener("click", function(e) {
+                    e.stopPropagation();
+                    const skc = this.dataset.skc;
+                    const editSection = document.getElementById(`edit-${skc}`);
+                    if (!editSection) return;
+                    const isVisible = editSection.style.display !== "none";
+                    if (isVisible) {
+                        editSection.style.display = "none";
+                        this.textContent = "✏️ 编辑登记信息 ▾";
+                    } else {
+                        editSection.style.display = "";
+                        this.textContent = "✏️ 编辑登记信息 ▴";
                     }
                 });
             });
