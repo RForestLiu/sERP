@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "sERP Collector",
+  "version": "2.1",
+  "description": "Multi-platform product data collector (Amazon, 1688, Wildberries, Ozon)",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "http://localhost:5000/*",
+    "http://127.0.0.1:5000/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.amazon.com/*",
+        "*://*.amazon.co.uk/*",
+        "*://*.amazon.de/*",
+        "*://*.amazon.fr/*",
+        "*://*.amazon.it/*",
+        "*://*.amazon.es/*",
+        "*://*.amazon.ca/*",
+        "*://*.amazon.co.jp/*",
+        "*://detail.1688.com/*",
+        "*://*.wildberries.ru/*",
+        "*://*.wildberries.by/*",
+        "*://*.wildberries.kz/*",
+        "*://*.ozon.ru/*",
+        "*://*.ozon.by/*",
+        "*://*.ozon.kz/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
