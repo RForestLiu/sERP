@@ -655,41 +655,84 @@
             cursor: pointer; color: #999; padding: 4px 8px;
         }
         .img-mgmt-close:hover { color: #333; }
-        .img-mgmt-set-card {
-            border: 1px solid #e5e7eb; border-radius: 6px; margin-bottom: 12px;
-            overflow: hidden;
+
+        /* Body: two-panel flex row */
+        .img-mgmt-body {
+            flex: 1; display: flex; overflow: hidden; padding: 0;
         }
-        .img-mgmt-set-header {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 8px 14px; background: #fafafa; border-bottom: 1px solid #f0f0f0;
+
+        /* Sidebar */
+        .img-mgmt-sidebar {
+            width: 240px; flex-shrink: 0; border-right: 1px solid #e5e7eb;
+            display: flex; flex-direction: column; overflow: hidden;
         }
-        .img-mgmt-set-name { font-size: 13px; color: #333; font-weight: 500; }
-        .img-mgmt-set-actions { display: flex; gap: 4px; }
-        .img-mgmt-set-actions button {
-            background: none; border: none; cursor: pointer; font-size: 14px;
-            padding: 2px 6px; border-radius: 3px; color: #999; transition: all 0.2s;
+        .img-mgmt-sidebar-header {
+            padding: 10px 14px; font-size: 13px; font-weight: 600;
+            border-bottom: 1px solid #e5e7eb; color: #555; flex-shrink: 0;
         }
-        .img-mgmt-set-actions button:hover { color: #333; background: #f0f0f0; }
-        .img-mgmt-set-actions .btn-rename:hover { color: #3498db; }
-        .img-mgmt-set-actions .btn-delete:hover { color: #ff4d4f; }
-        .img-mgmt-set-images {
-            display: flex; gap: 10px; padding: 14px;
-            overflow-x: auto; min-height: 110px; align-items: flex-start;
+        .img-mgmt-set-list { flex: 1; overflow-y: auto; padding: 6px 0; }
+        .img-mgmt-set-item {
+            padding: 7px 14px; cursor: pointer; font-size: 13px;
+            display: flex; align-items: center; gap: 4px;
+            transition: background 0.1s; user-select: none;
+        }
+        .img-mgmt-set-item:hover { background: #f0f4ff; }
+        .img-mgmt-set-item.active { background: #e0e7ff; color: #3730a3; font-weight: 600; }
+        .img-mgmt-set-item.drag-over { background: #dbeafe; outline: 2px dashed #3498db; outline-offset: -2px; }
+        .img-mgmt-set-item .mgmt-count { margin-left: auto; font-size: 11px; color: #999; }
+        .img-mgmt-set-item .mgmt-actions { display: none; margin-left: 2px; }
+        .img-mgmt-set-item:hover .mgmt-actions { display: flex; gap: 2px; }
+        .img-mgmt-set-item .mgmt-actions button {
+            background: none; border: none; cursor: pointer; font-size: 12px;
+            padding: 0 3px; color: #999; line-height: 1;
+        }
+        .img-mgmt-set-item .mgmt-actions .act-rename:hover { color: #3498db; }
+        .img-mgmt-set-item .mgmt-actions .act-delete:hover { color: #ff4d4f; }
+        .img-mgmt-sidebar-footer {
+            padding: 8px; border-top: 1px solid #f0f0f0; flex-shrink: 0;
+        }
+
+        /* Workspace */
+        .img-mgmt-workspace {
+            flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0;
+        }
+        .img-mgmt-toolbar {
+            padding: 6px 12px; border-bottom: 1px solid #e5e7eb; background: #fafbfc;
+            display: flex; gap: 6px; flex-wrap: wrap; align-items: center; flex-shrink: 0;
+        }
+        .img-mgmt-toolbar button {
+            padding: 4px 12px; font-size: 12px; border: 1px solid #d1d5db;
+            border-radius: 4px; background: white; cursor: pointer; transition: background 0.15s;
+        }
+        .img-mgmt-toolbar button:hover { background: #f0f0f0; }
+        .img-mgmt-toolbar button.primary { background: #8b5cf6; color: white; border-color: #8b5cf6; }
+        .img-mgmt-toolbar button.primary:hover { background: #7c3aed; }
+
+        /* Grid (management mode) */
+        .img-mgmt-grid-wrap {
+            flex: 1; overflow-y: auto; padding: 12px;
+            display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start;
             border: 2px dashed transparent; transition: border-color 0.2s;
         }
-        .img-mgmt-set-images.drag-over { border-color: #3498db; background: #f8fbff; }
-        .img-mgmt-body {
-            flex: 1; overflow-y: auto; padding: 20px;
+        .img-mgmt-grid-wrap.drag-over { border-color: #3498db; background: #f8fbff; }
+        .img-mgmt-grid-add {
+            width: 80px; height: 80px; border: 2px dashed #ddd; border-radius: 4px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: #bbb; font-size: 28px; transition: border-color 0.2s, color 0.2s;
         }
+        .img-mgmt-grid-add:hover { border-color: #3498db; color: #3498db; }
+
+        /* Grid items (reuse .img-mgmt-item base, add selected state) */
         .img-mgmt-item {
             width: 80px; height: 80px; flex-shrink: 0;
             border: 2px solid #e8e8e8; border-radius: 4px;
             overflow: hidden; position: relative; cursor: grab;
-            transition: border-color 0.2s, opacity 0.2s;
+            transition: border-color 0.2s, opacity 0.2s, box-shadow 0.2s;
         }
         .img-mgmt-item:active { cursor: grabbing; }
         .img-mgmt-item:hover { border-color: #428bca; }
         .img-mgmt-item.dragging { opacity: 0.4; }
+        .img-mgmt-item.selected { border-color: #3498db; box-shadow: 0 0 0 2px rgba(52,152,219,0.3); }
         .img-mgmt-item img { width: 100%; height: 100%; object-fit: cover; }
         .img-mgmt-item .order-badge {
             position: absolute; bottom: 2px; right: 2px;
@@ -703,40 +746,37 @@
             cursor: pointer; display: none; line-height: 18px; text-align: center; padding: 0;
         }
         .img-mgmt-item:hover .delete-btn { display: block; }
+
+        /* Batch mode */
+        .img-mgmt-batch-wrap {
+            flex: 1; display: flex; flex-direction: column; overflow: hidden;
+        }
+        .img-mgmt-canvas {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            background: #e9ecf1; position: relative; overflow: hidden;
+        }
+        .img-mgmt-canvas-placeholder { color: #bbb; text-align: center; font-size: 14px; }
+        .img-mgmt-canvas-placeholder .icon { font-size: 48px; margin-bottom: 8px; }
+        .img-mgmt-thumb-strip {
+            border-top: 1px solid #e5e7eb; background: white;
+            padding: 8px 12px; display: flex; gap: 6px; overflow-x: auto;
+            min-height: 86px; align-items: center; flex-shrink: 0;
+        }
+        .img-mgmt-thumb-strip img {
+            width: 70px; height: 70px; object-fit: cover; border-radius: 4px;
+            border: 1px solid #e5e7eb; cursor: pointer; flex-shrink: 0; transition: border-color 0.15s;
+        }
+        .img-mgmt-thumb-strip img:hover { border-color: #3498db; }
+        .img-mgmt-thumb-strip img.selected { border-color: #3498db; box-shadow: 0 0 0 2px rgba(52,152,219,0.3); }
+
         .img-mgmt-footer {
             display: flex; gap: 10px; padding: 12px 20px;
             border-top: 1px solid #f0f0f0; flex-shrink: 0; align-items: center;
         }
         .img-mgmt-empty {
-            text-align: center; color: #ccc; font-size: 14px;
-            padding: 40px 0; user-select: none; width: 100%;
+            display: flex; align-items: center; justify-content: center;
+            height: 100%; color: #bbb; font-size: 14px; width: 100%;
         }
-        .img-mgmt-subset-header {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-left: 24px; padding: 4px 10px 2px 10px;
-            border-left: 2px solid #e0e7ff;
-        }
-        .img-mgmt-subset-images {
-            margin-left: 24px;
-        }
-        .img-mgmt-create-subset {
-            margin-left: 24px; margin-top: 4px; padding: 4px 10px;
-            font-size: 11px; color: #8b5cf6; cursor: pointer;
-            border: 1px dashed #d1d5db; border-radius: 4px;
-            display: inline-block; user-select: none;
-            transition: background 0.15s, border-color 0.15s;
-        }
-        .img-mgmt-create-subset:hover { background: #f5f3ff; border-color: #8b5cf6; }
-        .subset-dropdown {
-            position: absolute; background: white; border: 1px solid #e5e7eb;
-            border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-            z-index: 20; min-width: 160px; overflow: hidden;
-        }
-        .subset-dd-item {
-            padding: 8px 14px; font-size: 12px; cursor: pointer;
-            white-space: nowrap; transition: background 0.1s;
-        }
-        .subset-dd-item:hover { background: #f0f4ff; }
 
         /* ===== 产品管理模块 ===== */
         .sync-toolbar {
@@ -1341,7 +1381,48 @@
                 <h3>产品图片管理 - <span id="img-mgmt-skc-label"></span></h3>
                 <button class="img-mgmt-close" id="img-mgmt-close-btn">✕</button>
             </div>
-            <div class="img-mgmt-body" id="img-mgmt-body"></div>
+            <div class="img-mgmt-body" id="img-mgmt-body">
+                <!-- Sidebar -->
+                <div class="img-mgmt-sidebar">
+                    <div class="img-mgmt-sidebar-header">📁 图片集</div>
+                    <div class="img-mgmt-set-list" id="img-mgmt-set-list"></div>
+                    <div class="img-mgmt-sidebar-footer">
+                        <button class="btn" id="img-mgmt-new-set-btn" style="width:100%;border:2px dashed #ddd;color:#999;background:none;cursor:pointer;padding:8px;font-size:12px;">+ 新建图片集</button>
+                    </div>
+                </div>
+                <!-- Workspace -->
+                <div class="img-mgmt-workspace" id="img-mgmt-workspace">
+                    <div class="img-mgmt-toolbar" id="img-mgmt-toolbar">
+                        <span id="img-mgmt-tb-manage">
+                            <button id="img-mgmt-select-all">全选</button>
+                            <button id="img-mgmt-deselect-all">取消全选</button>
+                            <button id="img-mgmt-switch-batch">🖼️ 批量处理</button>
+                            <button id="img-mgmt-save-subset" class="primary">💾 保存为子集</button>
+                            <button id="img-mgmt-upload-btn">➕ 上传</button>
+                        </span>
+                        <span id="img-mgmt-tb-batch" style="display:none">
+                            <button id="img-mgmt-switch-manage">📋 管理模式</button>
+                            <button id="img-mgmt-save-subset2" class="primary">💾 保存为子集</button>
+                        </span>
+                        <span style="flex:1"></span>
+                        <span class="mgmt-selection-info" id="img-mgmt-selection-info">已选: 0 / 总计: 0</span>
+                    </div>
+                    <!-- Management mode: grid -->
+                    <div class="img-mgmt-grid-wrap" id="img-mgmt-grid-wrap">
+                        <div class="img-mgmt-empty"><div>选择左侧图片集查看</div></div>
+                    </div>
+                    <!-- Batch mode: canvas + thumb strip -->
+                    <div class="img-mgmt-batch-wrap" id="img-mgmt-batch-wrap" style="display:none">
+                        <div class="img-mgmt-canvas" id="img-mgmt-canvas">
+                            <div class="img-mgmt-canvas-placeholder">
+                                <div class="icon">🖼️</div>
+                                <div>批量裁剪 / 缩放 / 加水印 / 调色</div>
+                            </div>
+                        </div>
+                        <div class="img-mgmt-thumb-strip" id="img-mgmt-thumb-strip"></div>
+                    </div>
+                </div>
+            </div>
             <div class="img-mgmt-footer">
                 <input type="file" id="img-mgmt-upload-input" accept="image/*" multiple style="display:none">
                 <button class="btn" id="img-mgmt-save-btn">💾 保存更改</button>
@@ -2833,10 +2914,20 @@
         let imageSets = {};
         let imageSubsets = {};
         let _uploadTargetSet = null;
+        let currentSetName = null;
+        let currentSubsetName = null;
+        let workspaceMode = "manage";
+        let selectedImages = new Set();
+
+        function _byId(id) { return document.getElementById(id); }
 
         async function openImageMgmt(skc) {
             currentImgSkc = skc;
             imgMgmtSkcLabel.textContent = skc;
+            currentSetName = null;
+            currentSubsetName = null;
+            workspaceMode = "manage";
+            selectedImages.clear();
             try {
                 const res = await fetch(`/api/products/${skc}/image-sets`);
                 if (!res.ok) { showMsg("加载图片集失败", true); return; }
@@ -2848,7 +2939,8 @@
                 return;
             }
             if (Object.keys(imageSets).length === 0) { imageSets["采集图片"] = []; }
-            renderAllSets();
+            _updateSidebar();
+            _showManageMode();
             imgMgmtOverlay.classList.add("active");
             imgMgmtSaveStatus.textContent = "";
         }
@@ -2859,6 +2951,10 @@
             imageSets = {};
             imageSubsets = {};
             _uploadTargetSet = null;
+            currentSetName = null;
+            currentSubsetName = null;
+            workspaceMode = "manage";
+            selectedImages.clear();
         }
 
         imgMgmtCloseBtn.addEventListener("click", closeImageMgmt);
@@ -2883,212 +2979,255 @@
             }
         });
 
-        function renderAllSets() {
-            imgMgmtBody.innerHTML = "";
-            const names = Object.keys(imageSets);
+        // ============ Sidebar ============
 
+        function _updateSidebar() {
+            const container = _byId("img-mgmt-set-list");
+            if (!container) return;
+            let h = "";
+            let total = 0;
+            const names = Object.keys(imageSets).sort();
             names.forEach(function(name) {
-                const card = document.createElement("div");
-                card.className = "img-mgmt-set-card";
-
-                // --- Header ---
-                const header = document.createElement("div");
-                header.className = "img-mgmt-set-header";
-
-                const nameSpan = document.createElement("span");
-                nameSpan.className = "img-mgmt-set-name";
-                const count = (imageSets[name] || []).length;
-                nameSpan.textContent = name + " (" + count + "张)";
-                header.appendChild(nameSpan);
-
-                const actions = document.createElement("div");
-                actions.className = "img-mgmt-set-actions";
-
-                // Rename button (always show)
-                const renameBtn = document.createElement("button");
-                renameBtn.className = "btn-rename";
-                renameBtn.title = "重命名";
-                renameBtn.textContent = "✏️";
-                renameBtn.addEventListener("click", function() {
-                    const newName = prompt("重命名图片集:", name);
-                    if (newName && newName !== name && !imageSets[newName]) {
-                        imageSets[newName] = imageSets[name];
-                        delete imageSets[name];
-                        renderAllSets();
-                        imgMgmtSaveStatus.textContent = "(未保存)";
-                    } else if (newName && imageSets[newName]) {
-                        showMsg("图片集名称已存在", true);
-                    }
-                });
-                actions.appendChild(renameBtn);
-
-                // Delete button (hidden for default set)
+                const entries = imageSets[name] || [];
+                total += entries.length;
+                const isActive = currentSetName === name && !currentSubsetName;
+                h += `<div class="img-mgmt-set-item${isActive ? " active" : ""}" data-set="${name}" data-type="set">`;
+                h += `📁 ${name}<span class="mgmt-count">${entries.length}</span>`;
+                h += `<span class="mgmt-actions">`;
+                h += `<button class="act-rename" title="重命名" data-action="rename-set" data-set="${name}">✏️</button>`;
                 if (name !== "采集图片") {
-                    const delSetBtn = document.createElement("button");
-                    delSetBtn.className = "btn-delete";
-                    delSetBtn.title = "删除图片集";
-                    delSetBtn.textContent = "🗑️";
-                    delSetBtn.addEventListener("click", function() {
-                        if (confirm("确定删除图片集「" + name + "」及其所有图片？\n图片将从磁盘物理删除。")) {
-                            delete imageSets[name];
-                            renderAllSets();
-                            imgMgmtSaveStatus.textContent = "(未保存)";
-                        }
-                    });
-                    actions.appendChild(delSetBtn);
+                    h += `<button class="act-delete" title="删除图片集" data-action="delete-set" data-set="${name}">🗑️</button>`;
                 }
-                header.appendChild(actions);
-                card.appendChild(header);
-
-                // --- Images row ---
-                const imagesRow = document.createElement("div");
-                imagesRow.className = "img-mgmt-set-images";
-                imagesRow.dataset.set = name;
-
-                const entries = (imageSets[name] || []).slice();
-                entries.sort(function(a, b) { return (a.index || 0) - (b.index || 0); });
-
-                entries.forEach(function(entry, idx) {
-                    const item = createImageItem(entry, idx, name);
-                    imagesRow.appendChild(item);
-                });
-
-                // "+" add-image button for this set
-                const addBtn = document.createElement("div");
-                addBtn.className = "img-mgmt-item";
-                addBtn.style.cssText = "border:2px dashed #ddd;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#bbb;font-size:28px;";
-                addBtn.title = "添加图片到「" + name + "」";
-                addBtn.textContent = "+";
-                addBtn.addEventListener("click", function() {
-                    _uploadTargetSet = name;
-                    imgMgmtUploadInput.click();
-                });
-                imagesRow.appendChild(addBtn);
-
-                // Drop zone for the row (cross-set drop target)
-                imagesRow.addEventListener("dragover", function(e) { e.preventDefault(); this.classList.add("drag-over"); });
-                imagesRow.addEventListener("dragleave", function(e) {
-                    if (e.target === this) this.classList.remove("drag-over");
-                });
-                imagesRow.addEventListener("drop", function(e) {
-                    e.preventDefault();
-                    this.classList.remove("drag-over");
-                    const data = JSON.parse(e.dataTransfer.getData("text/plain"));
-                    const fromSet = data.sourceSet;
-                    const fromIdx = data.sourceIndex;
-                    if (fromSet === name) return;
-                    const [moved] = imageSets[fromSet].splice(fromIdx, 1);
-                    moved.index = imageSets[name].length;
-                    imageSets[name].push(moved);
-                    imageSets[fromSet].forEach(function(e, i) { e.index = i; });
-                    renderAllSets();
-                    imgMgmtSaveStatus.textContent = "(未保存)";
-                });
-
-                card.appendChild(imagesRow);
-
-                // --- Subsets display (indented) ---
+                h += `</span></div>`;
+                // Subsets
                 const subs = imageSubsets[name] || {};
-                const subNames = Object.keys(subs).sort();
-                subNames.forEach(function(subName) {
+                Object.keys(subs).sort().forEach(function(subName) {
                     const subEntries = subs[subName] || [];
-                    const subHeader = document.createElement("div");
-                    subHeader.className = "img-mgmt-subset-header";
-                    subHeader.innerHTML = `<span class="img-mgmt-set-name">📄 ${subName} (${subEntries.length}张)</span>`;
-
-                    const subActions = document.createElement("div");
-                    subActions.className = "img-mgmt-set-actions";
-                    const delSubBtn = document.createElement("button");
-                    delSubBtn.className = "btn-delete";
-                    delSubBtn.title = "删除子集";
-                    delSubBtn.textContent = "🗑️";
-                    delSubBtn.addEventListener("click", function() {
-                        if (confirm("确定删除子集「" + subName + "」？")) {
-                            delete imageSubsets[name][subName];
-                            renderAllSets();
-                            imgMgmtSaveStatus.textContent = "(未保存)";
-                        }
-                    });
-                    subActions.appendChild(delSubBtn);
-                    subHeader.appendChild(subActions);
-                    card.appendChild(subHeader);
-
-                    const subRow = document.createElement("div");
-                    subRow.className = "img-mgmt-set-images img-mgmt-subset-images";
-                    subRow.dataset.set = name;
-                    subRow.dataset.subset = subName;
-                    subEntries.sort(function(a, b) { return (a.index || 0) - (b.index || 0); });
-                    subEntries.forEach(function(entry, idx) {
-                        const item = createImageItem(entry, idx, name + "::" + subName);
-                        subRow.appendChild(item);
-                    });
-                    card.appendChild(subRow);
+                    total += subEntries.length;
+                    const isSubActive = currentSetName === name && currentSubsetName === subName;
+                    h += `<div class="img-mgmt-set-item${isSubActive ? " active" : ""}" data-set="${name}" data-subset="${subName}" data-type="subset" style="padding-left:28px;">`;
+                    h += `📄 ${subName}<span class="mgmt-count">${subEntries.length}</span>`;
+                    h += `<span class="mgmt-actions">`;
+                    h += `<button class="act-delete" title="删除子集" data-action="delete-subset" data-set="${name}" data-subset="${subName}">🗑️</button>`;
+                    h += `</span></div>`;
                 });
-
-                // --- "创建图片子集" button ---
-                const createSubBtn = document.createElement("div");
-                createSubBtn.className = "img-mgmt-create-subset";
-                createSubBtn.textContent = "+ 创建图片子集";
-                createSubBtn.addEventListener("click", function(e) {
-                    e.stopPropagation();
-                    // Toggle dropdown
-                    const existing = card.querySelector(".subset-dropdown");
-                    if (existing) { existing.remove(); return; }
-                    const dd = document.createElement("div");
-                    dd.className = "subset-dropdown";
-                    dd.innerHTML = '<div class="subset-dd-item" data-action="batch-process">🖼️ 图片批量处理</div>';
-                    dd.querySelector("[data-action='batch-process']").addEventListener("click", function(ev) {
-                        ev.stopPropagation();
-                        dd.remove();
-                        window.open("/image-batch/" + currentImgSkc, "_blank");
-                    });
-                    card.appendChild(dd);
-                    // Close dropdown on outside click
-                    setTimeout(function() {
-                        document.addEventListener("click", function closeDD(ev2) {
-                            if (!dd.contains(ev2.target)) { dd.remove(); }
-                            document.removeEventListener("click", closeDD);
-                        }, { once: true });
-                    }, 0);
-                });
-                card.appendChild(createSubBtn);
-
-                imgMgmtBody.appendChild(card);
             });
-
-            // --- "New set" button at bottom ---
-            const newSetBtn = document.createElement("button");
-            newSetBtn.className = "btn";
-            newSetBtn.style.cssText = "width:100%;margin-top:4px;border:2px dashed #ddd;color:#999;background:none;cursor:pointer;padding:10px;font-size:13px;";
-            newSetBtn.textContent = "+ 新建图片集";
-            newSetBtn.addEventListener("click", function() {
-                const name = prompt("输入新图片集名称（如 俄语图片、英语图片）:");
-                if (name && !imageSets[name]) {
-                    imageSets[name] = [];
-                    renderAllSets();
-                    imgMgmtSaveStatus.textContent = "(未保存)";
-                } else if (name && imageSets[name]) {
-                    showMsg("图片集名称已存在", true);
-                }
-            });
-            imgMgmtBody.appendChild(newSetBtn);
+            if (!h) h = '<div style="padding:20px;color:#bbb;font-size:13px;text-align:center;">暂无图片集</div>';
+            container.innerHTML = h;
         }
 
-        function createImageItem(entry, idx, setName) {
-            const item = document.createElement("div");
+        // Sidebar click delegation
+        _byId("img-mgmt-set-list").addEventListener("click", function(e) {
+            const item = e.target.closest(".img-mgmt-set-item");
+            if (!item) return;
+            const actionBtn = e.target.closest("[data-action]");
+            if (actionBtn) {
+                var action = actionBtn.dataset.action;
+                var setName = actionBtn.dataset.set;
+                var subName = actionBtn.dataset.subset;
+                if (action === "rename-set") renameSet(setName);
+                else if (action === "delete-set") deleteSet(setName);
+                else if (action === "delete-subset") deleteSubset(setName, subName);
+                return;
+            }
+            var setName = item.dataset.set;
+            var subName = item.dataset.subset;
+            if (subName) selectSubset(setName, subName);
+            else selectSet(setName);
+        });
+
+        // Sidebar cross-set drag-drop targets
+        _byId("img-mgmt-set-list").addEventListener("dragover", function(e) {
+            var targetItem = e.target.closest(".img-mgmt-set-item[data-type='set']");
+            if (!targetItem) return;
+            e.preventDefault();
+            targetItem.classList.add("drag-over");
+        });
+        _byId("img-mgmt-set-list").addEventListener("dragleave", function(e) {
+            var targetItem = e.target.closest(".img-mgmt-set-item");
+            if (!targetItem) return;
+            var related = e.relatedTarget;
+            if (!related || !targetItem.contains(related)) {
+                targetItem.classList.remove("drag-over");
+            }
+        });
+        _byId("img-mgmt-set-list").addEventListener("drop", function(e) {
+            var targetItem = e.target.closest(".img-mgmt-set-item[data-type='set']");
+            if (!targetItem) return;
+            e.preventDefault();
+            targetItem.classList.remove("drag-over");
+            var toSet = targetItem.dataset.set;
+            try {
+                var payload = JSON.parse(e.dataTransfer.getData("text/plain"));
+                moveImageToSet(payload.sourceKey, payload.sourceIndex, toSet);
+            } catch (ex) {}
+        });
+
+        function selectSet(name) {
+            currentSetName = name;
+            currentSubsetName = null;
+            selectedImages.clear();
+            _updateSidebar();
+            _refreshCurrentView();
+        }
+
+        function selectSubset(setName, subName) {
+            currentSetName = setName;
+            currentSubsetName = subName;
+            selectedImages.clear();
+            _updateSidebar();
+            _refreshCurrentView();
+        }
+
+        function renameSet(name) {
+            var newName = prompt("重命名图片集:", name);
+            if (newName && newName !== name && !imageSets[newName]) {
+                imageSets[newName] = imageSets[name];
+                delete imageSets[name];
+                if (imageSubsets[name]) { imageSubsets[newName] = imageSubsets[name]; delete imageSubsets[name]; }
+                if (currentSetName === name) currentSetName = newName;
+                _updateSidebar();
+                imgMgmtSaveStatus.textContent = "(未保存)";
+            } else if (newName && imageSets[newName]) {
+                showMsg("图片集名称已存在", true);
+            }
+        }
+
+        function deleteSet(name) {
+            if (name === "采集图片") return;
+            if (confirm("确定删除图片集「" + name + "」及其所有图片？\n图片将从磁盘物理删除。")) {
+                delete imageSets[name];
+                if (imageSubsets[name]) delete imageSubsets[name];
+                if (currentSetName === name) { currentSetName = null; currentSubsetName = null; selectedImages.clear(); }
+                _updateSidebar();
+                _refreshCurrentView();
+                imgMgmtSaveStatus.textContent = "(未保存)";
+            }
+        }
+
+        function deleteSubset(setName, subName) {
+            if (confirm("确定删除子集「" + subName + "」？")) {
+                if (imageSubsets[setName]) delete imageSubsets[setName][subName];
+                if (currentSetName === setName && currentSubsetName === subName) {
+                    currentSubsetName = null; selectedImages.clear();
+                }
+                _updateSidebar();
+                _refreshCurrentView();
+                imgMgmtSaveStatus.textContent = "(未保存)";
+            }
+        }
+
+        // ============ Workspace helpers ============
+
+        function _getCurrentEntries() {
+            if (!currentSetName) return [];
+            if (currentSubsetName) {
+                var subs = imageSubsets[currentSetName] || {};
+                return (subs[currentSubsetName] || []).slice();
+            }
+            return (imageSets[currentSetName] || []).slice();
+        }
+
+        function _getCurrentSourceKey() {
+            if (!currentSetName) return null;
+            return currentSubsetName ? currentSetName + "::" + currentSubsetName : currentSetName;
+        }
+
+        function _updateSelectionInfo() {
+            var entries = _getCurrentEntries();
+            var el = _byId("img-mgmt-selection-info");
+            if (el) el.textContent = "已选: " + selectedImages.size + " / 总计: " + (entries.length || 0);
+        }
+
+        function _refreshCurrentView() {
+            if (workspaceMode === "batch") _showBatchMode();
+            else _showManageMode();
+        }
+
+        // ============ Management mode (grid) ============
+
+        function _showManageMode() {
+            workspaceMode = "manage";
+            _byId("img-mgmt-tb-manage").style.display = "";
+            _byId("img-mgmt-tb-batch").style.display = "none";
+            _byId("img-mgmt-grid-wrap").style.display = "";
+            _byId("img-mgmt-batch-wrap").style.display = "none";
+            _renderGrid();
+        }
+
+        function _renderGrid() {
+            var gridWrap = _byId("img-mgmt-grid-wrap");
+            gridWrap.innerHTML = "";
+
+            if (!currentSetName) {
+                gridWrap.innerHTML = '<div class="img-mgmt-empty"><div>选择左侧图片集查看</div></div>';
+                _updateSelectionInfo();
+                return;
+            }
+
+            var entries = _getCurrentEntries();
+            if (entries.length === 0) {
+                gridWrap.innerHTML = '<div class="img-mgmt-empty"><div>该图片集暂无图片</div></div>';
+                _updateSelectionInfo();
+                return;
+            }
+
+            entries.sort(function(a, b) { return (a.index || 0) - (b.index || 0); });
+            var sourceKey = _getCurrentSourceKey();
+
+            entries.forEach(function(entry, idx) {
+                var item = _createGridItem(entry, idx, sourceKey);
+                if (selectedImages.has(String(idx))) item.classList.add("selected");
+                gridWrap.appendChild(item);
+            });
+
+            // "+" add button
+            var addBtn = document.createElement("div");
+            addBtn.className = "img-mgmt-grid-add";
+            addBtn.textContent = "+";
+            addBtn.title = "上传图片到「" + (currentSubsetName || currentSetName) + "」";
+            addBtn.addEventListener("click", function() {
+                _uploadTargetSet = currentSetName;
+                imgMgmtUploadInput.click();
+            });
+            gridWrap.appendChild(addBtn);
+
+            // Grid cross-set drop zone
+            gridWrap.addEventListener("dragover", function(e) {
+                if (e.dataTransfer.types.contains("text/plain")) e.preventDefault();
+                this.classList.add("drag-over");
+            });
+            gridWrap.addEventListener("dragleave", function(e) {
+                if (e.target === this) this.classList.remove("drag-over");
+            });
+            gridWrap.addEventListener("drop", function(e) {
+                e.preventDefault();
+                this.classList.remove("drag-over");
+                try {
+                    var payload = JSON.parse(e.dataTransfer.getData("text/plain"));
+                    moveImageToSet(payload.sourceKey, payload.sourceIndex, currentSetName);
+                } catch (ex) {}
+            });
+
+            _updateSelectionInfo();
+        }
+
+        function _createGridItem(entry, idx, sourceKey) {
+            var item = document.createElement("div");
             item.className = "img-mgmt-item";
             item.draggable = true;
             item.dataset.index = idx;
-            item.dataset.set = setName;
+            item.dataset.source = sourceKey;
+            item.dataset.idx = idx;
 
-            let src = "";
+            var src = "";
             if (entry.filename) {
                 src = `/product_images/${currentImgSkc}/${entry.filename}`;
             } else if (entry.url) {
                 src = entry.url;
             }
 
-            const img = document.createElement("img");
+            var img = document.createElement("img");
             img.src = src;
             img.alt = entry.filename || "远程图片";
             img.onerror = function() {
@@ -3096,35 +3235,38 @@
             };
             item.appendChild(img);
 
-            const badge = document.createElement("span");
+            var badge = document.createElement("span");
             badge.className = "order-badge";
             badge.textContent = idx + 1;
             item.appendChild(badge);
 
-            const delBtn = document.createElement("button");
+            var delBtn = document.createElement("button");
             delBtn.className = "delete-btn";
             delBtn.textContent = "✕";
             delBtn.addEventListener("click", function(e) {
                 e.stopPropagation();
-                if (confirm("确定删除此图片？保存后将从磁盘物理删除。")) {
-                    imageSets[setName].splice(idx, 1);
-                    imageSets[setName].forEach(function(e, i) { e.index = i; });
-                    renderAllSets();
-                    imgMgmtSaveStatus.textContent = "(未保存)";
-                }
+                _deleteImageEntry(sourceKey, idx);
             });
             item.appendChild(delBtn);
+
+            // Click to select
+            item.addEventListener("click", function(e) {
+                if (e.target === delBtn) return;
+                _toggleImageSelection(String(idx));
+            });
 
             // Drag events
             item.addEventListener("dragstart", function(e) {
                 e.dataTransfer.setData("text/plain", JSON.stringify({
-                    sourceSet: setName, sourceIndex: idx
+                    sourceKey: sourceKey, sourceIndex: idx
                 }));
                 this.classList.add("dragging");
             });
             item.addEventListener("dragend", function(e) {
                 this.classList.remove("dragging");
-                document.querySelectorAll(".img-mgmt-set-images").forEach(function(r) { r.classList.remove("drag-over"); });
+                document.querySelectorAll(".img-mgmt-set-item").forEach(function(r) { r.classList.remove("drag-over"); });
+                var gw = _byId("img-mgmt-grid-wrap");
+                if (gw) gw.classList.remove("drag-over");
             });
             item.addEventListener("dragover", function(e) {
                 e.preventDefault();
@@ -3132,45 +3274,225 @@
             });
             item.addEventListener("drop", function(e) {
                 e.preventDefault();
-                const data = JSON.parse(e.dataTransfer.getData("text/plain"));
-                const fromSet = data.sourceSet;
-                const fromIdx = data.sourceIndex;
-                const toIdx = parseInt(this.dataset.index);
-
-                if (fromSet === setName && fromIdx === toIdx) return;
-
-                const [moved] = imageSets[fromSet].splice(fromIdx, 1);
-                imageSets[setName].splice(toIdx, 0, moved);
-                imageSets[fromSet].forEach(function(e, i) { e.index = i; });
-                if (fromSet !== setName) {
-                    imageSets[setName].forEach(function(e, i) { e.index = i; });
-                }
-                renderAllSets();
-                imgMgmtSaveStatus.textContent = "(未保存)";
+                try {
+                    var payload = JSON.parse(e.dataTransfer.getData("text/plain"));
+                    var fromKey = payload.sourceKey;
+                    var fromIdx = payload.sourceIndex;
+                    var toIdx = parseInt(this.dataset.idx);
+                    _reorderImages(fromKey, fromIdx, sourceKey, toIdx);
+                } catch (ex) {}
             });
 
             return item;
         }
 
-        // Upload — uses _uploadTargetSet set by the card's "+" button
+        // ============ Batch mode ============
+
+        function _showBatchMode() {
+            workspaceMode = "batch";
+            _byId("img-mgmt-tb-manage").style.display = "none";
+            _byId("img-mgmt-tb-batch").style.display = "";
+            _byId("img-mgmt-grid-wrap").style.display = "none";
+            _byId("img-mgmt-batch-wrap").style.display = "";
+            _renderBatchThumbs();
+        }
+
+        function _renderBatchThumbs() {
+            var strip = _byId("img-mgmt-thumb-strip");
+            var entries = _getCurrentEntries();
+            if (!currentSetName || entries.length === 0) {
+                strip.innerHTML = '<span style="color:#ccc;font-size:12px;">无图片</span>';
+                _updateSelectionInfo();
+                return;
+            }
+            entries.sort(function(a, b) { return (a.index || 0) - (b.index || 0); });
+            var h = "";
+            entries.forEach(function(entry, i) {
+                var src = entry.filename
+                    ? `/product_images/${currentImgSkc}/${entry.filename}`
+                    : (entry.url || "");
+                var selClass = selectedImages.has(String(i)) ? " selected" : "";
+                h += `<img src="${src}" data-idx="${i}" class="${selClass}" onclick="_toggleImageSelection('${i}')" title="${entry.filename || entry.url || ''}">`;
+            });
+            strip.innerHTML = h;
+            _updateSelectionInfo();
+        }
+
+        // ============ Shared operations ============
+
+        function _toggleImageSelection(idxStr) {
+            if (selectedImages.has(idxStr)) selectedImages.delete(idxStr);
+            else selectedImages.add(idxStr);
+            // Update visual
+            if (workspaceMode === "batch") {
+                var thumb = document.querySelector(`#img-mgmt-thumb-strip img[data-idx="${idxStr}"]`);
+                if (thumb) thumb.classList.toggle("selected");
+            } else {
+                var gridItem = document.querySelector(`#img-mgmt-grid-wrap .img-mgmt-item[data-idx="${idxStr}"]`);
+                if (gridItem) gridItem.classList.toggle("selected");
+            }
+            _updateSelectionInfo();
+        }
+
+        function _selectAll() {
+            var entries = _getCurrentEntries();
+            entries.forEach(function(_, i) { selectedImages.add(String(i)); });
+            _refreshCurrentView();
+        }
+
+        function _deselectAll() {
+            selectedImages.clear();
+            _refreshCurrentView();
+        }
+
+        function _saveAsSubset() {
+            if (!currentSetName) { alert("请先选择左侧图片集"); return; }
+            if (selectedImages.size === 0) { alert("请先选择图片"); return; }
+            var subName = prompt("输入子集名称:", "已处理");
+            if (!subName) return;
+
+            var entries = _getCurrentEntries();
+            var sorted = entries.slice().sort(function(a, b) { return (a.index || 0) - (b.index || 0); });
+            var subsetEntries = [];
+            selectedImages.forEach(function(idxStr) {
+                var i = parseInt(idxStr);
+                if (i >= 0 && i < sorted.length) subsetEntries.push(Object.assign({}, sorted[i], {index: subsetEntries.length}));
+            });
+
+            if (!imageSubsets[currentSetName]) imageSubsets[currentSetName] = {};
+            imageSubsets[currentSetName][subName] = subsetEntries;
+
+            _updateSidebar();
+            imgMgmtSaveStatus.textContent = "(未保存)";
+            alert("子集「" + subName + "」已创建 (" + subsetEntries.length + "张) — 请点击底部「保存更改」持久化");
+        }
+
+        function _deleteImageEntry(sourceKey, idx) {
+            if (!confirm("确定删除此图片？保存后将从磁盘物理删除。")) return;
+            var parts = sourceKey.split("::");
+            var setName = parts[0];
+            var subName = parts[1];
+
+            if (subName) {
+                var subs = imageSubsets[setName] || {};
+                var arr = subs[subName];
+                if (arr) { arr.splice(idx, 1); arr.forEach(function(e, i) { e.index = i; }); }
+            } else {
+                var arr = imageSets[setName];
+                if (arr) { arr.splice(idx, 1); arr.forEach(function(e, i) { e.index = i; }); }
+            }
+            selectedImages.clear();
+            _updateSidebar();
+            _refreshCurrentView();
+            imgMgmtSaveStatus.textContent = "(未保存)";
+        }
+
+        function moveImageToSet(sourceKey, sourceIdx, toSet) {
+            var parts = sourceKey.split("::");
+            var fromSet = parts[0];
+            var fromSub = parts[1];
+
+            if (fromSet === toSet && !fromSub) return;
+
+            var moved;
+            if (fromSub) {
+                var subs = imageSubsets[fromSet] || {};
+                var arr = subs[fromSub];
+                if (!arr) return;
+                moved = arr.splice(sourceIdx, 1)[0];
+                arr.forEach(function(e, i) { e.index = i; });
+            } else {
+                var arr = imageSets[fromSet];
+                if (!arr) return;
+                moved = arr.splice(sourceIdx, 1)[0];
+                arr.forEach(function(e, i) { e.index = i; });
+            }
+
+            if (!moved) return;
+            moved.index = (imageSets[toSet] || []).length;
+            if (!imageSets[toSet]) imageSets[toSet] = [];
+            imageSets[toSet].push(moved);
+
+            if (currentSetName === fromSet && (currentSubsetName === fromSub || (!currentSubsetName && !fromSub))) {
+                selectedImages.clear();
+            }
+            _updateSidebar();
+            _refreshCurrentView();
+            imgMgmtSaveStatus.textContent = "(未保存)";
+        }
+
+        function _reorderImages(fromKey, fromIdx, toKey, toIdx) {
+            if (fromKey !== toKey) {
+                return moveImageToSet(fromKey, fromIdx, toKey.split("::")[0]);
+            }
+            if (fromIdx === toIdx) return;
+
+            var parts = fromKey.split("::");
+            var setName = parts[0];
+            var subName = parts[1];
+
+            var arr;
+            if (subName) {
+                var subs = imageSubsets[setName] || {};
+                arr = subs[subName];
+            } else {
+                arr = imageSets[setName];
+            }
+            if (!arr) return;
+
+            var moved = arr.splice(fromIdx, 1)[0];
+            arr.splice(toIdx, 0, moved);
+            arr.forEach(function(e, i) { e.index = i; });
+
+            selectedImages.clear();
+            _refreshCurrentView();
+            imgMgmtSaveStatus.textContent = "(未保存)";
+        }
+
+        // ============ Toolbar button bindings ============
+
+        _byId("img-mgmt-select-all").addEventListener("click", _selectAll);
+        _byId("img-mgmt-deselect-all").addEventListener("click", _deselectAll);
+        _byId("img-mgmt-switch-batch").addEventListener("click", function() { _showBatchMode(); });
+        _byId("img-mgmt-switch-manage").addEventListener("click", function() { _showManageMode(); });
+        _byId("img-mgmt-save-subset").addEventListener("click", _saveAsSubset);
+        _byId("img-mgmt-save-subset2").addEventListener("click", _saveAsSubset);
+        _byId("img-mgmt-upload-btn").addEventListener("click", function() {
+            _uploadTargetSet = currentSetName || Object.keys(imageSets)[0] || "采集图片";
+            imgMgmtUploadInput.click();
+        });
+        _byId("img-mgmt-new-set-btn").addEventListener("click", function() {
+            var name = prompt("输入新图片集名称（如 俄语图片、英语图片）:");
+            if (name && !imageSets[name]) {
+                imageSets[name] = [];
+                _updateSidebar();
+                imgMgmtSaveStatus.textContent = "(未保存)";
+            } else if (name && imageSets[name]) {
+                showMsg("图片集名称已存在", true);
+            }
+        });
+
+        // ============ Upload ============
+
         imgMgmtUploadInput.addEventListener("change", async function(e) {
-            const files = Array.from(e.target.files);
-            const targetSet = _uploadTargetSet || Object.keys(imageSets)[0] || "采集图片";
+            var files = Array.from(e.target.files);
+            var targetSet = _uploadTargetSet || currentSetName || Object.keys(imageSets)[0] || "采集图片";
             if (!files.length) return;
-            for (const file of files) {
-                const fd = new FormData();
+            for (var i = 0; i < files.length; i++) {
+                var file = files[i];
+                var fd = new FormData();
                 fd.append("file", file);
                 fd.append("set_name", targetSet);
                 try {
-                    const res = await fetch(`/api/products/${currentImgSkc}/images/upload`, {
+                    var res = await fetch(`/api/products/${currentImgSkc}/images/upload`, {
                         method: "POST", body: fd
                     });
                     if (!res.ok) {
-                        const err = await res.json();
+                        var err = await res.json();
                         showMsg("上传 " + file.name + " 失败: " + err.error, true);
                         continue;
                     }
-                    const data = await res.json();
+                    var data = await res.json();
                     if (!imageSets[targetSet]) imageSets[targetSet] = [];
                     if (!imageSets[targetSet].find(function(e) { return e.filename === data.entry.filename; })) {
                         imageSets[targetSet].push(data.entry);
@@ -3179,12 +3501,14 @@
                     showMsg("上传 " + file.name + " 出错: " + err.message, true);
                 }
             }
-            renderAllSets();
+            _updateSidebar();
+            _refreshCurrentView();
             imgMgmtSaveStatus.textContent = "(未保存)";
             e.target.value = "";
         });
 
-        // Save
+        // ============ Save ============
+
         imgMgmtSaveBtn.addEventListener("click", async function() {
             imgMgmtSaveBtn.disabled = true;
             imgMgmtSaveBtn.textContent = "⏳ 保存中...";
