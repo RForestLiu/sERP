@@ -76,9 +76,15 @@ def _fetch_html_requests(url: str) -> str:
     """使用 requests 获取页面 HTML（快速模式）"""
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                      "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+                      "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9,zh-CN;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Cache-Control": "max-age=0",
+        "Sec-Ch-Ua": '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+        "Sec-Ch-Ua-Mobile": "?0",
+        "Sec-Ch-Ua-Platform": '"Windows"',
+        "Upgrade-Insecure-Requests": "1",
     }
     proxies = _get_proxy_dict()
     resp = sync_requests.get(url, headers=headers, timeout=30, allow_redirects=True, proxies=proxies)
@@ -153,6 +159,9 @@ async def _fetch_html_playwright(url: str) -> str:
 
 def _is_blocked(html: str) -> bool:
     """检测是否被反爬拦截"""
+    # 页面太小 → 大概率是被拦截的占位页
+    if len(html) < 8000:
+        return True
     blockers = [
         'Type the characters you see in this image',
         'Enter the characters you see below',
@@ -161,6 +170,8 @@ def _is_blocked(html: str) -> bool:
         'captcha',
         'To discuss automated access',
         'Sorry, we just need to make sure',
+        'rd-script-',              # Amazon CAPTCHA script reference
+        'api/pvov',                # Amazon verification endpoint
     ]
     lower = html.lower()
     return any(b.lower() in lower for b in blockers)
@@ -181,7 +192,11 @@ async def _fetch_html(url: str) -> str:
     if platform == 'amazon':
         try:
             logger.info("使用 requests 抓取 (Amazon 优先)")
-            return _fetch_html_requests(url)
+            html = _fetch_html_requests(url)
+            if _is_blocked(html):
+                logger.warning("Requests 遇到反爬拦截 (页面大小=%d)，回退到 Playwright", len(html))
+                return await _fetch_html_playwright(url)
+            return html
         except Exception as e:
             logger.warning("Requests 抓取 Amazon 失败，尝试 Playwright: %s", e)
             return await _fetch_html_playwright(url)
