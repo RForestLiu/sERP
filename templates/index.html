@@ -763,6 +763,9 @@
             width: 600px;
         }
         .product-store-table thead th.col-store {
+            width: 100px;
+        }
+        .product-store-table thead th.col-spacer {
         }
         /* 产品行 */
         .product-row {
@@ -2419,12 +2422,13 @@
 
             products.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-            const colSpan = (stores.length || 1) + 1;
+            const colSpan = (stores.length || 1) + 2;
 
             let html = '<div class="product-store-table-wrap"><table class="product-store-table">';
             // 表头
             html += '<thead><tr><th class="col-product">产品</th>';
             stores.forEach(s => { html += `<th class="col-store">${s.name}</th>`; });
+            html += '<th class="col-spacer"></th>';
             html += '</tr></thead><tbody>';
 
             products.forEach(p => {
@@ -2469,6 +2473,7 @@
                     html += `<button class="store-listing-btn ${btnClass}" data-action="listing">${btnLabel}</button>`;
                     html += '</td>';
                 });
+                html += '<td></td>';
                 html += '</tr>';
 
                 // 详情行（默认隐藏）
