@@ -738,17 +738,27 @@
         }
         .product-card {
             background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            overflow: hidden;
+            border-radius: 6px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            display: flex;
+            gap: 10px;
+            padding: 8px 10px;
+            cursor: pointer;
             transition: box-shadow 0.2s;
         }
         .product-card:hover {
-            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        }
+        .product-card-thumb {
+            width: 60px;
+            height: 60px;
+            border-radius: 4px;
+            object-fit: cover;
+            flex-shrink: 0;
+            background: #f0f0f0;
         }
         .product-card-header {
-            padding: 16px 20px 12px;
-            border-bottom: 1px solid #f0f0f0;
+            /* no extra padding — card padding handles it */
         }
         .product-card-header .skc-row {
             display: flex;
@@ -785,23 +795,26 @@
         }
         .btn-img-mgmt:hover { color: #fff; background: #8b5cf6; }
         .product-card-header .product-title {
-            font-size: 14px;
+            font-size: 13px;
             color: #333;
-            margin-bottom: 6px;
-            line-height: 1.4;
+            line-height: 1.3;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         .product-card-header .product-meta {
-            font-size: 12px;
+            font-size: 11px;
             color: #999;
             display: flex;
-            gap: 16px;
+            gap: 10px;
             flex-wrap: wrap;
         }
         .product-card-body {
-            padding: 16px 20px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
         .product-info-col {
             display: flex;
@@ -958,10 +971,11 @@
 
         /* 单列布局 */
         .product-card-body {
-            padding: 10px 16px 12px;
+            flex: 1;
+            min-width: 0;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 4px;
         }
         .product-info-row {
             display: flex;
@@ -1066,10 +1080,33 @@
             cursor: wait;
         }
 
+        /* 产品卡片详情（可折叠） */
+        .product-card-detail {
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            padding-top: 6px;
+            border-top: 1px solid #f0f0f0;
+        }
+        .product-card.expanded .product-card-detail {
+            display: flex;
+        }
+        .product-card-toggle {
+            font-size: 11px;
+            color: #8b5cf6;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .product-card-toggle:hover {
+            color: #7c3aed;
+        }
+
         /* 店铺矩阵 */
         .product-store-matrix {
-            padding: 12px 20px 16px;
-            border-top: 1px solid #f0f0f0;
+            /* compact — detail handles padding */
         }
         .product-store-matrix .matrix-title {
             font-size: 12px;
@@ -1911,10 +1948,10 @@
                         <div class="collect-card-progress-bar" id="collect-progress-bar-${taskId}" style="width: 0%"></div>
                     </div>
                     <div class="collect-card-actions" id="collect-actions-${taskId}" style="display:none">
-                        <button class="collect-btn-open-folder" onclick="event.stopPropagation(); openCollectFolder('${taskId}')">📂</button>
-                        <button class="collect-btn-view-data" onclick="event.stopPropagation(); showDataModal('${taskId}')">📋</button>
-                        <button class="collect-btn-save-product" id="collect-save-btn-${taskId}" onclick="event.stopPropagation(); saveAsProduct('${taskId}')">💾</button>
-                        <button class="collect-btn-delete" onclick="event.stopPropagation(); deleteCollectCard('${taskId}')">✕</button>
+                        <button class="collect-btn-open-folder" onclick="event.stopPropagation(); openCollectFolder('${taskId}')">📂 打开</button>
+                        <button class="collect-btn-view-data" onclick="event.stopPropagation(); showDataModal('${taskId}')">📋 数据</button>
+                        <button class="collect-btn-save-product" id="collect-save-btn-${taskId}" onclick="event.stopPropagation(); saveAsProduct('${taskId}')">💾 保存</button>
+                        <button class="collect-btn-delete" onclick="event.stopPropagation(); deleteCollectCard('${taskId}')">✕ 删除</button>
                     </div>
                 </div>
                 <div class="collect-card-gallery" id="collect-gallery-${taskId}"></div>
@@ -2434,62 +2471,74 @@
                 });
 
                 card.innerHTML = `
-                    <div class="product-card-header">
-                        <div class="skc-row">
-                            <span class="skc-badge">${p.skc}</span>
-                            <span class="category-tag">${p.category || '其他'}</span>
-                            <button class="btn btn-img-mgmt" data-action="img-mgmt" data-skc="${p.skc}">🖼️ 图片管理</button>
-                        </div>
-                        <div class="product-title">${p.title || '未命名产品'}</div>
-                        <div class="product-meta">
-                            <span>📎 ${p.platform || '未知平台'}</span>
-                            <span>💰 ${p.price || '—'}</span>
-                            <span>🕐 ${createdDate}</span>
-                            <span>📦 ${(p.skus || []).length} SKU</span>
-                        </div>
-                    </div>
+                    <img class="product-card-thumb" src="${p.thumbnail || ''}" alt="" onerror="this.style.display='none'">
                     <div class="product-card-body">
-                        <!-- 画中画触发条 -->
-                        <div class="collected-pip-trigger" data-skc="${p.skc}">
-                            <span class="pip-icon">📖</span>
-                            <span class="pip-label">采集原始数据</span>
-                            <span class="pip-hint">悬停查看</span>
+                        <div class="product-card-header">
+                            <div class="skc-row">
+                                <span class="skc-badge">${p.skc}</span>
+                                <span class="category-tag">${p.category || '其他'}</span>
+                                <button class="btn btn-img-mgmt" data-action="img-mgmt" data-skc="${p.skc}">🖼️ 图片管理</button>
+                            </div>
+                            <div class="product-title">${p.title || '未命名产品'}</div>
+                            <div class="product-meta">
+                                <span>📎 ${p.platform || '未知平台'}</span>
+                                <span>💰 ${p.price || '—'}</span>
+                                <span>🕐 ${createdDate}</span>
+                                <span>📦 ${(p.skus || []).length} SKU</span>
+                            </div>
+                            <div class="product-card-toggle" data-action="toggle-detail">📋 编辑登记信息 ▾</div>
                         </div>
-                        <!-- 粘贴文本框 + 识别按钮 -->
-                        <div class="paste-extract-area">
-                            <textarea class="paste-textarea" placeholder="粘贴产品描述文本，点击下方按钮用 AI 自动识别并转换为国际单位..."></textarea>
-                            <button class="paste-extract-btn" data-skc="${p.skc}">🤖 AI 识别并填充</button>
-                        </div>
-                        <!-- 人工登记字段 -->
-                        <div class="product-info-row manual">
-                            <span class="row-label">重量(g)</span>
-                            <input type="text" class="manual-input" data-field="weight_g" value="${manual.weight_g || ''}" placeholder="克">
-                        </div>
-                        <div class="product-info-row manual">
-                            <span class="row-label">尺寸规格</span>
-                            <input type="text" class="manual-input" data-field="size_spec" value="${manual.size_spec || ''}" placeholder="如 20×10×3cm">
-                        </div>
-                        <div class="product-info-row manual">
-                            <span class="row-label">规格</span>
-                            <input type="text" class="manual-input" data-field="spec" value="${manual.spec || ''}" placeholder="如 大号/黑色">
-                        </div>
-                        <div class="product-info-row manual">
-                            <span class="row-label">成本价</span>
-                            <input type="text" class="manual-input" data-field="cost_price" value="${manual.cost_price || ''}" placeholder="元">
-                        </div>
-                        <div class="product-info-row manual">
-                            <button class="save-manual-btn" data-skc="${p.skc}">💾 保存人工数据</button>
-                        </div>
-                    </div>
-                    <div class="product-store-matrix">
-                        <div class="matrix-title">🏪 产品店铺矩阵</div>
-                        <div class="matrix-grid">
-                            ${matrixCells}
+                        <div class="product-card-detail">
+                            <div class="collected-pip-trigger" data-skc="${p.skc}">
+                                <span class="pip-icon">📖</span>
+                                <span class="pip-label">采集原始数据</span>
+                                <span class="pip-hint">悬停查看</span>
+                            </div>
+                            <div class="paste-extract-area">
+                                <textarea class="paste-textarea" placeholder="粘贴产品描述文本，点击下方按钮用 AI 自动识别并转换为国际单位..."></textarea>
+                                <button class="paste-extract-btn" data-skc="${p.skc}">🤖 AI 识别并填充</button>
+                            </div>
+                            <div class="product-info-row manual">
+                                <span class="row-label">重量(g)</span>
+                                <input type="text" class="manual-input" data-field="weight_g" value="${manual.weight_g || ''}" placeholder="克">
+                            </div>
+                            <div class="product-info-row manual">
+                                <span class="row-label">尺寸规格</span>
+                                <input type="text" class="manual-input" data-field="size_spec" value="${manual.size_spec || ''}" placeholder="如 20×10×3cm">
+                            </div>
+                            <div class="product-info-row manual">
+                                <span class="row-label">规格</span>
+                                <input type="text" class="manual-input" data-field="spec" value="${manual.spec || ''}" placeholder="如 大号/黑色">
+                            </div>
+                            <div class="product-info-row manual">
+                                <span class="row-label">成本价</span>
+                                <input type="text" class="manual-input" data-field="cost_price" value="${manual.cost_price || ''}" placeholder="元">
+                            </div>
+                            <div class="product-info-row manual">
+                                <button class="save-manual-btn" data-skc="${p.skc}">💾 保存人工数据</button>
+                            </div>
+                            <div class="product-store-matrix">
+                                <div class="matrix-title">🏪 产品店铺矩阵</div>
+                                <div class="matrix-grid">
+                                    ${matrixCells}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 `;
 
                 productCardsContainer.appendChild(card);
+            });
+
+            // 卡片展开/收起切换
+            document.querySelectorAll(".product-card").forEach(card => {
+                card.addEventListener("click", function() {
+                    this.classList.toggle("expanded");
+                    const toggle = this.querySelector(".product-card-toggle");
+                    if (toggle) {
+                        toggle.textContent = this.classList.contains("expanded") ? "📋 编辑登记信息 ▴" : "📋 编辑登记信息 ▾";
+                    }
+                });
             });
 
             // ===== 画中画悬浮窗逻辑（下方展开 + 边界检测） =====
