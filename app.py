@@ -1468,16 +1468,16 @@ def get_products():
             sid = s["id"]
             if sid not in p["store_status"]:
                 p["store_status"][sid] = "未上架"
-        # 旧数据回填缩略图
-        if "thumbnail" not in p:
+        # 缩略图回填（key不存在 或 值为空时重新扫描 images_dir）
+        if not p.get("thumbnail"):
             images_dir = p.get("images_dir", "")
             if images_dir and os.path.exists(images_dir):
                 for fname in sorted(os.listdir(images_dir)):
                     if os.path.splitext(fname)[1].lower() in ('.jpg', '.jpeg', '.png', '.webp', '.bmp'):
                         p["thumbnail"] = f"/product_images/{p['skc']}/{fname}"
                         break
-            if "thumbnail" not in p:
-                p["thumbnail"] = ""
+        if not p.get("thumbnail"):
+            p["thumbnail"] = ""
 
     return jsonify({
         "products": product_list,
