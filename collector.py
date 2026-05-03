@@ -61,7 +61,7 @@ def _get_proxy_dict() -> dict | None:
 
 
 def _get_proxy_server() -> str | None:
-    """获取 Playwright/aiohttp 格式的代理地址。"""
+    """获取 nodriver/aiohttp 格式的代理地址。"""
     if not PROXY_ENABLED or not PROXY_URL:
         return None
     return PROXY_URL
@@ -92,69 +92,39 @@ def _fetch_html_requests(url: str) -> str:
     return resp.text
 
 
-async def _fetch_html_playwright(url: str) -> str:
-    """使用 Playwright 获取页面 HTML（支持 JS 渲染，含反爬措施）"""
+async def _fetch_html_nodriver(url: str) -> str:
+    """使用 nodriver (CDP 直连) 获取页面 HTML — 反爬能力强于 Playwright"""
     import random as _random
     try:
-        from playwright.async_api import async_playwright
+        import nodriver as uc
+
         proxy_server = _get_proxy_server()
-        async with async_playwright() as p:
-            launch_args = [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-accelerated-2d-canvas',
-                '--disable-gpu',
-                '--disable-blink-features=AutomationControlled',
-            ]
-            if proxy_server:
-                launch_args.append(f'--proxy-server={proxy_server}')
-            browser = await p.chromium.launch(
-                headless=True,
-                args=launch_args,
-            )
-            context_options = {
-                "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                            "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                "viewport": {"width": 1920, "height": 1080},
-                "locale": "zh-CN",
-                "timezone_id": "Asia/Shanghai",
-            }
-            if proxy_server:
-                context_options["proxy"] = {"server": proxy_server}
-            context = await browser.new_context(**context_options)
-            page = await context.new_page()
+        browser_args = []
+        if proxy_server:
+            browser_args.append(f'--proxy-server={proxy_server}')
 
-            # 隐藏自动化特征
-            await page.add_init_script("""
-                Object.defineProperty(navigator, 'webdriver', { get: () => false });
-                Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
-                Object.defineProperty(navigator, 'languages', { get: () => ['zh-CN', 'zh', 'en'] });
-            """)
+        browser = await uc.start(
+            headless=True,
+            browser_args=browser_args,
+        )
 
-            page.set_default_timeout(25000)
+        try:
+            page = await browser.get(url)
+            # 模拟人类浏览：随机等待 3-6 秒
+            await page.wait(_random.randint(3000, 6000) / 1000)
+            html = await page.get_content()
 
-            try:
-                await page.goto(url, wait_until="domcontentloaded", timeout=30000)
-                # 模拟人类浏览：随机等待 2-5 秒
-                await page.wait_for_timeout(2000 + int(_random.random() * 3000))
-            except Exception as e:
-                logger.warning("Playwright 页面加载超时，继续处理已有内容: %s", e)
-                await page.wait_for_timeout(3000)
-
-            html = await page.content()
-
-            # 检测是否遇到验证页面
             if _is_blocked(html):
                 logger.error("检测到反爬验证页面 (CAPTCHA/block)")
                 raise Exception("遇到反爬验证页面，请稍后重试或更换 IP")
 
-            await browser.close()
             return html
+        finally:
+            browser.stop()
     except Exception as e:
         if "反爬验证" in str(e):
             raise
-        raise Exception(f"Playwright 抓取失败: {str(e)}")
+        raise Exception(f"nodriver 抓取失败: {str(e)}")
 
 
 def _is_blocked(html: str) -> bool:
@@ -181,41 +151,39 @@ async def _fetch_html(url: str) -> str:
     """智能获取页面 HTML。
 
     引擎选择策略：
-    - Amazon: requests 优先（反爬较轻，Playwright 易触发 CAPTCHA）
-    - Wildberries/Ozon: Playwright（JS 渲染必需）
-    - 其他: requests 优先
-    - 任何引擎失败后尝试另一个
+    - Amazon: requests 优先 → 被拦截则 nodriver (CDP 直连，反爬最强)
+    - Wildberries/Ozon: nodriver 优先 (JS 渲染必需)
+    - 其他: requests 优先 → nodriver 回退
     """
     platform = _extract_platform(url)
 
-    # Amazon 用 requests 优先（Playwright headless 极易触发 CAPTCHA）
     if platform == 'amazon':
         try:
             logger.info("使用 requests 抓取 (Amazon 优先)")
             html = _fetch_html_requests(url)
             if _is_blocked(html):
-                logger.warning("Requests 遇到反爬拦截 (页面大小=%d)，回退到 Playwright", len(html))
-                return await _fetch_html_playwright(url)
+                logger.warning("Requests 遇到反爬拦截 (页面大小=%d)，回退到 nodriver", len(html))
+                return await _fetch_html_nodriver(url)
             return html
         except Exception as e:
-            logger.warning("Requests 抓取 Amazon 失败，尝试 Playwright: %s", e)
-            return await _fetch_html_playwright(url)
+            logger.warning("Requests 抓取 Amazon 失败，尝试 nodriver: %s", e)
+            return await _fetch_html_nodriver(url)
 
     # Wildberries/Ozon 需要 JS 渲染
     if platform in ('wildberries', 'ozon'):
         try:
-            logger.info("使用 Playwright 抓取 (平台: %s)", platform)
-            return await _fetch_html_playwright(url)
+            logger.info("使用 nodriver 抓取 (平台: %s)", platform)
+            return await _fetch_html_nodriver(url)
         except Exception as e:
-            logger.warning("Playwright 抓取失败，尝试 requests: %s", e)
+            logger.warning("nodriver 抓取失败，尝试 requests: %s", e)
             return _fetch_html_requests(url)
 
     # 其他平台：requests 优先
     try:
         return _fetch_html_requests(url)
     except Exception as e:
-        logger.warning("Requests 抓取失败，尝试 Playwright: %s", e)
-        return await _fetch_html_playwright(url)
+        logger.warning("Requests 抓取失败，尝试 nodriver: %s", e)
+        return await _fetch_html_nodriver(url)
 
 
 def _extract_amazon_variant_images(soup) -> dict:
