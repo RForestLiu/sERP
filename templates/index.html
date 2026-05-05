@@ -1908,10 +1908,8 @@
                     opts += '<option value="' + p.skc + '"' + sel + '>' + p.skc + ' - ' + (p.title || "").substring(0, 30) + '</option>';
                 });
                 saveSubsetProduct.innerHTML = opts;
-                if (taskSkc) {
-                    // Auto-load default product's image sets
-                    var defOpt = saveSubsetProduct.querySelector('option[selected]');
-                    if (defOpt) onSaveSubsetProductChange();
+                if (taskSkc && saveSubsetProduct.value === taskSkc) {
+                    onSaveSubsetProductChange();
                 }
             } catch(e) {
                 saveSubsetStatus.textContent = "加载产品列表失败: " + e.message;
