@@ -4106,6 +4106,7 @@ def ozon_product_create(store_id):
     type_id = data.get("type_id")
     attrs = data.get("attributes", [])
     images = data.get("images", [])
+    videos = data.get("videos", [])
     skus = data.get("skus", [])
 
     logger.info("[产品创建] ========== 开始创建产品 ==========")
@@ -4145,6 +4146,9 @@ def ozon_product_create(store_id):
     base_image_urls = [img.get("url", "") for img in images if img.get("url", "").startswith("http")]
     base_image_urls = base_image_urls[:10] if base_image_urls else []
 
+    # 公共视频
+    base_video_urls = [v.get("url", "") for v in videos if v.get("url", "").startswith("http")]
+
     def _build_item(sku_price, sku_offer_id, sku_barcode, sku_images):
         """构建单个 Ozon product import item"""
         item = {
@@ -4168,8 +4172,10 @@ def ozon_product_create(store_id):
         item_images = sku_urls[:10] if sku_urls else base_image_urls
         if item_images:
             item["images"] = item_images
+        if base_video_urls:
+            item["videos"] = base_video_urls
 
-        logger.info("[产品创建]   子产品: offer_id=%s | price=%s | images=%s", sku_offer_id, item["price"], len(item_images))
+        logger.info("[产品创建]   子产品: offer_id=%s | price=%s | images=%s | videos=%s", sku_offer_id, item["price"], len(item_images), len(base_video_urls))
         return item
 
     # 构建 items 数组
@@ -4454,6 +4460,46 @@ _IMG_PROXY_ALLOWED = {
     "images.wbstatic.net", "basket.wildberries.ru",
     "cdn1.ozonusercontent.com", "cdn2.ozonusercontent.com",
 }
+
+
+# ==================== 视频上传 & 服务 ====================
+
+VIDEOS_DIR = os.path.join(DATA_ROOT, "videos")
+
+
+@app.route("/api/upload-video", methods=["POST"])
+def upload_video():
+    """上传视频文件，返回可访问 URL"""
+    if 'file' not in request.files:
+        return jsonify({"error": "未提供文件"}), 400
+
+    file = request.files['file']
+    skc = request.form.get('skc', 'common')
+
+    if not file.filename:
+        return jsonify({"error": "文件名为空"}), 400
+
+    safe_name = secure_filename(file.filename)
+    dest_dir = os.path.join(VIDEOS_DIR, skc)
+    os.makedirs(dest_dir, exist_ok=True)
+
+    filepath = os.path.join(dest_dir, safe_name)
+    file.save(filepath)
+
+    return jsonify({
+        "success": True,
+        "filename": safe_name,
+        "url": f"/videos/{skc}/{safe_name}"
+    })
+
+
+@app.route("/videos/<skc>/<path:filename>")
+def serve_video(skc, filename):
+    """提供视频文件的静态服务"""
+    video_dir = os.path.join(VIDEOS_DIR, skc)
+    if os.path.exists(video_dir):
+        return send_from_directory(video_dir, filename)
+    return "", 404
 
 
 @app.route("/api/img_proxy")
