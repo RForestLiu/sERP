@@ -740,6 +740,7 @@
         }
         .img-mgmt-task-item.drag-over { border-color: #8b5cf6; background: #f5f3ff; }
         .img-mgmt-task-item.unavailable { opacity: 0.5; cursor: not-allowed; border-style: dotted; }
+        .img-mgmt-task-item.active, .save-subset-set-item.active { border-color: #3b82f6; background: #eff6ff; border-style: solid; }
         .img-mgmt-task-item .task-type-badge { font-size: 10px; background: #f59e0b; color: #fff; padding: 1px 5px; border-radius: 3px; margin-left: auto; }
         .img-mgmt-task-item .task-dot { width: auto; height: auto; border-radius: 0; background: none; flex-shrink: 0; font-size: 14px; }
         .img-mgmt-task-empty { padding: 8px 14px; font-size: 11px; color: #bbb; text-align: center; }
@@ -1524,8 +1525,13 @@
                 <div id="save-subset-set-list" style="max-height:200px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:4px;padding:4px;">
                     <div style="font-size:12px;color:#bbb;padding:8px;">请先选择产品</div>
                 </div>
+                <label style="font-size:12px;color:#666;margin-top:6px;">新子集名称（可选）</label>
+                <input id="save-subset-new-name" placeholder="输入子集名称以创建新子集…" style="padding:6px;width:100%;border:1px solid #d1d5db;border-radius:4px;font-size:13px;">
+                <div style="display:flex;gap:8px;margin-top:8px;">
+                    <button class="btn primary" id="save-subset-exec" style="flex:1;" disabled>执行保存</button>
+                    <button class="btn primary" id="save-subset-new-btn" style="flex:1;background:#8b5cf6;" disabled>保存为子集</button>
+                </div>
                 <div style="margin-top:8px;font-size:11px;color:#999;" id="save-subset-status"></div>
-                <button class="btn primary" id="save-subset-exec" style="margin-top:8px;width:100%;" disabled>执行保存</button>
             </div>
         </div>
     </div>
@@ -2139,12 +2145,16 @@
         var saveSubsetSetList = document.getElementById("save-subset-set-list");
         var saveSubsetStatus = document.getElementById("save-subset-status");
         var saveSubsetExec = document.getElementById("save-subset-exec");
+        var saveSubsetNewBtn = document.getElementById("save-subset-new-btn");
+        var saveSubsetNewName = document.getElementById("save-subset-new-name");
         var saveTargetSet = null, saveTargetSub = null;
 
         document.getElementById("save-to-product-btn").addEventListener("click", async function() {
             if (!currentTaskId) { showMsg("请先选择任务", true); return; }
             saveTargetSet = null; saveTargetSub = null;
             saveSubsetExec.disabled = true;
+            saveSubsetNewBtn.disabled = true;
+            saveSubsetNewName.value = "";
             saveSubsetSetList.innerHTML = '<div style="font-size:12px;color:#bbb;padding:8px;">请先选择产品</div>';
             saveSubsetStatus.textContent = "";
 
@@ -2210,6 +2220,8 @@
                         saveTargetSet = el.dataset.set;
                         saveTargetSub = el.dataset.sub || "";
                         saveSubsetExec.disabled = false;
+                        // "保存为子集" 需输入新子集名称
+                        _updateNewSubsetBtn();
                         saveSubsetStatus.textContent = "已选: " + saveTargetSet + (saveTargetSub ? " / " + saveTargetSub : "");
                     });
                 });
@@ -2240,6 +2252,44 @@
                 showMsg("已保存 " + data.count + " 张到 " + data.target);
             } catch(e) {
                 saveSubsetStatus.textContent = "保存失败: " + e.message;
+                saveSubsetExec.disabled = false;
+            }
+        });
+
+        // 新建子集名称输入 → 控制"保存为子集"按钮
+        function _updateNewSubsetBtn() {
+            saveSubsetNewBtn.disabled = !(saveTargetSet && !saveTargetSub && saveSubsetNewName.value.trim());
+        }
+        saveSubsetNewName.addEventListener("input", _updateNewSubsetBtn);
+
+        // "保存为子集" → 保存到选中图片集下的新子集
+        saveSubsetNewBtn.addEventListener("click", async function() {
+            var newSubName = saveSubsetNewName.value.trim();
+            if (!currentTaskId || !saveTargetSet || !newSubName) return;
+            if (saveTargetSub) { saveSubsetStatus.textContent = "请选图片集（非子集）再新建"; return; }
+            saveSubsetNewBtn.disabled = true;
+            saveSubsetExec.disabled = true;
+            saveSubsetStatus.textContent = "保存中...";
+            try {
+                var res = await fetch("/api/tasks/" + currentTaskId + "/save_to_product", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ skc: saveSubsetProduct.value, setName: saveTargetSet, subName: newSubName })
+                });
+                if (!res.ok) { var err = await res.json(); throw new Error(err.error); }
+                var data = await res.json();
+                if (data.count === 0) {
+                    saveSubsetStatus.textContent = data.message || "没有生成图片可保存，请先生成或保存图片";
+                    saveSubsetNewBtn.disabled = false;
+                    saveSubsetExec.disabled = false;
+                    return;
+                }
+                saveSubsetStatus.textContent = "已保存 " + data.count + " 张到 " + data.target;
+                saveSubsetOverlay.classList.remove("active");
+                showMsg("已保存 " + data.count + " 张到 " + data.target);
+            } catch(e) {
+                saveSubsetStatus.textContent = "保存失败: " + e.message;
+                saveSubsetNewBtn.disabled = false;
                 saveSubsetExec.disabled = false;
             }
         });
