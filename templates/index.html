@@ -1588,9 +1588,17 @@
         }
 
         function highlightActiveTask() {
-            Array.from(taskList.children).forEach(li => {
-                li.classList.toggle("active", li.dataset.taskId === currentTaskId);
+            Array.from(taskList.querySelectorAll(".task-group-item")).forEach(function(el) {
+                el.classList.toggle("active", el.dataset.taskId === currentTaskId);
             });
+            // Auto-expand group containing active task
+            if (currentTaskId) {
+                var activeItem = taskList.querySelector('[data-task-id="' + currentTaskId + '"]');
+                if (activeItem) {
+                    var group = activeItem.closest(".task-group");
+                    if (group) _expandGroup(group, true);
+                }
+            }
         }
 
         // 任务类型映射 {id: {name, icon}}
@@ -1608,81 +1616,150 @@
             } catch(e) {}
         }
 
-        // 渲染左侧任务列表（双击改名，右键/按钮删除）
+        function _expandGroup(group, show) {
+            var items = group.querySelector(".task-group-items");
+            var arrow = group.querySelector(".group-arrow");
+            if (show) {
+                items.style.display = "block";
+                arrow.textContent = "▼";
+            } else {
+                items.style.display = "none";
+                arrow.textContent = "▶";
+            }
+        }
+
+        // 渲染左侧任务列表（按类型分组，点击展开）
         async function renderTaskList() {
             const tasks = await fetchTasks();
-            taskList.innerHTML = "";
-            tasks.forEach(t => {
-                const li = document.createElement("li");
-                li.dataset.taskId = t.id;
-
-                // 类型图标
-                var typeInfo = _taskTypeMap[t.type] || {};
-                var typeIcon = document.createElement("span");
-                typeIcon.className = "task-type-icon";
-                typeIcon.title = typeInfo.name || "";
-                typeIcon.textContent = typeInfo.icon || "📋";
-                li.appendChild(typeIcon);
-
-                // 名称
-                const span = document.createElement("span");
-                span.textContent = t.name;
-                span.contentEditable = "false";
-                li.appendChild(span);
-
-                // 删除按钮
-                var delBtn = document.createElement("button");
-                delBtn.className = "task-del-btn";
-                delBtn.title = "删除任务";
-                delBtn.textContent = "✕";
-                delBtn.addEventListener("click", function(e) {
-                    e.stopPropagation();
-                    _deleteTaskItem(t.id);
-                });
-                li.appendChild(delBtn);
-
-                li.addEventListener("click", (e) => {
-                    if (e.target === span && span.isContentEditable) return;
-                    if (e.target === delBtn || e.target.classList.contains("task-del-btn")) return;
-                    switchTask(t.id);
-                });
-
-                span.addEventListener("dblclick", (e) => {
-                    e.stopPropagation();
-                    span.contentEditable = "true";
-                    span.focus();
-                    const range = document.createRange();
-                    range.selectNodeContents(span);
-                    const sel = window.getSelection();
-                    sel.removeAllRanges();
-                    sel.addRange(range);
-                });
-
-                span.addEventListener("blur", async () => {
-                    span.contentEditable = "false";
-                    const newName = span.textContent.trim();
-                    if (newName && newName !== t.name) {
-                        await fetch(`/api/tasks/${t.id}`, {
-                            method: "PUT",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ name: newName })
-                        });
-                        t.name = newName;
-                    } else if (!newName) {
-                        span.textContent = t.name;
-                    }
-                });
-
-                span.addEventListener("keydown", async (e) => {
-                    if (e.key === "Enter") {
-                        e.preventDefault();
-                        span.blur();
-                    }
-                });
-
-                taskList.appendChild(li);
+            // 按类型分组
+            var groups = {};  // {typeId: [task, ...]}
+            tasks.forEach(function(t) {
+                var tid = t.type || "_none";
+                if (!groups[tid]) groups[tid] = [];
+                groups[tid].push(t);
             });
+
+            // 按 TASK_TYPES 顺序排列，未识别的放最后
+            var orderedKeys = [];
+            // 从 API 接口已经加载的 _taskTypeMap 获取顺序
+            Object.keys(_taskTypeMap).forEach(function(tid) {
+                if (groups[tid]) orderedKeys.push(tid);
+            });
+            // 在 groups 中但不在 _taskTypeMap 中的
+            Object.keys(groups).forEach(function(tid) {
+                if (orderedKeys.indexOf(tid) === -1) orderedKeys.push(tid);
+            });
+
+            taskList.innerHTML = "";
+
+            orderedKeys.forEach(function(typeId) {
+                var typeTasks = groups[typeId];
+                var typeInfo = _taskTypeMap[typeId] || { name: "未分类", icon: "📋" };
+
+                // Group container
+                var group = document.createElement("div");
+                group.className = "task-group";
+
+                // Header
+                var header = document.createElement("div");
+                header.className = "task-group-header";
+                header.innerHTML = '<span class="group-arrow">▶</span>' +
+                    '<span class="group-icon">' + typeInfo.icon + '</span>' +
+                    '<span class="group-name">' + typeInfo.name + '</span>' +
+                    '<span class="group-count">' + typeTasks.length + '</span>' +
+                    '<button class="group-new-btn" title="新建任务">+</button>';
+                group.appendChild(header);
+
+                // Items container
+                var itemsDiv = document.createElement("div");
+                itemsDiv.className = "task-group-items";
+                itemsDiv.style.display = "none";
+
+                typeTasks.forEach(function(t) {
+                    var item = document.createElement("div");
+                    item.className = "task-group-item";
+                    item.dataset.taskId = t.id;
+
+                    var span = document.createElement("span");
+                    span.textContent = t.name;
+                    span.contentEditable = "false";
+                    item.appendChild(span);
+
+                    var delBtn = document.createElement("button");
+                    delBtn.className = "task-del-btn";
+                    delBtn.title = "删除任务";
+                    delBtn.textContent = "✕";
+                    delBtn.addEventListener("click", function(e) {
+                        e.stopPropagation();
+                        _deleteTaskItem(t.id);
+                    });
+                    item.appendChild(delBtn);
+
+                    item.addEventListener("click", function(e) {
+                        if (e.target === span && span.isContentEditable) return;
+                        if (e.target === delBtn || e.target.classList.contains("task-del-btn")) return;
+                        switchTask(t.id);
+                    });
+
+                    // 双击改名
+                    span.addEventListener("dblclick", function(e) {
+                        e.stopPropagation();
+                        span.contentEditable = "true";
+                        span.focus();
+                        var range = document.createRange();
+                        range.selectNodeContents(span);
+                        var sel = window.getSelection();
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                    });
+                    span.addEventListener("blur", async function() {
+                        span.contentEditable = "false";
+                        var newName = span.textContent.trim();
+                        if (newName && newName !== t.name) {
+                            await fetch("/api/tasks/" + t.id, {
+                                method: "PUT",
+                                headers: {"Content-Type": "application/json"},
+                                body: JSON.stringify({name: newName})
+                            });
+                            t.name = newName;
+                        } else if (!newName) {
+                            span.textContent = t.name;
+                        }
+                    });
+                    span.addEventListener("keydown", async function(e) {
+                        if (e.key === "Enter") { e.preventDefault(); span.blur(); }
+                    });
+
+                    itemsDiv.appendChild(item);
+                });
+
+                // Toggle header click
+                header.addEventListener("click", function(e) {
+                    if (e.target.classList.contains("group-new-btn")) return;
+                    var isOpen = itemsDiv.style.display !== "none";
+                    _expandGroup(group, !isOpen);
+                });
+
+                // New task button
+                header.querySelector(".group-new-btn").addEventListener("click", function(e) {
+                    e.stopPropagation();
+                    _createTaskOfType(typeId === "_none" ? "" : typeId);
+                });
+
+                group.appendChild(itemsDiv);
+                taskList.appendChild(group);
+            });
+
             highlightActiveTask();
+        }
+
+        async function _createTaskOfType(typeId) {
+            var body = typeId ? JSON.stringify({type: typeId}) : "{}";
+            var res = await fetch("/api/tasks", { method: "POST",
+                headers: {"Content-Type": "application/json"}, body: body });
+            var newTask = await res.json();
+            await renderTaskList();
+            switchTask(newTask.id);
         }
 
         async function _deleteTaskItem(taskId) {
@@ -1697,13 +1774,6 @@
             await renderTaskList();
             showMsg("任务已删除");
         }
-
-        document.getElementById("new-task-btn").addEventListener("click", async () => {
-            const res = await fetch("/api/tasks", { method: "POST" });
-            const newTask = await res.json();
-            await renderTaskList();
-            switchTask(newTask.id);
-        });
 
         // ---------- 工作台渲染 ----------
         function renderWorkspace() {
@@ -2136,6 +2206,11 @@
                 });
                 if (!res.ok) { var err = await res.json(); throw new Error(err.error); }
                 var data = await res.json();
+                if (data.count === 0) {
+                    saveSubsetStatus.textContent = data.message || "没有生成图片可保存，请先生成或保存图片";
+                    saveSubsetExec.disabled = false;
+                    return;
+                }
                 saveSubsetStatus.textContent = "已保存 " + data.count + " 张到 " + data.target;
                 saveSubsetOverlay.classList.remove("active");
                 showMsg("已保存 " + data.count + " 张到 " + data.target);

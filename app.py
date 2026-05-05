@@ -464,10 +464,26 @@ def save_to_product(task_id):
         return jsonify({"error": "产品图片目录不存在"}), 404
 
     gen_dir = os.path.join(task_folder(task_id), "generated")
-    if not os.path.exists(gen_dir):
-        return jsonify({"saved": [], "message": "没有生成图片可保存"}), 200
+    gen_files = []
+    if os.path.exists(gen_dir):
+        gen_files = sorted([f for f in os.listdir(gen_dir) if os.path.isfile(os.path.join(gen_dir, f))])
 
-    gen_files = sorted([f for f in os.listdir(gen_dir) if os.path.isfile(os.path.join(gen_dir, f))])
+    # Fallback to draft files (not yet "saved to task folder")
+    if not gen_files:
+        drafts_dir = os.path.join(task_folder(task_id), "drafts")
+        if os.path.exists(drafts_dir):
+            task_data = load_task_data(task_id)
+            seen = set()
+            for card in task_data.get("cards", []):
+                draft = card.get("generated_draft", "")
+                if draft:
+                    fname = os.path.basename(draft)
+                    fpath = os.path.join(task_folder(task_id), draft)
+                    if fname not in seen and os.path.isfile(fpath):
+                        seen.add(fname)
+                        gen_files.append(fname)
+            gen_dir = drafts_dir
+
     if not gen_files:
         return jsonify({"saved": [], "message": "没有生成图片可保存"}), 200
 
