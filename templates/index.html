@@ -1520,18 +1520,18 @@
             if (paths.length === 0) { showMsg("没有可复制的图片", true); return; }
 
             showMsg("正在复制 " + paths.length + " 张图片...");
+            var copied = 0;
             try {
-                var items = [];
                 for (var i = 0; i < paths.length; i++) {
                     var url = "/task_images/" + currentTaskId + "/" + paths[i];
                     var res = await fetch(url);
                     if (!res.ok) continue;
                     var blob = await res.blob();
-                    items.push(new ClipboardItem({ [blob.type]: blob }));
+                    await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+                    copied++;
                 }
-                if (items.length === 0) { showMsg("没有成功加载任何图片", true); return; }
-                await navigator.clipboard.write(items);
-                showMsg("已复制 " + items.length + " 张图片到剪贴板");
+                if (copied === 0) { showMsg("没有成功加载任何图片", true); return; }
+                showMsg("已复制 " + copied + " 张图片（剪贴板保留最后一张）");
             } catch(e) {
                 showMsg("复制失败: " + e.message, true);
             }
