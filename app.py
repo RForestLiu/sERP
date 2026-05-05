@@ -57,8 +57,9 @@ logger.info("sERP 启动中... | Flask %s | Debug=%s", app.name, app.debug)
 logger.info("=" * 50)
 
 # --------------- 配置 ---------------
-API_KEY = os.getenv("API_KEY", "")
-API_URL = "https://api.laozhang.ai/v1beta/models/gemini-3.1-flash-image-preview:generateContent"
+API_KEY = os.getenv("API_KEY", "") or os.getenv("OPENAI_API_KEY", "")
+IMAGE_MODEL = os.getenv("IMAGE_MODEL", "gemini-3.1-flash-image-preview")
+API_URL = f"https://api.laozhang.ai/v1beta/models/{IMAGE_MODEL}:generateContent"
 DATA_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 TASKS_FILE = os.path.join(DATA_ROOT, "tasks.json")
 
@@ -164,6 +165,30 @@ def create_task():
     save_tasks(tasks)
     save_task_data(task_id, {"text1": "", "cards": [], "skc": payload.get("skc", "")})
     return jsonify({"id": task_id, "name": name, "type": task_type})
+
+@app.route("/api/tasks/<task_id>", methods=["DELETE"])
+def delete_task(task_id):
+    """删除任务及其所有数据"""
+    tasks = load_tasks()
+    task_info = next((t for t in tasks if t["id"] == task_id), None)
+    if not task_info:
+        return jsonify({"error": "任务不存在"}), 404
+
+    tasks = [t for t in tasks if t["id"] != task_id]
+    save_tasks(tasks)
+
+    # 删除任务数据文件和目录
+    task_dir = task_folder(task_id)
+    task_data_file = os.path.join(task_dir, "task_data.json")
+    if os.path.exists(task_data_file):
+        os.remove(task_data_file)
+    if os.path.exists(task_dir):
+        try:
+            shutil.rmtree(task_dir)
+        except Exception:
+            pass
+
+    return jsonify({"deleted": task_id})
 
 @app.route("/api/tasks/<task_id>", methods=["GET"])
 def get_task(task_id):

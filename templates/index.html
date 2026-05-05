@@ -85,6 +85,12 @@
         #task-list li span[contenteditable="true"] {
             outline: none; border-bottom: 1px dashed white; background: rgba(255,255,255,0.1);
         }
+        .task-type-icon { font-size: 14px; margin-right: 6px; flex-shrink: 0; }
+        .task-del-btn {
+            background: none; border: none; color: rgba(255,255,255,0.4); cursor: pointer;
+            font-size: 12px; padding: 2px 4px; margin-left: 4px; border-radius: 2px; flex-shrink: 0;
+        }
+        .task-del-btn:hover { color: #e74c3c; background: rgba(255,255,255,0.15); }
         #new-task-btn {
             padding: 10px; background: #1abc9c; border: none; color: white; border-radius: 4px;
             cursor: pointer; margin-top: 10px;
@@ -1556,20 +1562,57 @@
             });
         }
 
-        // 渲染左侧任务列表（双击改名）
+        // 任务类型映射 {id: {name, icon}}
+        let _taskTypeMap = {};
+
+        async function _loadTaskTypeMap() {
+            try {
+                var res = await fetch("/api/task-types");
+                if (res.ok) {
+                    var types = await res.json();
+                    types.forEach(function(tt) {
+                        _taskTypeMap[tt.id] = { name: tt.name, icon: tt.icon };
+                    });
+                }
+            } catch(e) {}
+        }
+
+        // 渲染左侧任务列表（双击改名，右键/按钮删除）
         async function renderTaskList() {
             const tasks = await fetchTasks();
             taskList.innerHTML = "";
             tasks.forEach(t => {
                 const li = document.createElement("li");
                 li.dataset.taskId = t.id;
+
+                // 类型图标
+                var typeInfo = _taskTypeMap[t.type] || {};
+                var typeIcon = document.createElement("span");
+                typeIcon.className = "task-type-icon";
+                typeIcon.title = typeInfo.name || "";
+                typeIcon.textContent = typeInfo.icon || "📋";
+                li.appendChild(typeIcon);
+
+                // 名称
                 const span = document.createElement("span");
                 span.textContent = t.name;
                 span.contentEditable = "false";
                 li.appendChild(span);
 
+                // 删除按钮
+                var delBtn = document.createElement("button");
+                delBtn.className = "task-del-btn";
+                delBtn.title = "删除任务";
+                delBtn.textContent = "✕";
+                delBtn.addEventListener("click", function(e) {
+                    e.stopPropagation();
+                    _deleteTaskItem(t.id);
+                });
+                li.appendChild(delBtn);
+
                 li.addEventListener("click", (e) => {
                     if (e.target === span && span.isContentEditable) return;
+                    if (e.target === delBtn || e.target.classList.contains("task-del-btn")) return;
                     switchTask(t.id);
                 });
 
@@ -1609,6 +1652,19 @@
                 taskList.appendChild(li);
             });
             highlightActiveTask();
+        }
+
+        async function _deleteTaskItem(taskId) {
+            if (!confirm("确定要删除此任务？该操作不可恢复。")) return;
+            var res = await fetch("/api/tasks/" + taskId, { method: "DELETE" });
+            if (!res.ok) { var err = await res.json(); showMsg("删除失败: " + err.error, true); return; }
+            if (currentTaskId === taskId) {
+                currentTaskId = null;
+                taskData = { text1: "", cards: [] };
+                renderWorkspace();
+            }
+            await renderTaskList();
+            showMsg("任务已删除");
         }
 
         document.getElementById("new-task-btn").addEventListener("click", async () => {
@@ -2143,6 +2199,7 @@
 
         // ---------- 初始化 ----------
         (async function init() {
+            await _loadTaskTypeMap();
             await renderTaskList();
             var params = new URLSearchParams(window.location.search);
             var targetTaskId = params.get("task");
