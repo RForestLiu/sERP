@@ -1058,7 +1058,10 @@
         categories: {},
         basic_fields: {},
         attributes: [],
-        images: []
+        images: [],
+        extra_images: [],
+        videos: [],
+        rich_content: []
     };
     let autoSaveTimer = null;
     let isDirty = false;
@@ -1083,6 +1086,28 @@
     const fieldPrice = document.getElementById("field-price");
     const fieldOfferId = document.getElementById("field-offer-id");
     const fieldBarcode = document.getElementById("field-barcode");
+    const fieldUpc = document.getElementById("field-upc");
+    const fieldShipFrom = document.getElementById("field-ship-from");
+    const fieldLeadTime = document.getElementById("field-lead-time");
+    const fieldSourcePlatform = document.getElementById("field-source-platform");
+    const fieldSourceUrl = document.getElementById("field-source-url");
+
+    // 辅图
+    const extraImageUploadInput = document.getElementById("extra-image-upload-input");
+    const extraImageGrid = document.getElementById("extra-image-grid");
+    const extraUploadBox = document.getElementById("extra-upload-box");
+
+    // 视频
+    const videoUploadInput = document.getElementById("video-upload-input");
+    const videoGrid = document.getElementById("video-grid");
+    const videoUploadBox = document.getElementById("video-upload-box");
+    const fieldVideoUrl = document.getElementById("field-video-url");
+
+    // Rich Content
+    const richContentEditor = document.getElementById("rich-content-editor");
+
+    // SKU 图片独立区域
+    const skuImagesList = document.getElementById("sku-images-list");
 
     // ===== 价格计算器 =====
     const priceCalcIcon = document.getElementById("price-calc-icon");
@@ -1266,7 +1291,7 @@
 
     // Highlight anchor on scroll
     document.getElementById('main-content').addEventListener('scroll', function() {
-        var sections = ['basicInfo', 'productInfo', 'skuAttrInfo', 'skuImageInfo'];
+        var sections = ['sourceInfo', 'basicInfo', 'productInfo', 'skuAttrInfo', 'skuImageInfo', 'richContent', 'videoInfo'];
         var scrollPos = this.scrollTop + 60;
         sections.forEach(function(id) {
             var el = document.getElementById(id);
@@ -1315,6 +1340,9 @@
         // 初始化图片网格
         initImageGrid();
         initImageModals();
+        initExtraImages();
+        initVideoUploads();
+        initRichContent();
 
         // 加载店铺列表
         await loadStores();
@@ -2166,6 +2194,10 @@
                 if (!bf.offer_id && p.skus && p.skus.length > 0) {
                     fieldOfferId.value = p.skus[0];
                 }
+
+                // 来源信息
+                if (pd.platform) fieldSourcePlatform.value = pd.platform;
+                if (p.source_url) fieldSourceUrl.value = p.source_url;
             }
         } catch (e) { console.error("加载产品数据失败:", e); }
     }
@@ -2191,9 +2223,25 @@
         if (bf.price) fieldPrice.value = bf.price;
         if (bf.offer_id) fieldOfferId.value = bf.offer_id;
         if (bf.barcode) fieldBarcode.value = bf.barcode;
+        if (bf.upc) fieldUpc.value = bf.upc;
+        if (bf.ship_from) fieldShipFrom.value = bf.ship_from;
+        if (bf.lead_time) fieldLeadTime.value = bf.lead_time;
+
+        // 来源信息
+        if (bf.source_platform) fieldSourcePlatform.value = bf.source_platform;
+        if (bf.source_url) fieldSourceUrl.value = bf.source_url;
 
         if (listingDraft.images && listingDraft.images.length > 0) {
             renderImageGrid();
+        }
+        if (listingDraft.extra_images && listingDraft.extra_images.length > 0) {
+            renderExtraImageGrid();
+        }
+        if (listingDraft.videos && listingDraft.videos.length > 0) {
+            renderVideoGrid();
+        }
+        if (listingDraft.rich_content && listingDraft.rich_content.length > 0) {
+            renderRichContent();
         }
 
         // 还原 SKU 变种数据
@@ -2366,7 +2414,7 @@
     // 旧版轮播图片已移除，图片渲染统一使用 renderImageGrid()
     function renderCarouselImages(images) {}
     function bindAutoSave() {
-        var fields = [fieldName, fieldDescription, fieldPrice, fieldOfferId, fieldBarcode];
+        var fields = [fieldName, fieldDescription, fieldPrice, fieldOfferId, fieldBarcode, fieldUpc, fieldShipFrom, fieldLeadTime];
         fields.forEach(function(f) {
             f.addEventListener("input", function() { markDirty(); });
             f.addEventListener("change", function() { markDirty(); });
@@ -2388,7 +2436,12 @@
             description: fieldDescription.value,
             price: fieldPrice.value,
             offer_id: fieldOfferId.value,
-            barcode: fieldBarcode.value
+            barcode: fieldBarcode.value,
+            upc: fieldUpc.value,
+            ship_from: fieldShipFrom.value,
+            lead_time: fieldLeadTime.value,
+            source_platform: fieldSourcePlatform.value,
+            source_url: fieldSourceUrl.value
         };
 
         listingDraft.attributes = [];
@@ -2406,13 +2459,14 @@
         var productSkuSet = (productData && productData.skus) ? productData.skus : [];
         document.querySelectorAll("#sku-table-body tr").forEach(function(tr) {
             var skuCode = tr.dataset.sku || "";
-            var row = { price: "", stock: "", barcode: "", weight: "", images: [] };
+            var row = { price: "", old_price: "", stock: "", barcode: "", images: [] };
             tr.querySelectorAll("input").forEach(function(inp) {
                 if (inp.dataset.field === "sku_name") skuCode = inp.value.trim();
+                if (inp.dataset.field === "sku_code") row.sku_code = inp.value.trim();
                 if (inp.dataset.field === "price") row.price = inp.value.trim();
+                if (inp.dataset.field === "old_price") row.old_price = inp.value.trim();
                 if (inp.dataset.field === "stock") row.stock = inp.value.trim();
                 if (inp.dataset.field === "barcode") row.barcode = inp.value.trim();
-                if (inp.dataset.field === "weight") row.weight = inp.value.trim();
             });
             // 收集该 SKU 的独立图片（多张）
             if (tr.dataset.skuImages) {
@@ -2422,7 +2476,7 @@
             listingDraft.sku_data[skuCode] = row;
             // 不在产品 SKU 列表中的，记为自定义变种
             if (productSkuSet.indexOf(skuCode) === -1) {
-                listingDraft.custom_skus.push({ name: skuCode, price: row.price, stock: row.stock, barcode: row.barcode, weight: row.weight });
+                listingDraft.custom_skus.push({ name: skuCode, price: row.price, old_price: row.old_price, stock: row.stock, barcode: row.barcode });
             }
         });
 
@@ -2497,6 +2551,255 @@
         }
     });
 
+    // ===== 辅图网格 =====
+    function renderExtraImageGrid() {
+        if (!extraImageGrid) return;
+        extraImageGrid.querySelectorAll(".image-grid-item").forEach(function(el) { el.remove(); });
+        (listingDraft.extra_images || []).forEach(function(img, i) {
+            var item = document.createElement("div");
+            item.className = "image-grid-item";
+            item.dataset.index = i;
+            var imgEl = document.createElement("img");
+            imgEl.src = img.url;
+            imgEl.alt = "辅图 " + (i + 1);
+            imgEl.onerror = function() {
+                imgEl.src = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='104' height='104'><rect fill='%23f0f0f0' width='104' height='104'/><text x='52' y='52' text-anchor='middle' dy='.3em' fill='%23999' font-size='12'>加载失败</text></svg>";
+            };
+            item.appendChild(imgEl);
+            var badge = document.createElement("span");
+            badge.className = "order-badge";
+            badge.textContent = i + 1;
+            item.appendChild(badge);
+            var delBtn = document.createElement("button");
+            delBtn.style.cssText = "position:absolute;top:2px;right:2px;width:18px;height:18px;background:#ff4d4f;color:#fff;border:none;border-radius:50%;font-size:10px;cursor:pointer;display:none;line-height:18px;text-align:center;";
+            delBtn.textContent = "✕";
+            delBtn.addEventListener("click", function(e) {
+                e.stopPropagation();
+                listingDraft.extra_images.splice(i, 1);
+                renderExtraImageGrid();
+                markDirty();
+            });
+            item.addEventListener("mouseenter", function() { delBtn.style.display = "block"; });
+            item.addEventListener("mouseleave", function() { delBtn.style.display = "none"; });
+            item.appendChild(delBtn);
+            extraImageGrid.insertBefore(item, extraUploadBox);
+        });
+    }
+
+    function initExtraImages() {
+        if (!extraUploadBox || !extraImageUploadInput) return;
+        extraUploadBox.addEventListener("click", function() { extraImageUploadInput.click(); });
+        extraImageUploadInput.addEventListener("change", function(e) {
+            var files = Array.from(e.target.files);
+            files.forEach(function(file) {
+                var reader = new FileReader();
+                reader.onload = function(ev) {
+                    listingDraft.extra_images = listingDraft.extra_images || [];
+                    listingDraft.extra_images.push({ source: "upload", url: ev.target.result, local_path: "" });
+                    renderExtraImageGrid();
+                    markDirty();
+                };
+                reader.readAsDataURL(file);
+            });
+            e.target.value = "";
+        });
+        extraImageGrid.addEventListener("dragover", function(e) { e.preventDefault(); });
+        extraImageGrid.addEventListener("drop", function(e) {
+            e.preventDefault();
+            Array.from(e.dataTransfer.files).filter(function(f) { return f.type.startsWith("image/"); }).forEach(function(file) {
+                var reader = new FileReader();
+                reader.onload = function(ev) {
+                    listingDraft.extra_images = listingDraft.extra_images || [];
+                    listingDraft.extra_images.push({ source: "upload", url: ev.target.result, local_path: "" });
+                    renderExtraImageGrid();
+                    markDirty();
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+    }
+
+    // ===== 视频上传 =====
+    function renderVideoGrid() {
+        if (!videoGrid) return;
+        videoGrid.querySelectorAll(".video-grid-item").forEach(function(el) { el.remove(); });
+        (listingDraft.videos || []).forEach(function(vid, i) {
+            var item = document.createElement("div");
+            item.className = "video-grid-item";
+            var el;
+            if (vid.url && (vid.url.startsWith("http") || vid.url.startsWith("/videos/"))) {
+                el = document.createElement("video");
+                el.src = vid.url;
+                el.preload = "metadata";
+                el.muted = true;
+            } else {
+                el = document.createElement("div");
+                el.style.cssText = "width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;";
+                el.textContent = "视频 " + (i + 1);
+            }
+            item.appendChild(el);
+            var name = document.createElement("div");
+            name.className = "video-name";
+            name.textContent = vid.filename || vid.url || ("视频 " + (i + 1));
+            item.appendChild(name);
+            var delBtn = document.createElement("button");
+            delBtn.className = "video-del-btn";
+            delBtn.textContent = "✕";
+            delBtn.addEventListener("click", function(e) {
+                e.stopPropagation();
+                listingDraft.videos.splice(i, 1);
+                renderVideoGrid();
+                markDirty();
+            });
+            item.appendChild(delBtn);
+            videoGrid.insertBefore(item, videoUploadBox);
+        });
+    }
+
+    function _addVideoFile(file) {
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+            listingDraft.videos = listingDraft.videos || [];
+            listingDraft.videos.push({ source: "upload", url: ev.target.result, local_path: "", filename: file.name });
+            renderVideoGrid();
+            markDirty();
+            // 异步上传到后端
+            var formData = new FormData();
+            formData.append("file", file);
+            formData.append("skc", skc);
+            fetch("/api/upload-video", { method: "POST", body: formData })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.url) {
+                        var lastVid = listingDraft.videos[listingDraft.videos.length - 1];
+                        if (lastVid) {
+                            lastVid.url = data.url;
+                            lastVid.server_filename = data.filename;
+                            renderVideoGrid();
+                            markDirty();
+                        }
+                    }
+                }).catch(function(e) { console.error("视频上传失败:", e); });
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function initVideoUploads() {
+        if (!videoUploadBox || !videoUploadInput) return;
+        videoUploadBox.addEventListener("click", function() { videoUploadInput.click(); });
+        videoUploadInput.addEventListener("change", function(e) {
+            Array.from(e.target.files).forEach(function(file) { _addVideoFile(file); });
+            e.target.value = "";
+        });
+        videoGrid.addEventListener("dragover", function(e) { e.preventDefault(); });
+        videoGrid.addEventListener("drop", function(e) {
+            e.preventDefault();
+            Array.from(e.dataTransfer.files).filter(function(f) { return f.type.startsWith("video/"); }).forEach(function(file) {
+                _addVideoFile(file);
+            });
+        });
+        // URL 添加
+        document.getElementById("btn-add-video-url").addEventListener("click", function() {
+            var url = fieldVideoUrl.value.trim();
+            if (!url) return;
+            listingDraft.videos = listingDraft.videos || [];
+            listingDraft.videos.push({ source: "url", url: url, local_path: "", filename: url.split("/").pop() || "video_url" });
+            renderVideoGrid();
+            markDirty();
+            fieldVideoUrl.value = "";
+        });
+    }
+
+    // ===== Rich Content 编辑器 =====
+    var RICH_NODE_PRESETS = {
+        text: { type: "text", id: "text_block", value: "" },
+        image: { type: "image", id: "image_block", value: "https://" },
+        carousel: { type: "carousel", id: "carousel_block", value: "[]" },
+        video: { type: "video", id: "video_block", value: "https://" },
+        grid: { type: "grid", id: "grid_block", value: "[]" }
+    };
+
+    function renderRichContent() {
+        if (!richContentEditor) return;
+        richContentEditor.innerHTML = "";
+        (listingDraft.rich_content || []).forEach(function(node, i) {
+            _appendRichNodeRow(node, i);
+        });
+    }
+
+    function _appendRichNodeRow(node, i) {
+        var row = document.createElement("div");
+        row.className = "rich-node-row";
+
+        var selType = document.createElement("select");
+        selType.className = "rich-node-type";
+        ["text","image","carousel","video","grid"].forEach(function(t) {
+            var opt = document.createElement("option");
+            opt.value = t; opt.textContent = t;
+            if (node.type === t) opt.selected = true;
+            selType.appendChild(opt);
+        });
+        selType.addEventListener("change", function() {
+            listingDraft.rich_content[i].type = selType.value;
+            markDirty();
+        });
+        row.appendChild(selType);
+
+        var inpId = document.createElement("input");
+        inpId.className = "rich-node-id";
+        inpId.type = "text";
+        inpId.placeholder = "字段ID";
+        inpId.value = node.id || "";
+        inpId.addEventListener("input", function() {
+            listingDraft.rich_content[i].id = inpId.value;
+            markDirty();
+        });
+        row.appendChild(inpId);
+
+        var inpVal = document.createElement("input");
+        inpVal.className = "rich-node-value";
+        inpVal.type = "text";
+        inpVal.placeholder = "值（文本/URL/JSON）";
+        inpVal.value = node.value || "";
+        inpVal.addEventListener("input", function() {
+            listingDraft.rich_content[i].value = inpVal.value;
+            markDirty();
+        });
+        row.appendChild(inpVal);
+
+        var btnDel = document.createElement("button");
+        btnDel.className = "rich-node-del";
+        btnDel.textContent = "✕";
+        btnDel.addEventListener("click", function() {
+            listingDraft.rich_content.splice(i, 1);
+            renderRichContent();
+            markDirty();
+        });
+        row.appendChild(btnDel);
+
+        richContentEditor.appendChild(row);
+    }
+
+    function initRichContent() {
+        if (!richContentEditor) return;
+        document.getElementById("btn-add-rich-node").addEventListener("click", function() {
+            listingDraft.rich_content = listingDraft.rich_content || [];
+            listingDraft.rich_content.push({ type: "text", id: "", value: "" });
+            _appendRichNodeRow(listingDraft.rich_content[listingDraft.rich_content.length - 1], listingDraft.rich_content.length - 1);
+            markDirty();
+        });
+        document.getElementById("rich-preset-select").addEventListener("change", function() {
+            var key = this.value;
+            if (!key || !RICH_NODE_PRESETS[key]) return;
+            listingDraft.rich_content = listingDraft.rich_content || [];
+            var preset = RICH_NODE_PRESETS[key];
+            listingDraft.rich_content.push({ type: preset.type, id: preset.id, value: preset.value });
+            _appendRichNodeRow(listingDraft.rich_content[listingDraft.rich_content.length - 1], listingDraft.rich_content.length - 1);
+            markDirty();
+            this.value = "";
+        });
+    }
+
     // ===== 提交到 Ozon =====
     btnSubmit.addEventListener("click", async function() {
         if (!fieldName.value.trim()) { showMsg("❌ 产品名称不能为空", true); return; }
@@ -2516,13 +2819,14 @@
             var skus = [];
             document.querySelectorAll("#sku-table-body tr").forEach(function(tr) {
                 var skuCode = tr.dataset.sku || "";
-                var row = { name: skuCode, price: "", stock: "", barcode: "", weight: "", images: [] };
+                var row = { name: skuCode, price: "", old_price: "", stock: "", barcode: "", images: [] };
                 tr.querySelectorAll("input").forEach(function(inp) {
                     if (inp.dataset.field === "sku_name") row.name = inp.value.trim();
+                    if (inp.dataset.field === "sku_code") row.sku_code = inp.value.trim();
                     if (inp.dataset.field === "price") row.price = inp.value.trim();
+                    if (inp.dataset.field === "old_price") row.old_price = inp.value.trim();
                     if (inp.dataset.field === "stock") row.stock = inp.value.trim();
                     if (inp.dataset.field === "barcode") row.barcode = inp.value.trim();
-                    if (inp.dataset.field === "weight") row.weight = inp.value.trim();
                 });
                 if (!row.name) return;
                 if (tr.dataset.skuImages) {
@@ -2542,6 +2846,8 @@
                 type_id: selectedCategoryTypeId,
                 attributes: listingDraft.attributes,
                 images: listingDraft.images,
+                videos: listingDraft.videos || [],
+                rich_content: listingDraft.rich_content || [],
                 skus: skus
             };
 
@@ -2848,7 +3154,7 @@
     }
 
     function _createSkuRow(skuCode, initialData) {
-        // initialData: { price, stock, barcode, weight, images } (optional, from restored draft)
+        // initialData: { price, old_price, stock, barcode, images } (optional, from restored draft)
         var tr = document.createElement("tr");
         tr.dataset.sku = skuCode;
 
@@ -2856,41 +3162,64 @@
             ? initialData.images.slice()
             : (initialData && initialData.image ? [initialData.image] : []);
 
-        // SKU 名称（对于自定义变种，可编辑）
+        // 列1: 变种属性名称
         var tdName = document.createElement("td");
         tdName.className = "sku-name-cell";
-        var inpName = document.createElement("input");
-        inpName.type = "text";
-        inpName.placeholder = "变种名称，如 红色-M";
-        inpName.value = skuCode;
-        inpName.dataset.field = "sku_name";
-        inpName.style.textAlign = "left";
-        inpName.style.minWidth = "160px";
+        var inpAttr = document.createElement("input");
+        inpAttr.type = "text";
+        inpAttr.placeholder = "如 蓝色";
+        inpAttr.value = skuCode;
+        inpAttr.dataset.field = "sku_name";
+        inpAttr.style.textAlign = "left";
+        inpAttr.style.minWidth = "100px";
         var isProductSku = (productData && productData.skus && productData.skus.indexOf(skuCode) !== -1);
         if (isProductSku) {
-            inpName.readOnly = true;
-            inpName.style.background = "#f5f5f5";
-            inpName.style.cursor = "not-allowed";
+            inpAttr.readOnly = true;
+            inpAttr.style.background = "#f5f5f5";
+            inpAttr.style.cursor = "not-allowed";
         }
-        inpName.addEventListener("input", function() {
-            tr.dataset.sku = inpName.value;
+        inpAttr.addEventListener("input", function() {
+            tr.dataset.sku = inpAttr.value;
             markDirty();
         });
-        tdName.appendChild(inpName);
+        tdName.appendChild(inpAttr);
         tr.appendChild(tdName);
 
-        // 价格
+        // 列2: 平台SKU
+        var tdSku = document.createElement("td");
+        var inpSkuCode = document.createElement("input");
+        inpSkuCode.type = "text";
+        inpSkuCode.placeholder = "Offer ID";
+        inpSkuCode.value = skuCode;
+        inpSkuCode.dataset.field = "sku_code";
+        inpSkuCode.style.textAlign = "left";
+        inpSkuCode.addEventListener("input", function() { markDirty(); });
+        tdSku.appendChild(inpSkuCode);
+        tr.appendChild(tdSku);
+
+        // 列3: 原价
+        var tdOldPrice = document.createElement("td");
+        var inpOldPrice = document.createElement("input");
+        inpOldPrice.type = "number"; inpOldPrice.step = "0.01"; inpOldPrice.min = "0";
+        inpOldPrice.placeholder = "原价";
+        inpOldPrice.dataset.field = "old_price";
+        if (initialData && initialData.old_price) inpOldPrice.value = initialData.old_price;
+        inpOldPrice.addEventListener("input", function() { markDirty(); });
+        tdOldPrice.appendChild(inpOldPrice);
+        tr.appendChild(tdOldPrice);
+
+        // 列4: 售价
         var tdPrice = document.createElement("td");
         var inpPrice = document.createElement("input");
         inpPrice.type = "number"; inpPrice.step = "0.01"; inpPrice.min = "0";
-        inpPrice.placeholder = "价格";
+        inpPrice.placeholder = "售价";
         inpPrice.dataset.field = "price";
         if (initialData && initialData.price) inpPrice.value = initialData.price;
         inpPrice.addEventListener("input", function() { markDirty(); });
         tdPrice.appendChild(inpPrice);
         tr.appendChild(tdPrice);
 
-        // 库存
+        // 列5: 库存
         var tdStock = document.createElement("td");
         var inpStock = document.createElement("input");
         inpStock.type = "number"; inpStock.step = "1"; inpStock.min = "0";
@@ -2901,11 +3230,11 @@
         tdStock.appendChild(inpStock);
         tr.appendChild(tdStock);
 
-        // 条码
+        // 列6: 条形码
         var tdBarcode = document.createElement("td");
         var inpBarcode = document.createElement("input");
         inpBarcode.type = "text";
-        inpBarcode.placeholder = "条码";
+        inpBarcode.placeholder = "条形码";
         inpBarcode.dataset.field = "barcode";
         inpBarcode.style.textAlign = "left";
         if (initialData && initialData.barcode) inpBarcode.value = initialData.barcode;
@@ -2913,41 +3242,27 @@
         tdBarcode.appendChild(inpBarcode);
         tr.appendChild(tdBarcode);
 
-        // 重量
-        var tdWeight = document.createElement("td");
-        var inpWeight = document.createElement("input");
-        inpWeight.type = "number"; inpWeight.step = "1"; inpWeight.min = "0";
-        inpWeight.placeholder = "克";
-        inpWeight.dataset.field = "weight";
-        if (initialData && initialData.weight) inpWeight.value = initialData.weight;
-        inpWeight.addEventListener("input", function() { markDirty(); });
-        tdWeight.appendChild(inpWeight);
-        tr.appendChild(tdWeight);
-
-        // 操作
+        // 列7: 操作
         var tdAction = document.createElement("td");
         var btnDel = document.createElement("button");
         btnDel.className = "btn-delete-row";
         btnDel.textContent = "✕";
         btnDel.title = "删除";
         btnDel.addEventListener("click", function() {
-            if (tr._imageRow) tr._imageRow.remove();
             tr.remove();
+            _renderSkuImagesSection();
             markDirty();
         });
         tdAction.appendChild(btnDel);
         tr.appendChild(tdAction);
 
-        // 创建图片副行
-        var imgTr = _createSkuImageRow(tr, skuImages, skuCode);
-
-        return { main: tr, image: imgTr };
+        tr._skuImages = skuImages;
+        return tr;
     }
 
     function _appendSkuRows(skuCode, initialData) {
-        var rows = _createSkuRow(skuCode, initialData);
-        skuTableBody.appendChild(rows.main);
-        skuTableBody.appendChild(rows.image);
+        var tr = _createSkuRow(skuCode, initialData);
+        skuTableBody.appendChild(tr);
     }
 
     function renderSkuTable() {
@@ -2973,24 +3288,101 @@
 
         // 自动匹配图片集到 SKU
         _autoMatchSkuImages();
+        // 渲染独立图片区
+        _renderSkuImagesSection();
+    }
+
+    // ===== SKU 图片独立区域 =====
+    function _renderSkuImagesSection() {
+        if (!skuImagesList) return;
+        skuImagesList.innerHTML = "";
+        var rows = skuTableBody.querySelectorAll("tr");
+        rows.forEach(function(tr) {
+            var skuCode = tr.dataset.sku || "";
+            var images = tr._skuImages || [];
+            try {
+                if (tr.dataset.skuImages) images = JSON.parse(tr.dataset.skuImages);
+            } catch(e) {}
+
+            var block = document.createElement("div");
+            block.className = "sku-image-row-block";
+
+            var label = document.createElement("div");
+            label.className = "sku-image-row-label";
+            label.textContent = skuCode;
+            block.appendChild(label);
+
+            var thumbs = document.createElement("div");
+            thumbs.className = "sku-image-row-thumbs";
+            images.forEach(function(img, i) {
+                var t = document.createElement("img");
+                t.src = img.url;
+                t.alt = skuCode;
+                t.title = (img.source || img.local_path || img.url);
+                t.addEventListener("click", function() { openSkuImagePicker(tr); });
+                thumbs.appendChild(t);
+            });
+            // "+" 按钮
+            var addBtn = document.createElement("div");
+            addBtn.className = "sku-img-add";
+            addBtn.textContent = "+";
+            addBtn.title = "选择图片集";
+            addBtn.addEventListener("click", function() { openSkuImagePicker(tr); });
+            thumbs.appendChild(addBtn);
+            block.appendChild(thumbs);
+
+            var actions = document.createElement("div");
+            actions.className = "sku-image-row-actions";
+            var btnSet = document.createElement("button");
+            btnSet.className = "btn btn-sm";
+            btnSet.textContent = "选图片集";
+            btnSet.addEventListener("click", function() { openSkuImagePicker(tr); });
+            actions.appendChild(btnSet);
+            var btnLocal = document.createElement("button");
+            btnLocal.className = "btn btn-sm";
+            btnLocal.textContent = "本地上传";
+            btnLocal.addEventListener("click", function() {
+                var inp = document.createElement("input");
+                inp.type = "file"; inp.accept = "image/*"; inp.multiple = true;
+                inp.addEventListener("change", function(e) {
+                    Array.from(e.target.files).forEach(function(file) {
+                        var reader = new FileReader();
+                        reader.onload = function(ev) {
+                            var cur = tr._skuImages || [];
+                            try { if (tr.dataset.skuImages) cur = JSON.parse(tr.dataset.skuImages); } catch(e) {}
+                            cur.push({ url: ev.target.result, source: "upload", local_path: "" });
+                            tr.dataset.skuImages = JSON.stringify(cur);
+                            tr._skuImages = cur;
+                            _renderSkuImagesSection();
+                            markDirty();
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                });
+                inp.click();
+            });
+            actions.appendChild(btnLocal);
+            block.appendChild(actions);
+
+            skuImagesList.appendChild(block);
+        });
     }
 
     function _autoMatchSkuImages() {
         var setNames = Object.keys(_imageSetsData);
         if (setNames.length === 0) return;
 
-        var rows = skuTableBody.querySelectorAll("tr:not(.sku-image-row)");
+        var rows = skuTableBody.querySelectorAll("tr");
         rows.forEach(function(tr) {
             // 已有图片则跳过
             if (tr.dataset.skuImages && tr.dataset.skuImages !== "[]") return;
+            if (tr._skuImages && tr._skuImages.length > 0) return;
             var skuCode = (tr.dataset.sku || "").toLowerCase();
             if (!skuCode) return;
 
-            // 尝试匹配图片集名（大小写不敏感）
             var matchedSet = null;
             for (var i = 0; i < setNames.length; i++) {
                 var sLower = setNames[i].toLowerCase();
-                // 去掉 SKU 前缀取最后一段（如 WALLET-0001-BLUE → blue）
                 var parts = skuCode.split("-");
                 var lastPart = parts[parts.length - 1].trim();
                 if (lastPart && (sLower === lastPart || skuCode.indexOf(sLower) !== -1)) {
@@ -3002,23 +3394,21 @@
             if (matchedSet && _imageSetsData[matchedSet]) {
                 var setImages = _imageSetsData[matchedSet];
                 tr.dataset.skuImages = JSON.stringify(setImages);
-                if (tr._skuImagesRef) {
-                    tr._skuImagesRef.length = 0;
-                    setImages.forEach(function(img) { tr._skuImagesRef.push(img); });
-                }
-                if (tr._imageRow && tr._imageRow._renderImages) tr._imageRow._renderImages();
+                tr._skuImages = setImages.slice();
                 markDirty();
             }
         });
+        _renderSkuImagesSection();
     }
 
     // 添加变种
     document.getElementById("btn-add-variant").addEventListener("click", function() {
         skuVariantSection.style.display = "block";
         if (!listingDraft.custom_skus) listingDraft.custom_skus = [];
-        var newSku = { name: "新变种-" + (listingDraft.custom_skus.length + 1), price: "", stock: "", barcode: "", weight: "" };
+        var newSku = { name: "新变种-" + (listingDraft.custom_skus.length + 1), price: "", old_price: "", stock: "", barcode: "" };
         listingDraft.custom_skus.push(newSku);
         _appendSkuRows(newSku.name, null);
+        _renderSkuImagesSection();
         markDirty();
     });
 
@@ -3156,16 +3546,12 @@
     function applySkuImages() {
         if (!_skuPickerTargetTr) return;
         var selected = Object.values(_skuPickerSelected);
-        // 按 _idx 排序保持图片顺序
         selected.sort(function(a, b) { return (a._idx || 0) - (b._idx || 0); });
 
         var tr = _skuPickerTargetTr;
         tr.dataset.skuImages = selected.length > 0 ? JSON.stringify(selected) : "";
-        // 更新 SKU 图片引用并重新渲染图片副行
-        var ref = tr._skuImagesRef;
-        ref.length = 0;
-        selected.forEach(function(img) { ref.push(img); });
-        if (tr._imageRow && tr._imageRow._renderImages) tr._imageRow._renderImages();
+        tr._skuImages = selected.slice();
+        _renderSkuImagesSection();
         markDirty();
     }
 
@@ -3198,13 +3584,13 @@
     document.getElementById("btn-bulk-apply").addEventListener("click", function() {
         var bulkPrice = document.getElementById("bulk-price").value;
         var bulkStock = document.getElementById("bulk-stock").value;
-        var bulkWeight = document.getElementById("bulk-weight").value;
+        var bulkOldPrice = document.getElementById("bulk-old-price").value;
         skuTableBody.querySelectorAll("tr").forEach(function(tr) {
             var inputs = tr.querySelectorAll("input");
             inputs.forEach(function(inp) {
                 if (inp.dataset.field === "price" && bulkPrice) inp.value = bulkPrice;
+                if (inp.dataset.field === "old_price" && bulkOldPrice) inp.value = bulkOldPrice;
                 if (inp.dataset.field === "stock" && bulkStock) inp.value = bulkStock;
-                if (inp.dataset.field === "weight" && bulkWeight) inp.value = bulkWeight;
             });
         });
         markDirty();
