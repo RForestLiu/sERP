@@ -124,24 +124,44 @@ def get_tasks():
     tasks = load_tasks()
     return jsonify(tasks)
 
+# ── 任务类型定义 ───────────────────────────────────────────────
+TASK_TYPES = [
+    {"id": "batch_translate", "name": "批量翻译图片", "icon": "🌐", "description": "AI图片翻译，中→俄等", "available": True},
+    {"id": "batch_crop_resize", "name": "批量裁剪/缩放", "icon": "✂️", "description": "按平台尺寸要求处理", "available": False},
+    {"id": "generate_main_image", "name": "生成产品首图", "icon": "🎨", "description": "白模图+产品信息→首图", "available": False},
+    {"id": "batch_replace_product", "name": "批量替换产品图", "icon": "🔄", "description": "用新产品图替换模板", "available": False},
+]
+
+@app.route("/api/task-types", methods=["GET"])
+def get_task_types():
+    return jsonify(TASK_TYPES)
+
 @app.route("/api/tasks", methods=["POST"])
 def create_task():
     tasks = load_tasks()
-    # 自动递增任务名称
+    payload = request.get_json(silent=True) or {}
+    task_type = payload.get("type", "")
+    # 任务名称：指定类型用类型名，否则自动递增
+    if task_type:
+        type_info = next((tt for tt in TASK_TYPES if tt["id"] == task_type), None)
+        base_name = type_info["name"] if type_info else task_type
+    else:
+        base_name = "任务"
     existing_names = [t["name"] for t in tasks]
     n = 1
-    while f"任务{n}" in existing_names:
+    while f"{base_name} {n}" in existing_names:
         n += 1
-    name = f"任务{n}"
+    name = f"{base_name} {n}"
     task_id = str(uuid.uuid4())[:8]
     tasks.append({
         "id": task_id,
         "name": name,
+        "type": task_type,
         "created_at": datetime.now().isoformat()
     })
     save_tasks(tasks)
     save_task_data(task_id, {"text1": "", "cards": []})
-    return jsonify({"id": task_id, "name": name})
+    return jsonify({"id": task_id, "name": name, "type": task_type})
 
 @app.route("/api/tasks/<task_id>", methods=["GET"])
 def get_task(task_id):

@@ -710,7 +710,9 @@
             display: flex; align-items: center; gap: 6px;
         }
         .img-mgmt-task-item.drag-over { border-color: #8b5cf6; background: #f5f3ff; }
-        .img-mgmt-task-item .task-dot { width: 6px; height: 6px; border-radius: 50%; background: #8b5cf6; flex-shrink: 0; }
+        .img-mgmt-task-item.unavailable { opacity: 0.5; cursor: not-allowed; border-style: dotted; }
+        .img-mgmt-task-item .task-type-badge { font-size: 10px; background: #f59e0b; color: #fff; padding: 1px 5px; border-radius: 3px; margin-left: auto; }
+        .img-mgmt-task-item .task-dot { width: auto; height: auto; border-radius: 0; background: none; flex-shrink: 0; font-size: 14px; }
         .img-mgmt-task-empty { padding: 8px 14px; font-size: 11px; color: #bbb; text-align: center; }
 
         /* Workspace */
@@ -1411,7 +1413,7 @@
                         <button class="btn" id="img-mgmt-new-set-btn" style="width:100%;border:2px dashed #ddd;color:#999;background:none;cursor:pointer;padding:8px;font-size:12px;">+ 新建图片集</button>
                     </div>
                     <div class="img-mgmt-task-area" id="img-mgmt-task-area">
-                        <div class="img-mgmt-task-header">📋 批量处理任务</div>
+                        <div class="img-mgmt-task-header">📋 任务类型（拖拽到此创建任务）</div>
                         <div class="img-mgmt-task-list" id="img-mgmt-task-list">
                             <div class="img-mgmt-task-empty">加载中...</div>
                         </div>
@@ -3309,8 +3311,12 @@
 
             // Drag events
             item.addEventListener("dragstart", function(e) {
+                var entry = (imageSets[sourceKey] || [])[idx] || {};
                 e.dataTransfer.setData("text/plain", JSON.stringify({
-                    sourceKey: sourceKey, sourceIndex: idx
+                    type: "grid-image",
+                    sourceKey: sourceKey,
+                    sourceIndex: idx,
+                    filename: entry.filename || ""
                 }));
                 this.classList.add("dragging");
             });
@@ -3501,35 +3507,38 @@
             imgMgmtSaveStatus.textContent = "(未保存)";
         }
 
-        // ============ Task bar (drag image set → import to task) ============
+        // ============ Task bar (drag image → create task by type) ============
 
         async function _renderTaskBar() {
             var container = _byId("img-mgmt-task-list");
             if (!container) return;
             try {
-                var res = await fetch("/api/tasks");
+                var res = await fetch("/api/task-types");
                 if (!res.ok) throw new Error("加载失败");
-                var tasks = await res.json();
-                if (!tasks || tasks.length === 0) {
-                    container.innerHTML = '<div class="img-mgmt-task-empty">暂无任务，请先在"图片批量处理"模块创建</div>';
+                var types = await res.json();
+                if (!types || types.length === 0) {
+                    container.innerHTML = '<div class="img-mgmt-task-empty">暂无任务类型</div>';
                     return;
                 }
                 var h = "";
-                tasks.forEach(function(t) {
-                    h += '<div class="img-mgmt-task-item" data-task-id="' + t.id + '">';
-                    h += '<span class="task-dot"></span>';
-                    h += t.name;
+                types.forEach(function(tt) {
+                    var cls = tt.available ? "" : " unavailable";
+                    var label = tt.available ? "" : '<span class="task-type-badge">开发中</span>';
+                    h += '<div class="img-mgmt-task-item' + cls + '" data-task-type="' + tt.id + '">';
+                    h += '<span class="task-dot">' + tt.icon + '</span>';
+                    h += '<span>' + tt.name + '</span>';
+                    h += label;
                     h += '</div>';
                 });
                 container.innerHTML = h;
             } catch(e) {
-                container.innerHTML = '<div class="img-mgmt-task-empty">加载任务失败</div>';
+                container.innerHTML = '<div class="img-mgmt-task-empty">加载任务类型失败</div>';
             }
         }
 
-        // Task list drag-drop delegation
+        // Task type list drag-drop delegation
         _byId("img-mgmt-task-list").addEventListener("dragover", function(e) {
-            var targetItem = e.target.closest(".img-mgmt-task-item");
+            var targetItem = e.target.closest(".img-mgmt-task-item:not(.unavailable)");
             if (!targetItem) return;
             e.preventDefault();
             targetItem.classList.add("drag-over");
@@ -3542,78 +3551,83 @@
                 targetItem.classList.remove("drag-over");
             }
         });
-        _byId("img-mgmt-task-list").addEventListener("drop", function(e) {
-            var targetItem = e.target.closest(".img-mgmt-task-item");
+        _byId("img-mgmt-task-list").addEventListener("drop", async function(e) {
+            var targetItem = e.target.closest(".img-mgmt-task-item:not(.unavailable)");
             if (!targetItem) return;
             e.preventDefault();
             targetItem.classList.remove("drag-over");
-            var taskId = targetItem.dataset.taskId;
+            var taskType = targetItem.dataset.taskType;
+            var typeName = (targetItem.textContent || "").replace("开发中", "").trim();
             try {
-                var payload = JSON.parse(e.dataTransfer.getData("text/plain"));
+                var raw = e.dataTransfer.getData("text/plain");
+                if (!raw) return;
+                var payload = JSON.parse(raw);
+
+                // Determine entries to import
+                var entries = [];
                 if (payload.type === "image-set") {
-                    _importSetToTask(taskId, payload.setName, payload.subName);
+                    if (payload.subName) {
+                        var subs = imageSubsets[payload.setName] || {};
+                        entries = (subs[payload.subName] || []).slice();
+                    } else {
+                        entries = (imageSets[payload.setName] || []).slice();
+                    }
+                } else if (payload.type === "grid-image") {
+                    // Single image dragged from grid
+                    entries = [{filename: payload.filename, index: payload.sourceIndex}];
+                } else if (payload.sourceKey !== undefined) {
+                    // Legacy grid drag without type — treat as single image
+                    var setEntries = imageSets[payload.sourceKey] || [];
+                    var entry = setEntries[payload.sourceIndex];
+                    if (entry) entries = [entry];
                 }
-            } catch (ex) {}
-        });
 
-        async function _importSetToTask(taskId, setName, subName) {
-            var entries;
-            if (subName) {
-                var subs = imageSubsets[setName] || {};
-                entries = (subs[subName] || []).slice();
-            } else {
-                entries = (imageSets[setName] || []).slice();
-            }
-            if (entries.length === 0) { showMsg("该图片集无图片", true); return; }
+                if (entries.length === 0) { showMsg("无图片可导入", true); return; }
 
-            try {
-                var res = await fetch("/api/tasks/" + taskId + "/import_images", {
+                // 1. Create new task with type
+                var createRes = await fetch("/api/tasks", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ type: taskType })
+                });
+                if (!createRes.ok) { showMsg("创建任务失败", true); return; }
+                var newTask = await createRes.json();
+
+                // 2. Import images into the new task
+                var importRes = await fetch("/api/tasks/" + newTask.id + "/import_images", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ skc: currentImgSkc, entries: entries })
                 });
-                if (!res.ok) { var err = await res.json(); showMsg("导入失败: " + err.error, true); return; }
-                var data = await res.json();
-                if (!data.saved || data.saved.length === 0) { showMsg("没有文件被导入", true); return; }
+                if (!importRes.ok) { var err = await importRes.json(); showMsg("导入失败: " + err.error, true); return; }
+                var importData = await importRes.json();
 
-                // Fetch current task data and merge cards
-                var taskRes = await fetch("/api/tasks/" + taskId);
+                // 3. Create cards for imported images
+                var taskRes = await fetch("/api/tasks/" + newTask.id);
                 var task = await taskRes.json();
-                var taskData = task.data || { text1: "", cards: [] };
-
-                var matched = 0, created = 0;
-                data.saved.forEach(function(item) {
-                    var existingCard = taskData.cards.find(function(c) { return c.image_name === item.original_name; });
-                    if (existingCard) {
-                        existingCard.source_image = item.relative_path;
-                        matched++;
-                    } else {
-                        taskData.cards.push({
-                            id: genId(),
-                            image_name: item.original_name,
-                            prompt: "",
-                            source_image: item.relative_path,
-                            generated_draft: "",
-                            generated_final: ""
-                        });
-                        created++;
-                    }
+                var td = task.data || { text1: "", cards: [] };
+                importData.saved.forEach(function(item) {
+                    td.cards.push({
+                        id: genId(),
+                        image_name: item.original_name,
+                        prompt: "",
+                        source_image: item.relative_path,
+                        generated_draft: "",
+                        generated_final: ""
+                    });
                 });
-
-                // Save merged task data
-                var saveRes = await fetch("/api/tasks/" + taskId, {
+                await fetch("/api/tasks/" + newTask.id, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ data: taskData })
+                    body: JSON.stringify({ data: td })
                 });
-                if (!saveRes.ok) throw new Error("保存任务数据失败");
 
-                var label = subName ? (setName + "/" + subName) : setName;
-                showMsg("已导入 " + label + " → " + task.name + " (" + data.saved.length + "张, " + matched + " 匹配 " + created + " 新建)");
-            } catch(e) {
-                showMsg("导入出错: " + e.message, true);
+                var srcLabel = payload.type === "grid-image" ? "单图" : (payload.subName ? (payload.setName + "/" + payload.subName) : payload.setName);
+                showMsg("已创建 " + typeName + " → " + newTask.name + " (" + importData.saved.length + "张)");
+            } catch(ex) {
+                showMsg("操作出错: " + ex.message, true);
             }
-        }
+        });
 
         // ============ Toolbar button bindings ============
 
