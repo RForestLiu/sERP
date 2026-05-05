@@ -1509,29 +1509,50 @@
         }
 
         async function copyAllImages(type) {
-            // type: "source" or "result"
-            var paths = [];
+            // type: "source" or "result" — 以系统文件形式复制，可粘贴到文件夹
+            var pairs = [];
             taskData.cards.forEach(function(c) {
                 var p;
                 if (type === "source") p = c.source_image;
                 else p = c.generated_final || c.generated_draft;
-                if (p) paths.push(p);
+                if (p) pairs.push({ path: p, name: c.image_name || p.split("/").pop() });
             });
-            if (paths.length === 0) { showMsg("没有可复制的图片", true); return; }
+            if (pairs.length === 0) { showMsg("没有可复制的图片", true); return; }
 
-            showMsg("正在复制 " + paths.length + " 张图片...");
-            var copied = 0;
+            showMsg("正在复制 " + pairs.length + " 张图片...");
             try {
-                for (var i = 0; i < paths.length; i++) {
-                    var url = "/task_images/" + currentTaskId + "/" + paths[i];
+                var files = [];
+                for (var i = 0; i < pairs.length; i++) {
+                    var url = "/task_images/" + currentTaskId + "/" + pairs[i].path;
                     var res = await fetch(url);
                     if (!res.ok) continue;
                     var blob = await res.blob();
-                    await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
-                    copied++;
+                    // 保持原扩展名
+                    var ext = pairs[i].path.split(".").pop() || "png";
+                    var fname = pairs[i].name;
+                    if (!fname.match(/\.\w+$/)) fname += "." + ext;
+                    files.push(new File([blob], fname, { type: blob.type }));
                 }
-                if (copied === 0) { showMsg("没有成功加载任何图片", true); return; }
-                showMsg("已复制 " + copied + " 张图片（剪贴板保留最后一张）");
+                if (files.length === 0) { showMsg("没有成功加载任何图片", true); return; }
+
+                // 使用 copy 事件 + DataTransfer 写入系统文件剪贴板
+                var handler = function(e) {
+                    for (var j = 0; j < files.length; j++) {
+                        e.clipboardData.items.add(files[j]);
+                    }
+                    e.preventDefault();
+                };
+                document.addEventListener("copy", handler);
+                var ok = document.execCommand("copy");
+                document.removeEventListener("copy", handler);
+
+                if (!ok) {
+                    // 回退：剪贴板 API 写入第一张
+                    await navigator.clipboard.write([new ClipboardItem({ [files[0].type]: files[0] })]);
+                    showMsg("已复制 1 张 (" + files.length + " 张无法同时复制)");
+                } else {
+                    showMsg("已复制 " + files.length + " 张图片（可粘贴到文件夹）");
+                }
             } catch(e) {
                 showMsg("复制失败: " + e.message, true);
             }
