@@ -1303,6 +1303,23 @@
             color: #aaa;
             font-size: 16px;
         }
+        /* ---- 图片放大预览 ---- */
+        .img-preview-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.92); z-index: 10000; cursor: pointer;
+        }
+        .img-preview-overlay.active { display: flex; }
+        .img-preview-container {
+            display: flex; gap: 20px; width: 95%; height: 90%; margin: auto;
+            align-items: center; justify-content: center;
+        }
+        .img-preview-pane { flex: 1; display: flex; flex-direction: column; align-items: center; max-height: 100%; }
+        .img-preview-label { color: #ccc; font-size: 14px; margin-bottom: 8px; font-weight: 600; }
+        .img-preview-box {
+            flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; background: rgba(255,255,255,0.03);
+        }
+        .img-preview-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
     </style>
 </head>
 <body>
@@ -1487,6 +1504,20 @@
                 </div>
                 <div style="margin-top:8px;font-size:11px;color:#999;" id="save-subset-status"></div>
                 <button class="btn primary" id="save-subset-exec" style="margin-top:8px;width:100%;" disabled>执行保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图片放大预览弹窗 -->
+    <div class="img-preview-overlay" id="img-preview-overlay">
+        <div class="img-preview-container">
+            <div class="img-preview-pane">
+                <div class="img-preview-label">原图</div>
+                <div class="img-preview-box"><img id="img-preview-src" alt="原图"></div>
+            </div>
+            <div class="img-preview-pane">
+                <div class="img-preview-label">生成图</div>
+                <div class="img-preview-box"><img id="img-preview-gen" alt="生成图"></div>
             </div>
         </div>
     </div>
@@ -1742,9 +1773,49 @@
                 const execBtn = cardDiv.querySelector(".exec-source");
                 execBtn.addEventListener("click", () => executeGenerate(card, execBtn));
 
+                // 图片点击放大预览
+                var srcFrame = cardDiv.querySelector(".img-frame");
+                var resFrame = cardDiv.querySelector(".img-frame-result");
+                srcFrame.style.cursor = card.source_image ? "pointer" : "default";
+                resFrame.style.cursor = (card.generated_final || card.generated_draft) ? "pointer" : "default";
+                srcFrame.addEventListener("click", function(e) {
+                    e.stopPropagation();
+                    _openImagePreview(card);
+                });
+                resFrame.addEventListener("click", function(e) {
+                    e.stopPropagation();
+                    _openImagePreview(card);
+                });
+
                 cardsContainer.appendChild(cardDiv);
             });
         }
+
+        // 图片放大预览
+        var _previewOverlay = document.getElementById("img-preview-overlay");
+        var _previewSrc = document.getElementById("img-preview-src");
+        var _previewGen = document.getElementById("img-preview-gen");
+
+        function _openImagePreview(card) {
+            if (card.source_image) {
+                _previewSrc.src = "/task_images/" + currentTaskId + "/" + card.source_image;
+            } else {
+                _previewSrc.src = "";
+            }
+            var genPath = card.generated_final || card.generated_draft || "";
+            if (genPath) {
+                _previewGen.src = "/task_images/" + currentTaskId + "/" + genPath;
+            } else {
+                _previewGen.src = "";
+            }
+            _previewOverlay.classList.add("active");
+        }
+
+        _previewOverlay.addEventListener("click", function() {
+            _previewOverlay.classList.remove("active");
+            _previewSrc.src = "";
+            _previewGen.src = "";
+        });
 
         // 执行生图（带状态管理和强制保存）
         async function executeGenerate(card, button) {
