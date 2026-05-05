@@ -1342,7 +1342,8 @@
                     <label class="auto-compress-label">
                         <input type="checkbox" id="auto-compress" checked> 自动压缩
                     </label>
-                    <button class="save-all-btn" id="save-images-btn">💾 保存生成图片到任务文件夹</button>
+                    <button class="save-all-btn" id="save-images-btn">💾 保存到任务文件夹</button>
+                    <button class="save-all-btn" id="save-to-product-btn">📤 保存为图片子集</button>
                     <button class="open-folder-btn" id="open-folder-btn">📂 打开生成图片文件夹</button>
                 </div>
             </div>
@@ -1456,6 +1457,28 @@
                 <input type="file" id="img-mgmt-upload-input" accept="image/*" multiple style="display:none">
                 <button class="btn" id="img-mgmt-save-btn">💾 保存更改</button>
                 <span id="img-mgmt-save-status" style="font-size:12px; color:#999;"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 保存为图片子集弹窗 -->
+    <div class="img-mgmt-overlay" id="save-subset-overlay">
+        <div class="img-mgmt-modal" style="max-width:500px;max-height:80vh;">
+            <div class="img-mgmt-header">
+                <h3>保存生成图片到产品图片集</h3>
+                <button class="img-mgmt-close" id="save-subset-close">✕</button>
+            </div>
+            <div class="img-mgmt-body" style="flex-direction:column;gap:8px;padding:12px;">
+                <label style="font-size:12px;color:#666;">目标产品</label>
+                <select id="save-subset-product" style="padding:6px;width:100%;">
+                    <option value="">选择产品...</option>
+                </select>
+                <label style="font-size:12px;color:#666;margin-top:6px;">目标图片集</label>
+                <div id="save-subset-set-list" style="max-height:200px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:4px;padding:4px;">
+                    <div style="font-size:12px;color:#bbb;padding:8px;">请先选择产品</div>
+                </div>
+                <div style="margin-top:8px;font-size:11px;color:#999;" id="save-subset-status"></div>
+                <button class="btn primary" id="save-subset-exec" style="margin-top:8px;width:100%;" disabled>执行保存</button>
             </div>
         </div>
     </div>
@@ -1857,6 +1880,114 @@
             showMsg(`已将 ${data.moved.length} 张生成图片保存至任务文件夹。`);
         });
 
+        // ---------- 保存为图片子集 ----------
+        var saveSubsetOverlay = document.getElementById("save-subset-overlay");
+        var saveSubsetProduct = document.getElementById("save-subset-product");
+        var saveSubsetSetList = document.getElementById("save-subset-set-list");
+        var saveSubsetStatus = document.getElementById("save-subset-status");
+        var saveSubsetExec = document.getElementById("save-subset-exec");
+        var saveTargetSet = null, saveTargetSub = null;
+
+        document.getElementById("save-to-product-btn").addEventListener("click", async function() {
+            if (!currentTaskId) { showMsg("请先选择任务", true); return; }
+            saveTargetSet = null; saveTargetSub = null;
+            saveSubsetExec.disabled = true;
+            saveSubsetSetList.innerHTML = '<div style="font-size:12px;color:#bbb;padding:8px;">请先选择产品</div>';
+            saveSubsetStatus.textContent = "";
+
+            // Populate product list
+            try {
+                var res = await fetch("/api/products");
+                if (!res.ok) throw new Error("加载失败");
+                var data = await res.json();
+                var products = data.products || [];
+                var taskSkc = taskData.skc || "";
+                var opts = '<option value="">选择产品...</option>';
+                products.forEach(function(p) {
+                    var sel = p.skc === taskSkc ? " selected" : "";
+                    opts += '<option value="' + p.skc + '"' + sel + '>' + p.skc + ' - ' + (p.title || "").substring(0, 30) + '</option>';
+                });
+                saveSubsetProduct.innerHTML = opts;
+                if (taskSkc) {
+                    // Auto-load default product's image sets
+                    var defOpt = saveSubsetProduct.querySelector('option[selected]');
+                    if (defOpt) onSaveSubsetProductChange();
+                }
+            } catch(e) {
+                saveSubsetStatus.textContent = "加载产品列表失败: " + e.message;
+            }
+            saveSubsetOverlay.classList.add("active");
+        });
+
+        document.getElementById("save-subset-close").addEventListener("click", function() {
+            saveSubsetOverlay.classList.remove("active");
+        });
+
+        saveSubsetProduct.addEventListener("change", onSaveSubsetProductChange);
+
+        async function onSaveSubsetProductChange() {
+            var skc = saveSubsetProduct.value;
+            if (!skc) {
+                saveSubsetSetList.innerHTML = '<div style="font-size:12px;color:#bbb;padding:8px;">请先选择产品</div>';
+                saveSubsetExec.disabled = true;
+                return;
+            }
+            try {
+                var res = await fetch("/api/products/" + skc + "/image-sets");
+                if (!res.ok) throw new Error("加载失败");
+                var data = await res.json();
+                var sets = data.image_sets || {};
+                var subs = data.image_subsets || {};
+                var h = "";
+                Object.keys(sets).sort().forEach(function(setName) {
+                    h += '<div class="img-mgmt-task-item save-subset-set-item" data-set="' + setName + '" style="cursor:pointer;">';
+                    h += '📁 ' + setName + '<span class="mgmt-count">' + (sets[setName]||[]).length + '</span></div>';
+                    var ss = subs[setName] || {};
+                    Object.keys(ss).sort().forEach(function(subName) {
+                        h += '<div class="img-mgmt-task-item save-subset-set-item" data-set="' + setName + '" data-sub="' + subName + '" style="padding-left:28px;cursor:pointer;">';
+                        h += '📄 ' + subName + '<span class="mgmt-count">' + (ss[subName]||[]).length + '</span></div>';
+                    });
+                });
+                if (!h) h = '<div style="font-size:12px;color:#bbb;padding:8px;">该产品暂无图片集</div>';
+                saveSubsetSetList.innerHTML = h;
+
+                // Click to select
+                saveSubsetSetList.querySelectorAll(".save-subset-set-item").forEach(function(el) {
+                    el.addEventListener("click", function() {
+                        saveSubsetSetList.querySelectorAll(".save-subset-set-item").forEach(function(s) { s.classList.remove("active"); });
+                        el.classList.add("active");
+                        saveTargetSet = el.dataset.set;
+                        saveTargetSub = el.dataset.sub || "";
+                        saveSubsetExec.disabled = false;
+                        saveSubsetStatus.textContent = "已选: " + saveTargetSet + (saveTargetSub ? " / " + saveTargetSub : "");
+                    });
+                });
+            } catch(e) {
+                saveSubsetSetList.innerHTML = '<div style="font-size:12px;color:#e74c3c;padding:8px;">加载失败: ' + e.message + '</div>';
+            }
+        }
+
+        saveSubsetExec.addEventListener("click", async function() {
+            if (!currentTaskId || !saveTargetSet) return;
+            saveSubsetExec.disabled = true;
+            saveSubsetStatus.textContent = "保存中...";
+            try {
+                var res = await fetch("/api/tasks/" + currentTaskId + "/save_to_product", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ skc: saveSubsetProduct.value, setName: saveTargetSet, subName: saveTargetSub })
+                });
+                if (!res.ok) { var err = await res.json(); throw new Error(err.error); }
+                var data = await res.json();
+                saveSubsetStatus.textContent = "已保存 " + data.count + " 张到 " + data.target;
+                saveSubsetOverlay.classList.remove("active");
+                showMsg("已保存 " + data.count + " 张到 " + data.target);
+            } catch(e) {
+                saveSubsetStatus.textContent = "保存失败: " + e.message;
+                saveSubsetExec.disabled = false;
+            }
+        });
+
         // ---------- 压缩生成图片到1.5MB以下 ----------
         document.getElementById("compress-btn").addEventListener("click", async () => {
             if (!currentTaskId) {
@@ -1983,9 +2114,15 @@
         // ---------- 初始化 ----------
         (async function init() {
             await renderTaskList();
-            const tasks = await fetchTasks();
-            if (tasks.length > 0) {
-                await switchTask(tasks[0].id);
+            var params = new URLSearchParams(window.location.search);
+            var targetTaskId = params.get("task");
+            if (targetTaskId) {
+                await switchTask(targetTaskId);
+            } else {
+                const tasks = await fetchTasks();
+                if (tasks.length > 0) {
+                    await switchTask(tasks[0].id);
+                }
             }
             // 恢复历史采集任务
             await restoreCollectTasks();
@@ -3588,7 +3725,7 @@
                 var createRes = await fetch("/api/tasks", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ type: taskType })
+                    body: JSON.stringify({ type: taskType, skc: currentImgSkc })
                 });
                 if (!createRes.ok) { showMsg("创建任务失败", true); return; }
                 var newTask = await createRes.json();
@@ -3624,7 +3761,8 @@
 
                 var srcLabel = payload.type === "grid-image" ? "单图" : (payload.subName ? (payload.setName + "/" + payload.subName) : payload.setName);
                 showMsg("已创建 " + typeName + " → " + newTask.name + " (" + importData.saved.length + "张)");
-                await renderTaskList();
+                window.open('/?task=' + newTask.id + '#image-batch', '_blank');
+                closeImageMgmt();
             } catch(ex) {
                 showMsg("操作出错: " + ex.message, true);
             }

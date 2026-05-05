@@ -160,7 +160,7 @@ def create_task():
         "created_at": datetime.now().isoformat()
     })
     save_tasks(tasks)
-    save_task_data(task_id, {"text1": "", "cards": []})
+    save_task_data(task_id, {"text1": "", "cards": [], "skc": payload.get("skc", "")})
     return jsonify({"id": task_id, "name": name, "type": task_type})
 
 @app.route("/api/tasks/<task_id>", methods=["GET"])
@@ -417,6 +417,79 @@ def save_images(task_id):
                 card["generated_draft"] = ""
     save_task_data(task_id, task_data)
     return jsonify({"moved": moved, "generated_dir": f"task_images/{task_id}/generated"})
+
+@app.route("/api/tasks/<task_id>/save_to_product", methods=["POST"])
+def save_to_product(task_id):
+    """将任务的生成图片复制到指定产品的图片集/子集"""
+    data = request.get_json()
+    skc = data.get("skc")
+    setName = data.get("setName")
+    subName = data.get("subName", "")
+
+    products_data = _load_products()
+    product_list = products_data.get("产品列表", [])
+    product = next((p for p in product_list if p["skc"] == skc), None)
+    if not product:
+        return jsonify({"error": "产品不存在"}), 404
+
+    images_dir = product.get("images_dir", "")
+    if not images_dir or not os.path.exists(images_dir):
+        return jsonify({"error": "产品图片目录不存在"}), 404
+
+    gen_dir = os.path.join(task_folder(task_id), "generated")
+    if not os.path.exists(gen_dir):
+        return jsonify({"saved": [], "message": "没有生成图片可保存"}), 200
+
+    gen_files = sorted([f for f in os.listdir(gen_dir) if os.path.isfile(os.path.join(gen_dir, f))])
+    if not gen_files:
+        return jsonify({"saved": [], "message": "没有生成图片可保存"}), 200
+
+    path_prefix = f"{setName}/{subName}/" if subName else f"{setName}/"
+    target_dir = os.path.join(images_dir, path_prefix)
+    os.makedirs(target_dir, exist_ok=True)
+
+    saved = []
+    for fname in gen_files:
+        src = os.path.join(gen_dir, fname)
+        dest_name = fname
+        dest_path = os.path.join(target_dir, dest_name)
+        name_parts = os.path.splitext(fname)
+        counter = 1
+        while os.path.exists(dest_path):
+            dest_name = f"{name_parts[0]}_{counter}{name_parts[1]}"
+            dest_path = os.path.join(target_dir, dest_name)
+            counter += 1
+        shutil.copy2(src, dest_path)
+        rel_path = (path_prefix + dest_name).replace("\\", "/")
+        saved.append({"filename": rel_path, "index": 0})
+
+    # Update image_sets
+    image_sets = product.get("image_sets", {})
+    if setName not in image_sets:
+        image_sets[setName] = []
+    max_idx = max([e.get("index", 0) for e in image_sets[setName]], default=-1)
+    for entry in saved:
+        max_idx += 1
+        entry["index"] = max_idx
+        image_sets[setName].append(entry)
+
+    # Update image_subsets if subName
+    if subName:
+        image_subsets = product.get("image_subsets", {})
+        image_subsets.setdefault(setName, {}).setdefault(subName, [])
+        max_sub_idx = max([e.get("index", 0) for e in image_subsets[setName][subName]], default=-1)
+        for entry in saved:
+            sub_entry = {"filename": entry["filename"], "index": 0}
+            max_sub_idx += 1
+            sub_entry["index"] = max_sub_idx
+            image_subsets[setName][subName].append(sub_entry)
+        product["image_subsets"] = image_subsets
+
+    product["image_sets"] = image_sets
+    _save_products(products_data)
+
+    return jsonify({"saved": saved, "count": len(saved),
+                    "target": f"{skc}/{path_prefix}"})
 
 @app.route("/api/tasks/<task_id>/compress_images", methods=["POST"])
 def compress_task_images(task_id):
