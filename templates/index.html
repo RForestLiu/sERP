@@ -1491,6 +1491,8 @@
         // ---------- 全局状态 ----------
         let currentTaskId = null;
         let taskData = { text1: "", cards: [] };
+        // 循环复制队列 {source: {blobs:[], idx:0}, result: {blobs:[], idx:0}}
+        let _copyQueues = {};
         const taskList = document.getElementById("task-list");
         const text1El = document.getElementById("text1");
         const cardsContainer = document.getElementById("cards-container");
@@ -1508,50 +1510,51 @@
             return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
         }
 
-        async function copyAllImages(type) {
-            // type: "source" or "result" — 以系统文件形式复制，可粘贴到文件夹
+        async function _loadCopyQueue(type) {
+            // 收集图片路径，加载为 blob 存入队列，重置索引
             var pairs = [];
             taskData.cards.forEach(function(c) {
                 var p;
                 if (type === "source") p = c.source_image;
                 else p = c.generated_final || c.generated_draft;
-                if (p) pairs.push({ path: p, name: c.image_name || p.split("/").pop() });
+                if (p) pairs.push(p);
             });
-            if (pairs.length === 0) { showMsg("没有可复制的图片", true); return; }
+            if (pairs.length === 0) return false;
 
-            showMsg("正在复制 " + pairs.length + " 张图片...");
-            try {
-                var files = [];
-                for (var i = 0; i < pairs.length; i++) {
-                    var url = "/task_images/" + currentTaskId + "/" + pairs[i].path;
+            var blobs = [];
+            for (var i = 0; i < pairs.length; i++) {
+                var url = "/task_images/" + currentTaskId + "/" + pairs[i];
+                try {
                     var res = await fetch(url);
-                    if (!res.ok) continue;
-                    var blob = await res.blob();
-                    // 保持原扩展名
-                    var ext = pairs[i].path.split(".").pop() || "png";
-                    var fname = pairs[i].name;
-                    if (!fname.match(/\.\w+$/)) fname += "." + ext;
-                    files.push(new File([blob], fname, { type: blob.type }));
-                }
-                if (files.length === 0) { showMsg("没有成功加载任何图片", true); return; }
+                    if (res.ok) blobs.push(await res.blob());
+                } catch(e) {}
+            }
+            if (blobs.length === 0) return false;
+            _copyQueues[type] = { blobs: blobs, idx: 0 };
+            return true;
+        }
 
-                // 使用 copy 事件 + DataTransfer 写入系统文件剪贴板
-                var handler = function(e) {
-                    for (var j = 0; j < files.length; j++) {
-                        e.clipboardData.items.add(files[j]);
-                    }
-                    e.preventDefault();
-                };
-                document.addEventListener("copy", handler);
-                var ok = document.execCommand("copy");
-                document.removeEventListener("copy", handler);
+        async function _copyNextInQueue(type, btn) {
+            var q = _copyQueues[type];
+            // 首次点击或队列过期 → 重新加载
+            if (!q || q.idx >= q.blobs.length) {
+                btn.textContent = "加载中...";
+                var ok = await _loadCopyQueue(type);
+                if (!ok) { showMsg("没有可复制的图片", true); btn.textContent = btn._origText; return; }
+                q = _copyQueues[type];
+            }
 
-                if (!ok) {
-                    // 回退：剪贴板 API 写入第一张
-                    await navigator.clipboard.write([new ClipboardItem({ [files[0].type]: files[0] })]);
-                    showMsg("已复制 1 张 (" + files.length + " 张无法同时复制)");
+            var blob = q.blobs[q.idx];
+            q.idx++;
+            var n = q.blobs.length;
+            var cur = q.idx;
+
+            try {
+                await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+                if (cur >= n) {
+                    showMsg("已复制 " + cur + "/" + n + " (最后一张，下次从头开始)");
                 } else {
-                    showMsg("已复制 " + files.length + " 张图片（可粘贴到文件夹）");
+                    showMsg("已复制 " + cur + "/" + n + "，继续点击复制下一张");
                 }
             } catch(e) {
                 showMsg("复制失败: " + e.message, true);
@@ -1596,6 +1599,7 @@
             if (currentTaskId && currentTaskId !== taskId) {
                 await saveCurrentTask();
             }
+            _copyQueues = {};  // 清空复制队列
             await loadTask(taskId);
             highlightActiveTask();
         }
@@ -1910,14 +1914,18 @@
             showMsg(`提示词拆分完成：${matched} 项匹配卡片，${created} 项新建卡片。`);
         });
 
-        // ---------- 一键复制全部图片到剪贴板 ----------
-        document.getElementById("copy-all-source-btn").addEventListener("click", function() {
+        // ---------- 一键复制全部图片到剪贴板（循环模式）----------
+        var _copySrcBtn = document.getElementById("copy-all-source-btn");
+        var _copyResBtn = document.getElementById("copy-all-result-btn");
+        _copySrcBtn._origText = "📋 一键复制原图";
+        _copyResBtn._origText = "📋 一键复制生成图";
+        _copySrcBtn.addEventListener("click", function() {
             if (!currentTaskId) { showMsg("请先选择任务", true); return; }
-            copyAllImages("source");
+            _copyNextInQueue("source", _copySrcBtn);
         });
-        document.getElementById("copy-all-result-btn").addEventListener("click", function() {
+        _copyResBtn.addEventListener("click", function() {
             if (!currentTaskId) { showMsg("请先选择任务", true); return; }
-            copyAllImages("result");
+            _copyNextInQueue("result", _copyResBtn);
         });
 
         // ---------- 保存生成图片到正式目录 ----------
