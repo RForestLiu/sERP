@@ -625,10 +625,13 @@
     <!-- 锚点导航 -->
     <nav class="anchor-nav">
         <div class="anchor-nav-inner">
+            <a class="anchor-link" href="#sourceInfo">来源信息</a>
             <a class="anchor-link active" href="#basicInfo">基本信息</a>
             <a class="anchor-link" href="#productInfo">产品信息</a>
             <a class="anchor-link" href="#skuAttrInfo">品类属性</a>
             <a class="anchor-link" href="#skuImageInfo">产品图片</a>
+            <a class="anchor-link" href="#richContent">Rich Content</a>
+            <a class="anchor-link" href="#videoInfo">视频信息</a>
         </div>
     </nav>
 
@@ -642,6 +645,27 @@
                 <div class="product-summary-sku" id="product-summary-sku"></div>
                 <div class="product-summary-title" id="product-summary-title"></div>
                 <div class="product-summary-title-en" id="product-summary-title-en"></div>
+            </div>
+        </div>
+
+        <!-- ===== Section: 来源信息 ===== -->
+        <div class="form-card" id="sourceInfo">
+            <div class="form-card-header">
+                <h4 class="form-card-title">来源信息</h4>
+            </div>
+            <div class="form-card-content">
+                <div class="form-item">
+                    <label class="form-label">来源平台</label>
+                    <div class="form-control">
+                        <input type="text" id="field-source-platform" readonly>
+                    </div>
+                </div>
+                <div class="form-item">
+                    <label class="form-label">来源URL</label>
+                    <div class="form-control">
+                        <input type="text" id="field-source-url" readonly>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -724,7 +748,7 @@
                 <div class="form-item">
                     <label class="form-label">产品描述</label>
                     <div class="form-control">
-                        <textarea id="field-description" placeholder="产品详细描述（支持 HTML）" rows="6"></textarea>
+                        <textarea id="field-description" placeholder="产品详细描述（支持 HTML）" rows="10"></textarea>
                         <div class="desc-preview" id="desc-preview"></div>
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
                             <div class="form-hint"><span id="desc-count">0</span> / 6000</div>
@@ -772,6 +796,24 @@
                         <input type="text" id="field-barcode" placeholder="EAN / UPC / 留空" style="width:250px;">
                     </div>
                 </div>
+                <div class="form-item">
+                    <label class="form-label">UPC</label>
+                    <div class="form-control">
+                        <input type="text" id="field-upc" placeholder="通用产品代码" style="width:250px;">
+                    </div>
+                </div>
+                <div class="form-item">
+                    <label class="form-label">交货时间</label>
+                    <div class="form-control" style="display:flex;gap:8px;">
+                        <select id="field-ship-from" style="padding:5px 10px;font-size:13px;border:1px solid #d9d9d9;border-radius:2px;font-family:inherit;">
+                            <option value="中国">中国</option>
+                            <option value="俄罗斯">俄罗斯</option>
+                            <option value="土耳其">土耳其</option>
+                        </select>
+                        <input type="number" id="field-lead-time" placeholder="备货天数" min="1" max="90" value="5" style="width:120px;">
+                        <span style="font-size:12px;color:#999;padding-top:5px;">天</span>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -798,12 +840,12 @@
         <!-- ===== Section: 产品图片 ===== -->
         <div class="form-card" id="skuImageInfo">
             <div class="form-card-header">
-                <h4 class="form-card-title">产品图片</h4>
+                <h4 class="form-card-title">图文描述</h4>
                 <span class="form-card-title--desc">第一张图片将作为产品主图 · 支持拖拽排序</span>
             </div>
             <div class="form-card-content">
                 <div class="image-upload-section" id="main-images-section">
-                    <div class="image-upload-section-title">主图 <span class="hint">（拖拽图片到虚线框 / 点击上传，最多15张）</span></div>
+                    <div class="image-upload-section-title">📷 主图 <span class="hint">（拖拽图片到虚线框 / 点击上传，第一张为主图，最多15张）</span></div>
                     <div class="image-grid" id="main-image-grid">
                         <div class="image-upload-box" id="main-upload-box">
                             <span class="plus">+</span>
@@ -811,7 +853,17 @@
                         </div>
                     </div>
                 </div>
+                <div class="image-upload-section" id="extra-images-section" style="margin-top:16px;">
+                    <div class="image-upload-section-title">🖼 辅图 <span class="hint">（可选，详情页附加展示图片）</span></div>
+                    <div class="image-grid" id="extra-image-grid">
+                        <div class="image-upload-box" id="extra-upload-box">
+                            <span class="plus">+</span>
+                            <span class="sub">上传辅图</span>
+                        </div>
+                    </div>
+                </div>
                 <input type="file" id="image-upload-input" accept="image/*" multiple style="display:none">
+                <input type="file" id="extra-image-upload-input" accept="image/*" multiple style="display:none">
             </div>
         </div>
 
@@ -825,28 +877,81 @@
             <div class="form-card-content">
                 <div class="bulk-edit-bar">
                     <label>批量设置：</label>
-                    <label style="margin-left:4px;">价格</label>
+                    <label style="margin-left:4px;">售价</label>
                     <input type="number" id="bulk-price" placeholder="如 78.27" step="0.01" min="0">
                     <label style="margin-left:4px;">库存</label>
                     <input type="number" id="bulk-stock" placeholder="如 100" step="1" min="0">
-                    <label style="margin-left:4px;">重量(g)</label>
-                    <input type="number" id="bulk-weight" placeholder="如 200" step="1" min="0">
+                    <label style="margin-left:4px;">原价</label>
+                    <input type="number" id="bulk-old-price" placeholder="如 99.99" step="0.01" min="0">
                     <button class="btn btn-sm" id="btn-bulk-apply">应用全部</button>
                 </div>
                 <div class="sku-table-wrap">
                     <table class="sku-table" id="sku-table">
                         <thead>
                             <tr>
-                                <th>SKU 名称</th>
-                                <th style="width:120px;">价格</th>
-                                <th style="width:100px;">库存</th>
-                                <th style="width:140px;">条码</th>
-                                <th style="width:100px;">重量(g)</th>
-                                <th style="width:44px;">操作</th>
+                                <th>变种属性</th>
+                                <th style="width:130px;">平台SKU</th>
+                                <th style="width:100px;">原价</th>
+                                <th style="width:100px;">售价</th>
+                                <th style="width:80px;">库存</th>
+                                <th style="width:140px;">条形码</th>
+                                <th style="width:60px;">操作</th>
                             </tr>
                         </thead>
                         <tbody id="sku-table-body"></tbody>
                     </table>
+                </div>
+                <!-- SKU 图片独立区域 -->
+                <div class="sku-images-section" id="sku-images-section">
+                    <div class="image-upload-section-title" style="margin-bottom:8px;">变种图片</div>
+                    <div id="sku-images-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Section: Rich Content JSON ===== -->
+        <div class="form-card" id="richContent">
+            <div class="form-card-header">
+                <h4 class="form-card-title">Rich Content JSON</h4>
+                <span class="form-card-title--desc">Ozon 富内容结构化编辑器</span>
+            </div>
+            <div class="form-card-content">
+                <div id="rich-content-editor">
+                    <!-- JS 动态渲染预设节点编辑行 -->
+                </div>
+                <div style="margin-top:8px;display:flex;gap:8px;">
+                    <button class="btn btn-sm" id="btn-add-rich-node">+ 添加节点</button>
+                    <select id="rich-preset-select" style="padding:4px 8px;font-size:12px;border:1px solid #d9d9d9;border-radius:2px;">
+                        <option value="">预设模板...</option>
+                        <option value="text">文本模块</option>
+                        <option value="image">图片模块</option>
+                        <option value="carousel">轮播模块</option>
+                        <option value="video">视频模块</option>
+                        <option value="grid">网格模块</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Section: 视频信息 ===== -->
+        <div class="form-card" id="videoInfo">
+            <div class="form-card-header">
+                <h4 class="form-card-title">视频信息</h4>
+                <span class="form-card-title--desc">上传产品展示视频 · 支持拖拽 / 本地 / URL</span>
+            </div>
+            <div class="form-card-content">
+                <div class="video-upload-section">
+                    <div class="video-grid" id="video-grid">
+                        <div class="video-upload-box" id="video-upload-box">
+                            <span class="plus">+</span>
+                            <span class="sub">拖拽视频<br>或点击上传</span>
+                        </div>
+                    </div>
+                </div>
+                <input type="file" id="video-upload-input" accept="video/*" style="display:none">
+                <div style="margin-top:8px;display:flex;gap:8px;">
+                    <input type="text" id="field-video-url" placeholder="或粘贴视频 URL（如已托管到云存储）" style="flex:1;padding:5px 10px;font-size:13px;border:1px solid #d9d9d9;border-radius:2px;">
+                    <button class="btn btn-sm" id="btn-add-video-url">添加</button>
                 </div>
             </div>
         </div>
