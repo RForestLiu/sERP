@@ -75,26 +75,49 @@
         }
         .sidebar h2 { margin-bottom: 15px; font-size: 16px; }
         #task-list { list-style: none; flex:1; overflow-y: auto; }
-        #task-list li {
-            padding: 10px; margin-bottom: 5px; cursor: pointer; border-radius: 4px;
-            background: #34495e; display: flex; justify-content: space-between; align-items: center;
-            transition: background 0.2s;
+        .task-group { margin-bottom: 8px; }
+        .task-group-header {
+            display: flex; align-items: center; gap: 6px; padding: 8px 10px;
+            background: #34495e; border-radius: 4px; cursor: pointer;
+            user-select: none; transition: background 0.2s;
         }
-        #task-list li.active { background: #1abc9c; }
-        #task-list li span { flex:1; word-break: break-all; user-select: none; }
-        #task-list li span[contenteditable="true"] {
+        .task-group-header:hover { background: #3d5a70; }
+        .group-arrow {
+            font-size: 10px; color: rgba(255,255,255,0.5); flex-shrink: 0;
+            transition: transform 0.2s; width: 14px; text-align: center;
+        }
+        .group-arrow.open { transform: rotate(90deg); }
+        .group-icon { font-size: 14px; flex-shrink: 0; }
+        .group-name { flex: 1; font-size: 13px; font-weight: 600; }
+        .group-count {
+            font-size: 11px; background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.7);
+            padding: 1px 6px; border-radius: 8px; flex-shrink: 0;
+        }
+        .group-new-btn {
+            background: rgba(255,255,255,0.1); border: none; color: rgba(255,255,255,0.5);
+            width: 22px; height: 22px; border-radius: 3px; cursor: pointer;
+            font-size: 16px; line-height: 1; flex-shrink: 0; transition: all 0.2s;
+        }
+        .group-new-btn:hover { background: #1abc9c; color: white; }
+        .task-group-items { margin: 2px 0 4px 18px; }
+        .task-group-item {
+            padding: 8px 10px; margin-bottom: 2px; cursor: pointer; border-radius: 3px;
+            background: rgba(52,73,94,0.6); display: flex; justify-content: space-between;
+            align-items: center; transition: background 0.2s;
+        }
+        .task-group-item:hover { background: #3d5a70; }
+        .task-group-item.active { background: #1abc9c; }
+        .task-group-item span {
+            flex:1; word-break: break-all; user-select: none; font-size: 12px;
+        }
+        .task-group-item span[contenteditable="true"] {
             outline: none; border-bottom: 1px dashed white; background: rgba(255,255,255,0.1);
         }
-        .task-type-icon { font-size: 14px; margin-right: 6px; flex-shrink: 0; }
         .task-del-btn {
             background: none; border: none; color: rgba(255,255,255,0.4); cursor: pointer;
             font-size: 12px; padding: 2px 4px; margin-left: 4px; border-radius: 2px; flex-shrink: 0;
         }
         .task-del-btn:hover { color: #e74c3c; background: rgba(255,255,255,0.15); }
-        #new-task-btn {
-            padding: 10px; background: #1abc9c; border: none; color: white; border-radius: 4px;
-            cursor: pointer; margin-top: 10px;
-        }
         
         /* 右侧工作台 */
         .workspace {
@@ -1346,7 +1369,6 @@
             <div class="sidebar">
                 <h2>任务列表</h2>
                 <ul id="task-list"></ul>
-                <button id="new-task-btn">+ 新建任务</button>
             </div>
 
             <div class="workspace">
@@ -1622,9 +1644,11 @@
             if (show) {
                 items.style.display = "block";
                 arrow.textContent = "▼";
+                arrow.classList.add("open");
             } else {
                 items.style.display = "none";
                 arrow.textContent = "▶";
+                arrow.classList.remove("open");
             }
         }
 
