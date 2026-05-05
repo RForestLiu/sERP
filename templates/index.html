@@ -133,10 +133,6 @@
         .btn-execute:disabled {
             background: #95a5a6; cursor: not-allowed;
         }
-        .card-copy-row { display: flex; gap: 4px; margin-top: 4px; }
-        .btn-copy { flex: 1; padding: 4px; border: 1px solid #ccc; border-radius: 4px; background: #f8f9fa; cursor: pointer; font-size: 11px; transition: background 0.15s; }
-        .btn-copy:hover { background: #e9ecef; }
-        .btn-copy:disabled { opacity: 0.4; cursor: not-allowed; }
         .btn-execute.running::after {
             content: ""; display: inline-block; width: 12px; height: 12px; margin-left: 6px;
             border: 2px solid white; border-top: 2px solid transparent; border-radius: 50%;
@@ -1342,6 +1338,8 @@
                 </div>
                 <div class="cards-container" id="cards-container"></div>
                 <div class="toolbar">
+                    <button class="save-all-btn" id="copy-all-source-btn">📋 一键复制原图</button>
+                    <button class="save-all-btn" id="copy-all-result-btn">📋 一键复制生成图</button>
                     <button class="compress-btn" id="compress-btn">🔽 压缩到1.5MB以下</button>
                     <label class="auto-compress-label">
                         <input type="checkbox" id="auto-compress" checked> 自动压缩
@@ -1510,25 +1508,32 @@
             return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
         }
 
-        async function copyImageToClipboard(imagePath, btn) {
-            if (!imagePath) return;
-            var url = "/task_images/" + currentTaskId + "/" + imagePath;
-            var origText = btn.textContent;
-            btn.textContent = "复制中...";
-            btn.disabled = true;
+        async function copyAllImages(type) {
+            // type: "source" or "result"
+            var paths = [];
+            taskData.cards.forEach(function(c) {
+                var p;
+                if (type === "source") p = c.source_image;
+                else p = c.generated_final || c.generated_draft;
+                if (p) paths.push(p);
+            });
+            if (paths.length === 0) { showMsg("没有可复制的图片", true); return; }
+
+            showMsg("正在复制 " + paths.length + " 张图片...");
             try {
-                var res = await fetch(url);
-                if (!res.ok) throw new Error("加载失败");
-                var blob = await res.blob();
-                await navigator.clipboard.write([
-                    new ClipboardItem({ [blob.type]: blob })
-                ]);
-                btn.textContent = "已复制!";
-                setTimeout(function() { btn.textContent = origText; btn.disabled = false; }, 1500);
+                var items = [];
+                for (var i = 0; i < paths.length; i++) {
+                    var url = "/task_images/" + currentTaskId + "/" + paths[i];
+                    var res = await fetch(url);
+                    if (!res.ok) continue;
+                    var blob = await res.blob();
+                    items.push(new ClipboardItem({ [blob.type]: blob }));
+                }
+                if (items.length === 0) { showMsg("没有成功加载任何图片", true); return; }
+                await navigator.clipboard.write(items);
+                showMsg("已复制 " + items.length + " 张图片到剪贴板");
             } catch(e) {
-                btn.textContent = "复制失败";
-                btn.disabled = false;
-                setTimeout(function() { btn.textContent = origText; }, 1500);
+                showMsg("复制失败: " + e.message, true);
             }
         }
 
@@ -1690,10 +1695,6 @@
                     <div class="img-frame-result" data-type="result">
                         ${resultContent}
                     </div>
-                    <div class="card-copy-row">
-                        <button class="btn-copy copy-source" ${card.source_image ? "" : "disabled"}>📋 复制原图</button>
-                        <button class="btn-copy copy-result" ${(card.generated_final || card.generated_draft) ? "" : "disabled"}>📋 复制生成图</button>
-                    </div>
                 `;
 
                 // 删除按钮事件
@@ -1713,21 +1714,6 @@
                 // 执行生图按钮
                 const execBtn = cardDiv.querySelector(".exec-source");
                 execBtn.addEventListener("click", () => executeGenerate(card, execBtn));
-
-                // 复制原图按钮
-                const copySrcBtn = cardDiv.querySelector(".copy-source");
-                copySrcBtn.addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    copyImageToClipboard(card.source_image, copySrcBtn);
-                });
-
-                // 复制生成图按钮
-                const copyResBtn = cardDiv.querySelector(".copy-result");
-                copyResBtn.addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    var imgPath = card.generated_final || card.generated_draft;
-                    copyImageToClipboard(imgPath, copyResBtn);
-                });
 
                 cardsContainer.appendChild(cardDiv);
             });
@@ -1901,6 +1887,16 @@
             renderCards();
             await saveCurrentTask();
             showMsg(`提示词拆分完成：${matched} 项匹配卡片，${created} 项新建卡片。`);
+        });
+
+        // ---------- 一键复制全部图片到剪贴板 ----------
+        document.getElementById("copy-all-source-btn").addEventListener("click", function() {
+            if (!currentTaskId) { showMsg("请先选择任务", true); return; }
+            copyAllImages("source");
+        });
+        document.getElementById("copy-all-result-btn").addEventListener("click", function() {
+            if (!currentTaskId) { showMsg("请先选择任务", true); return; }
+            copyAllImages("result");
         });
 
         // ---------- 保存生成图片到正式目录 ----------
