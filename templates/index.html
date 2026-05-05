@@ -1491,8 +1491,6 @@
         // ---------- 全局状态 ----------
         let currentTaskId = null;
         let taskData = { text1: "", cards: [] };
-        // 预加载的复制缓存 {source: {files:[], nameMap:{}}, result: {files:[], nameMap:{}}}
-        let _copyCache = {};
         const taskList = document.getElementById("task-list");
         const text1El = document.getElementById("text1");
         const cardsContainer = document.getElementById("cards-container");
@@ -1508,61 +1506,6 @@
 
         function genId() {
             return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-        }
-
-        // 后台预加载图片（切换任务时调用），避免 async 消耗用户手势
-        async function _preloadCopyCache(type) {
-            var paths = [];
-            taskData.cards.forEach(function(c) {
-                var p;
-                if (type === "source") p = c.source_image;
-                else p = c.generated_final || c.generated_draft;
-                if (p) paths.push(p);
-            });
-            var files = [];
-            for (var i = 0; i < paths.length; i++) {
-                try {
-                    var url = "/task_images/" + currentTaskId + "/" + paths[i];
-                    var res = await fetch(url);
-                    if (!res.ok) continue;
-                    var blob = await res.blob();
-                    var fname = paths[i].split("/").pop();
-                    files.push(new File([blob], fname, { type: blob.type }));
-                } catch(e) {}
-            }
-            if (files.length > 0) _copyCache[type] = { files: files };
-        }
-
-        // 同步复制 — 必须在用户手势内调用，否则 execCommand 返回 false
-        function _copyFilesSync(type) {
-            var cache = _copyCache[type];
-            if (!cache || !cache.files || cache.files.length === 0) {
-                showMsg("没有可复制的图片（请先加载任务）", true); return;
-            }
-            var files = cache.files;
-
-            var dt = new DataTransfer();
-            files.forEach(function(f) { dt.items.add(f); });
-
-            var onCopy = function(e) {
-                e.preventDefault();
-                e.clipboardData.setData("text/plain", "");
-                for (var j = 0; j < dt.items.length; j++) {
-                    var item = dt.items[j];
-                    if (item.kind === "file") {
-                        e.clipboardData.items.add(item.getAsFile());
-                    }
-                }
-            };
-            document.addEventListener("copy", onCopy);
-            var ok = document.execCommand("copy");
-            document.removeEventListener("copy", onCopy);
-
-            if (ok) {
-                showMsg("已复制 " + files.length + " 张图片（可粘贴到页面或文件夹）");
-            } else {
-                showMsg("复制失败：请重试", true);
-            }
         }
 
         // ---------- 增强的保存函数 ----------
@@ -1603,12 +1546,8 @@
             if (currentTaskId && currentTaskId !== taskId) {
                 await saveCurrentTask();
             }
-            _copyCache = {};  // 清空复制缓存
             await loadTask(taskId);
             highlightActiveTask();
-            // 后台预加载复制缓存
-            _preloadCopyCache("source");
-            _preloadCopyCache("result");
         }
 
         function highlightActiveTask() {
@@ -1921,15 +1860,35 @@
             showMsg(`提示词拆分完成：${matched} 项匹配卡片，${created} 项新建卡片。`);
         });
 
-        // ---------- 一键复制全部图片到剪贴板（同步 DataTransfer）----------
-        document.getElementById("copy-all-source-btn").addEventListener("click", function() {
+        // ---------- 一键复制全部图片到系统剪贴板（后端 CF_HDROP）----------
+        document.getElementById("copy-all-source-btn").addEventListener("click", async function() {
             if (!currentTaskId) { showMsg("请先选择任务", true); return; }
-            _copyFilesSync("source");
+            await _copyViaBackend("source", this);
         });
-        document.getElementById("copy-all-result-btn").addEventListener("click", function() {
+        document.getElementById("copy-all-result-btn").addEventListener("click", async function() {
             if (!currentTaskId) { showMsg("请先选择任务", true); return; }
-            _copyFilesSync("result");
+            await _copyViaBackend("result", this);
         });
+
+        async function _copyViaBackend(type, btn) {
+            btn.textContent = "复制中...";
+            btn.disabled = true;
+            try {
+                var res = await fetch("/api/tasks/" + currentTaskId + "/copy_to_clipboard", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({type: type})
+                });
+                if (!res.ok) { var err = await res.json(); showMsg("复制失败: " + err.error, true); return; }
+                var data = await res.json();
+                showMsg("已复制 " + data.copied + " 张图片（可粘贴到页面或文件夹）");
+            } catch(e) {
+                showMsg("复制出错: " + e.message, true);
+            } finally {
+                btn.textContent = type === "source" ? "📋 一键复制原图" : "📋 一键复制生成图";
+                btn.disabled = false;
+            }
+        }
 
         // ---------- 保存生成图片到正式目录 ----------
         document.getElementById("save-images-btn").addEventListener("click", async () => {

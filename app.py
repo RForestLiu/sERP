@@ -8,6 +8,8 @@ import uuid
 import subprocess
 import sys
 import io
+import struct
+import ctypes
 import random
 import logging
 import logging.config
@@ -490,6 +492,76 @@ def save_to_product(task_id):
 
     return jsonify({"saved": saved, "count": len(saved),
                     "target": f"{skc}/{path_prefix}"})
+
+# ── 系统剪贴板辅助 ─────────────────────────────────────────────
+def _copy_files_to_clipboard(file_paths):
+    """将文件路径列表写入 Windows 系统剪贴板 CF_HDROP"""
+    from ctypes import wintypes
+
+    kernel32 = ctypes.windll.kernel32
+    kernel32.GlobalAlloc.argtypes = [wintypes.UINT, ctypes.c_size_t]
+    kernel32.GlobalAlloc.restype = wintypes.HGLOBAL
+    kernel32.GlobalLock.argtypes = [wintypes.HGLOBAL]
+    kernel32.GlobalLock.restype = wintypes.LPVOID
+    kernel32.GlobalUnlock.argtypes = [wintypes.HGLOBAL]
+    kernel32.GlobalUnlock.restype = wintypes.BOOL
+
+    file_list = b""
+    for p in file_paths:
+        file_list += p.encode("utf-16-le") + b"\x00\x00"
+    file_list += b"\x00\x00"
+
+    dropfiles = struct.pack("Iiiii", 20, 0, 0, 0, 1)
+    data = dropfiles + file_list
+
+    GMEM_MOVEABLE = 0x0002
+    GMEM_ZEROINIT = 0x0040
+    hglobal = kernel32.GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, len(data))
+    if not hglobal:
+        raise OSError("GlobalAlloc failed")
+    ptr = kernel32.GlobalLock(hglobal)
+    if not ptr:
+        kernel32.GlobalFree(hglobal)
+        raise OSError("GlobalLock failed")
+    ctypes.memmove(ptr, data, len(data))
+    kernel32.GlobalUnlock(hglobal)
+
+    import win32clipboard
+    win32clipboard.OpenClipboard(None)
+    win32clipboard.EmptyClipboard()
+    win32clipboard.SetClipboardData(win32clipboard.CF_HDROP, hglobal)
+    win32clipboard.CloseClipboard()
+
+
+@app.route("/api/tasks/<task_id>/copy_to_clipboard", methods=["POST"])
+def copy_task_images_to_clipboard(task_id):
+    """将任务图片写入系统剪贴板（CF_HDROP 文件列表）"""
+    data = request.get_json()
+    img_type = data.get("type", "source")
+
+    task_data = load_task_data(task_id)
+    cards = task_data.get("cards", [])
+
+    paths = []
+    for c in cards:
+        p = None
+        if img_type == "source":
+            p = c.get("source_image")
+        else:
+            p = c.get("generated_final") or c.get("generated_draft")
+        if p:
+            full = os.path.join(task_folder(task_id), p).replace("/", "\\")
+            if os.path.exists(full):
+                paths.append(full)
+
+    if not paths:
+        return jsonify({"error": "没有可复制的图片"}), 400
+
+    try:
+        _copy_files_to_clipboard(paths)
+        return jsonify({"copied": len(paths)})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/api/tasks/<task_id>/compress_images", methods=["POST"])
 def compress_task_images(task_id):
