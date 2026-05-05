@@ -3624,6 +3624,7 @@
 
                 var srcLabel = payload.type === "grid-image" ? "单图" : (payload.subName ? (payload.setName + "/" + payload.subName) : payload.setName);
                 showMsg("已创建 " + typeName + " → " + newTask.name + " (" + importData.saved.length + "张)");
+                await renderTaskList();
             } catch(ex) {
                 showMsg("操作出错: " + ex.message, true);
             }
