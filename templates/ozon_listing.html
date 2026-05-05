@@ -778,7 +778,7 @@
 
 <!-- ===== SKU 图片选择器弹窗 ===== -->
 <div class="modal-overlay" id="sku-image-picker-modal">
-    <div class="modal-container modal-sm" style="max-width: 520px;">
+    <div class="modal-container modal-sm" style="max-width: 640px;">
         <div class="modal-header">
             <h3 class="modal-title">为变种选择图片（可多选）</h3>
             <button class="modal-close" id="btn-close-sku-picker">✕</button>
@@ -2113,6 +2113,8 @@
     }
 
     // ===== 加载产品图片 =====
+    var _imageSetsData = {};  // { setName: [{url, local_path, source, order}] }
+
     async function loadProductImages() {
         try {
             var res = await fetch('/api/products/' + skc + '/image-sets');
@@ -2120,29 +2122,37 @@
             var data = await res.json();
             if (!data.success || !data.image_sets) return;
 
-            // 合并所有图片集的图片（产品管理→图片管理 的图片）
+            // 按集分组保存
+            _imageSetsData = {};
             var merged = [];
             Object.keys(data.image_sets).forEach(function(setName) {
                 var entries = data.image_sets[setName] || [];
+                var setImages = [];
                 entries.forEach(function(entry) {
+                    var img = null;
                     if (entry.filename) {
-                        // 本地文件
-                        merged.push({
+                        img = {
                             source: "product_mgmt",
                             url: "/product_images/" + skc + "/" + entry.filename,
                             local_path: entry.filename,
-                            order: merged.length
-                        });
+                            order: merged.length,
+                            _setName: setName
+                        };
                     } else if (entry.url && entry.url.startsWith("http")) {
-                        // 远程 URL（已在图片管理中保留）
-                        merged.push({
+                        img = {
                             source: "url",
                             url: entry.url,
                             local_path: "",
-                            order: merged.length
-                        });
+                            order: merged.length,
+                            _setName: setName
+                        };
+                    }
+                    if (img) {
+                        merged.push(img);
+                        setImages.push(img);
                     }
                 });
+                if (setImages.length > 0) _imageSetsData[setName] = setImages;
             });
 
             if (merged.length > 0 && (!listingDraft.images || listingDraft.images.length === 0)) {
@@ -2759,6 +2769,46 @@
             var initialData = listingDraft.sku_data ? listingDraft.sku_data[skuCode] : sku;
             _appendSkuRows(skuCode, initialData);
         });
+
+        // 自动匹配图片集到 SKU
+        _autoMatchSkuImages();
+    }
+
+    function _autoMatchSkuImages() {
+        var setNames = Object.keys(_imageSetsData);
+        if (setNames.length === 0) return;
+
+        var rows = skuTableBody.querySelectorAll("tr:not(.sku-image-row)");
+        rows.forEach(function(tr) {
+            // 已有图片则跳过
+            if (tr.dataset.skuImages && tr.dataset.skuImages !== "[]") return;
+            var skuCode = (tr.dataset.sku || "").toLowerCase();
+            if (!skuCode) return;
+
+            // 尝试匹配图片集名（大小写不敏感）
+            var matchedSet = null;
+            for (var i = 0; i < setNames.length; i++) {
+                var sLower = setNames[i].toLowerCase();
+                // 去掉 SKU 前缀取最后一段（如 WALLET-0001-BLUE → blue）
+                var parts = skuCode.split("-");
+                var lastPart = parts[parts.length - 1].trim();
+                if (lastPart && (sLower === lastPart || skuCode.indexOf(sLower) !== -1)) {
+                    matchedSet = setNames[i];
+                    break;
+                }
+            }
+
+            if (matchedSet && _imageSetsData[matchedSet]) {
+                var setImages = _imageSetsData[matchedSet];
+                tr.dataset.skuImages = JSON.stringify(setImages);
+                if (tr._skuImagesRef) {
+                    tr._skuImagesRef.length = 0;
+                    setImages.forEach(function(img) { tr._skuImagesRef.push(img); });
+                }
+                if (tr._imageRow && tr._imageRow._renderImages) tr._imageRow._renderImages();
+                markDirty();
+            }
+        });
     }
 
     // 添加变种
@@ -2783,7 +2833,7 @@
         try {
             var existing = JSON.parse(tr.dataset.skuImages || "[]");
             existing.forEach(function(img) {
-                _skuPickerSelected[img._idx] = img;
+                _skuPickerSelected[img._idx || img.order || img.local_path] = img;
             });
         } catch(e) {}
 
@@ -2797,27 +2847,38 @@
         if (images.length === 0) {
             grid.innerHTML = "<p style='color:#999;font-size:12px;text-align:center;width:100%;'>暂无产品图片，请先在上方图片区上传</p>";
         } else {
-            images.forEach(function(img, i) {
-                img._idx = i;  // 标记索引用于匹配
-                var isSelected = !!_skuPickerSelected[i];
+            // 给每张图片分配全局索引
+            images.forEach(function(img, i) { img._idx = i; });
 
+            // 按 _setName 分组
+            var groups = {};  // { setName: [img, ...] }
+            var ungrouped = [];
+            var orderedSetNames = Object.keys(_imageSetsData);
+            images.forEach(function(img) {
+                var sn = img._setName;
+                if (sn && _imageSetsData[sn]) {
+                    if (!groups[sn]) groups[sn] = [];
+                    groups[sn].push(img);
+                } else {
+                    ungrouped.push(img);
+                }
+            });
+
+            function _makeCard(img, idx) {
+                var isSel = !!_skuPickerSelected[idx];
                 var card = document.createElement("div");
-                card.style.cssText = "width:72px;height:72px;border:2px solid " + (isSelected ? "#428bca" : "#e8e8e8") + ";border-radius:4px;cursor:pointer;overflow:hidden;position:relative;transition:border-color 0.15s;";
+                card.style.cssText = "width:72px;height:72px;border:2px solid " + (isSel ? "#428bca" : "#e8e8e8") + ";border-radius:4px;cursor:pointer;overflow:hidden;position:relative;transition:border-color 0.15s;flex-shrink:0;";
                 var el = document.createElement("img");
                 el.src = img.url;
                 el.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;";
-                el.title = "图片 " + (i + 1);
+                el.title = (img._setName ? img._setName + " / " : "") + (img.local_path || "图片");
                 card.appendChild(el);
-
-                // 选中标记 ✓
                 var check = document.createElement("div");
-                check.style.cssText = "display:" + (isSelected ? "flex" : "none") + ";position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:50%;background:#428bca;color:#fff;font-size:11px;font-weight:bold;align-items:center;justify-content:center;pointer-events:none;";
+                check.style.cssText = "display:" + (isSel ? "flex" : "none") + ";position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:50%;background:#428bca;color:#fff;font-size:11px;font-weight:bold;align-items:center;justify-content:center;pointer-events:none;";
                 check.textContent = "✓";
                 card.appendChild(check);
                 card._checkEl = check;
-
                 card.addEventListener("click", function() {
-                    var idx = img._idx;
                     if (_skuPickerSelected[idx]) {
                         delete _skuPickerSelected[idx];
                         card.style.borderColor = "#e8e8e8";
@@ -2829,8 +2890,62 @@
                     }
                     document.getElementById("sku-picker-count").textContent = Object.keys(_skuPickerSelected).length;
                 });
-                grid.appendChild(card);
+                return card;
+            }
+
+            function _renderSetGroup(setName, imgs) {
+                var wrap = document.createElement("div");
+                wrap.style.cssText = "margin-bottom:10px;";
+
+                var hdr = document.createElement("div");
+                hdr.style.cssText = "display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;padding:4px 0;border-bottom:1px solid #f0f0f0;";
+                hdr.innerHTML = '<span style="font-size:13px;font-weight:600;color:#333;">📁 ' + setName + ' <span style="color:#999;font-weight:400;font-size:11px;">(' + imgs.length + '张)</span></span>';
+
+                var btnSelectAll = document.createElement("button");
+                btnSelectAll.className = "btn btn-sm";
+                btnSelectAll.textContent = "选整集";
+                btnSelectAll.style.cssText = "font-size:11px;padding:2px 8px;";
+                btnSelectAll.addEventListener("click", function(e) {
+                    e.stopPropagation();
+                    imgs.forEach(function(img) {
+                        var idx = img._idx;
+                        _skuPickerSelected[idx] = { url: img.url || "", source: img.source || "", local_path: img.local_path || "", _idx: idx };
+                    });
+                    // 刷新网格
+                    openSkuImagePicker(tr);
+                });
+                hdr.appendChild(btnSelectAll);
+                wrap.appendChild(hdr);
+
+                var row = document.createElement("div");
+                row.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;";
+                imgs.forEach(function(img) {
+                    row.appendChild(_makeCard(img, img._idx));
+                });
+                wrap.appendChild(row);
+                return wrap;
+            }
+
+            // 按 _imageSetsData 顺序渲染分组
+            orderedSetNames.forEach(function(sn) {
+                if (groups[sn]) grid.appendChild(_renderSetGroup(sn, groups[sn]));
             });
+            // 渲染未分组图片
+            if (ungrouped.length > 0) {
+                var wrap = document.createElement("div");
+                wrap.style.cssText = "margin-bottom:10px;";
+                var hdr = document.createElement("div");
+                hdr.style.cssText = "margin-bottom:6px;padding:4px 0;border-bottom:1px solid #f0f0f0;font-size:13px;font-weight:600;color:#999;";
+                hdr.textContent = "📋 其他 (" + ungrouped.length + "张)";
+                wrap.appendChild(hdr);
+                var row = document.createElement("div");
+                row.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;";
+                ungrouped.forEach(function(img) {
+                    row.appendChild(_makeCard(img, img._idx));
+                });
+                wrap.appendChild(row);
+                grid.appendChild(wrap);
+            }
         }
 
         document.getElementById("sku-picker-count").textContent = Object.keys(_skuPickerSelected).length;
