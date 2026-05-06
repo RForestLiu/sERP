@@ -132,7 +132,7 @@ TASK_TYPES = [
     {"id": "batch_translate", "name": "批量翻译图片", "icon": "🌐", "description": "AI图片翻译，中→俄等", "available": True},
     {"id": "batch_crop_resize", "name": "批量裁剪/缩放", "icon": "✂️", "description": "按平台尺寸要求处理", "available": False},
     {"id": "generate_main_image", "name": "生成产品首图", "icon": "🎨", "description": "白模图+产品信息→首图", "available": False},
-    {"id": "batch_replace_product", "name": "批量替换产品图", "icon": "🔄", "description": "用新产品图替换模板", "available": False},
+    {"id": "batch_replace_product", "name": "批量替换产品图", "icon": "🔄", "description": "用新产品图替换模板", "available": True},
 ]
 
 @app.route("/api/task-types", methods=["GET"])
@@ -198,6 +198,7 @@ def get_task(task_id):
     return jsonify({
         "id": task_id,
         "name": task_info["name"] if task_info else "",
+        "type": task_info["type"] if task_info else "",
         "data": data
     })
 
@@ -234,6 +235,32 @@ def upload_source_images(task_id):
             "relative_path": f"source_images/{safe_name}"
         })
     return jsonify({"saved": saved})
+
+
+@app.route("/api/tasks/<task_id>/upload_ref_image/<int:ref_index>", methods=["POST"])
+def upload_ref_image(task_id, ref_index):
+    """上传任务的公共参考图 (ref_index: 1 或 2)"""
+    if ref_index not in (1, 2):
+        return jsonify({"error": "ref_index 必须为 1 或 2"}), 400
+    ensure_task_dirs(task_id)
+    f = request.files.get("image")
+    if not f or f.filename == "":
+        return jsonify({"error": "未选择图片"}), 400
+
+    # 使用固定文件名 _ref_1.jpg / _ref_2.jpg
+    ext = os.path.splitext(f.filename)[1] or ".jpg"
+    safe_name = f"_ref_{ref_index}{ext}"
+    save_path = os.path.join(task_folder(task_id), "source_images", safe_name)
+    f.save(save_path)
+
+    # 更新 task_data.json
+    data = get_task_data(task_id)
+    field = f"ref_image_{ref_index}"
+    data[field] = f"source_images/{safe_name}"
+    save_task_data(task_id, data)
+
+    logger.info("[上传参考图] task=%s ref=%s → %s", task_id, ref_index, safe_name)
+    return jsonify({"success": True, "ref_index": ref_index, "field": field, "path": f"source_images/{safe_name}"})
 
 
 @app.route("/api/tasks/<task_id>/import_images", methods=["POST"])

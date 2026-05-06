@@ -126,7 +126,7 @@
         .top-section { display: flex; gap: 20px; margin-bottom: 20px; }
         .json-section { flex: 1; display: flex; flex-direction: column; }
         #text1 { flex: 1; min-height: 120px; padding: 10px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px; resize: vertical; }
-        .json-btn { margin-top: 10px; padding: 8px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .json-btn { margin-top: 10px; padding: 8px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; max-width: 300px; }
         
         .drop-zone {
             width: 300px; border: 2px dashed #95a5a6; border-radius: 8px; display: flex;
@@ -134,7 +134,33 @@
             transition: background 0.2s; cursor: pointer;
         }
         .drop-zone.dragover { background: #ecf0f1; border-color: #1abc9c; }
-        
+
+        /* ===== 公共参考图 ===== */
+        .ref-images-row {
+            display: flex; gap: 20px; margin-top: 10px; padding: 10px 0;
+        }
+        .ref-image-box {
+            flex: 1; max-width: 300px;
+            background: white; border: 1px solid #e8e8e8; border-radius: 8px;
+            overflow: hidden;
+        }
+        .ref-image-title {
+            font-size: 13px; font-weight: 600; color: #555;
+            padding: 8px 12px; background: #fafafa; border-bottom: 1px solid #eee;
+        }
+        .ref-image-drop {
+            min-height: 160px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: background 0.2s; position: relative;
+        }
+        .ref-image-drop img {
+            width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0;
+        }
+        .ref-image-placeholder {
+            color: #bbb; font-size: 13px; text-align: center;
+        }
+        .ref-image-drop.dragover { background: #ecf0f1; outline: 2px dashed #1abc9c; outline-offset: -4px; }
+        .ref-image-drop.has-image .ref-image-placeholder { display: none; }
+
         .cards-container {
             display: flex; overflow-x: auto; padding: 10px 0; gap: 15px; align-items: flex-start;
             border-top: 1px solid #ddd; margin-top: 10px;
@@ -1434,9 +1460,26 @@
                     <div class="json-section">
                         <textarea id="text1" placeholder="在此粘贴 JSON 提示词体..."></textarea>
                         <button class="json-btn" id="split-btn">拆分提示词</button>
+                        <button class="json-btn" id="apply-all-btn">应用到所有</button>
                     </div>
                     <div class="drop-zone" id="drop-zone">
                         <div>拖拽图片到此处<br>（可多选）</div>
+                    </div>
+                </div>
+                <div class="ref-images-row" id="ref-images-row" style="display:none;">
+                    <div class="ref-image-box" id="ref-box-1">
+                        <div class="ref-image-title">替换目标参考图1</div>
+                        <div class="ref-image-drop" id="ref-drop-1">
+                            <div class="ref-image-placeholder">拖拽或点击上传<br>参考图1</div>
+                        </div>
+                        <input type="file" accept="image/*" id="ref-file-1" style="display:none">
+                    </div>
+                    <div class="ref-image-box" id="ref-box-2">
+                        <div class="ref-image-title">替换目标参考图2</div>
+                        <div class="ref-image-drop" id="ref-drop-2">
+                            <div class="ref-image-placeholder">拖拽或点击上传<br>参考图2</div>
+                        </div>
+                        <input type="file" accept="image/*" id="ref-file-2" style="display:none">
                     </div>
                 </div>
                 <div class="cards-container" id="cards-container"></div>
@@ -1632,6 +1675,7 @@
     <script>
         // ---------- 全局状态 ----------
         let currentTaskId = null;
+        let currentTaskType = "";
         let taskData = { text1: "", cards: [] };
         const taskList = document.getElementById("task-list");
         const text1El = document.getElementById("text1");
@@ -1680,6 +1724,7 @@
             if (!res.ok) return null;
             const task = await res.json();
             currentTaskId = task.id;
+            currentTaskType = task.type || "";
             taskData = task.data || { text1: "", cards: [] };
             renderWorkspace();
         }
@@ -1885,8 +1930,67 @@
         // ---------- 工作台渲染 ----------
         function renderWorkspace() {
             text1El.value = taskData.text1 || "";
+            const refRow = document.getElementById("ref-images-row");
+            if (currentTaskType === "batch_replace_product") {
+                refRow.style.display = "flex";
+                _renderRefImage(1);
+                _renderRefImage(2);
+            } else {
+                refRow.style.display = "none";
+            }
             renderCards();
         }
+
+        function _renderRefImage(refIndex) {
+            const drop = document.getElementById("ref-drop-" + refIndex);
+            const field = "ref_image_" + refIndex;
+            const imgPath = taskData[field];
+            if (imgPath) {
+                drop.innerHTML = '<img src="/task_images/' + currentTaskId + '/' + imgPath + '" alt="参考图' + refIndex + '">';
+                drop.classList.add("has-image");
+            } else {
+                drop.innerHTML = '<div class="ref-image-placeholder">拖拽或点击上传<br>参考图' + refIndex + '</div>';
+                drop.classList.remove("has-image");
+            }
+        }
+
+        // ---------- 参考图上传 ----------
+        async function _uploadRefImage(refIndex, file) {
+            if (!currentTaskId) { showMsg("请先选择任务", true); return; }
+            const formData = new FormData();
+            formData.append("image", file);
+            try {
+                const res = await fetch("/api/tasks/" + currentTaskId + "/upload_ref_image/" + refIndex, {
+                    method: "POST", body: formData
+                });
+                if (!res.ok) { const err = await res.json(); throw new Error(err.error); }
+                const result = await res.json();
+                taskData[result.field || ("ref_image_" + refIndex)] = result.path;
+                _renderRefImage(refIndex);
+                await saveCurrentTask();
+                showMsg("参考图" + refIndex + "上传成功");
+            } catch (e) { showMsg("上传失败: " + e.message, true); }
+        }
+
+        function _setupRefImageDrop(refIndex) {
+            const drop = document.getElementById("ref-drop-" + refIndex);
+            const fileInput = document.getElementById("ref-file-" + refIndex);
+
+            drop.addEventListener("click", () => fileInput.click());
+            drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("dragover"); });
+            drop.addEventListener("dragleave", () => drop.classList.remove("dragover"));
+            drop.addEventListener("drop", (e) => {
+                e.preventDefault();
+                drop.classList.remove("dragover");
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith("image/")) _uploadRefImage(refIndex, file);
+            });
+            fileInput.addEventListener("change", () => {
+                if (fileInput.files[0]) { _uploadRefImage(refIndex, fileInput.files[0]); fileInput.value = ""; }
+            });
+        }
+        _setupRefImageDrop(1);
+        _setupRefImageDrop(2);
 
         // 删除卡片
         async function deleteCard(cardId) {
@@ -2162,6 +2266,23 @@
             renderCards();
             await saveCurrentTask();
             showMsg(`提示词拆分完成：${matched} 项匹配卡片，${created} 项新建卡片。`);
+        });
+
+        // ---------- 应用到所有 ----------
+        document.getElementById("apply-all-btn").addEventListener("click", () => {
+            const content = text1El.value.trim();
+            if (!content) {
+                showMsg("文本框1为空，没有内容可以应用！", true);
+                return;
+            }
+            if (!taskData.cards || taskData.cards.length === 0) {
+                showMsg("没有卡片可以应用！", true);
+                return;
+            }
+            taskData.cards.forEach(card => { card.prompt = content; });
+            renderCards();
+            saveCurrentTask();
+            showMsg(`已将文本1内容应用到所有 ${taskData.cards.length} 张卡片。`);
         });
 
         // ---------- 一键复制全部图片到系统剪贴板（后端 CF_HDROP）----------
