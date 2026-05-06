@@ -1793,9 +1793,9 @@
 
             // 按 TASK_TYPES 顺序排列，未识别的放最后
             var orderedKeys = [];
-            // 从 API 接口已经加载的 _taskTypeMap 获取顺序
+            // 所有已注册的任务类型始终显示（含无任务实例的）
             Object.keys(_taskTypeMap).forEach(function(tid) {
-                if (groups[tid]) orderedKeys.push(tid);
+                orderedKeys.push(tid);
             });
             // 在 groups 中但不在 _taskTypeMap 中的
             Object.keys(groups).forEach(function(tid) {
@@ -1805,7 +1805,7 @@
             taskList.innerHTML = "";
 
             orderedKeys.forEach(function(typeId) {
-                var typeTasks = groups[typeId];
+                var typeTasks = groups[typeId] || [];
                 var typeInfo = _taskTypeMap[typeId] || { name: "未分类", icon: "📋" };
 
                 // Group container
