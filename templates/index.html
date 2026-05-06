@@ -1760,7 +1760,7 @@
                 if (res.ok) {
                     var types = await res.json();
                     types.forEach(function(tt) {
-                        _taskTypeMap[tt.id] = { name: tt.name, icon: tt.icon };
+                        _taskTypeMap[tt.id] = { name: tt.name, icon: tt.icon, available: tt.available };
                     });
                 }
             } catch(e) {}
@@ -1815,9 +1815,13 @@
                 // Header
                 var header = document.createElement("div");
                 header.className = "task-group-header";
+                if (typeInfo.available === false) {
+                    header.style.opacity = "0.55";
+                }
+                var badgeHtml = typeInfo.available === false ? '<span style="font-size:10px;background:#e74c3c;color:white;padding:1px 5px;border-radius:3px;margin-left:4px;">未实装</span>' : '';
                 header.innerHTML = '<span class="group-arrow">▶</span>' +
                     '<span class="group-icon">' + typeInfo.icon + '</span>' +
-                    '<span class="group-name">' + typeInfo.name + '</span>' +
+                    '<span class="group-name">' + typeInfo.name + badgeHtml + '</span>' +
                     '<span class="group-count">' + typeTasks.length + '</span>' +
                     '<button class="group-new-btn" title="新建任务">+</button>';
                 group.appendChild(header);
@@ -1906,6 +1910,11 @@
         }
 
         async function _createTaskOfType(typeId) {
+            var typeInfo = _taskTypeMap[typeId];
+            if (typeInfo && typeInfo.available === false) {
+                showMsg("「" + typeInfo.name + "」功能尚未实装，敬请期待", true);
+                return;
+            }
             var body = typeId ? JSON.stringify({type: typeId}) : "{}";
             var res = await fetch("/api/tasks", { method: "POST",
                 headers: {"Content-Type": "application/json"}, body: body });
