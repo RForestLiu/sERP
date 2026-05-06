@@ -847,6 +847,56 @@
             color: #666;
             white-space: nowrap;
         }
+        /* ===== 同步结果面板 ===== */
+        .sync-results-panel {
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .sync-results-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 14px;
+            background: #fafafa;
+            border-bottom: 1px solid #eee;
+        }
+        .sync-results-title { font-size: 13px; font-weight: 600; color: #333; }
+        .sync-results-close {
+            background: none; border: none; font-size: 16px; cursor: pointer;
+            color: #999; padding: 0 4px; line-height: 1;
+        }
+        .sync-results-close:hover { color: #333; }
+        .sync-results-summary {
+            padding: 8px 14px; font-size: 12px;
+            color: #666; border-bottom: 1px solid #f0f0f0;
+        }
+        .sync-results-table-wrap { max-height: 400px; overflow-y: auto; }
+        .sync-results-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .sync-results-table th {
+            background: #fafafa; padding: 6px 10px; text-align: left;
+            font-weight: 600; color: #555; border-bottom: 2px solid #eee;
+            position: sticky; top: 0;
+        }
+        .sync-results-table td {
+            padding: 6px 10px; border-bottom: 1px solid #f5f5f5;
+            vertical-align: top;
+        }
+        .sync-result-ok { color: #16a34a; font-weight: 600; }
+        .sync-result-fail { color: #e74c3c; font-weight: 600; }
+        .sync-result-skip { color: #9ca3af; }
+        .sync-error-detail {
+            font-size: 11px; color: #e74c3c; max-width: 260px;
+            word-break: break-all;
+        }
+        .sync-warning-detail {
+            font-size: 11px; color: #ca8a04;
+        }
+        .sync-retry-btn {
+            font-size: 11px; padding: 2px 10px; border: 1px solid #e74c3c;
+            border-radius: 3px; background: #fff; color: #e74c3c; cursor: pointer;
+        }
+        .sync-retry-btn:hover { background: #e74c3c; color: #fff; }
+        .sync-retry-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .product-manage-panel {
             flex: 1;
             display: flex;
@@ -1423,6 +1473,26 @@
                     </select>
                     <button class="btn btn-sm" id="btn-sync-products" style="background:#f0f5ff;color:#428bca;border:1px solid #d6e4ff;">🔄 同步产品</button>
                     <span id="sync-status" style="font-size:12px;color:#999;margin-left:8px;"></span>
+                </div>
+                <div class="sync-results-panel" id="sync-results-panel" style="display:none;">
+                    <div class="sync-results-header">
+                        <span class="sync-results-title" id="sync-results-title">同步结果</span>
+                        <button class="sync-results-close" id="sync-results-close">✕</button>
+                    </div>
+                    <div class="sync-results-summary" id="sync-results-summary"></div>
+                    <div class="sync-results-table-wrap">
+                        <table class="sync-results-table" id="sync-results-table">
+                            <thead><tr>
+                                <th style="width:100px;">SKC</th>
+                                <th style="width:140px;">Offer IDs</th>
+                                <th style="width:50px;">方向</th>
+                                <th style="width:60px;">状态</th>
+                                <th>详情</th>
+                                <th style="width:50px;"></th>
+                            </tr></thead>
+                            <tbody id="sync-results-body"></tbody>
+                        </table>
+                    </div>
                 </div>
                 <div class="product-empty" id="product-empty">暂无正式产品，请先在"采集产品"模块中保存产品</div>
                 <div id="product-cards-container"></div>
@@ -2941,15 +3011,17 @@
             var btn = this;
             var sel = document.getElementById("sync-store-select");
             var statusEl = document.getElementById("sync-status");
+            var panel = document.getElementById("sync-results-panel");
             var storeId = sel.value;
 
             if (!storeId) { statusEl.textContent = "请先选择店铺"; statusEl.style.color = "#ff4d4f"; return; }
-            if (!confirm("将从 Ozon 店铺同步产品状态到正式产品库。\n\n已匹配的SKU将更新上架状态，未匹配的SKU将被记录。\n\n确定继续？")) return;
+            if (!confirm("确定同步店铺？\n\n拉取：从 Ozon 获取最新产品状态\n推送：上传「待发布」产品到 Ozon\n\n增量模式：未修改草稿自动跳过")) return;
 
             btn.disabled = true;
             btn.textContent = "⏳ 同步中...";
-            statusEl.textContent = "正在从 Ozon 拉取产品数据...";
+            statusEl.textContent = "正在同步...";
             statusEl.style.color = "#999";
+            panel.style.display = "none";
 
             try {
                 var res = await fetch('/api/ozon/' + storeId + '/sync-products', { method: "POST" });
@@ -2961,16 +3033,23 @@
                     return;
                 }
 
-                var parts = [];
-                if (result.total_ozon_products > 0) parts.push("店铺共 " + result.total_ozon_products + " 个产品");
-                if (result.matched > 0) parts.push(result.matched + " 个已匹配");
-                if (result.updated > 0) parts.push(result.updated + " 个状态已更新");
-                if (result.new_skus > 0) parts.push(result.new_skus + " 个新SKU待注册");
-                statusEl.textContent = "✅ " + (parts.length > 0 ? parts.join("，") : "无变化");
-                statusEl.style.color = "#52c41a";
-                console.log("[同步] 详情:", result.synced_products);
+                // 构建汇总
+                var pull = result.pull || {};
+                var push = result.push || {};
+                var summaryParts = [];
+                if (pull.matched > 0) summaryParts.push("拉取 " + pull.matched + " 匹配");
+                if (pull.updated > 0) summaryParts.push(pull.updated + " 更新");
+                if (push.success_count > 0) summaryParts.push("推送成功 " + push.success_count);
+                if (push.failed_count > 0) summaryParts.push("推送失败 " + push.failed_count);
+                if (push.skipped_count > 0) summaryParts.push("跳过 " + push.skipped_count);
+                statusEl.textContent = "✅ " + (summaryParts.length > 0 ? summaryParts.join("，") : "无变化");
+                statusEl.style.color = push.failed_count > 0 ? "#e67e22" : "#52c41a";
 
-                // 重新加载产品列表以反映状态变化
+                // 渲染详情面板
+                renderSyncResults(result, storeId);
+                panel.style.display = "";
+
+                // 重新加载产品列表
                 await loadProducts();
             } catch (e) {
                 statusEl.textContent = "同步失败: " + e.message;
@@ -2978,6 +3057,109 @@
             } finally {
                 btn.disabled = false;
                 btn.textContent = "🔄 同步产品";
+            }
+        });
+
+        // 同步结果面板关闭按钮
+        document.getElementById("sync-results-close").addEventListener("click", function() {
+            document.getElementById("sync-results-panel").style.display = "none";
+        });
+
+        // 渲染同步结果
+        function renderSyncResults(result, storeId) {
+            var pull = result.pull || {};
+            var push = result.push || {};
+
+            var summaryEl = document.getElementById("sync-results-summary");
+            var parts = [];
+            parts.push("拉取: " + (pull.total_ozon_products || 0) + " 个产品, " + (pull.matched || 0) + " 匹配, " + (pull.updated || 0) + " 状态更新, " + (pull.new_skus || 0) + " 新SKU");
+            parts.push("推送: " + (push.success_count || 0) + " 成功, " + (push.failed_count || 0) + " 失败, " + (push.skipped_count || 0) + " 跳过");
+            if (push.last_sync) parts.push("同步时间: " + new Date(push.last_sync).toLocaleString("zh-CN"));
+            summaryEl.textContent = parts.join(" | ");
+
+            var tbody = document.getElementById("sync-results-body");
+            tbody.innerHTML = "";
+
+            // 推送结果
+            (push.results || []).forEach(function(r) {
+                var tr = document.createElement("tr");
+                var statusClass, statusText;
+                if (r.skipped) {
+                    statusClass = "sync-result-skip";
+                    statusText = "⏭ 跳过";
+                } else if (r.success) {
+                    statusClass = "sync-result-ok";
+                    statusText = "✅ 成功";
+                } else {
+                    statusClass = "sync-result-fail";
+                    statusText = "❌ 失败";
+                }
+                var offerIds = (r.offer_ids || []).join(", ") || "—";
+                var detailHtml = _escHtml(r.error || r.message || "");
+                if (r.warnings && r.warnings.length) {
+                    detailHtml += ' <span class="sync-warning-detail">⚠ ' + _escHtml(r.warnings.join("; ")) + '</span>';
+                }
+                var retryHtml = (!r.success && r.retryable)
+                    ? '<button class="sync-retry-btn" data-skc="' + _escAttr(r.skc) + '" data-store="' + _escAttr(storeId) + '">重试</button>'
+                    : '';
+
+                tr.innerHTML =
+                    '<td>' + _escHtml(r.skc || "—") + '</td>' +
+                    '<td style="font-size:10px;color:#888;">' + _escHtml(offerIds) + '</td>' +
+                    '<td>推送</td>' +
+                    '<td class="' + statusClass + '">' + statusText + '</td>' +
+                    '<td>' + detailHtml + '</td>' +
+                    '<td>' + retryHtml + '</td>';
+                tbody.appendChild(tr);
+            });
+
+            // 拉取结果（前30条匹配的）
+            (pull.synced_products || []).slice(0, 30).forEach(function(s) {
+                var tr = document.createElement("tr");
+                var statusText = s.match === "matched" ? "🔄 " + s.status : "📋 新SKU";
+                tr.innerHTML =
+                    '<td>' + _escHtml(s.skc || "—") + '</td>' +
+                    '<td style="font-size:10px;color:#888;">' + _escHtml(s.offer_id || "") + '</td>' +
+                    '<td>拉取</td>' +
+                    '<td class="sync-result-ok">' + _escHtml(statusText) + '</td>' +
+                    '<td style="font-size:11px;color:#999;">' + _escHtml(s.name || "") + '</td>' +
+                    '<td></td>';
+                tbody.appendChild(tr);
+            });
+        }
+
+        // HTML/属性转义辅助
+        function _escHtml(s) { var d = document.createElement("div"); d.textContent = s || ""; return d.innerHTML; }
+        function _escAttr(s) { return (s || "").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+        // 重试按钮委托
+        document.getElementById("sync-results-body").addEventListener("click", async function(e) {
+            var retryBtn = e.target.closest(".sync-retry-btn");
+            if (!retryBtn) return;
+
+            var skc = retryBtn.dataset.skc;
+            var storeId = retryBtn.dataset.store;
+            retryBtn.disabled = true;
+            retryBtn.textContent = "重试中...";
+
+            try {
+                // 重置状态为"待发布"
+                await fetch('/api/products/' + skc + '/store_status', {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ store_id: storeId, status: "待发布" })
+                });
+
+                // 重新同步
+                var res = await fetch('/api/ozon/' + storeId + '/sync-products', { method: "POST" });
+                var result = await res.json();
+                renderSyncResults(result, storeId);
+                await loadProducts();
+            } catch (ex) {
+                showMsg("重试失败: " + ex.message, true);
+            } finally {
+                retryBtn.disabled = false;
+                retryBtn.textContent = "重试";
             }
         });
 
