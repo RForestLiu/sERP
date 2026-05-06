@@ -1791,11 +1791,16 @@
                 groups[tid].push(t);
             });
 
-            // 按 TASK_TYPES 顺序排列，未识别的放最后
+            // 已实装在上，未实装在下，未识别的放最后
             var orderedKeys = [];
-            // 所有已注册的任务类型始终显示（含无任务实例的）
-            Object.keys(_taskTypeMap).forEach(function(tid) {
-                orderedKeys.push(tid);
+            var allTypeIds = Object.keys(_taskTypeMap);
+            allTypeIds.forEach(function(tid) {
+                var info = _taskTypeMap[tid];
+                if (info.available !== false) orderedKeys.push(tid);
+            });
+            allTypeIds.forEach(function(tid) {
+                var info = _taskTypeMap[tid];
+                if (info.available === false) orderedKeys.push(tid);
             });
             // 在 groups 中但不在 _taskTypeMap 中的
             Object.keys(groups).forEach(function(tid) {
