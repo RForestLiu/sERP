@@ -2122,6 +2122,16 @@
                 showMsg("提示词不能为空！", true);
                 return;
             }
+            if (currentTaskType === "batch_replace_product") {
+                if (!taskData.ref_image_1) {
+                    showMsg("「替换目标参考图1」不能为空！", true);
+                    return;
+                }
+                if (!taskData.ref_image_2) {
+                    showMsg("「替换目标参考图2」不能为空！", true);
+                    return;
+                }
+            }
 
             const allBtns = button ? [button] : document.querySelectorAll(`[data-card-id="${card.id}"] .exec-source`);
             allBtns.forEach(b => {
