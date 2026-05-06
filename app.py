@@ -4259,133 +4259,9 @@ def ozon_product_create(store_id):
     })
 
 
-def _listing_to_ozon_items(draft):
-    """将 listing draft 转换为 Ozon /v3/product/import 的 items 数组。
-
-    返回 (items, preflight_errors)
-      items: list — Ozon import items，为空时表示不可提交
-      preflight_errors: list[str] — 预检警告，为空表示无问题
-    """
-    warnings = []
-    bf = draft.get("basic_fields", {})
-    name = (bf.get("name") or "").strip()
-    price = (bf.get("price") or "").strip()
-    description = (bf.get("description") or "")[:2000]
-    category_id = draft.get("category_id")
-    type_id = draft.get("category_type_id")
-
-    if not name:
-        return [], ["产品名称为空，不可提交"]
-    if not price:
-        return [], ["产品价格为空，不可提交"]
-    if not category_id:
-        return [], ["未匹配品类，不可提交"]
-
-    # 构建 Ozon 属性
-    ozon_attrs = []
-    for attr in (draft.get("attributes") or []):
-        aid = attr.get("attribute_id") or attr.get("id")
-        if not aid:
-            continue
-        try:
-            aid_int = int(aid)
-        except (ValueError, TypeError):
-            continue
-        entry = {"id": aid_int, "values": []}
-        val = attr.get("value", "")
-        if str(attr.get("type", "")).lower() == "dictionary":
-            try:
-                entry["values"].append({"dictionary_value_id": int(val)})
-            except (ValueError, TypeError):
-                entry["values"].append({"value": str(val)})
-        else:
-            entry["values"].append({"value": str(val)})
-        ozon_attrs.append(entry)
-
-    if not ozon_attrs:
-        warnings.append("属性为空，产品信息不完整")
-
-    # 公共图片（仅 HTTP URL 可被 Ozon 访问）
-    images = draft.get("images") or []
-    base_image_urls = [img.get("url", "") for img in images if img.get("url", "").startswith("http")][:10]
-    if images and not base_image_urls:
-        warnings.append(f"共 {len(images)} 张图片均为本地路径，Ozon 无法访问，将不上传图片")
-
-    # 公共视频
-    videos = draft.get("videos") or []
-    base_video_urls = [v.get("url", "") for v in videos if v.get("url", "").startswith("http")]
-
-    # 构建 items
-    sku_data = draft.get("sku_data") or {}
-    items = []
-
-    if sku_data:
-        for sku_code, sku in sku_data.items():
-            offer_id = (sku.get("sku_code") or sku_code).strip()
-            if not offer_id:
-                continue
-            sku_price = (sku.get("price") or "").strip()
-            sku_barcode = (sku.get("barcode") or "").strip()
-            sku_images = sku.get("images") or []
-
-            item = {
-                "name": name,
-                "offer_id": offer_id,
-                "price": sku_price or price,
-                "currency_code": "CNY",
-                "description_category_id": int(category_id),
-                "attributes": ozon_attrs,
-                "vat": "0",
-            }
-            if type_id and str(type_id) != str(category_id):
-                item["type_id"] = int(type_id)
-            if description:
-                item["description"] = description
-            if sku_barcode:
-                item["barcode"] = sku_barcode
-
-            sku_urls = [img.get("url", "") for img in sku_images if img.get("url", "").startswith("http")][:10]
-            item_images = sku_urls if sku_urls else base_image_urls
-            if item_images:
-                item["images"] = item_images
-            if base_video_urls:
-                item["videos"] = base_video_urls
-
-            items.append(item)
-    else:
-        # 无 SKU 数据时，使用 basic_fields 中的 offer_id
-        offer_id = (bf.get("offer_id") or "").strip()
-        if offer_id:
-            item = {
-                "name": name,
-                "offer_id": offer_id,
-                "price": price,
-                "currency_code": "CNY",
-                "description_category_id": int(category_id),
-                "attributes": ozon_attrs,
-                "vat": "0",
-            }
-            if type_id and str(type_id) != str(category_id):
-                item["type_id"] = int(type_id)
-            if description:
-                item["description"] = description
-            if bf.get("barcode"):
-                item["barcode"] = bf["barcode"]
-            if base_image_urls:
-                item["images"] = base_image_urls
-            if base_video_urls:
-                item["videos"] = base_video_urls
-            items.append(item)
-
-    if not items:
-        return [], ["无有效 SKU 数据"]
-
-    return items, warnings
-
-
 @app.route("/api/ozon/<store_id>/sync-products", methods=["POST"])
 def ozon_sync_products(store_id):
-    """双向同步：拉取 Ozon 产品状态 + 推送本地待发布草稿"""
+    """从 Ozon 店铺拉取产品状态，匹配并更新本地产品库"""
     logger.info("[产品同步] ========== 开始同步 ==========")
     logger.info("[产品同步] store_id=%s", store_id)
 
@@ -4494,163 +4370,27 @@ def ozon_sync_products(store_id):
 
     _save_products(products_data)
 
-    logger.info("[产品同步] 拉取完成 | 匹配=%s | 更新=%s | 新SKU=%s",
-                matched, updated, new_skus)
-
-    # ===== PUSH 阶段: 推送本地待发布草稿 =====
-    push_total = 0
-    push_success = 0
-    push_skipped = 0
-    push_failed = 0
-    push_results = []
-
-    # 加载同步状态，做增量检测
+    # 更新同步状态
     sync_state = _load_sync_state()
     store_sync = sync_state.get(store_id, {})
-    last_sync = store_sync.get("last_sync", "")
     now_iso = datetime.now().isoformat()
-
-    if os.path.exists(LISTINGS_DIR):
-        for fname in sorted(os.listdir(LISTINGS_DIR)):
-            if not fname.endswith(f"_{store_id}.json"):
-                continue
-            draft_path = os.path.join(LISTINGS_DIR, fname)
-            try:
-                with open(draft_path, "r", encoding="utf-8") as f:
-                    draft = json.load(f)
-            except:
-                continue
-
-            skc = draft.get("skc", "")
-            updated_at = draft.get("updated_at", "")
-
-            # 查找产品并检查状态
-            product = None
-            for p in product_list:
-                if p["skc"] == skc:
-                    product = p
-                    break
-            if not product:
-                continue
-            current_status = product.get("store_status", {}).get(store_id, "")
-            if current_status != "待发布":
-                continue
-
-            # 增量检测
-            if last_sync and updated_at and updated_at <= last_sync:
-                push_skipped += 1
-                push_results.append({
-                    "skc": skc, "success": False, "skipped": True,
-                    "error": "草稿未修改，跳过（上次同步后无变化）",
-                    "offer_ids": [], "retryable": False
-                })
-                continue
-
-            push_total += 1
-
-            # 预检
-            items, warnings = _listing_to_ozon_items(draft)
-            if not items:
-                push_failed += 1
-                push_results.append({
-                    "skc": skc, "success": False,
-                    "error": warnings[0] if warnings else "预检失败",
-                    "warnings": warnings,
-                    "offer_ids": [], "retryable": True
-                })
-                continue
-
-            # 调用 Ozon API
-            payload = {"items": items}
-            result, err = _call_ozon_api(store_id, "/v3/product/import", payload)
-            if err:
-                push_failed += 1
-                user_msg = err
-                try:
-                    raw_err = err.replace("Ozon API Error 400: ", "").replace("Ozon API Error 500: ", "")
-                    err_data = json.loads(raw_err)
-                    if isinstance(err_data, dict):
-                        if "message" in err_data:
-                            user_msg = err_data["message"]
-                        elif "details" in err_data:
-                            details = err_data["details"]
-                            if isinstance(details, list) and details:
-                                user_msg = "; ".join(
-                                    str(d.get("message", d)) for d in details[:3])
-                except:
-                    pass
-                push_results.append({
-                    "skc": skc, "success": False,
-                    "error": user_msg,
-                    "warnings": warnings,
-                    "offer_ids": [item["offer_id"] for item in items],
-                    "retryable": True
-                })
-                continue
-
-            # 成功（新上传产品状态为"审核中"，下次拉取会更新为实际状态）
-            push_success += 1
-            task_id = (result or {}).get("result", {}).get("task_id", "")
-            offer_ids = [item["offer_id"] for item in items]
-
-            product["store_status"][store_id] = "审核中"
-
-            try:
-                os.remove(draft_path)
-            except:
-                pass
-
-            msg = f"已提交 {len(items)} 个变种（task: {task_id}）"
-            if warnings:
-                msg += " | 警告: " + "; ".join(warnings)
-            push_results.append({
-                "skc": skc, "success": True,
-                "task_id": task_id,
-                "offer_ids": offer_ids,
-                "warnings": warnings,
-                "message": msg
-            })
-
-    # 保存更新后的产品状态
-    if push_success > 0:
-        _save_products(products_data)
-
-    # 更新同步状态
     store_sync["last_sync"] = now_iso
     store_sync["last_pull_matched"] = matched
-    store_sync["last_push_count"] = push_success
     sync_state[store_id] = store_sync
     _save_sync_state(sync_state)
 
-    logger.info("[产品同步] ✅ 完成 | 拉取: %s匹配/%s更新/%s新 | 推送: %s成功/%s失败/%s跳过",
-                matched, updated, new_skus, push_success, push_failed, push_skipped)
-
-    summary_parts = [f"拉取 {matched} 匹配({updated} 更新)"]
-    if push_total > 0:
-        summary_parts.append(f"推送 {push_success}成功")
-    if push_failed > 0:
-        summary_parts.append(f"{push_failed}失败")
-    if push_skipped > 0:
-        summary_parts.append(f"{push_skipped}跳过")
+    logger.info("[产品同步] ✅ 完成 | 匹配=%s | 更新=%s | 新SKU=%s",
+                matched, updated, new_skus)
 
     return jsonify({
         "success": True,
-        "pull": {
-            "total_ozon_products": len(all_info_items),
-            "matched": matched,
-            "new_skus": new_skus,
-            "updated": updated,
-            "synced_products": synced
-        },
-        "push": {
-            "total_drafts": push_total,
-            "success_count": push_success,
-            "failed_count": push_failed,
-            "skipped_count": push_skipped,
-            "results": push_results,
-            "last_sync": now_iso
-        },
-        "message": "同步完成：" + "，".join(summary_parts)
+        "total_ozon_products": len(all_info_items),
+        "matched": matched,
+        "new_skus": new_skus,
+        "updated": updated,
+        "synced_products": synced,
+        "last_sync": now_iso,
+        "message": f"同步完成：{matched} 个匹配，{updated} 个状态更新，{new_skus} 个新SKU待注册"
     })
 
 
