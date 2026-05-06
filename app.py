@@ -693,7 +693,7 @@ STORES_FILE = os.path.join(DATA_ROOT, "stores.json")
 SYNC_STATE_FILE = os.path.join(DATA_ROOT, "sync_state.json")
 
 # 店铺状态枚举
-STORE_STATUSES = ["未上架", "待发布", "已上架", "下架回归中"]
+STORE_STATUSES = ["未上架", "待发布", "审核中", "已上架", "审核拒绝", "下架回归中"]
 
 
 def _load_sync_state():
@@ -4588,12 +4588,12 @@ def ozon_sync_products(store_id):
                 })
                 continue
 
-            # 成功
+            # 成功（新上传产品状态为"审核中"，下次拉取会更新为实际状态）
             push_success += 1
             task_id = (result or {}).get("result", {}).get("task_id", "")
             offer_ids = [item["offer_id"] for item in items]
 
-            product["store_status"][store_id] = "已上架"
+            product["store_status"][store_id] = "审核中"
 
             try:
                 os.remove(draft_path)

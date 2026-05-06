@@ -1078,9 +1078,11 @@
             margin-bottom: 3px;
         }
         .store-status-badge.s-未上架 { background: #f3f4f6; color: #9ca3af; }
-        .store-status-badge.s-已上架 { background: #dcfce7; color: #16a34a; }
-        .store-status-badge.s-下架回归中 { background: #fef9c3; color: #ca8a04; }
         .store-status-badge.s-待发布 { background: #e0e7ff; color: #4338ca; }
+        .store-status-badge.s-审核中 { background: #fce7f3; color: #c026d3; }
+        .store-status-badge.s-已上架 { background: #dcfce7; color: #16a34a; }
+        .store-status-badge.s-审核拒绝 { background: #fee2e2; color: #dc2626; }
+        .store-status-badge.s-下架回归中 { background: #fef9c3; color: #ca8a04; }
         .store-listing-btn {
             font-size: 10px;
             padding: 2px 8px;
@@ -1095,6 +1097,10 @@
         .store-listing-btn:hover { background: #2980b9; }
         .store-listing-btn.pending { background: #8b5cf6; }
         .store-listing-btn.pending:hover { background: #7c3aed; }
+        .store-listing-btn.reviewing { background: #c026d3; }
+        .store-listing-btn.reviewing:hover { background: #a21caf; }
+        .store-listing-btn.rejected { background: #dc2626; }
+        .store-listing-btn.rejected:hover { background: #b91c1c; }
         .store-listing-btn.published { background: #f59e0b; }
         .store-listing-btn.published:hover { background: #d97706; }
 
@@ -3229,6 +3235,8 @@
                     const status = storeStatus[s.id] || "未上架";
                     let btnLabel, btnClass;
                     if (status === "待发布") { btnLabel = "继续上架"; btnClass = "pending"; }
+                    else if (status === "审核中") { btnLabel = "查看"; btnClass = "reviewing"; }
+                    else if (status === "审核拒绝") { btnLabel = "修复"; btnClass = "rejected"; }
                     else if (status === "已上架") { btnLabel = "编辑"; btnClass = "published"; }
                     else { btnLabel = "上架"; btnClass = ""; }
                     html += `<td class="store-cell" data-skc="${p.skc}" data-store-id="${s.id}" data-status="${status}">`;
@@ -3457,7 +3465,15 @@
                         const storeId = cell.dataset.storeId;
                         const badge = cell.querySelector(".store-status-badge");
                         const currentStatus = cell.dataset.status;
-                        if (currentStatus !== "已上架") {
+                        if (currentStatus === "未上架") {
+                            try {
+                                const res = await fetch(`/api/products/${skc}/store_status`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ store_id: storeId, status: "待发布" }) });
+                                if (!res.ok) throw new Error("更新失败");
+                                badge.textContent = "待发布"; badge.className = "store-status-badge s-待发布";
+                                this.textContent = "继续上架"; this.classList.add("pending");
+                                cell.dataset.status = "待发布";
+                            } catch (e) { showMsg("❌ 更新失败: " + e.message, true); return; }
+                        } else if (currentStatus === "审核拒绝") {
                             try {
                                 const res = await fetch(`/api/products/${skc}/store_status`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ store_id: storeId, status: "待发布" }) });
                                 if (!res.ok) throw new Error("更新失败");
@@ -3476,7 +3492,7 @@
                     const storeId = this.dataset.storeId;
                     const badge = this.querySelector(".store-status-badge");
                     const currentStatus = badge ? badge.textContent : this.dataset.status;
-                    if (currentStatus === "待发布") {
+                    if (currentStatus === "待发布" || currentStatus === "审核中" || currentStatus === "审核拒绝") {
                         window.open(`/ozon-listing?skc=${skc}&store_id=${storeId}`, "_blank");
                         return;
                     }
