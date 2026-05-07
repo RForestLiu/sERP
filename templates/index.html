@@ -2350,16 +2350,21 @@
         });
 
         // ---------- 生成提示词（批量替换产品）----------
-        document.getElementById("gen-prompt-btn").addEventListener("click", () => {
+        document.getElementById('gen-prompt-btn').addEventListener('click', () => {
             if (!currentTaskId) {
-                showMsg("请先选择一个任务！", true);
+                showMsg('请先选择一个任务！', true);
                 return;
             }
-            const prompt = '图1是“参考图像”（海报模板）。图2是“目标产品”的图片，请你用“目标产品”替换“参考图像”中的产品，生成和“参考图像”一样的海报。\n\n要求：\n- 替换产品，保留图像中其他部分不变。确保替换后能自然融合光影、透视与整体风格。写实风格、高分辨率、无缝整合。\n- 图片比例3:4。';
+            const hasRef1 = taskData.ref_image_1;
+            const hasRef2 = taskData.ref_image_2;
+            const refDesc = (hasRef1 && hasRef2)
+                ? '图2和图3是产品的不同角度图片，请你以图1为“参考图像”，以图2和图3为“目标产品”。'
+                : '图2是产品的图片，请你以图1为“参考图像”，以图2为“目标产品”。';
+            const prompt = refDesc + '用“目标产品”替换“参考图像”中的产品，生成和“参考图像”一样的海报。\n\n要求：\n- 替换产品，保留图像中其他部分不变。确保替换后能自然融合光影、透视与整体风格。写实风格、高分辨率、无缝整合。\n- 图片比例3:4。';
             text1El.value = prompt;
             taskData.text1 = prompt;
             saveCurrentTask();
-            showMsg("提示词已生成到文本框1，可使用“应用到所有”分发到卡片。");
+            showMsg('提示词已生成到文本框1，可使用“应用到所有”分发到卡片。');
         });
         // ---------- 一键复制全部图片到系统剪贴板（后端 CF_HDROP）----------
         document.getElementById("copy-all-source-btn").addEventListener("click", async function() {
