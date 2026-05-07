@@ -170,6 +170,168 @@
         }
         .ref-clear-btn:hover { color: #e74c3c; }
 
+        /* ===== 批量替换产品图专用布局 ===== */
+        .product-section {
+            display: flex; gap: 20px; margin-bottom: 18px; align-items: flex-start;
+            flex-shrink: 0;
+        }
+        .section-label {
+            font-size: 13px; font-weight: 700; color: #2c3e50; margin-bottom: 8px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .section-label .step-badge {
+            background: #1abc9c; color: white; min-width: 22px; height: 22px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700;
+        }
+        .product-card {
+            flex: 1; max-width: 300px; background: white; border: 2px solid #e0e0e0; border-radius: 10px;
+            overflow: hidden; transition: border-color 0.2s;
+        }
+        .product-card.has-image { border-color: #1abc9c; }
+        .product-card-title {
+            font-size: 13px; font-weight: 600; color: #555; padding: 10px 14px;
+            background: #fafafa; border-bottom: 1px solid #eee;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .product-card-title .required-star { color: #e74c3c; }
+        .product-card-title .optional-tag { color: #999; font-weight: 400; font-size: 11px; }
+        .product-drop {
+            min-height: 130px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; position: relative; transition: background 0.2s;
+        }
+        .product-drop img {
+            width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0;
+        }
+        .product-drop-placeholder { color: #bbb; font-size: 13px; text-align: center; line-height: 1.6; }
+        .product-drop.dragover { background: #ecf0f1; outline: 2px dashed #1abc9c; outline-offset: -4px; }
+        .product-drop.has-image .product-drop-placeholder { display: none; }
+        .product-clear-btn {
+            background: none; border: none; color: #ccc; cursor: pointer;
+            font-size: 14px; padding: 0 4px; line-height: inherit;
+        }
+        .product-clear-btn:hover { color: #e74c3c; }
+
+        .poster-section { margin-bottom: 12px; flex-shrink: 0; }
+        .poster-section-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+        }
+        .poster-drop-zone {
+            border: 2px dashed #95a5a6; border-radius: 8px; min-height: 80px;
+            display: flex; align-items: center; justify-content: center;
+            color: #7f8c8d; font-size: 14px; cursor: pointer; transition: background 0.2s;
+        }
+        .poster-drop-zone.dragover { background: #ecf0f1; border-color: #1abc9c; }
+
+        .prompt-preview-bar {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+            background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px 12px;
+        }
+        .prompt-preview-bar .prompt-label { font-size: 12px; color: #888; white-space: nowrap; }
+        .prompt-preview-bar .prompt-text {
+            flex: 1; font-size: 12px; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .prompt-preview-bar .prompt-expand-btn {
+            background: none; border: none; color: #3498db; cursor: pointer; font-size: 12px; white-space: nowrap;
+        }
+        .prompt-preview-bar .prompt-expand-btn:hover { text-decoration: underline; }
+        .prompt-editor {
+            display: none; margin-bottom: 8px;
+        }
+        .prompt-editor.open { display: block; }
+        .prompt-editor textarea {
+            width: 100%; height: 100px; padding: 10px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px; resize: vertical;
+        }
+
+        .batch-generate-bar {
+            display: flex; align-items: center; gap: 12px; margin-top: 8px; padding: 10px 0;
+            border-top: 1px solid #eee; border-bottom: 1px solid #eee;
+        }
+        .batch-generate-btn {
+            padding: 10px 24px; background: #e67e22; color: white; border: none; border-radius: 6px;
+            cursor: pointer; font-size: 14px; font-weight: 600; transition: opacity 0.2s;
+        }
+        .batch-generate-btn:disabled { background: #95a5a6; cursor: not-allowed; }
+        .batch-generate-btn.running::after {
+            content: ""; display: inline-block; width: 14px; height: 14px; margin-left: 8px;
+            border: 2px solid white; border-top: 2px solid transparent; border-radius: 50%;
+            animation: spin 0.8s linear infinite; vertical-align: middle;
+        }
+        .batch-progress { font-size: 13px; color: #666; }
+
+        /* 海报卡片 */
+        .poster-cards-row {
+            display: flex; overflow-x: auto; padding: 8px 0; gap: 15px; align-items: flex-start;
+            flex-shrink: 0; min-height: 400px;
+        }
+        .poster-card {
+            min-width: 280px; background: white; border: 1px solid #ddd; border-radius: 8px;
+            padding: 10px; display: flex; flex-direction: column; box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            position: relative; flex-shrink: 0;
+        }
+        .poster-card .poster-img-frame {
+            width: 100%; height: 150px; background: #f0f0f0; display: flex; align-items: center;
+            justify-content: center; overflow: hidden; border-radius: 4px; position: relative; cursor: pointer;
+        }
+        .poster-card .poster-img-frame img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .poster-card .poster-img-frame:hover img { transform: scale(2); z-index: 10; transition: transform 0.2s; }
+        .poster-card .poster-card-name {
+            font-size: 12px; color: #555; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            text-align: center;
+        }
+        .poster-card .poster-card-delete {
+            position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.45); color: white;
+            border: none; width: 22px; height: 22px; border-radius: 50%; cursor: pointer;
+            font-size: 12px; display: flex; align-items: center; justify-content: center; z-index: 2;
+            transition: background 0.2s;
+        }
+        .poster-card .poster-card-delete:hover { background: #e74c3c; }
+        .poster-exec-btn {
+            margin-top: 8px; padding: 8px; background: #e67e22; color: white; border: none;
+            border-radius: 4px; cursor: pointer; font-size: 13px; position: relative; transition: opacity 0.2s;
+        }
+        .poster-exec-btn:disabled { background: #95a5a6; cursor: not-allowed; }
+        .poster-exec-btn.running::after {
+            content: ""; display: inline-block; width: 12px; height: 12px; margin-left: 6px;
+            border: 2px solid white; border-top: 2px solid transparent; border-radius: 50%;
+            animation: spin 0.8s linear infinite; vertical-align: middle;
+        }
+        .poster-card textarea {
+            margin-top: 8px; width: 100%; height: 60px; padding: 5px; font-size: 12px;
+            border: 1px solid #ccc; border-radius: 4px; resize: vertical;
+        }
+        .poster-result {
+            margin-top: 8px; width: 100%; height: 150px; background: #f0f0f0; display: flex;
+            align-items: center; justify-content: center; overflow: hidden; border-radius: 4px;
+            border: 1px dashed #ddd;
+        }
+        .poster-result img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .poster-result .img-placeholder { color: #bbb; font-size: 12px; }
+
+        /* 结果网格 */
+        .result-section {
+            border-top: 2px solid #1abc9c; padding-top: 15px; margin-top: 12px;
+        }
+        .result-section-header {
+            font-size: 14px; font-weight: 700; color: #2c3e50; margin-bottom: 10px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .result-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;
+        }
+        .result-card {
+            background: white; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+        }
+        .result-card .result-img {
+            width: 100%; aspect-ratio: 3/4; background: #f0f0f0; display: flex;
+            align-items: center; justify-content: center; overflow: hidden;
+        }
+        .result-card .result-img img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .result-card .result-card-name {
+            padding: 6px 10px; font-size: 11px; color: #777; text-align: center;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
         .cards-container {
             display: flex; overflow-x: auto; padding: 10px 0; gap: 15px; align-items: flex-start;
             border-top: 1px solid #ddd; margin-top: 10px;
@@ -1516,7 +1678,58 @@
                         <input type="file" accept="image/*" id="ref-file-2" style="display:none">
                     </div>
                 </div>
+                <!-- 批量替换产品图：产品图区域 -->
+                <div class="product-section" id="product-section" style="display:none;">
+                    <div style="flex:1;">
+                        <div class="section-label"><span class="step-badge">1</span> 目标产品（要被替换到海报里的产品图）</div>
+                        <div style="display:flex;gap:20px;">
+                            <div class="product-card" id="product-card-1">
+                                <div class="product-card-title">产品图 ①<span class="required-star">*必填</span><button class="product-clear-btn" id="product-clear-1" title="清空">✕</button></div>
+                                <div class="product-drop" id="product-drop-1">
+                                    <div class="product-drop-placeholder">拖拽或点击上传<br>主视角产品图</div>
+                                </div>
+                                <input type="file" accept="image/*" id="product-file-1" style="display:none">
+                            </div>
+                            <div class="product-card" id="product-card-2">
+                                <div class="product-card-title">产品图 ②<span class="optional-tag">选填·辅助角度</span><button class="product-clear-btn" id="product-clear-2" title="清空">✕</button></div>
+                                <div class="product-drop" id="product-drop-2">
+                                    <div class="product-drop-placeholder">拖拽或点击上传<br>辅助角度产品图</div>
+                                </div>
+                                <input type="file" accept="image/*" id="product-file-2" style="display:none">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 批量替换产品图：海报模板区域 -->
+                <div class="poster-section" id="poster-section" style="display:none;">
+                    <div class="poster-section-header">
+                        <div class="section-label"><span class="step-badge">2</span> 海报模板</div>
+                        <button class="json-btn" id="gen-prompt-btn-v2" style="width:auto;padding:8px 16px;">🔄 生成提示词</button>
+                    </div>
+                    <div class="poster-drop-zone" id="poster-drop-zone">
+                        <div>拖拽海报图片到此处（可多选）或点击上传</div>
+                    </div>
+                </div>
+                <!-- 批量替换产品图：提示词预览 -->
+                <div class="prompt-preview-bar" id="prompt-preview-bar" style="display:none;">
+                    <span class="prompt-label">提示词：</span>
+                    <span class="prompt-text" id="prompt-preview-text"></span>
+                    <button class="prompt-expand-btn" id="prompt-expand-btn">展开编辑</button>
+                </div>
+                <div class="prompt-editor" id="prompt-editor">
+                    <textarea id="prompt-editor-textarea" placeholder="编辑提示词..."></textarea>
+                </div>
                 <div class="cards-container" id="cards-container"></div>
+                <!-- 批量替换产品图：批量生成按钮 -->
+                <div class="batch-generate-bar" id="batch-generate-bar" style="display:none;">
+                    <button class="batch-generate-btn" id="batch-generate-btn">▶ 全部生成</button>
+                    <span class="batch-progress" id="batch-progress"></span>
+                </div>
+                <!-- 批量替换产品图：结果区域 -->
+                <div class="result-section" id="result-section" style="display:none;">
+                    <div class="result-section-header"><span class="step-badge">3</span> 生成结果</div>
+                    <div class="result-grid" id="result-grid"></div>
+                </div>
                 <div class="toolbar">
                     <div class="toolbar-col">
                         <button class="save-all-btn" id="copy-all-source-btn">📋 一键复制原图</button>
@@ -1996,18 +2209,61 @@
         // ---------- 工作台渲染 ----------
         function renderWorkspace() {
             text1El.value = taskData.text1 || "";
-            const refRow = document.getElementById("ref-images-row");
-            const genPromptBtn = document.getElementById("gen-prompt-btn");
-            if (currentTaskType === "batch_replace_product") {
-                refRow.style.display = "flex";
-                genPromptBtn.style.display = "";
-                _renderRefImage(1);
-                _renderRefImage(2);
+            const isReplace = currentTaskType === "batch_replace_product";
+
+            // Old elements (used by batch_translate etc.)
+            const topSection = document.querySelector(".top-section");
+            const oldRefRow = document.getElementById("ref-images-row");
+            const oldGenPrompt = document.getElementById("gen-prompt-btn");
+            const splitBtn = document.getElementById("split-btn");
+            const applyAllBtn = document.getElementById("apply-all-btn");
+
+            // New elements (batch_replace_product)
+            const productSection = document.getElementById("product-section");
+            const posterSection = document.getElementById("poster-section");
+            const promptBar = document.getElementById("prompt-preview-bar");
+            const promptEditor = document.getElementById("prompt-editor");
+            const batchBar = document.getElementById("batch-generate-bar");
+            const resultSection = document.getElementById("result-section");
+            const genPromptV2 = document.getElementById("gen-prompt-btn-v2");
+
+            if (isReplace) {
+                topSection.style.display = "";
+                oldRefRow.style.display = "none";
+                oldGenPrompt.style.display = "";
+                splitBtn.style.display = "none";
+                applyAllBtn.style.display = "";
+                dropZone.style.display = "none";
+
+                productSection.style.display = "flex";
+                posterSection.style.display = "none";
+                promptBar.style.display = "none";
+                promptEditor.style.display = "none";
+                batchBar.style.display = "flex";
+                resultSection.style.display = "none";
+                genPromptV2.style.display = "none";
+
+                _renderProductImage(1);
+                _renderProductImage(2);
+                _renderPosterCards();
             } else {
-                refRow.style.display = "none";
-                genPromptBtn.style.display = "none";
+                topSection.style.display = "";
+                oldRefRow.style.display = "none";
+                oldGenPrompt.style.display = "none";
+                splitBtn.style.display = "";
+                applyAllBtn.style.display = "";
+                dropZone.style.display = "";
+
+                productSection.style.display = "none";
+                posterSection.style.display = "none";
+                promptBar.style.display = "none";
+                promptEditor.style.display = "none";
+                batchBar.style.display = "none";
+                resultSection.style.display = "none";
+                genPromptV2.style.display = "none";
+
+                renderCards();
             }
-            renderCards();
         }
 
         function _renderRefImage(refIndex) {
@@ -2079,7 +2335,334 @@
             showMsg("参考图" + refIndex + "已清空");
         }
 
-        // 删除卡片
+        // ===== 批量替换产品图专用函数 =====
+
+        function _renderProductImage(refIndex) {
+            const drop = document.getElementById("product-drop-" + refIndex);
+            const card = document.getElementById("product-card-" + refIndex);
+            const field = "ref_image_" + refIndex;
+            const imgPath = taskData[field];
+            if (imgPath) {
+                drop.innerHTML = '<img src="/task_images/' + currentTaskId + '/' + imgPath + '" alt="产品图' + refIndex + '">';
+                drop.classList.add("has-image");
+                card.classList.add("has-image");
+            } else {
+                const labels = {1: "主视角产品图", 2: "辅助角度产品图"};
+                drop.innerHTML = '<div class="product-drop-placeholder">拖拽或点击上传<br>' + labels[refIndex] + '</div>';
+                drop.classList.remove("has-image");
+                card.classList.remove("has-image");
+            }
+        }
+
+        async function _uploadProductImage(refIndex, file) {
+            if (!currentTaskId) { showMsg("请先选择任务", true); return; }
+            const formData = new FormData();
+            formData.append("image", file);
+            try {
+                const res = await fetch("/api/tasks/" + currentTaskId + "/upload_ref_image/" + refIndex, {
+                    method: "POST", body: formData
+                });
+                if (!res.ok) { const err = await res.json(); throw new Error(err.error); }
+                const result = await res.json();
+                taskData[result.field || ("ref_image_" + refIndex)] = result.path;
+                _renderProductImage(refIndex);
+                await saveCurrentTask();
+                showMsg("产品图" + refIndex + "上传成功");
+            } catch (e) { showMsg("上传失败: " + e.message, true); }
+        }
+
+        async function _clearProductImage(refIndex) {
+            const field = "ref_image_" + refIndex;
+            delete taskData[field];
+            _renderProductImage(refIndex);
+            await saveCurrentTask();
+            showMsg("产品图" + refIndex + "已清空");
+        }
+
+        function _setupProductDrop(refIndex) {
+            const drop = document.getElementById("product-drop-" + refIndex);
+            const fileInput = document.getElementById("product-file-" + refIndex);
+            drop.addEventListener("click", function() { fileInput.click(); });
+            drop.addEventListener("dragover", function(e) { e.preventDefault(); drop.classList.add("dragover"); });
+            drop.addEventListener("dragleave", function() { drop.classList.remove("dragover"); });
+            drop.addEventListener("drop", function(e) {
+                e.preventDefault();
+                drop.classList.remove("dragover");
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith("image/")) _uploadProductImage(refIndex, file);
+            });
+            fileInput.addEventListener("change", function() {
+                if (fileInput.files[0]) { _uploadProductImage(refIndex, fileInput.files[0]); fileInput.value = ""; }
+            });
+            // Clear button
+            document.getElementById("product-clear-" + refIndex).addEventListener("click", function(e) {
+                e.stopPropagation();
+                _clearProductImage(refIndex);
+            });
+        }
+        _setupProductDrop(1);
+        _setupProductDrop(2);
+
+        function _renderPosterCards() {
+            cardsContainer.innerHTML = "";
+            cardsContainer.className = "poster-cards-row";
+            if (!taskData.cards || taskData.cards.length === 0) {
+                cardsContainer.innerHTML = '<div style="color:#aaa; padding:20px; width:100%;">暂无海报模板，请拖入海报图片</div>';
+                return;
+            }
+            taskData.cards.forEach(function(card, index) {
+                const cardDiv = document.createElement("div");
+                cardDiv.className = "poster-card";
+                cardDiv.dataset.cardId = card.id;
+
+                // 生成结果内容
+                let resultContent = '<div class="img-placeholder">等待生成</div>';
+                const genPath = card.generated_final || card.generated_draft;
+                if (genPath) {
+                    resultContent = '<img src="/task_images/' + currentTaskId + '/' + genPath + '" alt="生成图">';
+                }
+
+                cardDiv.innerHTML =
+                    '<button class="poster-card-delete" title="删除">✕</button>' +
+                    '<div class="poster-img-frame">' +
+                        (card.source_image
+                            ? '<img src="/task_images/' + currentTaskId + '/' + card.source_image + '" alt="海报">'
+                            : '<div class="img-placeholder">无图片</div>') +
+                    '</div>' +
+                    '<div class="poster-card-name">' + (card.image_name || "海报" + (index + 1)) + '</div>' +
+                    '<button class="poster-exec-btn">执行生图</button>' +
+                    '<textarea rows="3" placeholder="提示词...">' + (card.prompt || "") + '</textarea>' +
+                    '<div class="poster-result">' + resultContent + '</div>';
+
+                cardDiv.querySelector(".poster-card-delete").addEventListener("click", function(e) {
+                    e.stopPropagation();
+                    _deletePosterCard(card.id);
+                });
+
+                cardDiv.querySelector(".poster-img-frame").addEventListener("click", function() {
+                    if (card.source_image) { _previewPosterImage(card); }
+                });
+
+                cardDiv.querySelector(".poster-exec-btn").addEventListener("click", function(e) {
+                    e.stopPropagation();
+                    _onSingleGenerate(card, this);
+                });
+
+                // 卡片级提示词编辑保存
+                cardDiv.querySelector("textarea").addEventListener("input", function() {
+                    card.prompt = this.value;
+                    saveCurrentTask();
+                });
+
+                cardsContainer.appendChild(cardDiv);
+            });
+        }
+
+        // 单个生成
+        async function _onSingleGenerate(card, btn) {
+            if (!card.source_image) { showMsg(“请先为这张海报添加图片！”, true); return; }
+            if (!taskData.ref_image_1 && !taskData.ref_image_2) {
+                showMsg(“请至少上传一张产品图！”, true); return;
+            }
+            if (!(card.prompt || taskData.text1) || (card.prompt || taskData.text1).trim() === “”) {
+                showMsg(“提示词不能为空，请先点击”生成提示词”！”, true); return;
+            }
+
+            btn.disabled = true;
+            btn.classList.add("running");
+            btn.textContent = "正在生成…";
+
+            const autoCompress = document.getElementById("auto-compress").checked;
+            const removeWatermark = document.getElementById("auto-watermark").checked;
+            const extra_image_paths = [];
+            if (taskData.ref_image_1) extra_image_paths.push(taskData.ref_image_1);
+            if (taskData.ref_image_2) extra_image_paths.push(taskData.ref_image_2);
+
+            try {
+                const res = await fetch("/api/generate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        task_id: currentTaskId,
+                        card_id: card.id,
+                        prompt: card.prompt || taskData.text1,
+                        source_image_path: card.source_image,
+                        extra_image_paths: extra_image_paths,
+                        auto_compress: autoCompress,
+                        remove_watermark: removeWatermark
+                    })
+                });
+                if (!res.ok) {
+                    const errData = await res.json().catch(function() { return null; });
+                    throw new Error(errData && errData.error ? errData.error : "HTTP " + res.status);
+                }
+                const data = await res.json();
+                card.generated_draft = data.draft_file;
+                await saveCurrentTask();
+
+                // Update the result area in this card
+                const cardDiv = document.querySelector('[data-card-id="' + card.id + '"]');
+                if (cardDiv) {
+                    cardDiv.querySelector(".poster-result").innerHTML = '<img src="' + data.url + '" alt="生成图">';
+                }
+                showMsg("生成成功！");
+            } catch (e) {
+                showMsg("生成失败: " + e.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove("running");
+                btn.textContent = "执行生图";
+            }
+        }
+
+        async function _deletePosterCard(cardId) {
+            if (!confirm("确定要删除这张海报吗？")) return;
+            taskData.cards = taskData.cards.filter(function(c) { return c.id !== cardId; });
+            _renderPosterCards();
+            await saveCurrentTask();
+            showMsg("海报已删除");
+        }
+
+        function _previewPosterImage(card) {
+            // Reuse existing preview overlay
+            const overlay = document.getElementById("img-preview-overlay");
+            const srcImg = document.getElementById("img-preview-src");
+            const genImg = document.getElementById("img-preview-gen");
+            if (card.source_image) {
+                srcImg.src = "/task_images/" + currentTaskId + "/" + card.source_image;
+            } else {
+                srcImg.src = "";
+            }
+            genImg.src = "";
+            overlay.classList.add("active");
+        }
+
+        function _updatePromptPreview() {
+            const promptText = taskData.text1 || "";
+            const previewEl = document.getElementById("prompt-preview-text");
+            const editorTextarea = document.getElementById("prompt-editor-textarea");
+            if (promptText) {
+                previewEl.textContent = promptText.replace(/\n/g, " ");
+            } else {
+                previewEl.textContent = "未生成提示词，请点击“生成提示词”按钮";
+            }
+            editorTextarea.value = promptText;
+        }
+
+        function _renderResultGrid() {
+            const grid = document.getElementById("result-grid");
+            grid.innerHTML = "";
+            if (!taskData.cards || taskData.cards.length === 0) {
+                grid.innerHTML = '<div style="color:#aaa;padding:10px;grid-column:1/-1;">暂无结果</div>';
+                document.getElementById("result-section").style.display = "none";
+                return;
+            }
+            let hasResults = false;
+            taskData.cards.forEach(function(card, index) {
+                const genPath = card.generated_final || card.generated_draft;
+                if (!genPath) return;
+                hasResults = true;
+                const cardDiv = document.createElement("div");
+                cardDiv.className = "result-card";
+                cardDiv.innerHTML =
+                    '<div class="result-img"><img src="/task_images/' + currentTaskId + '/' + genPath + '" alt="结果"></div>' +
+                    '<div class="result-card-name">' + (card.image_name || "结果" + (index + 1)) + '</div>';
+                grid.appendChild(cardDiv);
+            });
+            document.getElementById("result-section").style.display = hasResults ? "block" : "none";
+        }
+
+        // 生成提示词 v2（批量替换产品）
+        function _onGenPromptV2() {
+            if (!currentTaskId) { showMsg("请先选择一个任务！", true); return; }
+            const hasRef1 = taskData.ref_image_1;
+            const hasRef2 = taskData.ref_image_2;
+            let refDesc;
+            if (hasRef1 && hasRef2) {
+                refDesc = "图2和图3是产品的不同角度图片，请你以图1为“参考图像”，以图2和图3为“目标产品”。";
+            } else {
+                refDesc = "图2是产品的图片，请你以图1为“参考图像”，以图2为“目标产品”。";
+            }
+            const prompt = refDesc + "用“目标产品”替换“参考图像”中的产品，生成和“参考图像”一样的海报。\n\n要求：\n- 替换产品，保留图像中其他部分不变。确保替换后能自然融合光影、透视与整体风格。写实风格、高分辨率、无缝整合。\n- 图片比例3:4。";
+            text1El.value = prompt;
+            taskData.text1 = prompt;
+            saveCurrentTask();
+            _updatePromptPreview();
+            showMsg("提示词已生成，可点击“展开编辑”修改。");
+        }
+
+        // 全部生成（批量替换产品）
+        async function _onBatchGenerate(btn) {
+            if (!taskData.cards || taskData.cards.length === 0) {
+                showMsg("没有海报卡片！", true); return;
+            }
+            if (!taskData.ref_image_1 && !taskData.ref_image_2) {
+                showMsg("请至少上传一张产品图（产品图①）！", true); return;
+            }
+            if (!taskData.text1 || taskData.text1.trim() === "") {
+                showMsg("提示词不能为空，请先点击“生成提示词”！", true); return;
+            }
+
+            const autoCompress = document.getElementById("auto-compress").checked;
+            const removeWatermark = document.getElementById("auto-watermark").checked;
+
+            const extra_image_paths = [];
+            if (taskData.ref_image_1) extra_image_paths.push(taskData.ref_image_1);
+            if (taskData.ref_image_2) extra_image_paths.push(taskData.ref_image_2);
+
+            btn.disabled = true;
+            btn.classList.add("running");
+            btn.textContent = "正在生成…";
+
+            const progressEl = document.getElementById("batch-progress");
+            let succeeded = 0;
+            let failed = 0;
+
+            for (let i = 0; i < taskData.cards.length; i++) {
+                const card = taskData.cards[i];
+                if (!card.source_image) {
+                    failed++;
+                    continue;
+                }
+                progressEl.textContent = "已生成 " + succeeded + "/" + taskData.cards.length + " …";
+                try {
+                    const res = await fetch("/api/generate", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            task_id: currentTaskId,
+                            card_id: card.id,
+                            prompt: card.prompt || taskData.text1,
+                            source_image_path: card.source_image,
+                            extra_image_paths: extra_image_paths,
+                            auto_compress: autoCompress,
+                            remove_watermark: removeWatermark
+                        })
+                    });
+                    if (!res.ok) {
+                        const errData = await res.json().catch(function() { return null; });
+                        throw new Error(errData && errData.error ? errData.error : "HTTP " + res.status);
+                    }
+                    const data = await res.json();
+                    card.generated_draft = data.draft_file;
+                    succeeded++;
+                } catch (e) {
+                    failed++;
+                    console.error("Generate failed for card " + card.id + ":", e);
+                }
+            }
+
+            await saveCurrentTask();
+            _renderResultGrid();
+            _renderPosterCards();
+
+            btn.disabled = false;
+            btn.classList.remove("running");
+            btn.textContent = "▶ 全部生成";
+            progressEl.textContent = "生成完成：成功 " + succeeded + " ，失败 " + failed;
+        }
+
+        // 删除卡片（旧版，保留兼容）
         async function deleteCard(cardId) {
             if (!confirm("确定要删除这个卡片吗？")) return;
             // 从数组中过滤掉该卡片
@@ -2091,6 +2674,7 @@
 
         function renderCards() {
             cardsContainer.innerHTML = "";
+            cardsContainer.className = "cards-container";
             if (!taskData.cards || taskData.cards.length === 0) {
                 cardsContainer.innerHTML = '<div style="color:#aaa; padding:20px;">暂无卡片，请拖入图片或拆分提示词</div>';
                 return;
@@ -2287,6 +2871,40 @@
             input.click();
         });
 
+        // text1 文本框也支持拖入图片（批量替换产品图等场景）
+        text1El.addEventListener("dragover", function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            text1El.style.outline = "2px dashed #1abc9c";
+            text1El.style.outlineOffset = "-4px";
+        });
+        text1El.addEventListener("dragleave", function() {
+            text1El.style.outline = "";
+        });
+        text1El.addEventListener("drop", async function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            text1El.style.outline = "";
+            const files = Array.from(e.dataTransfer.files).filter(function(f) { return f.type.startsWith("image/"); });
+            if (files.length > 0) { await handleImageUpload(files); }
+        });
+        text1El.addEventListener("click", function(e) {
+            // 按住 Ctrl 点击可以上传图片
+            if (!e.ctrlKey && !e.metaKey) return;
+            const input = document.createElement("input");
+            input.type = "file";
+            input.multiple = true;
+            input.accept = "image/*";
+            input.onchange = async function(ev) {
+                const files = Array.from(ev.target.files);
+                if (files.length > 0) {
+                    await handleImageUpload(files);
+                    if (currentTaskType === "batch_replace_product") { _renderPosterCards(); }
+                }
+            };
+            input.click();
+        });
+
         async function handleImageUpload(files) {
             if (!currentTaskId) {
                 showMsg("请先选择或创建一个任务！", true);
@@ -2320,7 +2938,11 @@
                     newCount++;
                 }
             });
-            renderCards();
+            if (currentTaskType === "batch_replace_product") {
+                _renderPosterCards();
+            } else {
+                renderCards();
+            }
             await saveCurrentTask();
             showMsg(`图片已添加：${matchedCount} 张匹配现有卡片，${newCount} 张新建卡片。`);
         }
@@ -2384,7 +3006,11 @@
                 return;
             }
             taskData.cards.forEach(card => { card.prompt = content; });
-            renderCards();
+            if (currentTaskType === "batch_replace_product") {
+                _renderPosterCards();
+            } else {
+                renderCards();
+            }
             saveCurrentTask();
             showMsg(`已将文本1内容应用到全部 ${taskData.cards.length} 张卡片。`);
         });
@@ -2404,8 +3030,69 @@
             text1El.value = prompt;
             taskData.text1 = prompt;
             saveCurrentTask();
-            showMsg('提示词已生成到文本框1，可使用“应用到全部”分发到卡片。');
+            showMsg('提示词已生成到文本框1，可使用”应用到全部”分发到卡片。');
         });
+        // ---------- 生成提示词 v2（批量替换产品新布局）----------
+        document.getElementById('gen-prompt-btn-v2').addEventListener('click', _onGenPromptV2);
+
+        // ---------- 全部生成（批量替换产品）----------
+        document.getElementById('batch-generate-btn').addEventListener('click', function() {
+            _onBatchGenerate(this);
+        });
+
+        // ---------- 提示词展开/收起 ----------
+        document.getElementById('prompt-expand-btn').addEventListener('click', function() {
+            const editor = document.getElementById('prompt-editor');
+            const btn = document.getElementById('prompt-expand-btn');
+            const isOpen = editor.classList.toggle('open');
+            btn.textContent = isOpen ? '收起编辑' : '展开编辑';
+        });
+
+        // 提示词编辑器内容同步
+        document.getElementById('prompt-editor-textarea').addEventListener('input', function() {
+            taskData.text1 = this.value;
+            text1El.value = this.value;
+            document.getElementById('prompt-preview-text').textContent = this.value.replace(/\n/g, ' ') || '未生成提示词，请点击”生成提示词”按钮';
+            saveCurrentTask();
+        });
+
+        // ---------- 海报拖拽区域 ----------
+        (function() {
+            const posterDrop = document.getElementById('poster-drop-zone');
+            posterDrop.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                posterDrop.classList.add('dragover');
+            });
+            posterDrop.addEventListener('dragleave', function() {
+                posterDrop.classList.remove('dragover');
+            });
+            posterDrop.addEventListener('drop', async function(e) {
+                e.preventDefault();
+                posterDrop.classList.remove('dragover');
+                const files = Array.from(e.dataTransfer.files).filter(function(f) { return f.type.startsWith('image/'); });
+                if (files.length === 0) return;
+                await handleImageUpload(files);
+                if (currentTaskType === 'batch_replace_product') {
+                    _renderPosterCards();
+                }
+            });
+            posterDrop.addEventListener('click', function() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.multiple = true;
+                input.accept = 'image/*';
+                input.onchange = async function(e) {
+                    const files = Array.from(e.target.files);
+                    if (files.length > 0) {
+                        await handleImageUpload(files);
+                        if (currentTaskType === 'batch_replace_product') {
+                            _renderPosterCards();
+                        }
+                    }
+                };
+                input.click();
+            });
+        })();
         // ---------- 一键复制全部图片到系统剪贴板（后端 CF_HDROP）----------
         document.getElementById("copy-all-source-btn").addEventListener("click", async function() {
             if (!currentTaskId) { showMsg("请先选择任务", true); return; }
