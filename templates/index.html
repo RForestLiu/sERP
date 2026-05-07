@@ -3473,6 +3473,28 @@
             }
         });
 
+        // ---------- 复选框状态持久化 ----------
+        (function initCheckboxPersistence() {
+            var compressCb = document.getElementById("auto-compress");
+            var watermarkCb = document.getElementById("auto-watermark");
+
+            // 恢复上次状态
+            if (compressCb) {
+                var saved = localStorage.getItem("sERP_auto_compress");
+                compressCb.checked = saved !== null ? saved === "true" : true; // 默认开启
+                compressCb.addEventListener("change", function() {
+                    localStorage.setItem("sERP_auto_compress", compressCb.checked);
+                });
+            }
+            if (watermarkCb) {
+                var savedWm = localStorage.getItem("sERP_auto_watermark");
+                watermarkCb.checked = savedWm === "true"; // 默认关闭
+                watermarkCb.addEventListener("change", function() {
+                    localStorage.setItem("sERP_auto_watermark", watermarkCb.checked);
+                });
+            }
+        })();
+
         // ---------- 恢复历史采集任务 ----------
         async function restoreCollectTasks() {
             try {
