@@ -1741,6 +1741,10 @@
             }
             await loadTask(taskId);
             highlightActiveTask();
+            // 更新 URL 路径，刷新时恢复当前任务
+            const url = new URL(window.location);
+            url.searchParams.set("task", taskId);
+            window.history.replaceState({}, "", url);
         }
 
         function highlightActiveTask() {
