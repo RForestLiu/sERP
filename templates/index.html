@@ -232,17 +232,21 @@
             border: 2px solid white; border-top: 2px solid transparent; border-radius: 50%;
             animation: spin 0.8s linear infinite; vertical-align: middle;
         }
-        .toolbar { display: flex; flex-direction: column; margin-top: 15px; gap: 8px; }
-        .toolbar-row {
-            display: flex; align-items: center; gap: 10px;
-            padding: 6px 0;
+        .toolbar { display: flex; margin-top: 15px; gap: 20px; }
+        .toolbar-col {
+            display: flex; flex-direction: column; gap: 8px;
+            padding: 0 20px;
         }
-        .toolbar-row + .toolbar-row {
-            border-top: 1px solid #eee;
-            padding-top: 10px;
+        .toolbar-col:first-child { padding-left: 0; }
+        .toolbar-col:last-child { padding-right: 0; }
+        .toolbar-col + .toolbar-col {
+            border-left: 1px solid #ddd;
         }
-        .toolbar-row.vertical { flex-direction: column; align-items: flex-start; gap: 4px; }
-        .toolbar-subrow { display: flex; align-items: center; gap: 10px; }
+        .toolbar-col .save-all-btn,
+        .toolbar-col .compress-btn,
+        .toolbar-col .watermark-btn,
+        .toolbar-col .open-folder-btn { width: 180px; }
+        .toolbar-subrow { display: flex; align-items: center; gap: 6px; }
         .auto-compress-label {
             font-size: 12px; color: #555; display: inline-flex; align-items: center; gap: 4px;
             cursor: pointer; user-select: none;
@@ -1514,11 +1518,11 @@
                 </div>
                 <div class="cards-container" id="cards-container"></div>
                 <div class="toolbar">
-                    <div class="toolbar-row">
+                    <div class="toolbar-col">
                         <button class="save-all-btn" id="copy-all-source-btn">📋 一键复制原图</button>
                         <button class="save-all-btn" id="copy-all-result-btn">📋 一键复制生成图</button>
                     </div>
-                    <div class="toolbar-row vertical">
+                    <div class="toolbar-col">
                         <div class="toolbar-subrow">
                             <button class="compress-btn" id="compress-btn">🔽 压缩到1.5MB以下</button>
                             <label class="auto-compress-label">
@@ -1532,7 +1536,7 @@
                             </label>
                         </div>
                     </div>
-                    <div class="toolbar-row">
+                    <div class="toolbar-col">
                         <button class="save-all-btn" id="save-images-btn">💾 保存到任务文件夹</button>
                         <button class="save-all-btn" id="save-to-product-btn">📤 保存为图片子集</button>
                         <button class="open-folder-btn" id="open-folder-btn">📂 打开生成图片文件夹</button>
