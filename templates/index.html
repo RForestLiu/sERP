@@ -160,6 +160,11 @@
         }
         .ref-image-drop.dragover { background: #ecf0f1; outline: 2px dashed #1abc9c; outline-offset: -4px; }
         .ref-image-drop.has-image .ref-image-placeholder { display: none; }
+        .ref-clear-btn {
+            float: right; background: none; border: none; color: #ccc; cursor: pointer;
+            font-size: 12px; padding: 0 4px; line-height: inherit;
+        }
+        .ref-clear-btn:hover { color: #e74c3c; }
 
         .cards-container {
             display: flex; overflow-x: auto; padding: 10px 0; gap: 15px; align-items: flex-start;
@@ -1469,14 +1474,14 @@
                 </div>
                 <div class="ref-images-row" id="ref-images-row" style="display:none;">
                     <div class="ref-image-box" id="ref-box-1">
-                        <div class="ref-image-title">替换目标参考图1</div>
+                        <div class="ref-image-title">替换目标参考图1<button class="ref-clear-btn" id="ref-clear-1" title="清空参考图1">✕</button></div>
                         <div class="ref-image-drop" id="ref-drop-1">
                             <div class="ref-image-placeholder">拖拽或点击上传<br>参考图1</div>
                         </div>
                         <input type="file" accept="image/*" id="ref-file-1" style="display:none">
                     </div>
                     <div class="ref-image-box" id="ref-box-2">
-                        <div class="ref-image-title">替换目标参考图2</div>
+                        <div class="ref-image-title">替换目标参考图2<button class="ref-clear-btn" id="ref-clear-2" title="清空参考图2">✕</button></div>
                         <div class="ref-image-drop" id="ref-drop-2">
                             <div class="ref-image-placeholder">拖拽或点击上传<br>参考图2</div>
                         </div>
@@ -2009,6 +2014,24 @@
         }
         _setupRefImageDrop(1);
         _setupRefImageDrop(2);
+
+        // 清空参考图按钮
+        document.getElementById("ref-clear-1").addEventListener("click", (e) => {
+            e.stopPropagation();
+            _clearRefImage(1);
+        });
+        document.getElementById("ref-clear-2").addEventListener("click", (e) => {
+            e.stopPropagation();
+            _clearRefImage(2);
+        });
+
+        async function _clearRefImage(refIndex) {
+            const field = "ref_image_" + refIndex;
+            delete taskData[field];
+            _renderRefImage(refIndex);
+            await saveCurrentTask();
+            showMsg("参考图" + refIndex + "已清空");
+        }
 
         // 删除卡片
         async function deleteCard(cardId) {
