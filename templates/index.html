@@ -1472,7 +1472,7 @@
                             <button class="json-btn" id="split-btn">拆分提示词</button>
                             <div class="json-btns-col">
                                 <button class="json-btn" id="gen-prompt-btn">生成提示词</button>
-                                <button class="json-btn" id="apply-all-btn">应用到所有</button>
+                                <button class="json-btn" id="apply-all-btn">应用到全部</button>
                             </div>
                         </div>
                     </div>
@@ -2340,7 +2340,7 @@
             showMsg(`提示词拆分完成：${matched} 项匹配卡片，${created} 项新建卡片。`);
         });
 
-        // ---------- 应用到所有 ----------
+        // ---------- 应用到全部 ----------
         document.getElementById("apply-all-btn").addEventListener("click", () => {
             const content = text1El.value.trim();
             if (!content) {
@@ -2354,7 +2354,7 @@
             taskData.cards.forEach(card => { card.prompt = content; });
             renderCards();
             saveCurrentTask();
-            showMsg(`已将文本1内容应用到所有 ${taskData.cards.length} 张卡片。`);
+            showMsg(`已将文本1内容应用到全部 ${taskData.cards.length} 张卡片。`);
         });
 
         // ---------- 生成提示词（批量替换产品）----------
@@ -2372,7 +2372,7 @@
             text1El.value = prompt;
             taskData.text1 = prompt;
             saveCurrentTask();
-            showMsg('提示词已生成到文本框1，可使用“应用到所有”分发到卡片。');
+            showMsg('提示词已生成到文本框1，可使用“应用到全部”分发到卡片。');
         });
         // ---------- 一键复制全部图片到系统剪贴板（后端 CF_HDROP）----------
         document.getElementById("copy-all-source-btn").addEventListener("click", async function() {
