@@ -365,6 +365,7 @@ def generate_image():
     card_id = data.get("card_id")
     prompt = data.get("prompt", "")
     source_image_path = data.get("source_image_path", "")
+    extra_image_paths = data.get("extra_image_paths") or []
     auto_compress = data.get("auto_compress", True)
 
     if not API_KEY:
@@ -383,6 +384,15 @@ def generate_image():
     parts = [{"text": prompt}]
     if ref_image_data:
         parts.append({"inline_data": ref_image_data})
+
+    # 批量替换产品：附加参考图（图2、图3）
+    for img_path in extra_image_paths:
+        full = os.path.join(task_folder(task_id), img_path)
+        if os.path.exists(full):
+            img_mime = mimetypes.guess_type(full)[0] or "image/jpeg"
+            with open(full, "rb") as f:
+                img_enc = base64.b64encode(f.read()).decode("utf-8")
+            parts.append({"inline_data": {"mime_type": img_mime, "data": img_enc}})
 
     payload = {
         "contents": [{"parts": parts}],

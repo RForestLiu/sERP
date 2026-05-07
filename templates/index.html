@@ -1461,6 +1461,7 @@
                         <textarea id="text1" placeholder="在此粘贴 JSON 提示词体..."></textarea>
                         <button class="json-btn" id="split-btn">拆分提示词</button>
                         <button class="json-btn" id="apply-all-btn">应用到所有</button>
+                        <button class="json-btn" id="gen-prompt-btn">生成提示词</button>
                     </div>
                     <div class="drop-zone" id="drop-zone">
                         <div>拖拽图片到此处<br>（可多选）</div>
@@ -2142,6 +2143,14 @@
 
             const autoCompress = document.getElementById("auto-compress").checked;
 
+            // 批量替换产品：附加参考图1、参考图2
+            let extra_image_paths = undefined;
+            if (currentTaskType === "batch_replace_product") {
+                extra_image_paths = [];
+                if (taskData.ref_image_1) extra_image_paths.push(taskData.ref_image_1);
+                if (taskData.ref_image_2) extra_image_paths.push(taskData.ref_image_2);
+            }
+
             try {
                 const res = await fetch("/api/generate", {
                     method: "POST",
@@ -2151,6 +2160,7 @@
                         card_id: card.id,
                         prompt: card.prompt,
                         source_image_path: card.source_image,
+                        extra_image_paths: extra_image_paths,
                         auto_compress: autoCompress
                     })
                 });
@@ -2307,6 +2317,35 @@
             renderCards();
             saveCurrentTask();
             showMsg(`已将文本1内容应用到所有 ${taskData.cards.length} 张卡片。`);
+        });
+
+        // ---------- 生成提示词（批量替换产品）----------
+        document.getElementById("gen-prompt-btn").addEventListener("click", () => {
+            if (!currentTaskId) {
+                showMsg("请先选择一个任务！", true);
+                return;
+            }
+            const hasRef1 = taskData.ref_image_1;
+            const hasRef2 = taskData.ref_image_2;
+            if (!hasRef1 && !hasRef2) {
+                showMsg("请先上传参考图1或参考图2！", true);
+                return;
+            }
+            if (!taskData.cards || taskData.cards.length === 0) {
+                showMsg("没有卡片可以应用提示词！", true);
+                return;
+            }
+            let targetDesc = "";
+            if (hasRef1 && hasRef2) {
+                targetDesc = "图2和图3是“目标产品”的不同角度图片，";
+            } else {
+                targetDesc = "图2是“目标产品”的图片，";
+            }
+            const prompt = "图1是“参考图像”（海报模板）。" + targetDesc + "请你用“目标产品”替换“参考图像”中的产品，生成和“参考图像”一样的海报。\n\n要求：\n- 将“参考图像”内的文案有对产品的描述，需要改为符合“目标产品”的描述。语言需要改为“目标语言”，并且不改变文案风格。\n- 替换产品，保留图像中其他部分不变。确保替换后能自然融合光影、透视与整体风格。写实风格、高分辨率、无缝整合。\n- 图片比例3:4。";
+            taskData.cards.forEach(card => { card.prompt = prompt; });
+            renderCards();
+            saveCurrentTask();
+            showMsg(`已生成提示词并应用到所有 ${taskData.cards.length} 张卡片。`);
         });
 
         // ---------- 一键复制全部图片到系统剪贴板（后端 CF_HDROP）----------
