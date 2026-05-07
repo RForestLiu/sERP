@@ -254,7 +254,7 @@ def upload_ref_image(task_id, ref_index):
     f.save(save_path)
 
     # 更新 task_data.json
-    data = get_task_data(task_id)
+    data = load_task_data(task_id)
     field = f"ref_image_{ref_index}"
     data[field] = f"source_images/{safe_name}"
     save_task_data(task_id, data)
