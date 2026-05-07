@@ -725,30 +725,30 @@ def compress_task_images(task_id):
 
 @app.route("/api/tasks/<task_id>/remove_watermark", methods=["POST"])
 def remove_watermark_endpoint(task_id):
-    """批量去除任务 generated 目录中所有图片的隐形水印（JPEG重编码 quality=92）"""
+    """批量去除任务 generated/ 和 drafts/ 目录中所有图片的隐形水印（JPEG重编码 quality=92）"""
     processed_count = 0
     error_count = 0
 
-    gen_dir = os.path.join(task_folder(task_id), "generated")
-    if not os.path.exists(gen_dir):
-        return jsonify({"success": True, "processed_count": 0, "error_count": 0})
-
-    for fname in os.listdir(gen_dir):
-        fpath = os.path.join(gen_dir, fname)
-        if not os.path.isfile(fpath):
+    for subdir in ("generated", "drafts"):
+        dir_path = os.path.join(task_folder(task_id), subdir)
+        if not os.path.exists(dir_path):
             continue
-        ext = os.path.splitext(fname)[1].lower()
-        if ext not in ('.jpg', '.jpeg', '.png', '.webp'):
-            continue
-        try:
-            with open(fpath, "rb") as f:
-                original = f.read()
-            processed, _ = remove_invisible_watermark(original)
-            with open(fpath, "wb") as f:
-                f.write(processed)
-            processed_count += 1
-        except Exception:
-            error_count += 1
+        for fname in os.listdir(dir_path):
+            fpath = os.path.join(dir_path, fname)
+            if not os.path.isfile(fpath):
+                continue
+            ext = os.path.splitext(fname)[1].lower()
+            if ext not in ('.jpg', '.jpeg', '.png', '.webp'):
+                continue
+            try:
+                with open(fpath, "rb") as f:
+                    original = f.read()
+                processed, _ = remove_invisible_watermark(original)
+                with open(fpath, "wb") as f:
+                    f.write(processed)
+                processed_count += 1
+            except Exception:
+                error_count += 1
 
     logger.info("[去水印] task=%s processed=%s errors=%s", task_id, processed_count, error_count)
     return jsonify({"success": True, "processed_count": processed_count, "error_count": error_count})
