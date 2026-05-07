@@ -313,6 +313,24 @@ def import_images_to_task(task_id):
     return jsonify({"saved": saved})
 
 
+# ── 去除隐形水印 ───────────────────────────────────────────────
+def remove_invisible_watermark(image_data):
+    """
+    通过 JPEG 重新编码（quality=92）破坏频域隐写水印
+    对画质影响极小，能有效去除 DCT/DWT 域水印
+    返回: (处理后的字节数据, mime类型)
+    """
+    try:
+        img = Image.open(io.BytesIO(image_data))
+        if img.mode in ('RGBA', 'LA', 'P'):
+            img = img.convert('RGB')
+        buf = io.BytesIO()
+        img.save(buf, format='JPEG', quality=92, optimize=True)
+        return buf.getvalue(), 'image/jpeg'
+    except Exception:
+        return image_data, 'image/jpeg'
+
+
 # ── 图片压缩函数 ───────────────────────────────────────────────
 def compress_image(image_data, max_size=1.5*1024*1024):
     """
@@ -367,6 +385,7 @@ def generate_image():
     source_image_path = data.get("source_image_path", "")
     extra_image_paths = data.get("extra_image_paths") or []
     auto_compress = data.get("auto_compress", True)
+    remove_watermark = data.get("remove_watermark", False)
 
     if not API_KEY:
         return jsonify({"error": "API_KEY not configured"}), 500
@@ -434,6 +453,10 @@ def generate_image():
         os.makedirs(draft_dir, exist_ok=True)
         draft_path = os.path.join(draft_dir, file_name)
         image_data = base64.b64decode(image_part["data"])
+
+        # 去除隐形水印（JPEG 重编码 quality=92）
+        if remove_watermark:
+            image_data, _ = remove_invisible_watermark(image_data)
 
         # 自动压缩
         if auto_compress:
@@ -699,6 +722,36 @@ def compress_task_images(task_id):
         "total_size_after": total_size_after,
         "saved_bytes": total_size_before - total_size_after
     })
+
+@app.route("/api/tasks/<task_id>/remove_watermark", methods=["POST"])
+def remove_watermark_endpoint(task_id):
+    """批量去除任务 generated 目录中所有图片的隐形水印（JPEG重编码 quality=92）"""
+    processed_count = 0
+    error_count = 0
+
+    gen_dir = os.path.join(task_folder(task_id), "generated")
+    if not os.path.exists(gen_dir):
+        return jsonify({"success": True, "processed_count": 0, "error_count": 0})
+
+    for fname in os.listdir(gen_dir):
+        fpath = os.path.join(gen_dir, fname)
+        if not os.path.isfile(fpath):
+            continue
+        ext = os.path.splitext(fname)[1].lower()
+        if ext not in ('.jpg', '.jpeg', '.png', '.webp'):
+            continue
+        try:
+            with open(fpath, "rb") as f:
+                original = f.read()
+            processed, _ = remove_invisible_watermark(original)
+            with open(fpath, "wb") as f:
+                f.write(processed)
+            processed_count += 1
+        except Exception:
+            error_count += 1
+
+    logger.info("[去水印] task=%s processed=%s errors=%s", task_id, processed_count, error_count)
+    return jsonify({"success": True, "processed_count": processed_count, "error_count": error_count})
 
 @app.route("/api/tasks/<task_id>/open_folder", methods=["POST"])
 def open_folder(task_id):

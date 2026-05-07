@@ -213,7 +213,7 @@
             align-items: center; justify-content: center; overflow: hidden; border-radius: 4px;
         }
         .img-frame-result img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .save-all-btn, .open-folder-btn, .compress-btn {
+        .save-all-btn, .open-folder-btn, .compress-btn, .watermark-btn {
             padding: 12px 20px; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;
             margin-right: 10px;
         }
@@ -222,6 +222,13 @@
         .compress-btn { background: #e67e22; }
         .compress-btn:disabled { background: #95a5a6; cursor: not-allowed; }
         .compress-btn.running::after {
+            content: ""; display: inline-block; width: 12px; height: 12px; margin-left: 6px;
+            border: 2px solid white; border-top: 2px solid transparent; border-radius: 50%;
+            animation: spin 0.8s linear infinite; vertical-align: middle;
+        }
+        .watermark-btn { background: #2980b9; }
+        .watermark-btn:disabled { background: #95a5a6; cursor: not-allowed; }
+        .watermark-btn.running::after {
             content: ""; display: inline-block; width: 12px; height: 12px; margin-left: 6px;
             border: 2px solid white; border-top: 2px solid transparent; border-radius: 50%;
             animation: spin 0.8s linear infinite; vertical-align: middle;
@@ -1504,6 +1511,10 @@
                     <label class="auto-compress-label">
                         <input type="checkbox" id="auto-compress" checked> 自动压缩
                     </label>
+                    <button class="watermark-btn" id="watermark-btn">🛡️ 去除隐形水印</button>
+                    <label class="auto-compress-label">
+                        <input type="checkbox" id="auto-watermark"> 默认去除隐形水印
+                    </label>
                     <button class="save-all-btn" id="save-images-btn">💾 保存到任务文件夹</button>
                     <button class="save-all-btn" id="save-to-product-btn">📤 保存为图片子集</button>
                     <button class="open-folder-btn" id="open-folder-btn">📂 打开生成图片文件夹</button>
@@ -2176,6 +2187,7 @@
             });
 
             const autoCompress = document.getElementById("auto-compress").checked;
+            const removeWatermark = document.getElementById("auto-watermark").checked;
 
             // 批量替换产品：附加参考图1、参考图2
             let extra_image_paths = undefined;
@@ -2195,7 +2207,8 @@
                         prompt: card.prompt,
                         source_image_path: card.source_image,
                         extra_image_paths: extra_image_paths,
-                        auto_compress: autoCompress
+                        auto_compress: autoCompress,
+                        remove_watermark: removeWatermark
                     })
                 });
                 if (!res.ok) {
@@ -2602,6 +2615,33 @@
                 btn.disabled = false;
                 btn.classList.remove("running");
                 btn.textContent = "🔽 压缩到1.5MB以下";
+            }
+        });
+
+        // ---------- 去除隐形水印 ----------
+        document.getElementById("watermark-btn").addEventListener("click", async () => {
+            if (!currentTaskId) {
+                showMsg("请先选择一个任务！", true);
+                return;
+            }
+            const btn = document.getElementById("watermark-btn");
+            btn.disabled = true;
+            btn.classList.add("running");
+            btn.textContent = "🛡️ 处理中…";
+            try {
+                const res = await fetch(`/api/tasks/${currentTaskId}/remove_watermark`, { method: "POST" });
+                const data = await res.json();
+                if (data.processed_count > 0) {
+                    showMsg(`✅ 去水印完成：${data.processed_count} 张图片已重新编码`);
+                } else {
+                    showMsg("✅ 没有可处理的图片");
+                }
+            } catch (e) {
+                showMsg("❌ 去水印失败: " + e.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove("running");
+                btn.textContent = "🛡️ 去除隐形水印";
             }
         });
 
