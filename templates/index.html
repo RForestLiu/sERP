@@ -1946,12 +1946,15 @@
         function renderWorkspace() {
             text1El.value = taskData.text1 || "";
             const refRow = document.getElementById("ref-images-row");
+            const genPromptBtn = document.getElementById("gen-prompt-btn");
             if (currentTaskType === "batch_replace_product") {
                 refRow.style.display = "flex";
+                genPromptBtn.style.display = "";
                 _renderRefImage(1);
                 _renderRefImage(2);
             } else {
                 refRow.style.display = "none";
+                genPromptBtn.style.display = "none";
             }
             renderCards();
         }
