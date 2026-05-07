@@ -214,8 +214,7 @@
         }
         .img-frame-result img { max-width: 100%; max-height: 100%; object-fit: contain; }
         .save-all-btn, .open-folder-btn, .compress-btn, .watermark-btn {
-            padding: 12px 20px; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;
-            margin-right: 10px;
+            padding: 10px 16px; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px;
         }
         .save-all-btn { background: #8e44ad; }
         .open-folder-btn { background: #2ecc71; }
@@ -233,10 +232,20 @@
             border: 2px solid white; border-top: 2px solid transparent; border-radius: 50%;
             animation: spin 0.8s linear infinite; vertical-align: middle;
         }
-        .toolbar { display: flex; margin-top: 15px; align-items: center; }
+        .toolbar { display: flex; flex-direction: column; margin-top: 15px; gap: 8px; }
+        .toolbar-row {
+            display: flex; align-items: center; gap: 10px;
+            padding: 6px 0;
+        }
+        .toolbar-row + .toolbar-row {
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+        .toolbar-row.vertical { flex-direction: column; align-items: flex-start; gap: 4px; }
+        .toolbar-subrow { display: flex; align-items: center; gap: 10px; }
         .auto-compress-label {
             font-size: 12px; color: #555; display: inline-flex; align-items: center; gap: 4px;
-            margin-right: 10px; cursor: pointer; user-select: none;
+            cursor: pointer; user-select: none;
         }
         .auto-compress-label input { margin: 0; }
         .message {
@@ -1505,19 +1514,29 @@
                 </div>
                 <div class="cards-container" id="cards-container"></div>
                 <div class="toolbar">
-                    <button class="save-all-btn" id="copy-all-source-btn">📋 一键复制原图</button>
-                    <button class="save-all-btn" id="copy-all-result-btn">📋 一键复制生成图</button>
-                    <button class="compress-btn" id="compress-btn">🔽 压缩到1.5MB以下</button>
-                    <label class="auto-compress-label">
-                        <input type="checkbox" id="auto-compress" checked> 自动压缩
-                    </label>
-                    <button class="watermark-btn" id="watermark-btn">🛡️ 去除隐形水印</button>
-                    <label class="auto-compress-label">
-                        <input type="checkbox" id="auto-watermark"> 默认去除隐形水印
-                    </label>
-                    <button class="save-all-btn" id="save-images-btn">💾 保存到任务文件夹</button>
-                    <button class="save-all-btn" id="save-to-product-btn">📤 保存为图片子集</button>
-                    <button class="open-folder-btn" id="open-folder-btn">📂 打开生成图片文件夹</button>
+                    <div class="toolbar-row">
+                        <button class="save-all-btn" id="copy-all-source-btn">📋 一键复制原图</button>
+                        <button class="save-all-btn" id="copy-all-result-btn">📋 一键复制生成图</button>
+                    </div>
+                    <div class="toolbar-row vertical">
+                        <div class="toolbar-subrow">
+                            <button class="compress-btn" id="compress-btn">🔽 压缩到1.5MB以下</button>
+                            <label class="auto-compress-label">
+                                <input type="checkbox" id="auto-compress" checked> 自动压缩
+                            </label>
+                        </div>
+                        <div class="toolbar-subrow">
+                            <button class="watermark-btn" id="watermark-btn">🛡️ 去除隐形水印</button>
+                            <label class="auto-compress-label">
+                                <input type="checkbox" id="auto-watermark"> 默认去除隐形水印
+                            </label>
+                        </div>
+                    </div>
+                    <div class="toolbar-row">
+                        <button class="save-all-btn" id="save-images-btn">💾 保存到任务文件夹</button>
+                        <button class="save-all-btn" id="save-to-product-btn">📤 保存为图片子集</button>
+                        <button class="open-folder-btn" id="open-folder-btn">📂 打开生成图片文件夹</button>
+                    </div>
                 </div>
             </div>
         </div>
