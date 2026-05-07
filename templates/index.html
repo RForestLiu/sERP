@@ -275,8 +275,8 @@
         .poster-card .poster-img-frame img { max-width: 100%; max-height: 100%; object-fit: contain; }
         .poster-card .poster-img-frame:hover img { transform: scale(2); z-index: 10; transition: transform 0.2s; }
         .poster-card .poster-card-name {
-            font-size: 12px; color: #555; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            text-align: center;
+            font-size: 12px; color: #555; margin-top: 6px; word-break: break-word;
+            text-align: center; line-height: 1.4;
         }
         .poster-card .poster-card-delete {
             position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.45); color: white;
@@ -1938,6 +1938,9 @@
         let currentTaskId = null;
         let currentTaskType = "";
         let taskData = { text1: "", cards: [] };
+        let _batchRunning = false;
+        let _batchAbortCtrl = null;
+        let _batchCancelBtn = null;
         const taskList = document.getElementById("task-list");
         const text1El = document.getElementById("text1");
         const cardsContainer = document.getElementById("cards-container");
@@ -1992,7 +1995,20 @@
 
         async function switchTask(taskId) {
             if (currentTaskId && currentTaskId !== taskId) {
-                await saveCurrentTask();
+                // 如果正在批量生成，先取消并保存部分结果
+                if (_batchRunning && _batchAbortCtrl) {
+                    _batchAbortCtrl.abort();
+                    await saveCurrentTask();
+                    if (_batchCancelBtn) {
+                        _batchCancelBtn.classList.remove("running");
+                        _batchCancelBtn.textContent = "▶ 全部生成";
+                    }
+                    _batchRunning = false;
+                    _batchAbortCtrl = null;
+                    _batchCancelBtn = null;
+                } else {
+                    await saveCurrentTask();
+                }
             }
             await loadTask(taskId);
             highlightActiveTask();
@@ -2443,6 +2459,10 @@
                     if (card.source_image) { _previewPosterImage(card); }
                 });
 
+                cardDiv.querySelector(".poster-result").addEventListener("click", function() {
+                    if (card.generated_draft || card.generated_final) { _previewGenImage(card); }
+                });
+
                 cardDiv.querySelector(".poster-exec-btn").addEventListener("click", function(e) {
                     e.stopPropagation();
                     _onSingleGenerate(card, this);
@@ -2524,16 +2544,22 @@
         }
 
         function _previewPosterImage(card) {
-            // Reuse existing preview overlay
             const overlay = document.getElementById("img-preview-overlay");
             const srcImg = document.getElementById("img-preview-src");
             const genImg = document.getElementById("img-preview-gen");
-            if (card.source_image) {
-                srcImg.src = "/task_images/" + currentTaskId + "/" + card.source_image;
-            } else {
-                srcImg.src = "";
-            }
-            genImg.src = "";
+            srcImg.src = card.source_image ? "/task_images/" + currentTaskId + "/" + card.source_image : "";
+            var genPath = card.generated_final || card.generated_draft;
+            genImg.src = genPath ? "/task_images/" + currentTaskId + "/" + genPath : "";
+            overlay.classList.add("active");
+        }
+
+        function _previewGenImage(card) {
+            const overlay = document.getElementById("img-preview-overlay");
+            const srcImg = document.getElementById("img-preview-src");
+            const genImg = document.getElementById("img-preview-gen");
+            srcImg.src = card.source_image ? "/task_images/" + currentTaskId + "/" + card.source_image : "";
+            var genPath = card.generated_final || card.generated_draft;
+            genImg.src = genPath ? "/task_images/" + currentTaskId + "/" + genPath : "";
             overlay.classList.add("active");
         }
 
@@ -2591,8 +2617,15 @@
             showMsg("提示词已生成，可点击“展开编辑”修改。");
         }
 
-        // 全部生成（批量替换产品）
+        // 全部生成（批量替换产品）— 并发 + 超时 + 可取消
         async function _onBatchGenerate(btn) {
+            // 取消模式
+            if (_batchRunning) {
+                if (_batchAbortCtrl) { _batchAbortCtrl.abort(); }
+                showMsg("已取消批量生成");
+                return;
+            }
+
             if (!taskData.cards || taskData.cards.length === 0) {
                 showMsg("没有海报卡片！", true); return;
             }
@@ -2603,30 +2636,40 @@
                 showMsg("提示词不能为空，请先点击“生成提示词”！", true); return;
             }
 
+            _batchRunning = true;
+            _batchAbortCtrl = new AbortController();
+            _batchCancelBtn = btn;
+            btn.textContent = "✕ 取消生成";
+            btn.classList.add("running");
+
             const autoCompress = document.getElementById("auto-compress").checked;
             const removeWatermark = document.getElementById("auto-watermark").checked;
-
             const extra_image_paths = [];
             if (taskData.ref_image_1) extra_image_paths.push(taskData.ref_image_1);
             if (taskData.ref_image_2) extra_image_paths.push(taskData.ref_image_2);
 
-            btn.disabled = true;
-            btn.classList.add("running");
-            btn.textContent = "正在生成…";
-
             const progressEl = document.getElementById("batch-progress");
             let succeeded = 0;
             let failed = 0;
+            const total = taskData.cards.length;
+            const CONCURRENCY = 3;
 
-            for (let i = 0; i < taskData.cards.length; i++) {
-                const card = taskData.cards[i];
-                if (!card.source_image) {
-                    failed++;
-                    continue;
-                }
-                progressEl.textContent = "已生成 " + succeeded + "/" + taskData.cards.length + " …";
-                try {
-                    const res = await fetch("/api/generate", {
+            // 只处理有 source_image 的卡片
+            const pending = taskData.cards.filter(function(c) { return !!c.source_image; });
+            failed += taskData.cards.length - pending.length;
+
+            for (let i = 0; i < pending.length; i += CONCURRENCY) {
+                if (_batchAbortCtrl.signal.aborted) break;
+                const batch = pending.slice(i, i + CONCURRENCY);
+                progressEl.textContent = "已生成 " + succeeded + "/" + total + " (并发" + batch.length + ")…";
+
+                const tasks = batch.map(function(card) {
+                    const ctrl = new AbortController();
+                    const timeoutId = setTimeout(function() { ctrl.abort(); }, 300000); // 5 min timeout
+                    // 父级取消信号联动
+                    _batchAbortCtrl.signal.addEventListener("abort", function() { ctrl.abort(); });
+
+                    return fetch("/api/generate", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
@@ -2637,29 +2680,46 @@
                             extra_image_paths: extra_image_paths,
                             auto_compress: autoCompress,
                             remove_watermark: removeWatermark
-                        })
+                        }),
+                        signal: ctrl.signal
+                    }).then(async function(res) {
+                        clearTimeout(timeoutId);
+                        if (!res.ok) {
+                            const errData = await res.json().catch(function() { return null; });
+                            throw new Error(errData && errData.error ? errData.error : "HTTP " + res.status);
+                        }
+                        const data = await res.json();
+                        card.generated_draft = data.draft_file;
+                        return { ok: true, card: card };
+                    }).catch(function(e) {
+                        clearTimeout(timeoutId);
+                        if (e.name === "AbortError") {
+                            return { ok: false, card: card, error: "超时或已取消" };
+                        }
+                        return { ok: false, card: card, error: e.message };
                     });
-                    if (!res.ok) {
-                        const errData = await res.json().catch(function() { return null; });
-                        throw new Error(errData && errData.error ? errData.error : "HTTP " + res.status);
-                    }
-                    const data = await res.json();
-                    card.generated_draft = data.draft_file;
-                    succeeded++;
-                } catch (e) {
-                    failed++;
-                    console.error("Generate failed for card " + card.id + ":", e);
+                });
+
+                const results = await Promise.allSettled(tasks);
+                for (let r = 0; r < results.length; r++) {
+                    const outcome = results[r].value;
+                    if (outcome.ok) { succeeded++; }
+                    else { failed++; console.error("Generate failed for card " + outcome.card.id + ":", outcome.error); }
                 }
             }
 
             await saveCurrentTask();
-            _renderResultGrid();
             _renderPosterCards();
 
-            btn.disabled = false;
+            var wasAborted = _batchAbortCtrl && _batchAbortCtrl.signal.aborted;
+            _batchRunning = false;
+            _batchAbortCtrl = null;
+            _batchCancelBtn = null;
             btn.classList.remove("running");
             btn.textContent = "▶ 全部生成";
-            progressEl.textContent = "生成完成：成功 " + succeeded + " ，失败 " + failed;
+            progressEl.textContent = wasAborted
+                ? "已取消：成功 " + succeeded + " ，失败 " + failed
+                : "生成完成：成功 " + succeeded + " ，失败 " + failed;
         }
 
         // 删除卡片（旧版，保留兼容）
