@@ -974,13 +974,39 @@
       if (!el) return false;
       var tag = el.tagName.toLowerCase();
 
+      // 如果附近有"编辑JSON代码"开关，先点击进入 JSON 编辑模式
+      if (tag === "textarea" || el.type === "textarea" || el.classList.contains("CodeMirror")) {
+        var formItem = el.closest(".ant-form-item");
+        var jsonToggle = (formItem || document).querySelector(".ant-switch, [class*='json-toggle'], [class*='code-toggle']");
+        if (!jsonToggle) {
+          var allSwitches = document.querySelectorAll(".ant-switch");
+          for (var si = 0; si < allSwitches.length; si++) {
+            var swLabel = allSwitches[si].closest(".ant-form-item");
+            if (swLabel && swLabel.textContent.indexOf("JSON") !== -1) { jsonToggle = allSwitches[si]; break; }
+          }
+        }
+        if (jsonToggle && !jsonToggle.classList.contains("ant-switch-checked")) {
+          jsonToggle.click();
+        }
+      }
+
       function trigger(el, eventName) {
         el.dispatchEvent(new Event(eventName, { bubbles: true }));
       }
 
       if (tag === "input") {
         if (el.type === "checkbox" || el.type === "radio") {
-          el.checked = (value === "true" || value === "1" || value === "yes");
+          var boolVal = (value === "true" || value === "1" || value === "yes");
+          if (boolVal || value === "false" || value === "0" || value === "no") {
+            el.checked = boolVal;
+            trigger(el, "change");
+            return true;
+          }
+          // 非布尔值：匹配 checkbox/radio 附近文本
+          var cbLabel = (findLabel(el, true) || "").toLowerCase();
+          var cbText = (el.parentElement ? el.parentElement.textContent : "").toLowerCase();
+          var vLower = value.toLowerCase();
+          el.checked = (cbLabel.indexOf(vLower) !== -1 || cbText.indexOf(vLower) !== -1 || vLower.indexOf(cbLabel) !== -1);
           trigger(el, "change");
           return true;
         }
@@ -1108,10 +1134,29 @@
     setProgress(20);
 
     var customPrompts = collectCustomPrompts();
+
+    // 关键字段标签匹配：产品标题、产品描述、主题标签、JSON富文本
+    var KEY_PATTERNS = ["产品标题", "产品描述", "主题标签", "json", "#хештеги", "название", "описание"];
+    function isKeyField(f) {
+      var lbl = (f.label || f.name || "").toLowerCase();
+      for (var k = 0; k < KEY_PATTERNS.length; k++) {
+        if (lbl.indexOf(KEY_PATTERNS[k].toLowerCase()) !== -1) return true;
+      }
+      return false;
+    }
+
+    var keyFields = [];
+    var restFields = [];
+    formFields.forEach(function (f) {
+      if (isKeyField(f)) keyFields.push(f);
+      else restFields.push(f);
+    });
+
     var BATCH_SIZE = 10;
     var batches = [];
-    for (var i = 0; i < formFields.length; i += BATCH_SIZE) {
-      batches.push(formFields.slice(i, i + BATCH_SIZE));
+    if (keyFields.length) batches.push(keyFields);
+    for (var i = 0; i < restFields.length; i += BATCH_SIZE) {
+      batches.push(restFields.slice(i, i + BATCH_SIZE));
     }
 
     showToast("分 " + batches.length + " 批发送 " + formFields.length + " 个字段到 DeepSeek 分析...", "info");
