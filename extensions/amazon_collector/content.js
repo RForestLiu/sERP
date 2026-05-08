@@ -330,12 +330,13 @@
     },
 
     extractBullets: function () {
-      // Try multiple selectors for "About this item" bullets — Amazon changes markup frequently
+      // Try multiple selectors for "About this item" bullets
       var selectors = [
+        "#pqv-feature-bullets li span.a-list-item",
+        "#pqv-feature-bullets .a-list-item",
         "#feature-bullets .a-list-item",
         "#feature-bullets li",
         "#feature-bullets .a-section.a-spacing-small",
-        "#feature-bullets span.a-list-item",
         "#featurebullets_feature_div .a-list-item",
         "#featurebullets_feature_div li",
         "[data-a-expander-name='feature_bullets'] .a-list-item"
@@ -353,10 +354,11 @@
     extractAboutItem: function () {
       // Reuse same selector chain as extractBullets
       var selectors = [
+        "#pqv-feature-bullets li span.a-list-item",
+        "#pqv-feature-bullets .a-list-item",
         "#feature-bullets .a-list-item",
         "#feature-bullets li",
         "#feature-bullets .a-section.a-spacing-small",
-        "#feature-bullets span.a-list-item",
         "#featurebullets_feature_div .a-list-item",
         "#featurebullets_feature_div li",
         "[data-a-expander-name='feature_bullets'] .a-list-item"
@@ -389,25 +391,49 @@
     /** Product Details / Technical Specs — 返回结构化 JSON */
     extractProductDetails: function () {
       var result = {};
-      // 标准 product details 表格
-      var trs = $$("#productDetails_techSpec_section_1 tr, #productDetails_detailBullets_sections1 tr, #prodDetails tr, #detailBullets_feature_div tr");
-      trs.forEach(function (tr) {
-        var th = tr.querySelector("th");
-        var td = tr.querySelector("td");
+
+      // 转为 key:value 的通用函数
+      function parseLines(text) {
+        var lines = text.split(/\n/);
+        lines.forEach(function (line) {
+          line = line.replace(/[‏‎]/g, "").trim();
+          if (!line) return;
+          var idx = line.indexOf(":");
+          if (idx === -1) return;
+          var key = line.slice(0, idx).replace(/[‏‎]/g, "").trim();
+          var val = line.slice(idx + 1).replace(/[‏‎]/g, "").trim();
+          if (!key || !val) return;
+          var normKey = key.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "").toLowerCase();
+          if (normKey && val && !result[normKey]) result[normKey] = val;
+        });
+      }
+
+      // 1. 现代 Voyager 布局表格
+      var trs = $$("#prodDetails table.prodDetTable tr, .prodDetTable tr, #productDetails_techSpec_section_1 tr, #productDetails_detailBullets_sections1 tr, #detailBullets_feature_div tr");
+      for (var i = 0; i < trs.length; i++) {
+        var th = trs[i].querySelector("th");
+        var td = trs[i].querySelector("td");
         if (th && td) {
-          var key = cleanText(th).replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "").toLowerCase();
-          var val = cleanText(td);
-          if (key && val && !result[key]) result[key] = val;
+          var tKey = cleanText(th).replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "").toLowerCase();
+          var tVal = cleanText(td);
+          if (tKey && tVal && !result[tKey]) result[tKey] = tVal;
         }
-      });
+      }
       if (Object.keys(result).length) return result;
 
-      // 备用格式：detail-bullets wrapper
+      // 2. detail-bullets 列表 → 按行解析 key:value
       var bullets = $$("#detailBulletsWrapper_feature_div .a-list-item, #detailBullets_feature_div .a-list-item");
       if (bullets.length) {
-        result._raw = bullets.map(function (el) { return cleanText(el); }).filter(Boolean).join("\n");
-        return result;
+        parseLines(bullets.map(function (el) { return cleanText(el); }).filter(Boolean).join("\n"));
+        if (Object.keys(result).length) return result;
       }
+
+      // 3. 最后兜底：尝试从 #prodDetails 全文解析（可能有隐藏的表格文本）
+      var prodDetailsEl = document.getElementById("prodDetails");
+      if (prodDetailsEl) {
+        parseLines(cleanText(prodDetailsEl));
+      }
+
       return result;
     },
 
