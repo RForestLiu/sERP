@@ -797,31 +797,43 @@
     return true;
   }
 
+  // 跳过这些已经由其他按钮专门处理的字段，避免二次填充
+  function isSkippedField(label) {
+    var kw = (label || "").toLowerCase().replace(/\s+/g, "");
+    return kw.indexOf("店铺") !== -1
+        || kw.indexOf("分类") !== -1
+        || kw.indexOf("品类") !== -1
+        || kw.indexOf("类目") !== -1;
+  }
+
   function collectFormFields() {
     var fields = [];
     var seenSelectors = {};
     document.querySelectorAll('input:not([type="hidden"]):not([type="file"])').forEach(function (el) {
       if (!isVisibleField(el)) return;
       var sel = buildSelector(el);
-      // 去重：同一个 selector 只保留第一个（针对复选框组）
+      var label = findLabel(el);
+      if (isSkippedField(label)) return;
       if (el.type === "checkbox" || el.type === "radio") {
         if (seenSelectors[sel]) return;
-        // 用 label 前缀做组名，比如 "包装" 组的复选框只发一个代表
-        var label = findLabel(el);
         var groupKey = label.replace(/\(.+?\)/, "").trim();
         if (seenSelectors[groupKey]) return;
         seenSelectors[groupKey] = true;
       }
       seenSelectors[sel] = true;
-      fields.push({ tag: "input", type: el.type || "text", name: el.name || "", id: el.id || "", label: findLabel(el), placeholder: el.placeholder || "", currentValue: el.value || "", selector: sel });
+      fields.push({ tag: "input", type: el.type || "text", name: el.name || "", id: el.id || "", label: label, placeholder: el.placeholder || "", currentValue: el.value || "", selector: sel });
     });
     document.querySelectorAll("select").forEach(function (el) {
       if (!isVisibleField(el)) return;
-      fields.push({ tag: "select", name: el.name || "", id: el.id || "", label: findLabel(el), currentValue: el.value || "", options: Array.from(el.options).map(function (o) { return { value: o.value, text: o.text }; }), selector: buildSelector(el) });
+      var label = findLabel(el);
+      if (isSkippedField(label)) return;
+      fields.push({ tag: "select", name: el.name || "", id: el.id || "", label: label, currentValue: el.value || "", options: Array.from(el.options).map(function (o) { return { value: o.value, text: o.text }; }), selector: buildSelector(el) });
     });
     document.querySelectorAll("textarea").forEach(function (el) {
       if (!isVisibleField(el)) return;
-      fields.push({ tag: "textarea", name: el.name || "", id: el.id || "", label: findLabel(el), placeholder: el.placeholder || "", currentValue: el.value || "", selector: buildSelector(el) });
+      var label = findLabel(el);
+      if (isSkippedField(label)) return;
+      fields.push({ tag: "textarea", name: el.name || "", id: el.id || "", label: label, placeholder: el.placeholder || "", currentValue: el.value || "", selector: buildSelector(el) });
     });
     return fields;
   }
