@@ -10,6 +10,37 @@
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
 
+  // ==================== Service Worker Fetch Proxy ====================
+  // Content scripts on some sites can"t directly fetch to localhost due to CSP.
+  // Route all requests through the extension"s background service worker.
+  function bgFetch(url, options) {
+    console.log("[sERP] bgFetch:", (options && options.method) || "GET", url);
+    return new Promise(function (resolve, reject) {
+      chrome.runtime.sendMessage(
+        { type: "fetch", url: url, options: options || {} },
+        function (result) {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+            return;
+          }
+          if (!result) {
+            reject(new Error("bgFetch: no response from service worker"));
+            return;
+          }
+          // Build a synthetic Response-like object
+          var body = result.body || "";
+          resolve({
+            ok: result.ok,
+            status: result.status,
+            statusText: result.statusText,
+            json: function () { return Promise.resolve(JSON.parse(body)); },
+            text: function () { return Promise.resolve(body); }
+          });
+        }
+      );
+    });
+  }
+
   // 店铺中文名 → store_id 映射
   var STORE_CN_MAP = {
     "安凌": "ozon_anling",
@@ -177,7 +208,7 @@
   // ==================== 产品 API ====================
   function fetchProducts() {
     console.log("[sERP] 正在请求产品列表:", API_PRODUCTS);
-    return fetch(API_PRODUCTS)
+    return bgFetch(API_PRODUCTS)
       .then(function (res) {
         console.log("[sERP] 产品列表响应状态:", res.status);
         if (!res.ok) throw new Error("HTTP " + res.status + " 获取产品列表失败");
@@ -227,7 +258,7 @@
     showToast("正在匹配 Ozon 品类...", "info");
     var prodData = selectedProduct.product_data || {};
     var desc = (prodData.about_item || "") + " " + (prodData.product_description || "");
-    return fetch(FLASK_BASE + "/api/ozon/" + storeId + "/match-category", {
+    return bgFetch(FLASK_BASE + "/api/ozon/" + storeId + "/match-category", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ product_title: selectedProduct.title || "", product_category: selectedProduct.category || "", product_description: desc.trim() })
     })
@@ -348,7 +379,7 @@
     showToast("正在分析产品 " + selectedProduct.skc + " 的表单字段...", "info");
     var formFields = collectFormFields(); setProgress(30);
     showToast("正在调用 DeepSeek 分析 " + formFields.length + " 个表单字段...", "info");
-    return fetch(API_AUTO_FILL, {
+    return bgFetch(API_AUTO_FILL, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ skc: selectedProduct.skc, product_title: selectedProduct.title, product_data: selectedProduct.product_data || {}, manual_data: selectedProduct.manual_data || {}, form_fields: formFields })
     })

@@ -4,6 +4,9 @@
   "version": "3.0",
   "description": "sERP 浏览器助手：多平台采集 (Amazon/1688/WB/Ozon) + 店小秘 Ozon 智能上架",
   "permissions": ["storage"],
+  "background": {
+    "service_worker": "background.js"
+  },
   "host_permissions": [
     "http://localhost:5000/*",
     "http://127.0.0.1:5000/*"
