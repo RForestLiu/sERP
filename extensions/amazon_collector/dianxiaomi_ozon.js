@@ -157,6 +157,8 @@
       '<textarea class="serp-hint-input" id="serp-hint-desc" placeholder="描述填充提示..."></textarea>' +
       '<div class="hint-label">JSON文本</div>' +
       '<textarea class="serp-hint-input" id="serp-hint-json" placeholder="JSON属性填充提示..."></textarea>' +
+      '<div class="hint-label">主题标签</div>' +
+      '<textarea class="serp-hint-input" id="serp-hint-hashtag" placeholder="主题标签填充提示..."></textarea>' +
     '</div>';
   document.body.appendChild(toolbar);
 
@@ -202,6 +204,7 @@
   var hintTitle = document.getElementById("serp-hint-title");
   var hintDesc = document.getElementById("serp-hint-desc");
   var hintJson = document.getElementById("serp-hint-json");
+  var hintHashtag = document.getElementById("serp-hint-hashtag");
 
   // ==================== 工具函数 ====================
   function showToast(msg, type) {
@@ -818,9 +821,11 @@
     var t = (hintTitle.value || "").trim();
     var d = (hintDesc.value || "").trim();
     var j = (hintJson.value || "").trim();
+    var h = (hintHashtag.value || "").trim();
     if (t) prompts.title = t;
     if (d) prompts.description = d;
     if (j) prompts.json_text = j;
+    if (h) prompts.hashtag = h;
     return prompts;
   }
 
