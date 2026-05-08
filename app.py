@@ -2106,11 +2106,24 @@ def auto_fill_analyze():
     description = product_data.get("description", "")
 
     # 收集所有产品文本
+    product_details = product_data.get("product_details", {})
+    if product_details and isinstance(product_details, dict) and product_details.get("_raw"):
+        del product_details["_raw"]
+    brand = product_data.get("brand", "")
+    category = product_data.get("category", "")
+    rating = product_data.get("rating", "")
+    variants = product_data.get("variants", {})
+
     product_texts = [
+        "品牌: " + brand if brand else "",
+        "品类: " + category if category else "",
+        "评分: " + rating if rating else "",
         product_title,
         about_item,
         product_description,
         description,
+        "### 产品规格\n" + json.dumps(product_details, ensure_ascii=False, indent=2) if product_details else "",
+        "### 变体信息\n" + json.dumps(variants, ensure_ascii=False, indent=2) if variants else "",
     ]
     product_text = "\n".join(t for t in product_texts if t)
 
@@ -2152,20 +2165,20 @@ def auto_fill_analyze():
 - **重量** → 匹配标签含"重量""weight""重さ"的字段
 - **尺寸/长宽高** → 匹配标签含"尺寸""长""宽""高""size""dimension"的字段
 - **颜色** → 匹配标签含"颜色""color""colour"的字段
-- **材质** → 匹配标签含"材质""材料""material"的字段
+- **材质/材料** → 匹配标签含"材质""材料""material""leather"的字段，从产品标题/描述推断
 - **品牌** → 匹配标签含"品牌""brand"的字段
 - **分类/品类** → 匹配标签含"分类""品类""category"的字段
-- **数量/库存** → 匹配标签含"数量""库存""quantity""stock"的字段
+- **数量/件数/个数** → 匹配标签含"数量""库存""件数""个数""quantity""count""pcs"的字段，从产品描述或常识推断
 - **对于 select 下拉框**：从选项列表中匹配最接近的值
-- **对于 checkbox**：返回 true/false
+- **对于 checkbox**：返回匹配的选项文本或 true/false
 - **对于其他字段**：根据标签和占位符推断
 
 ### 重要规则：
 1. selector 必须从表单字段列表里**原样复制**"选择器"的值，不要自己编造
-2. 如果某个字段无法匹配到产品数据中的任何信息，不要输出该字段的映射
+2. 尽量为每个字段提供填充值，能推断的就推断（如皮革钱包 → 材质为"天然皮革"）
 3. 对于下拉框(select)，必须从提供的选项列表中选取值
 4. 所有值必须是字符串
-5. 不要编造数据，不确定的字段跳过
+5. 明显无关的字段可跳过，但属性类字段尽量填充
 
 请严格按照以下 JSON 格式返回，不要包含其他内容：
 {"mappings": [{"selector": "...", "value": "..."}, ...]}
