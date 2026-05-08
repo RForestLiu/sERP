@@ -32,6 +32,13 @@
   function text(el) {
     return el ? el.textContent.trim() : "";
   }
+  /** 克隆元素并剔除 <style>/<script> 后取纯文本 */
+  function cleanText(el) {
+    if (!el) return "";
+    var clone = el.cloneNode(true);
+    clone.querySelectorAll("style, script, noscript, [style*='display:none'], [style*='display: none'], .aplus-carousel-nav, .aplus-pagination-dots").forEach(function (n) { n.remove(); });
+    return clone.textContent.replace(/[\s​‌]+/g, " ").trim();
+  }
   function attr(el, name) {
     return el ? el.getAttribute(name) || "" : "";
   }
@@ -335,12 +342,12 @@
     /** Product Description — 产品描述正文（A+ 内容等） */
     extractProductDescription: function () {
       var el = document.getElementById("productDescription");
-      if (el) return text(el);
+      if (el) return cleanText(el);
       el = document.querySelector("#aplus_feature_div, #aplus .aplus-v2-description, [data-aplus]");
-      if (el) return text(el);
+      if (el) return cleanText(el);
       // A+ narrative cards
       var cards = $$("#aplus_feature_div .card-content, #aplus_feature_div .aplus-module-content");
-      if (cards.length) return cards.map(function (c) { return text(c); }).filter(Boolean).join("\n");
+      if (cards.length) return cards.map(function (c) { return cleanText(c); }).filter(Boolean).join("\n");
       return "";
     },
 
@@ -351,13 +358,13 @@
       $$("#productDetails_techSpec_section_1 tr, #productDetails_detailBullets_sections1 tr, #prodDetails tr, #detailBullets_feature_div tr").forEach(function (tr) {
         var th = tr.querySelector("th");
         var td = tr.querySelector("td");
-        if (th && td) rows.push(text(th) + ": " + text(td));
+        if (th && td) rows.push(cleanText(th) + ": " + cleanText(td));
       });
       if (rows.length) return rows.join("\n");
 
       // 备用格式：detail-bullets wrapper
       var bullets = $$("#detailBulletsWrapper_feature_div .a-list-item, #detailBullets_feature_div .a-list-item");
-      return bullets.map(function (el) { return text(el); }).filter(Boolean).join("\n");
+      return bullets.map(function (el) { return cleanText(el); }).filter(Boolean).join("\n");
     },
 
     extractAll: function () {
