@@ -374,10 +374,10 @@
     extractProductDescription: function () {
       // A+ content first (richer description with images), then product description
       var el = document.querySelector("#aplus_feature_div, #aplus .aplus-v2-description, [data-aplus]");
-      if (el) { var t = cleanText(el); if (t.length > 30) return t; }
+      if (el) { var t = cleanText(el); if (t.length > 50 && t.indexOf("Previous page") === -1 && t.indexOf("Product description") !== t.length - 18) return t; }
       // Product description section — use .a-section children, not the wrapper
       el = document.querySelector("#productDescription .a-section, #productDescription_feature_div .a-section");
-      if (el) { var t2 = cleanText(el); if (t2 && t2.indexOf("Previous page") === -1) return t2; }
+      if (el) { var t2 = cleanText(el); if (t2 && t2.indexOf("Previous page") === -1 && t2 !== "Product description") return t2; }
       el = document.getElementById("productDescription");
       if (el) { var t3 = cleanText(el); if (t3.length > 50 && t3.indexOf("Previous page") === -1) return t3; }
       // A+ narrative cards
@@ -386,20 +386,29 @@
       return "";
     },
 
-    /** Product Details / Technical Specs — 产品技术规格表 */
+    /** Product Details / Technical Specs — 返回结构化 JSON */
     extractProductDetails: function () {
-      var rows = [];
+      var result = {};
       // 标准 product details 表格
-      $$("#productDetails_techSpec_section_1 tr, #productDetails_detailBullets_sections1 tr, #prodDetails tr, #detailBullets_feature_div tr").forEach(function (tr) {
+      var trs = $$("#productDetails_techSpec_section_1 tr, #productDetails_detailBullets_sections1 tr, #prodDetails tr, #detailBullets_feature_div tr");
+      trs.forEach(function (tr) {
         var th = tr.querySelector("th");
         var td = tr.querySelector("td");
-        if (th && td) rows.push(cleanText(th) + ": " + cleanText(td));
+        if (th && td) {
+          var key = cleanText(th).replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "").toLowerCase();
+          var val = cleanText(td);
+          if (key && val && !result[key]) result[key] = val;
+        }
       });
-      if (rows.length) return rows.join("\n");
+      if (Object.keys(result).length) return result;
 
       // 备用格式：detail-bullets wrapper
       var bullets = $$("#detailBulletsWrapper_feature_div .a-list-item, #detailBullets_feature_div .a-list-item");
-      return bullets.map(function (el) { return cleanText(el); }).filter(Boolean).join("\n");
+      if (bullets.length) {
+        result._raw = bullets.map(function (el) { return cleanText(el); }).filter(Boolean).join("\n");
+        return result;
+      }
+      return result;
     },
 
     extractAll: function () {
@@ -880,7 +889,7 @@
       bullets: d.bullets || [],
       about_item: d.about_item || "",
       product_description: d.product_description || "",
-      product_details: d.product_details || "",
+      product_details: d.product_details || {},
       description: d.description || "",
       currentVariant: d.currentVariant || "",
       collectedAt: new Date().toISOString(),

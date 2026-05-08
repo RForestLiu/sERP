@@ -1150,10 +1150,17 @@ def browser_capture():
     os.makedirs(images_dir, exist_ok=True)
 
     product_data_file = os.path.join(data_dir, "product_data.json")
+    # 保存时移除图片URL（图片已下载到本地，无需在数据中保留冗长的URL）
+    sanitized = dict(data)
+    sanitized["images"] = []
+    if sanitized.get("variantData"):
+        sanitized["variantData"] = [
+            {**v, "images": []} for v in sanitized["variantData"]
+        ]
     with open(product_data_file, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+        json.dump(sanitized, f, indent=2, ensure_ascii=False)
 
-    # 计算总图片数
+    # 计算总图片数（基于原始 data）
     total_image_count = len(images)
     if variant_data:
         for v in variant_data:
