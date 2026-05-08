@@ -912,25 +912,20 @@
     return "";
   }
 
+  var _serpFidCounter = 0;
   function buildSelector(el) {
     if (el.id) return "#" + CSS.escape(el.id);
     if (el.name) return el.tagName.toLowerCase() + '[name="' + el.name + '"]';
     var cls = Array.from(el.classList).filter(function (c) { return !c.startsWith("ant-") && !c.startsWith("el-") && !c.startsWith("vxe-") && !c.startsWith("css-"); });
     if (cls.length) return el.tagName.toLowerCase() + "." + cls.map(function (c) { return CSS.escape(c); }).join(".");
-    // 有 placeholder 的输入框
     if (el.placeholder) return el.tagName.toLowerCase() + '[placeholder="' + el.placeholder + '"]';
-    // 有 title 属性
     if (el.title) return el.tagName.toLowerCase() + '[title="' + el.title + '"]';
-    // 向上找最近有 id 的祖先，构建路径选择器
-    var path = [el.tagName.toLowerCase()];
-    var p = el.parentElement;
-    while (p && p !== document.body) {
-      if (p.id) { path.unshift("#" + CSS.escape(p.id)); break; }
-      var pCls = Array.from(p.classList).filter(function (c) { return !c.startsWith("ant-") && !c.startsWith("css-") && c.length < 30; });
-      if (pCls.length > 0) { path.unshift(p.tagName.toLowerCase() + "." + CSS.escape(pCls[0])); break; }
-      p = p.parentElement;
+    // 以上都不可用 → 打标签，用 data-serp-fid 属性选择器（鲁棒，不会被 LLM 损坏）
+    if (!el.hasAttribute("data-serp-fid")) {
+      _serpFidCounter++;
+      el.setAttribute("data-serp-fid", "f" + _serpFidCounter);
     }
-    return path.join(" > ");
+    return '[data-serp-fid="' + el.getAttribute("data-serp-fid") + '"]';
   }
 
   function isVisibleField(el) {
