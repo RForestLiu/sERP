@@ -2122,7 +2122,7 @@ def auto_fill_analyze():
         about_item,
         product_description,
         description,
-        "### 产品规格\n" + json.dumps(product_details, ensure_ascii=False, indent=2) if product_details else "",
+        "### 产品规格 (含原始单位，填充时注意换算)\n" + json.dumps(product_details, ensure_ascii=False, indent=2) if product_details else "",
         "### 变体信息\n" + json.dumps(variants, ensure_ascii=False, indent=2) if variants else "",
     ]
     product_text = "\n".join(t for t in product_texts if t)
@@ -2154,6 +2154,7 @@ def auto_fill_analyze():
 你将收到：
 1. 产品信息（标题、描述、属性等）
 2. 表单字段列表（每个字段包含标签、占位符、选项等）
+3. 表单字段标签可能包含 `[行上下文]`，用于区分多行SKU中相同名称的字段。例如 "统一计量单位中的商品数量 [变体: 红色-L]" 表示该字段属于红色L码变体
 
 ## 输出要求
 请分析每个表单字段，判断它对应产品数据中的哪个信息，然后给出填充值。
@@ -2179,6 +2180,11 @@ def auto_fill_analyze():
 3. 对于下拉框(select)，必须从提供的选项列表中选取值
 4. 所有值必须是字符串
 5. 明显无关的字段可跳过，但属性类字段尽量填充
+6. **单位换算**: 产品规格可能使用英制单位（oz盎司/lb磅/in英寸），Ozon 表单通常需要公制:
+   - 重量: 1 oz ≈ 28.35g, 1 lb ≈ 453.6g → 填克(g)数值
+   - 长度/尺寸: 1 in ≈ 2.54cm → 填厘米(cm)数值
+   - 如果表单字段标签或占位符写明了单位（如"重量, g"）, 只填数值不填单位
+   - 如果产品规格已有公制数值，直接用公制
 
 请严格按照以下 JSON 格式返回，不要包含其他内容：
 {"mappings": [{"selector": "...", "value": "..."}, ...]}

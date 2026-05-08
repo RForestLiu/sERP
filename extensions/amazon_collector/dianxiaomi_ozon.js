@@ -925,6 +925,22 @@
         || kw.indexOf("类目") !== -1;
   }
 
+  // 获取字段所在表格行的上下文（用于区分多个SKU行中的同名字段）
+  function getRowContext(el) {
+    var row = el.closest(".ant-table-row, tr[class*=\"ant-table\"]");
+    if (!row) return null;
+    // 尝试从行首单元格获取变体名称（通常是第一列或包含名称的列）
+    var nameCell = row.querySelector("td:first-child, th:first-child");
+    if (nameCell) {
+      var txt = (nameCell.textContent || "").trim();
+      if (txt && txt.length < 60) return txt;
+    }
+    // 回退：取整行的精简文本
+    var rowText = (row.textContent || "").trim();
+    if (rowText && rowText.length < 80) return rowText;
+    return null;
+  }
+
   function collectFormFields() {
     var fields = [];
     var seenSelectors = {};
@@ -933,29 +949,35 @@
       var sel = buildSelector(el);
       var label = findLabel(el);
       if (isSkippedField(label)) return;
+      // 如果在表格行内，附加行上下文以区分不同SKU
+      var rowCtx = getRowContext(el);
+      var fullLabel = label + (rowCtx ? " [" + rowCtx + "]" : "");
       if (el.type === "checkbox" || el.type === "radio") {
-        // 复选框/单选框的 wrapper label 只是选项值（如"男士"），
-        // 真正的字段名是外层 .ant-form-item 的 label
         label = findLabel(el, true);
+        fullLabel = label + (rowCtx ? " [" + rowCtx + "]" : "");
         if (seenSelectors[sel]) return;
         var groupKey = label.replace(/\(.+?\)/, "").trim();
         if (seenSelectors[groupKey]) return;
         seenSelectors[groupKey] = true;
       }
       seenSelectors[sel] = true;
-      fields.push({ tag: "input", type: el.type || "text", name: el.name || "", id: el.id || "", label: label, placeholder: el.placeholder || "", currentValue: el.value || "", selector: sel });
+      fields.push({ tag: "input", type: el.type || "text", name: el.name || "", id: el.id || "", label: fullLabel, placeholder: el.placeholder || "", currentValue: el.value || "", selector: sel });
     });
     document.querySelectorAll("select").forEach(function (el) {
       if (!isVisibleField(el)) return;
       var label = findLabel(el);
       if (isSkippedField(label)) return;
-      fields.push({ tag: "select", name: el.name || "", id: el.id || "", label: label, currentValue: el.value || "", options: Array.from(el.options).map(function (o) { return { value: o.value, text: o.text }; }), selector: buildSelector(el) });
+      var rowCtx = getRowContext(el);
+      var fullLabel = label + (rowCtx ? " [" + rowCtx + "]" : "");
+      fields.push({ tag: "select", name: el.name || "", id: el.id || "", label: fullLabel, currentValue: el.value || "", options: Array.from(el.options).map(function (o) { return { value: o.value, text: o.text }; }), selector: buildSelector(el) });
     });
     document.querySelectorAll("textarea").forEach(function (el) {
       if (!isVisibleField(el)) return;
       var label = findLabel(el);
       if (isSkippedField(label)) return;
-      fields.push({ tag: "textarea", name: el.name || "", id: el.id || "", label: label, placeholder: el.placeholder || "", currentValue: el.value || "", selector: buildSelector(el) });
+      var rowCtx = getRowContext(el);
+      var fullLabel = label + (rowCtx ? " [" + rowCtx + "]" : "");
+      fields.push({ tag: "textarea", name: el.name || "", id: el.id || "", label: fullLabel, placeholder: el.placeholder || "", currentValue: el.value || "", selector: buildSelector(el) });
     });
     return fields;
   }
@@ -1053,38 +1075,41 @@
   }
 
   function collectCustomPrompts() {
-    var prompts = {};
+    // 直接从 chrome.storage 读取，不依赖 DOM 状态（面板可能未打开）
     var platform = detectPlatform();
     var storeId = detectStoreId();
     var category = detectCategory();
 
-    // 平台级提示词 — 始终收集（如果有平台）
-    if (platform) {
-      var t = (hintTitle.value || "").trim();
-      var d = (hintDesc.value || "").trim();
-      var j = (hintJson.value || "").trim();
-      var h = (hintHashtag.value || "").trim();
-      if (t) prompts.title = t;
-      if (d) prompts.description = d;
-      if (j) prompts.json_text = j;
-      if (h) prompts.hashtag = h;
-      var pp = (hintPlatformPrompt.value || "").trim();
-      if (pp) prompts.platform = pp;
-    }
-
-    // 店铺级提示词 — 仅当店铺已识别
+    var keys = [];
+    if (platform) keys.push("serp_hint_platform_" + platform);
     if (storeId) {
-      var sp = (hintStorePrompt.value || "").trim();
-      if (sp) prompts.store = sp;
+      keys.push("serp_hint_store_" + storeId);
+      if (category) keys.push("serp_hint_category_" + storeId + "_" + category);
     }
+    if (!keys.length) return Promise.resolve({});
 
-    // 品类级提示词 — 仅当店铺+品类均识别
-    if (storeId && category) {
-      var cp = (hintCategoryPrompt.value || "").trim();
-      if (cp) prompts.category = cp;
-    }
-
-    return prompts;
+    return new Promise(function (resolve) {
+      chrome.storage.local.get(keys, function (data) {
+        var prompts = {};
+        if (platform && data["serp_hint_platform_" + platform]) {
+          var pd = data["serp_hint_platform_" + platform];
+          if (pd.title) prompts.title = pd.title;
+          if (pd.description) prompts.description = pd.description;
+          if (pd.json_text) prompts.json_text = pd.json_text;
+          if (pd.hashtag) prompts.hashtag = pd.hashtag;
+          if (pd.platform_prompt) prompts.platform = pd.platform_prompt;
+        }
+        if (storeId && data["serp_hint_store_" + storeId]) {
+          var sd = data["serp_hint_store_" + storeId];
+          if (sd.prompt) prompts.store = sd.prompt;
+        }
+        if (storeId && category && data["serp_hint_category_" + storeId + "_" + category]) {
+          var cd = data["serp_hint_category_" + storeId + "_" + category];
+          if (cd.prompt) prompts.category = cd.prompt;
+        }
+        resolve(prompts);
+      });
+    });
   }
 
   function positionResultsPanel() {
@@ -1125,7 +1150,7 @@
     resultsPanel.classList.add("visible");
   }
 
-  function doAutoFill() {
+  async function doAutoFill() {
     if (!selectedProduct) { showToast("请先点击\"选品\"选择一个产品", "error"); return; }
     setBtnLoading(btnFill, true); setProgress(10);
     showToast("正在收集表单字段...", "info");
@@ -1133,7 +1158,7 @@
     if (!formFields.length) { setBtnLoading(btnFill, false); setProgress(0); showToast("未找到可填充的表单字段", "error"); return; }
     setProgress(20);
 
-    var customPrompts = collectCustomPrompts();
+    var customPrompts = await collectCustomPrompts();
 
     // 关键字段标签匹配：产品标题、产品描述、主题标签、JSON富文本
     var KEY_PATTERNS = ["产品标题", "产品描述", "主题标签", "json", "#хештеги", "название", "описание"];
@@ -1152,7 +1177,7 @@
       else restFields.push(f);
     });
 
-    var BATCH_SIZE = 10;
+    var BATCH_SIZE = 5;
     var batches = [];
     if (keyFields.length) batches.push(keyFields);
     for (var i = 0; i < restFields.length; i += BATCH_SIZE) {
