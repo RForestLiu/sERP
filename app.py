@@ -2163,7 +2163,7 @@ def auto_fill_analyze():
     custom_prompt_block = ""
     if custom_prompts:
         parts = []
-        for key, label in [("title", "产品标题"), ("description", "产品描述"), ("json_text", "JSON文本"), ("hashtag", "主题标签"), ("platform", "平台"), ("store", "店铺")]:
+        for key, label in [("title", "产品标题"), ("description", "产品描述"), ("json_text", "JSON文本"), ("hashtag", "主题标签"), ("platform", "平台"), ("store", "店铺"), ("category", "品类")]:
             if custom_prompts.get(key):
                 parts.append(f"### {label}填充提示\n{custom_prompts[key]}")
         if parts:

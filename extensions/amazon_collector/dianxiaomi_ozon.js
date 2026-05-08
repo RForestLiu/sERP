@@ -103,21 +103,31 @@
     "#serp-toast.info{background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe;}",
     "/* ===== 进度条 ===== */",
     "#serp-progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,#667eea,#764ba2);z-index:1000002;transition:width 0.3s ease;width:0%;}",
-    "/* ===== 增加提示词面板（居中弹窗） ===== */",
+    "/* ===== 额外提示词面板（居中弹窗） ===== */",
     "#serp-hint-toggle{font-size:10px;color:#8b8b8b;cursor:pointer;text-align:center;padding:2px 4px;border:1px dashed #d9d9d9;border-radius:4px;transition:all 0.2s;white-space:nowrap;}",
     "#serp-hint-toggle:hover{color:#428bca;border-color:#428bca;}",
     "#serp-hint-toggle.active{color:#428bca;border-color:#428bca;background:#f0f5ff;}",
     "#serp-hint-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000001;align-items:center;justify-content:center;}",
     "#serp-hint-overlay.active{display:flex;}",
-    "#serp-hint-panel{background:#fff;border-radius:12px;width:520px;max-width:90vw;max-height:85vh;overflow-y:auto;padding:20px 24px;box-shadow:0 20px 60px rgba(0,0,0,0.3);font-family:\"Microsoft YaHei\",sans-serif;}",
-    "#serp-hint-panel .hint-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #e5e7eb;}",
+    "#serp-hint-panel{background:#fff;border-radius:12px;width:560px;max-width:90vw;max-height:85vh;overflow-y:auto;padding:20px 24px;box-shadow:0 20px 60px rgba(0,0,0,0.3);font-family:\"Microsoft YaHei\",sans-serif;}",
+    "#serp-hint-panel .hint-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #e5e7eb;}",
     "#serp-hint-panel .hint-header .hint-title{font-size:16px;font-weight:600;color:#333;}",
     "#serp-hint-panel .hint-header .hint-close{background:none;border:none;font-size:20px;cursor:pointer;color:#999;padding:0 4px;}",
     "#serp-hint-panel .hint-header .hint-close:hover{color:#333;}",
-    "#serp-hint-panel .hint-label{font-size:12px;color:#555;margin-bottom:4px;margin-top:10px;font-weight:500;}",
+    "/* ===== Section 卡片 ===== */",
+    "#serp-hint-panel .hint-section{border:1px solid #e8e8e8;border-radius:8px;padding:10px 12px;margin-bottom:10px;background:#fafafa;}",
+    "#serp-hint-panel .hint-section-header{font-size:12px;font-weight:600;color:#555;margin-bottom:6px;display:flex;align-items:center;gap:6px;}",
+    "#serp-hint-panel .hint-section-header .hs-ctx{font-size:10px;color:#999;font-weight:400;}",
+    "#serp-hint-panel .hint-section-header .hs-ctx span{color:#428bca;}",
+    "#serp-hint-panel .hint-label{font-size:11px;color:#888;margin-bottom:2px;margin-top:6px;}",
     "#serp-hint-panel .hint-label:first-of-type{margin-top:0;}",
-    "#serp-hint-panel textarea.serp-hint-input{width:100%;height:60px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;padding:6px 10px;resize:vertical;font-family:\"Microsoft YaHei\",sans-serif;box-sizing:border-box;outline:none;transition:border-color 0.2s;}",
+    "#serp-hint-panel textarea.serp-hint-input{width:100%;height:50px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;padding:5px 8px;resize:vertical;font-family:\"Microsoft YaHei\",sans-serif;box-sizing:border-box;outline:none;transition:border-color 0.2s;}",
     "#serp-hint-panel textarea.serp-hint-input:focus{border-color:#428bca;box-shadow:0 0 0 3px rgba(66,139,202,0.1);}",
+    "/* ===== 保存按钮 ===== */",
+    "#serp-hint-panel .hint-save-row{display:flex;justify-content:flex-end;margin-top:6px;}",
+    "#serp-hint-panel .hint-save-btn{font-size:11px;padding:3px 12px;border:1px solid #428bca;border-radius:4px;background:#fff;color:#428bca;cursor:pointer;transition:all 0.2s;}",
+    "#serp-hint-panel .hint-save-btn:hover{background:#428bca;color:#fff;}",
+    "#serp-hint-panel .hint-save-btn.saved{background:#16a34a;color:#fff;border-color:#16a34a;}",
     "/* ===== 填充结果面板 ===== */",
     "#serp-results-panel{position:fixed;left:8px;top:auto;z-index:999989;background:#fff;border-radius:10px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,0.12);font-family:\"Microsoft YaHei\",sans-serif;font-size:12px;max-width:360px;max-height:400px;overflow-y:auto;display:none;}",
     "#serp-results-panel.visible{display:block;}",
@@ -182,21 +192,36 @@
   hintOverlay.innerHTML =
     '<div id="serp-hint-panel">' +
       '<div class="hint-header">' +
-        '<span class="hint-title">💡 填充提示词</span>' +
+        '<span class="hint-title">💡 额外提示词</span>' +
         '<button class="hint-close" id="serp-hint-close">✕</button>' +
       '</div>' +
-      '<div class="hint-label">产品标题</div>' +
-      '<textarea class="serp-hint-input" id="serp-hint-title" placeholder="标题填充提示..."></textarea>' +
-      '<div class="hint-label">产品描述</div>' +
-      '<textarea class="serp-hint-input" id="serp-hint-desc" placeholder="描述填充提示..."></textarea>' +
-      '<div class="hint-label">JSON文本</div>' +
-      '<textarea class="serp-hint-input" id="serp-hint-json" placeholder="JSON属性填充提示..."></textarea>' +
-      '<div class="hint-label">主题标签</div>' +
-      '<textarea class="serp-hint-input" id="serp-hint-hashtag" placeholder="主题标签填充提示..."></textarea>' +
-      '<div class="hint-label">平台提示词 <span style="color:#999;font-size:11px">(同平台通用)</span></div>' +
-      '<textarea class="serp-hint-input" id="serp-hint-platform" placeholder="平台通用填充提示..."></textarea>' +
-      '<div class="hint-label">店铺提示词 <span style="color:#999;font-size:11px">(当前店铺)</span></div>' +
-      '<textarea class="serp-hint-input" id="serp-hint-store" placeholder="当前店铺填充提示..."></textarea>' +
+      /* ===== 平台提示词 ===== */
+      '<div class="hint-section" id="hint-section-platform">' +
+        '<div class="hint-section-header">📋 平台提示词 <span class="hs-ctx">(当前: <span id="hint-ctx-platform">--</span>)</span></div>' +
+        '<div class="hint-label">产品标题</div>' +
+        '<textarea class="serp-hint-input" id="serp-hint-title" placeholder="标题填充提示..."></textarea>' +
+        '<div class="hint-label">产品描述</div>' +
+        '<textarea class="serp-hint-input" id="serp-hint-desc" placeholder="描述填充提示..."></textarea>' +
+        '<div class="hint-label">JSON富文本</div>' +
+        '<textarea class="serp-hint-input" id="serp-hint-json" placeholder="JSON属性填充提示..."></textarea>' +
+        '<div class="hint-label">主题标签</div>' +
+        '<textarea class="serp-hint-input" id="serp-hint-hashtag" placeholder="主题标签填充提示..."></textarea>' +
+        '<div class="hint-save-row"><button class="hint-save-btn" data-level="platform">💾 保存</button></div>' +
+      '</div>' +
+      /* ===== 店铺提示词 ===== */
+      '<div class="hint-section" id="hint-section-store">' +
+        '<div class="hint-section-header">📋 店铺提示词 <span class="hs-ctx">(当前: <span id="hint-ctx-store">--</span>)</span></div>' +
+        '<div class="hint-label">店铺专属提示</div>' +
+        '<textarea class="serp-hint-input" id="serp-hint-store-prompt" placeholder="当前店铺的额外填充指引..."></textarea>' +
+        '<div class="hint-save-row"><button class="hint-save-btn" data-level="store">💾 保存</button></div>' +
+      '</div>' +
+      /* ===== 品类提示词 ===== */
+      '<div class="hint-section" id="hint-section-category" style="display:none;">' +
+        '<div class="hint-section-header">📋 品类提示词 <span class="hs-ctx">(当前: <span id="hint-ctx-category">--</span>)</span></div>' +
+        '<div class="hint-label">品类专属提示</div>' +
+        '<textarea class="serp-hint-input" id="serp-hint-category-prompt" placeholder="此品类的额外填充指引..."></textarea>' +
+        '<div class="hint-save-row"><button class="hint-save-btn" data-level="category">💾 保存</button></div>' +
+      '</div>' +
     '</div>';
   document.body.appendChild(hintOverlay);
 
@@ -224,46 +249,118 @@
   var hintDesc = document.getElementById("serp-hint-desc");
   var hintJson = document.getElementById("serp-hint-json");
   var hintHashtag = document.getElementById("serp-hint-hashtag");
-  var hintPlatform = document.getElementById("serp-hint-platform");
-  var hintStore = document.getElementById("serp-hint-store");
+  var hintStorePrompt = document.getElementById("serp-hint-store-prompt");
+  var hintCategoryPrompt = document.getElementById("serp-hint-category-prompt");
+  var hintCtxPlatform = document.getElementById("hint-ctx-platform");
+  var hintCtxStore = document.getElementById("hint-ctx-store");
+  var hintCtxCategory = document.getElementById("hint-ctx-category");
+  var hintSectionCategory = document.getElementById("hint-section-category");
 
-  // ==================== 提示词持久化 ====================
-  function hintStorageKey(type, id) {
-    return "serp_hint_" + type + "_" + (id || "unknown");
+  // ==================== 平台检测 ====================
+  function detectPlatform() {
+    var host = window.location.hostname;
+    if (host.indexOf("ozon") !== -1) return "ozon";
+    if (host.indexOf("amazon") !== -1) return "amazon";
+    if (host.indexOf("1688") !== -1) return "1688";
+    if (host.indexOf("wildberries") !== -1) return "wb";
+    return null;
   }
 
-  function loadPersistedHints() {
+  // ==================== 品类检测 ====================
+  function detectCategory() {
+    var el = document.querySelector(".category-item .ant-select-selection-item");
+    if (!el) return null;
+    return (el.getAttribute("title") || el.textContent || "").trim() || null;
+  }
+
+  // ==================== 提示词持久化（平台/店铺/品类三层） ====================
+  function loadAllHints() {
     var platform = detectPlatform();
     var storeId = detectStoreId();
+    var category = detectCategory();
+
+    // 更新 section header 中的上下文显示
+    hintCtxPlatform.textContent = platform || "未识别";
+    hintCtxStore.textContent = storeId || "未识别";
+    hintCtxCategory.textContent = category || "未选择";
+
+    // 品类 section 仅在选中店铺+品类时显示
+    hintSectionCategory.style.display = (storeId && category) ? "" : "none";
+
     var keys = [];
-    if (platform) keys.push(hintStorageKey("platform", platform));
-    if (storeId) keys.push(hintStorageKey("store", storeId));
+    if (platform) keys.push("serp_hint_platform_" + platform);
+    if (storeId) {
+      keys.push("serp_hint_store_" + storeId);
+      if (category) keys.push("serp_hint_category_" + storeId + "_" + category);
+    }
     if (!keys.length) return;
+
     chrome.storage.local.get(keys, function (data) {
-      if (platform && data[hintStorageKey("platform", platform)]) {
-        hintPlatform.value = data[hintStorageKey("platform", platform)];
+      // 平台提示词
+      if (platform && data["serp_hint_platform_" + platform]) {
+        var pd = data["serp_hint_platform_" + platform];
+        hintTitle.value = pd.title || "";
+        hintDesc.value = pd.description || "";
+        hintJson.value = pd.json_text || "";
+        hintHashtag.value = pd.hashtag || "";
       }
-      if (storeId && data[hintStorageKey("store", storeId)]) {
-        hintStore.value = data[hintStorageKey("store", storeId)];
+      // 店铺提示词
+      if (storeId && data["serp_hint_store_" + storeId]) {
+        var sd = data["serp_hint_store_" + storeId];
+        hintStorePrompt.value = sd.prompt || "";
+      } else {
+        hintStorePrompt.value = "";
+      }
+      // 品类提示词
+      if (storeId && category && data["serp_hint_category_" + storeId + "_" + category]) {
+        var cd = data["serp_hint_category_" + storeId + "_" + category];
+        hintCategoryPrompt.value = cd.prompt || "";
+      } else {
+        hintCategoryPrompt.value = "";
       }
     });
   }
 
-  function saveHintValue(type, id, value) {
-    var kv = {};
-    kv[hintStorageKey(type, id)] = value;
-    chrome.storage.local.set(kv);
-  }
-
-  // 平台/店铺文本框输入时自动保存
-  hintPlatform.addEventListener("input", function () {
+  function saveHints(level) {
     var platform = detectPlatform();
-    if (platform) saveHintValue("platform", platform, hintPlatform.value);
-  });
-  hintStore.addEventListener("input", function () {
     var storeId = detectStoreId();
-    if (storeId) saveHintValue("store", storeId, hintStore.value);
-  });
+    var category = detectCategory();
+    var kv = {};
+    var key;
+
+    if (level === "platform") {
+      if (!platform) { showToast("未识别当前平台，无法保存", "error"); return; }
+      key = "serp_hint_platform_" + platform;
+      kv[key] = {
+        title: hintTitle.value,
+        description: hintDesc.value,
+        json_text: hintJson.value,
+        hashtag: hintHashtag.value
+      };
+    } else if (level === "store") {
+      if (!storeId) { showToast("未识别当前店铺，无法保存", "error"); return; }
+      key = "serp_hint_store_" + storeId;
+      kv[key] = { prompt: hintStorePrompt.value };
+    } else if (level === "category") {
+      if (!storeId || !category) { showToast("请先选择店铺和品类后再保存", "error"); return; }
+      key = "serp_hint_category_" + storeId + "_" + category;
+      kv[key] = { prompt: hintCategoryPrompt.value };
+    }
+
+    chrome.storage.local.set(kv, function () {
+      // 保存按钮反馈
+      var btn = document.querySelector(".hint-save-btn[data-level=\"" + level + "\"]");
+      if (btn) {
+        var originalText = btn.textContent;
+        btn.textContent = "已保存 ✓";
+        btn.classList.add("saved");
+        setTimeout(function () {
+          btn.textContent = originalText;
+          btn.classList.remove("saved");
+        }, 1500);
+      }
+    });
+  }
 
   // ==================== 工具函数 ====================
   function showToast(msg, type) {
@@ -926,18 +1023,34 @@
 
   function collectCustomPrompts() {
     var prompts = {};
-    var t = (hintTitle.value || "").trim();
-    var d = (hintDesc.value || "").trim();
-    var j = (hintJson.value || "").trim();
-    var h = (hintHashtag.value || "").trim();
-    var p = (hintPlatform.value || "").trim();
-    var s = (hintStore.value || "").trim();
-    if (t) prompts.title = t;
-    if (d) prompts.description = d;
-    if (j) prompts.json_text = j;
-    if (h) prompts.hashtag = h;
-    if (p) prompts.platform = p;
-    if (s) prompts.store = s;
+    var platform = detectPlatform();
+    var storeId = detectStoreId();
+    var category = detectCategory();
+
+    // 平台级提示词 — 始终收集（如果有平台）
+    if (platform) {
+      var t = (hintTitle.value || "").trim();
+      var d = (hintDesc.value || "").trim();
+      var j = (hintJson.value || "").trim();
+      var h = (hintHashtag.value || "").trim();
+      if (t) prompts.title = t;
+      if (d) prompts.description = d;
+      if (j) prompts.json_text = j;
+      if (h) prompts.hashtag = h;
+    }
+
+    // 店铺级提示词 — 仅当店铺已识别
+    if (storeId) {
+      var sp = (hintStorePrompt.value || "").trim();
+      if (sp) prompts.store = sp;
+    }
+
+    // 品类级提示词 — 仅当店铺+品类均识别
+    if (storeId && category) {
+      var cp = (hintCategoryPrompt.value || "").trim();
+      if (cp) prompts.category = cp;
+    }
+
     return prompts;
   }
 
@@ -1115,6 +1228,7 @@
   hintToggle.addEventListener("click", function () {
     hintOverlay.classList.add("active");
     hintToggle.classList.add("active");
+    loadAllHints();
   });
   document.getElementById("serp-hint-close").addEventListener("click", function () {
     hintOverlay.classList.remove("active");
@@ -1122,6 +1236,13 @@
   });
   hintOverlay.addEventListener("click", function (e) {
     if (e.target === hintOverlay) { hintOverlay.classList.remove("active"); hintToggle.classList.remove("active"); }
+  });
+  // 保存按钮委托
+  hintPanel.addEventListener("click", function (e) {
+    var btn = e.target.closest(".hint-save-btn");
+    if (!btn) return;
+    var level = btn.getAttribute("data-level");
+    saveHints(level);
   });
   document.getElementById("serp-results-close").addEventListener("click", function () {
     resultsPanel.classList.remove("visible");
@@ -1139,7 +1260,7 @@
     else if (e.key.toLowerCase() === "f") { e.preventDefault(); btnFill.click(); }
   });
 
-  loadPersistedHints();
+  loadAllHints();
   console.log("[sERP ExtensionHelper] 店小秘 Ozon 智能助手已加载");
   console.log("[sERP ExtensionHelper] 左侧工具栏: 选品 → 分类 → 填充 | 快捷键: Ctrl+Shift+S/C/F");
 })();
