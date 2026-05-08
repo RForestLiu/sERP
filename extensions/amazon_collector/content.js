@@ -221,7 +221,7 @@
         });
       }
 
-      return images.slice(0, 3);
+      return images;
     },
 
     extractVariants: function () {
@@ -1004,7 +1004,7 @@
         if (apexMatch) price = apexMatch[1];
       }
 
-      return { images: images.slice(0, 3), price: price };
+      return { images: images, price: price };
     });
   }
 
