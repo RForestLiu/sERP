@@ -141,7 +141,24 @@
     "#serp-results-panel .sr-item{display:flex;align-items:flex-start;gap:6px;padding:3px 0;border-bottom:1px solid #fafafa;font-size:11px;line-height:1.4;}",
     "#serp-results-panel .sr-item .sr-icon{flex-shrink:0;width:16px;text-align:center;}",
     "#serp-results-panel .sr-item .sr-label{color:#666;min-width:60px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}",
-    "#serp-results-panel .sr-item .sr-value{color:#333;word-break:break-all;flex:1;}"
+    "#serp-results-panel .sr-item .sr-value{color:#333;word-break:break-all;flex:1;}",
+    "/* ===== 提取字段面板 ===== */",
+    "#serp-extract-panel{position:fixed;left:8px;top:auto;z-index:999989;background:#fff;border-radius:10px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,0.12);font-family:\"Microsoft YaHei\",sans-serif;font-size:12px;max-width:400px;max-height:500px;overflow-y:auto;display:none;}",
+    "#serp-extract-panel.visible{display:block;}",
+    "#serp-extract-panel .ex-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0;}",
+    "#serp-extract-panel .ex-header .ex-title{font-weight:600;font-size:13px;color:#333;}",
+    "#serp-extract-panel .ex-header .ex-close{background:none;border:none;font-size:16px;cursor:pointer;color:#999;padding:0 4px;line-height:1;}",
+    "#serp-extract-panel .ex-header .ex-close:hover{color:#333;}",
+    "#serp-extract-panel .ex-summary{font-size:11px;color:#666;margin-bottom:8px;line-height:1.6;}",
+    "#serp-extract-panel .ex-summary .ex-count{font-weight:600;}",
+    "#serp-extract-panel .ex-section{margin-bottom:8px;}",
+    "#serp-extract-panel .ex-section-title{font-size:11px;font-weight:600;color:#555;margin-bottom:3px;padding:2px 6px;background:#f5f5f5;border-radius:3px;}",
+    "#serp-extract-panel .ex-item{font-size:11px;color:#333;padding:2px 8px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}",
+    "#serp-extract-panel .ex-item .ex-tag{display:inline-block;font-size:9px;padding:0 4px;border-radius:2px;margin-right:4px;flex-shrink:0;line-height:1.5;}",
+    "#serp-extract-panel .ex-tag.txt{background:#e6f7ff;color:#1890ff;}",
+    "#serp-extract-panel .ex-tag.sel{background:#f6ffed;color:#52c41a;}",
+    "#serp-extract-panel .ex-tag.cb{background:#fff7e6;color:#fa8c16;}",
+    "#serp-extract-panel .ex-tag.rd{background:#f9f0ff;color:#722ed1;}"
   ].join("\n");
   document.head.appendChild(style);
 
@@ -155,6 +172,9 @@
     '</button>' +
     '<button class="serp-tb-btn" id="serp-btn-category" title="自动匹配品类">' +
       '<span class="tb-icon">🏷️</span><span class="tb-label">自动分类</span>' +
+    '</button>' +
+    '<button class="serp-tb-btn" id="serp-btn-extract" title="提取页面可填字段">' +
+      '<span class="tb-icon">🔍</span><span class="tb-label">提取</span>' +
     '</button>' +
     '<button class="serp-tb-btn" id="serp-btn-fill" title="自动填充表单">' +
       '<span class="tb-icon">✍️</span><span class="tb-label">自动填充</span>' +
@@ -186,6 +206,17 @@
     '<div class="sr-summary" id="serp-results-summary"></div>' +
     '<div id="serp-results-list"></div>';
   document.body.appendChild(resultsPanel);
+
+  var extractPanel = document.createElement("div");
+  extractPanel.id = "serp-extract-panel";
+  extractPanel.innerHTML =
+    '<div class="ex-header">' +
+      '<span class="ex-title">🔍 提取字段</span>' +
+      '<button class="ex-close" id="serp-extract-close">✕</button>' +
+    '</div>' +
+    '<div class="ex-summary" id="serp-extract-summary"></div>' +
+    '<div id="serp-extract-sections"></div>';
+  document.body.appendChild(extractPanel);
 
   var hintOverlay = document.createElement("div");
   hintOverlay.id = "serp-hint-overlay";
@@ -240,6 +271,7 @@
   // ==================== DOM 引用 ====================
   var btnSelect = document.getElementById("serp-btn-select");
   var btnCategory = document.getElementById("serp-btn-category");
+  var btnExtract = document.getElementById("serp-btn-extract");
   var btnFill = document.getElementById("serp-btn-fill");
   var productInfo = document.getElementById("serp-product-info");
   var piSkc = document.getElementById("serp-pi-skc");
@@ -1397,6 +1429,64 @@
     resultsPanel.classList.add("visible");
   }
 
+  function doExtractFields() {
+    resultsPanel.classList.remove("visible");
+    var formFields = collectFormFields();
+    if (!formFields.length) { showToast("未找到可填充的表单字段", "error"); return; }
+
+    // 分类统计
+    var txtFields = [], selFields = [], cbFields = [], rdFields = [];
+    formFields.forEach(function (f) {
+      if (f.tag === "checkbox-group") cbFields.push(f);
+      else if (f.tag === "radio-group") rdFields.push(f);
+      else if (f.tag === "select") selFields.push(f);
+      else txtFields.push(f);
+    });
+
+    // 摘要
+    var summary = document.getElementById("serp-extract-summary");
+    var parts = [];
+    if (txtFields.length) parts.push('<span class="ex-count" style="color:#1890ff">' + txtFields.length + '</span> 文本输入');
+    if (selFields.length) parts.push('<span class="ex-count" style="color:#52c41a">' + selFields.length + '</span> 下拉选择');
+    if (cbFields.length) parts.push('<span class="ex-count" style="color:#fa8c16">' + cbFields.length + '</span> 多选组');
+    if (rdFields.length) parts.push('<span class="ex-count" style="color:#722ed1">' + rdFields.length + '</span> 单选组');
+    summary.innerHTML = '共 <b>' + formFields.length + '</b> 个字段：' + parts.join(' &nbsp;|&nbsp; ');
+
+    // 详情列表
+    var sections = document.getElementById("serp-extract-sections");
+    var html = "";
+
+    function renderSection(title, fields, tagClass, showOptions) {
+      if (!fields.length) return "";
+      var s = '<div class="ex-section"><div class="ex-section-title">' + title + ' (' + fields.length + ')</div>';
+      fields.forEach(function (f) {
+        var label = f.label || f.name || f.placeholder || "(无标签)";
+        s += '<div class="ex-item"><span class="ex-tag ' + tagClass + '">' + title.charAt(0) + '</span>' + label + '</div>';
+      });
+      s += '</div>';
+      return s;
+    }
+
+    html += renderSection("文本输入", txtFields, "txt");
+    html += renderSection("下拉选择", selFields, "sel");
+    html += renderSection("多选组", cbFields, "cb");
+    html += renderSection("单选组", rdFields, "rd");
+
+    sections.innerHTML = html;
+
+    // 定位面板
+    var tbRect = toolbar.getBoundingClientRect();
+    var top = tbRect.bottom + 8;
+    if (productInfo.classList.contains("visible")) {
+      top = productInfo.getBoundingClientRect().bottom + 8;
+    }
+    extractPanel.style.top = top + "px";
+    extractPanel.style.left = "8px";
+    extractPanel.classList.add("visible");
+
+    showToast("已提取 " + formFields.length + " 个字段", "info");
+  }
+
   async function doAutoFill() {
     if (!selectedProduct) { showToast("请先点击\"选品\"选择一个产品", "error"); return; }
     setBtnLoading(btnFill, true); setProgress(10);
@@ -1550,6 +1640,7 @@
     });
   });
   btnCategory.addEventListener("click", function () { doMatchCategory(); });
+  btnExtract.addEventListener("click", function () { doExtractFields(); });
   btnFill.addEventListener("click", function () { doAutoFill(); });
   piClear.addEventListener("click", function () { selectedProduct = null; updateProductUI(); showToast("已清除产品选择", "info"); });
   hintToggle.addEventListener("click", function () {
@@ -1573,6 +1664,9 @@
   });
   document.getElementById("serp-results-close").addEventListener("click", function () {
     resultsPanel.classList.remove("visible");
+  });
+  document.getElementById("serp-extract-close").addEventListener("click", function () {
+    extractPanel.classList.remove("visible");
   });
   document.getElementById("serp-modal-close").addEventListener("click", function () { modalOverlay.classList.remove("active"); });
   modalOverlay.addEventListener("click", function (e) { if (e.target === modalOverlay) modalOverlay.classList.remove("active"); });
