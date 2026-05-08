@@ -2109,8 +2109,9 @@ def auto_fill_analyze():
         ftype = f.get("type", "")
         name = f.get("name", "")
         options = f.get("options", [])
-        
-        field_desc = f"  - 标签: {label or name or '(无标签)'}"
+        selector = f.get("selector", "")
+
+        field_desc = f"  - 标签: {label or name or '(无标签)'} | 选择器: {selector}"
         if placeholder:
             field_desc += f" | 占位: {placeholder}"
         if tag == "select" and options:
@@ -2146,15 +2147,16 @@ def auto_fill_analyze():
 - **对于其他字段**：根据标签和占位符推断
 
 ### 重要规则：
-1. 如果某个字段无法匹配到产品数据中的任何信息，返回空字符串
-2. 对于下拉框(select)，必须从提供的选项列表中选取值
-3. 所有值必须是字符串
-4. 不要编造数据，不确定的字段留空
+1. selector 必须从表单字段列表里**原样复制**"选择器"的值，不要自己编造
+2. 如果某个字段无法匹配到产品数据中的任何信息，不要输出该字段的映射
+3. 对于下拉框(select)，必须从提供的选项列表中选取值
+4. 所有值必须是字符串
+5. 不要编造数据，不确定的字段跳过
 
 请严格按照以下 JSON 格式返回，不要包含其他内容：
 {"mappings": [{"selector": "...", "value": "..."}, ...]}
 
-其中 selector 是表单字段的 CSS 选择器，value 是要填充的值。"""
+其中 selector 是表单字段列表中对应字段的"选择器"值（直接复制），value 是要填充的值。"""
 
     user_prompt = f"""## 产品信息
 SKC: {skc}

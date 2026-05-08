@@ -671,20 +671,61 @@
     if (el.name) return el.tagName.toLowerCase() + '[name="' + el.name + '"]';
     var cls = Array.from(el.classList).filter(function (c) { return !c.startsWith("ant-") && !c.startsWith("el-") && !c.startsWith("vxe-") && !c.startsWith("css-"); });
     if (cls.length) return el.tagName.toLowerCase() + "." + cls.map(function (c) { return CSS.escape(c); }).join(".");
-    var parent = el.parentElement;
-    if (parent) return el.tagName.toLowerCase() + ":nth-child(" + (Array.from(parent.children).indexOf(el) + 1) + ")";
-    return el.tagName.toLowerCase();
+    // 有 placeholder 的输入框
+    if (el.placeholder) return el.tagName.toLowerCase() + '[placeholder="' + el.placeholder + '"]';
+    // 有 title 属性
+    if (el.title) return el.tagName.toLowerCase() + '[title="' + el.title + '"]';
+    // 向上找最近有 id 的祖先，构建路径选择器
+    var path = [el.tagName.toLowerCase()];
+    var p = el.parentElement;
+    while (p && p !== document.body) {
+      if (p.id) { path.unshift("#" + CSS.escape(p.id)); break; }
+      var pCls = Array.from(p.classList).filter(function (c) { return !c.startsWith("ant-") && !c.startsWith("css-") && c.length < 30; });
+      if (pCls.length > 0) { path.unshift(p.tagName.toLowerCase() + "." + CSS.escape(pCls[0])); break; }
+      p = p.parentElement;
+    }
+    return path.join(" > ");
+  }
+
+  function isVisibleField(el) {
+    // 过滤下拉弹出层内的元素（不属于表单本身）
+    if (el.closest(".ant-select-dropdown")) return false;
+    if (el.closest(".ant-dropdown")) return false;
+    if (el.closest(".ant-picker-dropdown")) return false;
+    if (el.closest(".ant-tooltip")) return false;
+    if (el.closest(".ant-popover")) return false;
+    // 过滤隐藏弹窗内的元素
+    var modal = el.closest(".ant-modal");
+    if (modal && modal.offsetParent === null) return false;
+    // 过滤不可见元素
+    if (el.offsetParent === null) return false;
+    return true;
   }
 
   function collectFormFields() {
     var fields = [];
+    var seenSelectors = {};
     document.querySelectorAll('input:not([type="hidden"]):not([type="file"])').forEach(function (el) {
-      fields.push({ tag: "input", type: el.type || "text", name: el.name || "", id: el.id || "", label: findLabel(el), placeholder: el.placeholder || "", currentValue: el.value || "", selector: buildSelector(el) });
+      if (!isVisibleField(el)) return;
+      var sel = buildSelector(el);
+      // 去重：同一个 selector 只保留第一个（针对复选框组）
+      if (el.type === "checkbox" || el.type === "radio") {
+        if (seenSelectors[sel]) return;
+        // 用 label 前缀做组名，比如 "包装" 组的复选框只发一个代表
+        var label = findLabel(el);
+        var groupKey = label.replace(/\(.+?\)/, "").trim();
+        if (seenSelectors[groupKey]) return;
+        seenSelectors[groupKey] = true;
+      }
+      seenSelectors[sel] = true;
+      fields.push({ tag: "input", type: el.type || "text", name: el.name || "", id: el.id || "", label: findLabel(el), placeholder: el.placeholder || "", currentValue: el.value || "", selector: sel });
     });
     document.querySelectorAll("select").forEach(function (el) {
+      if (!isVisibleField(el)) return;
       fields.push({ tag: "select", name: el.name || "", id: el.id || "", label: findLabel(el), currentValue: el.value || "", options: Array.from(el.options).map(function (o) { return { value: o.value, text: o.text }; }), selector: buildSelector(el) });
     });
     document.querySelectorAll("textarea").forEach(function (el) {
+      if (!isVisibleField(el)) return;
       fields.push({ tag: "textarea", name: el.name || "", id: el.id || "", label: findLabel(el), placeholder: el.placeholder || "", currentValue: el.value || "", selector: buildSelector(el) });
     });
     return fields;
@@ -694,10 +735,15 @@
     if (!value && value !== 0) return false;
     value = String(value);
     try {
-      var el = null;
-      if (selector.startsWith("#")) { el = document.querySelector(selector); }
-      else if (selector.indexOf("[name=") !== -1) { var m = selector.match(/^(\w+)\[name="([^"]+)"\]$/); if (m) el = document.querySelector(m[1] + '[name="' + m[2] + '"]'); }
-      if (!el) { var parts = selector.split("."); if (parts.length > 1) el = document.querySelector(parts[0] + "." + parts.slice(1).join(".")); }
+      // 直接用 selector 查询（buildSelector 生成的已是有效 CSS selector）
+      var el = document.querySelector(selector);
+      if (!el) {
+        // 回退：尝试从 selector 中提取类名重试
+        var parts = selector.split(".");
+        if (parts.length > 1) {
+          el = document.querySelector(parts[0] + "." + parts.slice(1).join("."));
+        }
+      }
       if (!el) return false;
       var tag = el.tagName.toLowerCase();
       if (tag === "input") {
