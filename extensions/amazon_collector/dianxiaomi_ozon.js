@@ -375,22 +375,44 @@
     var items = column.querySelectorAll(".categories-item");
     var best = null;
 
+    // Pass 1: 精确匹配（最高优先级）
     for (var i = 0; i < items.length; i++) {
       var titleEl = items[i].querySelector(".categories-item-name");
       var title = titleEl ? (titleEl.getAttribute("title") || "").trim() : "";
-
-      // 精确匹配
-      if (title === ruName) { best = items[i]; break; }
-      // 包含匹配
-      if (title.indexOf(ruName) !== -1) { best = items[i]; break; }
-      if (ruName.indexOf(title) !== -1 && title.length > 0) { best = items[i]; break; }
+      if (title === ruName) { return items[i]; }
     }
 
-    // 如果 title 匹配失败，尝试 textContent 包含匹配
+    // Pass 2: 包含匹配 — 取最短标题（最接近精确匹配）
+    for (var j = 0; j < items.length; j++) {
+      var titleEl2 = items[j].querySelector(".categories-item-name");
+      var title2 = titleEl2 ? (titleEl2.getAttribute("title") || "").trim() : "";
+      if (title2.indexOf(ruName) !== -1) {
+        if (!best || title2.length < (best._matchTitle || "").length) {
+          best = items[j];
+          best._matchTitle = title2;
+        }
+      }
+    }
+
+    // Pass 3: 反向包含匹配
     if (!best) {
-      for (var j = 0; j < items.length; j++) {
-        var txt = items[j].textContent.trim();
-        if (txt.indexOf(ruName) !== -1) { best = items[j]; break; }
+      for (var k = 0; k < items.length; k++) {
+        var titleEl3 = items[k].querySelector(".categories-item-name");
+        var title3 = titleEl3 ? (titleEl3.getAttribute("title") || "").trim() : "";
+        if (ruName.indexOf(title3) !== -1 && title3.length > 0) {
+          if (!best || title3.length > (best._matchTitle || "").length) {
+            best = items[k];
+            best._matchTitle = title3;
+          }
+        }
+      }
+    }
+
+    // Pass 4: textContent 模糊匹配
+    if (!best) {
+      for (var m = 0; m < items.length; m++) {
+        var txt = items[m].textContent.trim();
+        if (txt.indexOf(ruName) !== -1) { best = items[m]; break; }
       }
     }
 
