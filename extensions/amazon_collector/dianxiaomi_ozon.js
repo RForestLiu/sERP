@@ -159,6 +159,10 @@
       '<textarea class="serp-hint-input" id="serp-hint-json" placeholder="JSON属性填充提示..."></textarea>' +
       '<div class="hint-label">主题标签</div>' +
       '<textarea class="serp-hint-input" id="serp-hint-hashtag" placeholder="主题标签填充提示..."></textarea>' +
+      '<div class="hint-label">平台提示词 <span style="color:#999;font-size:9px">(同平台通用)</span></div>' +
+      '<textarea class="serp-hint-input" id="serp-hint-platform" placeholder="平台通用填充提示..."></textarea>' +
+      '<div class="hint-label">店铺提示词 <span style="color:#999;font-size:9px">(当前店铺)</span></div>' +
+      '<textarea class="serp-hint-input" id="serp-hint-store" placeholder="当前店铺填充提示..."></textarea>' +
     '</div>';
   document.body.appendChild(toolbar);
 
@@ -205,6 +209,46 @@
   var hintDesc = document.getElementById("serp-hint-desc");
   var hintJson = document.getElementById("serp-hint-json");
   var hintHashtag = document.getElementById("serp-hint-hashtag");
+  var hintPlatform = document.getElementById("serp-hint-platform");
+  var hintStore = document.getElementById("serp-hint-store");
+
+  // ==================== 提示词持久化 ====================
+  function hintStorageKey(type, id) {
+    return "serp_hint_" + type + "_" + (id || "unknown");
+  }
+
+  function loadPersistedHints() {
+    var platform = detectPlatform();
+    var storeId = detectStoreId();
+    var keys = [];
+    if (platform) keys.push(hintStorageKey("platform", platform));
+    if (storeId) keys.push(hintStorageKey("store", storeId));
+    if (!keys.length) return;
+    chrome.storage.local.get(keys, function (data) {
+      if (platform && data[hintStorageKey("platform", platform)]) {
+        hintPlatform.value = data[hintStorageKey("platform", platform)];
+      }
+      if (storeId && data[hintStorageKey("store", storeId)]) {
+        hintStore.value = data[hintStorageKey("store", storeId)];
+      }
+    });
+  }
+
+  function saveHintValue(type, id, value) {
+    var kv = {};
+    kv[hintStorageKey(type, id)] = value;
+    chrome.storage.local.set(kv);
+  }
+
+  // 平台/店铺文本框输入时自动保存
+  hintPlatform.addEventListener("input", function () {
+    var platform = detectPlatform();
+    if (platform) saveHintValue("platform", platform, hintPlatform.value);
+  });
+  hintStore.addEventListener("input", function () {
+    var storeId = detectStoreId();
+    if (storeId) saveHintValue("store", storeId, hintStore.value);
+  });
 
   // ==================== 工具函数 ====================
   function showToast(msg, type) {
@@ -822,10 +866,14 @@
     var d = (hintDesc.value || "").trim();
     var j = (hintJson.value || "").trim();
     var h = (hintHashtag.value || "").trim();
+    var p = (hintPlatform.value || "").trim();
+    var s = (hintStore.value || "").trim();
     if (t) prompts.title = t;
     if (d) prompts.description = d;
     if (j) prompts.json_text = j;
     if (h) prompts.hashtag = h;
+    if (p) prompts.platform = p;
+    if (s) prompts.store = s;
     return prompts;
   }
 
@@ -1007,6 +1055,7 @@
     else if (e.key.toLowerCase() === "f") { e.preventDefault(); btnFill.click(); }
   });
 
+  loadPersistedHints();
   console.log("[sERP ExtensionHelper] 店小秘 Ozon 智能助手已加载");
   console.log("[sERP ExtensionHelper] 左侧工具栏: 选品 → 分类 → 填充 | 快捷键: Ctrl+Shift+S/C/F");
 })();
