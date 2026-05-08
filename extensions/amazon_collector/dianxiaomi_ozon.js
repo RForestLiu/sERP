@@ -206,6 +206,8 @@
         '<textarea class="serp-hint-input" id="serp-hint-json" placeholder="JSON属性填充提示..."></textarea>' +
         '<div class="hint-label">主题标签</div>' +
         '<textarea class="serp-hint-input" id="serp-hint-hashtag" placeholder="主题标签填充提示..."></textarea>' +
+        '<div class="hint-label">平台专属提示</div>' +
+        '<textarea class="serp-hint-input" id="serp-hint-platform-prompt" placeholder="当前平台的额外填充指引..."></textarea>' +
         '<div class="hint-save-row"><button class="hint-save-btn" data-level="platform">💾 保存</button></div>' +
       '</div>' +
       /* ===== 店铺提示词 ===== */
@@ -249,6 +251,7 @@
   var hintDesc = document.getElementById("serp-hint-desc");
   var hintJson = document.getElementById("serp-hint-json");
   var hintHashtag = document.getElementById("serp-hint-hashtag");
+  var hintPlatformPrompt = document.getElementById("serp-hint-platform-prompt");
   var hintStorePrompt = document.getElementById("serp-hint-store-prompt");
   var hintCategoryPrompt = document.getElementById("serp-hint-category-prompt");
   var hintCtxPlatform = document.getElementById("hint-ctx-platform");
@@ -303,6 +306,7 @@
         hintDesc.value = pd.description || "";
         hintJson.value = pd.json_text || "";
         hintHashtag.value = pd.hashtag || "";
+        hintPlatformPrompt.value = pd.platform_prompt || "";
       }
       // 店铺提示词
       if (storeId && data["serp_hint_store_" + storeId]) {
@@ -335,7 +339,8 @@
         title: hintTitle.value,
         description: hintDesc.value,
         json_text: hintJson.value,
-        hashtag: hintHashtag.value
+        hashtag: hintHashtag.value,
+        platform_prompt: hintPlatformPrompt.value
       };
     } else if (level === "store") {
       if (!storeId) { showToast("未识别当前店铺，无法保存", "error"); return; }
@@ -1037,6 +1042,8 @@
       if (d) prompts.description = d;
       if (j) prompts.json_text = j;
       if (h) prompts.hashtag = h;
+      var pp = (hintPlatformPrompt.value || "").trim();
+      if (pp) prompts.platform = pp;
     }
 
     // 店铺级提示词 — 仅当店铺已识别
