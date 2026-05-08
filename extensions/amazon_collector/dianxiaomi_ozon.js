@@ -353,12 +353,22 @@
     return best;
   }
 
+  // 防重入标记
+  var _fillCategoryRunning = false;
+
   function fillCategorySelect(matched) {
+    // 防重入：如果已经在执行中，跳过
+    if (_fillCategoryRunning) {
+      console.log("[sERP] fillCategorySelect 已在执行中，跳过重复调用");
+      return Promise.resolve();
+    }
+    _fillCategoryRunning = true;
+
     var catWrapper = document.querySelector(".category-item .ant-select");
-    if (!catWrapper) { showToast("未找到品类下拉框", "error"); return Promise.resolve(); }
+    if (!catWrapper) { _fillCategoryRunning = false; showToast("未找到品类下拉框", "error"); return Promise.resolve(); }
 
     var selector = catWrapper.querySelector(".ant-select-selector");
-    if (!selector) { showToast("品类组件异常", "error"); return Promise.resolve(); }
+    if (!selector) { _fillCategoryRunning = false; showToast("品类组件异常", "error"); return Promise.resolve(); }
 
     // 解析路径：优先用后端返回的 node_path_names，否则回退解析 path 字段
     var pathNames = [];
@@ -373,20 +383,28 @@
     console.log("[sERP] fillCategorySelect: pathNames =", pathNames);
     console.log("[sERP] fillCategorySelect: matched.id =", matched.id, "| type_id =", matched.type_id);
 
-    // Step 1: 清除现有选择
+    // Step 1: 清除现有选择（检查 selection-item 是否有值，而不仅仅是 clearBtn）
+    var selItem = catWrapper.querySelector(".ant-select-selection-item");
+    var hasSelection = selItem && (selItem.getAttribute("title") || selItem.textContent || "").trim();
     var clearBtn = catWrapper.querySelector(".ant-select-clear");
-    if (clearBtn) {
-      console.log("[sERP] 清除现有品类选择");
+
+    if (hasSelection && clearBtn) {
+      console.log("[sERP] 清除现有品类选择:", hasSelection);
       clearBtn.click();
-      return sleep(500).then(function () { return fillCategorySelect(matched); });
+      // 等待 DOM 更新后重试，但最多重试 3 次
+      return sleep(500).then(function () {
+        return fillCategorySelect(matched);
+      });
     }
 
-    // Step 2: 先点击下拉框获取顶级品类列表
-    // 如果已经打开就先关闭再打开，确保从顶层开始
+    // Step 2: 如果下拉已经打开就先关闭，确保从顶层开始
     var openDropdown = document.querySelector(".ant-select-dropdown:not(.ant-select-dropdown-hidden)");
     if (openDropdown) {
-      document.body.click(); // 关闭
-      return sleep(300).then(function () { return fillCategorySelect(matched); });
+      console.log("[sERP] 关闭已打开的下拉...");
+      document.body.click();
+      return sleep(400).then(function () {
+        return fillCategorySelect(matched);
+      });
     }
 
     console.log("[sERP] 打开品类下拉...");
@@ -403,9 +421,6 @@
       var isLast = (idx === pathNames.length - 1);
       console.log("[sERP] ====== 导航第 " + (idx + 1) + "/" + pathNames.length + " 层: " + levelName + " ======");
 
-      // 如果非第一层，可能需要点击当前选项来加载子选项
-      // 对于第一层，下拉菜单应该已经打开并显示顶级品类
-
       return waitForDropdownOptions(8000).then(function (result) {
         if (!result || result.options.length === 0) {
           console.log("[sERP] 第" + (idx + 1) + "层超时：未出现下拉选项");
@@ -421,11 +436,9 @@
           console.log("[sERP]   选项[" + i + "]:", (o.textContent || "").trim().substring(0, 70));
         });
 
-        // 在当前选项中查找匹配
         var bestOption = findOptionByLevelName(result.options, levelName);
 
         if (!bestOption) {
-          // 尝试在搜索框输入来缩小范围
           var searchInput = catWrapper.querySelector(".ant-select-selection-search-input");
           if (searchInput) {
             var ruOnly = levelName.replace(/（.+?）$/, "").trim();
@@ -449,7 +462,6 @@
                 showToast("未找到品类 \"" + levelName + "\"，请手动选择", "error");
                 return;
               }
-              // Continue below with bestOption set
               return clickAndProceed(bestOption, idx, isLast, levelName);
             });
           } else {
@@ -498,7 +510,12 @@
       }
     }
 
-    return navigateLevel(0);
+    return navigateLevel(0).then(function () {
+      _fillCategoryRunning = false;
+    }).catch(function (e) {
+      _fillCategoryRunning = false;
+      console.error("[sERP] fillCategorySelect 异常:", e);
+    });
   }
 
   // ==================== 智能填充 ====================
