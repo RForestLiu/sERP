@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "sERP Collector",
-  "version": "2.3",
-  "description": "Multi-platform product data collector (Amazon, 1688, Wildberries, Ozon)",
+  "name": "sERP ExtensionHelper",
+  "version": "3.0",
+  "description": "sERP 浏览器助手：多平台采集 (Amazon/1688/WB/Ozon) + 店小秘 Ozon 智能上架",
   "permissions": ["storage"],
   "host_permissions": [
     "http://localhost:5000/*",
@@ -28,6 +28,14 @@
         "*://*.ozon.kz/*"
       ],
       "js": ["content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "*://www.dianxiaomi.com/web/ozonProduct/add*",
+        "*://www.dianxiaomi.com/web/ozonProduct/edit*"
+      ],
+      "js": ["dianxiaomi_ozon.js"],
       "run_at": "document_idle"
     }
   ]
