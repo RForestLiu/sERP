@@ -221,7 +221,7 @@
         });
       }
 
-      return images;
+      return images.slice(0, 3);
     },
 
     extractVariants: function () {
@@ -330,21 +330,56 @@
     },
 
     extractBullets: function () {
-      return $$("#feature-bullets .a-list-item, #feature-bullets li").map(function (el) { return text(el); }).filter(Boolean).slice(0, 10);
+      // Try multiple selectors for "About this item" bullets — Amazon changes markup frequently
+      var selectors = [
+        "#feature-bullets .a-list-item",
+        "#feature-bullets li",
+        "#feature-bullets .a-section.a-spacing-small",
+        "#feature-bullets span.a-list-item",
+        "#featurebullets_feature_div .a-list-item",
+        "#featurebullets_feature_div li",
+        "[data-a-expander-name='feature_bullets'] .a-list-item"
+      ];
+      var items = null;
+      for (var i = 0; i < selectors.length; i++) {
+        items = $$(selectors[i]);
+        if (items.length) break;
+      }
+      if (!items || !items.length) return [];
+      return items.map(function (el) { return text(el); }).filter(Boolean).slice(0, 15);
     },
 
-    /** "About this item" 段落文本（feature-bullets 的纯文本版） */
+    /** "About this item" 段落文本 */
     extractAboutItem: function () {
-      var items = $$("#feature-bullets .a-list-item, #feature-bullets li");
+      // Reuse same selector chain as extractBullets
+      var selectors = [
+        "#feature-bullets .a-list-item",
+        "#feature-bullets li",
+        "#feature-bullets .a-section.a-spacing-small",
+        "#feature-bullets span.a-list-item",
+        "#featurebullets_feature_div .a-list-item",
+        "#featurebullets_feature_div li",
+        "[data-a-expander-name='feature_bullets'] .a-list-item"
+      ];
+      var items = null;
+      for (var i = 0; i < selectors.length; i++) {
+        items = $$(selectors[i]);
+        if (items.length) break;
+      }
+      if (!items || !items.length) return "";
       return items.map(function (el) { return text(el); }).filter(Boolean).join("\n");
     },
 
     /** Product Description — 产品描述正文（A+ 内容等） */
     extractProductDescription: function () {
-      var el = document.getElementById("productDescription");
-      if (el) return cleanText(el);
-      el = document.querySelector("#aplus_feature_div, #aplus .aplus-v2-description, [data-aplus]");
-      if (el) return cleanText(el);
+      // A+ content first (richer description with images), then product description
+      var el = document.querySelector("#aplus_feature_div, #aplus .aplus-v2-description, [data-aplus]");
+      if (el) { var t = cleanText(el); if (t.length > 30) return t; }
+      // Product description section — use .a-section children, not the wrapper
+      el = document.querySelector("#productDescription .a-section, #productDescription_feature_div .a-section");
+      if (el) { var t2 = cleanText(el); if (t2 && t2.indexOf("Previous page") === -1) return t2; }
+      el = document.getElementById("productDescription");
+      if (el) { var t3 = cleanText(el); if (t3.length > 50 && t3.indexOf("Previous page") === -1) return t3; }
       // A+ narrative cards
       var cards = $$("#aplus_feature_div .card-content, #aplus_feature_div .aplus-module-content");
       if (cards.length) return cards.map(function (c) { return cleanText(c); }).filter(Boolean).join("\n");
@@ -957,7 +992,7 @@
         if (apexMatch) price = apexMatch[1];
       }
 
-      return { images: images, price: price };
+      return { images: images.slice(0, 3), price: price };
     });
   }
 
