@@ -340,7 +340,8 @@
     return new Promise(function (resolve) {
       function check() {
         var modal = document.querySelector(".ant-modal");
-        if (modal) { resolve(modal); return; }
+        // 弹窗必须可见（offsetParent !== null 表示非 display:none）
+        if (modal && modal.offsetParent !== null) { resolve(modal); return; }
         if (Date.now() > deadline) { resolve(null); return; }
         setTimeout(check, 200);
       }
@@ -354,7 +355,14 @@
     return new Promise(function (resolve) {
       function check() {
         var boxes = document.querySelectorAll(".categories-box");
-        if (boxes.length > columnIndex) { resolve(boxes[columnIndex]); return; }
+        if (boxes.length > columnIndex) {
+          var col = boxes[columnIndex];
+          // 列容器出现还不够，需要等待列表项渲染完毕
+          if (col.querySelectorAll(".categories-item").length > 0) {
+            resolve(col);
+            return;
+          }
+        }
         if (Date.now() > deadline) { resolve(null); return; }
         setTimeout(check, 200);
       }
@@ -471,12 +479,30 @@
       return Promise.resolve();
     }
 
-    // 如果弹窗已经打开，先关闭再重新开始
+    // 如果弹窗已打开（可见状态），先关闭再重新开始
     var existingModal = document.querySelector(".ant-modal");
-    if (existingModal) {
+    if (existingModal && existingModal.offsetParent !== null) {
+      console.log("[sERP] 弹窗已打开，先关闭...");
       var closeX = existingModal.querySelector(".ant-modal-close");
       if (closeX) closeX.click();
-      return sleep(400).then(function () { return fillCategorySelect_ozon(matched, true); });
+      // 等待弹窗真正关闭（隐藏或从 DOM 移除）
+      return new Promise(function (resolve) {
+        var deadline = Date.now() + 3000;
+        function checkHidden() {
+          var m = document.querySelector(".ant-modal");
+          if (!m || m.offsetParent === null) {
+            resolve(fillCategorySelect_ozon(matched, true));
+            return;
+          }
+          if (Date.now() > deadline) {
+            console.log("[sERP] 弹窗关闭超时，继续执行");
+            resolve(fillCategorySelect_ozon(matched, true));
+            return;
+          }
+          setTimeout(checkHidden, 150);
+        }
+        checkHidden();
+      });
     }
 
     console.log("[sERP] 点击\"选择分类\"按钮...");
@@ -545,6 +571,14 @@
           var bestItem = findCategoryInColumn(column, ruName);
 
           if (!bestItem) {
+            // 打印所有标题帮助调试
+            var allTitles = [];
+            for (var j = 0; j < items.length; j++) {
+              var tEl = items[j].querySelector(".categories-item-name");
+              allTitles.push(tEl ? tEl.getAttribute("title") : items[j].textContent.trim().substring(0, 40));
+            }
+            console.log("[sERP] 匹配失败，可用标题:", JSON.stringify(allTitles));
+            console.log("[sERP] 查找目标:", JSON.stringify(ruName));
             // 尝试弹窗搜索
             var searchInput = document.querySelector(".ant-modal input[name='searchCategory']");
             if (searchInput) {
@@ -567,6 +601,7 @@
                   var found = findCategoryInColumn(firstCol, ruName);
                   if (found) {
                     console.log("[sERP] 搜索后找到:", ruName);
+                    found.scrollIntoView({ block: "nearest" });
                     found.click();
                     return sleep(600).then(function () { return navigateColumn(idx + 1); });
                   }
@@ -580,6 +615,7 @@
           }
 
           console.log("[sERP] 点击:", ruName);
+          bestItem.scrollIntoView({ block: "nearest" });
           bestItem.click();
 
           return sleep(600).then(function () {
