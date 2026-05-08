@@ -3383,11 +3383,26 @@ def ozon_match_category(store_id):
                     else:
                         path_parts.append(p["name"])
 
+                node_path_names = []
+                node_path_ids = []
+                for p in path_nodes:
+                    pn = p.get("node", p)
+                    n_ru = _node_name(pn)
+                    n_cn = translations.get(str(p["id"]), "")
+                    n_cn_leaf = n_cn.split(" > ")[-1] if n_cn else ""
+                    if n_cn_leaf and n_cn_leaf != n_ru:
+                        node_path_names.append(f"{n_ru}（{n_cn_leaf}）")
+                    else:
+                        node_path_names.append(n_ru)
+                    node_path_ids.append(str(p["id"]))
+
                 best_match = {
                     "id": c.get("validation_id") or c["id"],
                     "type_id": c["id"] if c["id"] != (c.get("validation_id") or c["id"]) else None,
                     "name": c["name"],
                     "path": " > ".join(path_parts),
+                    "node_path_names": node_path_names,
+                    "node_path_ids": node_path_ids,
                     "reason": f"逐层匹配（共 {depth + 1} 层）→ {c['name']}（关键词验证）"
                 }
                 logger.info("[品类匹配] ✅ 验证通过: '%s'(ID=%s)", c["name"], c["id"])
@@ -3462,11 +3477,26 @@ def ozon_match_category(store_id):
                 else:
                     path_parts.append(p["name"])
 
+            node_path_names = []
+            node_path_ids = []
+            for p in path_nodes:
+                pn = p.get("node", p)
+                n_ru = _node_name(pn)
+                n_cn = translations.get(str(p["id"]), "")
+                n_cn_leaf = n_cn.split(" > ")[-1] if n_cn else ""
+                if n_cn_leaf and n_cn_leaf != n_ru:
+                    node_path_names.append(f"{n_ru}（{n_cn_leaf}）")
+                else:
+                    node_path_names.append(n_ru)
+                node_path_ids.append(str(p["id"]))
+
             best_match = {
                 "id": chosen.get("validation_id") or chosen["id"],
                 "type_id": chosen["id"] if chosen["id"] != (chosen.get("validation_id") or chosen["id"]) else None,
                 "name": chosen["name"],
                 "path": " > ".join(path_parts),
+                "node_path_names": node_path_names,
+                "node_path_ids": node_path_ids,
                 "reason": f"逐层匹配（共 {depth + 1} 层）→ {chosen['name']}"
             }
             logger.info("[品类匹配] ✅ 验证通过: '%s'(ID=%s)", chosen["name"], chosen["id"])

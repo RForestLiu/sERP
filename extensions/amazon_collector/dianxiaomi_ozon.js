@@ -305,6 +305,54 @@
     });
   }
 
+  // 帮助函数：从下拉选项中找匹配项
+  function findOptionByLevelName(options, levelName) {
+    // levelName 格式: "Russian（Chinese）" 或纯 "Russian"
+    var cnMatch = levelName.match(/（(.+?)）$/);
+    var ruName = cnMatch ? levelName.substring(0, levelName.lastIndexOf("（")).trim().toLowerCase() : levelName.toLowerCase();
+    var cnName = cnMatch ? cnMatch[1].trim().toLowerCase() : "";
+
+    console.log("[sERP] findOption: ru=" + ruName + " cn=" + cnName + " 在 " + options.length + " 个选项中");
+
+    var best = null;
+
+    // 策略A: 精确匹配俄语名（去除括号内容）
+    for (var i = 0; i < options.length; i++) {
+      var txt = (options[i].textContent || "").trim();
+      var txtRu = txt.replace(/（.+?）$/, "").trim().toLowerCase();
+      if (txtRu === ruName) { best = options[i]; break; }
+    }
+
+    // 策略B: 俄语名包含匹配
+    if (!best) {
+      for (var i = 0; i < options.length; i++) {
+        var txt = (options[i].textContent || "").toLowerCase();
+        if (txt.indexOf(ruName) !== -1) { best = options[i]; break; }
+      }
+    }
+
+    // 策略C: 中文名匹配
+    if (!best && cnName) {
+      for (var i = 0; i < options.length; i++) {
+        var txt = (options[i].textContent || "").toLowerCase();
+        if (txt.indexOf(cnName) !== -1) { best = options[i]; break; }
+      }
+    }
+
+    // 策略D: 模糊匹配（匹配前几个字符）
+    if (!best && ruName.length > 3) {
+      var shortRu = ruName.substring(0, 5);
+      for (var i = 0; i < options.length; i++) {
+        var txt = (options[i].textContent || "").toLowerCase();
+        if (txt.indexOf(shortRu) !== -1) { best = options[i]; break; }
+      }
+    }
+
+    if (best) console.log("[sERP] findOption 匹配到:", best.textContent.trim().substring(0, 60));
+    else console.log("[sERP] findOption 未匹配到任何选项");
+    return best;
+  }
+
   function fillCategorySelect(matched) {
     var catWrapper = document.querySelector(".category-item .ant-select");
     if (!catWrapper) { showToast("未找到品类下拉框", "error"); return Promise.resolve(); }
@@ -312,105 +360,145 @@
     var selector = catWrapper.querySelector(".ant-select-selector");
     if (!selector) { showToast("品类组件异常", "error"); return Promise.resolve(); }
 
-    console.log("[sERP] fillCategorySelect: 目标品类 =", matched.name, "| ID =", matched.id, "| path =", matched.path);
-
-    // Step 1: 先清除现有选择（如果有的话）
-    var clearBtn = catWrapper.querySelector(".ant-select-clear");
-    if (clearBtn) {
-      console.log("[sERP] 先清除现有品类选择");
-      clearBtn.click();
-      return sleep(400).then(function () { return fillCategorySelect(matched); });
+    // 解析路径：优先用后端返回的 node_path_names，否则回退解析 path 字段
+    var pathNames = [];
+    if (matched.node_path_names && matched.node_path_names.length > 0) {
+      pathNames = matched.node_path_names;
+    } else if (matched.path) {
+      pathNames = matched.path.split(" > ").filter(function (s) { return s.trim(); });
+    } else {
+      pathNames = [matched.name || ""];
     }
 
-    // Step 2: 点击打开下拉
+    console.log("[sERP] fillCategorySelect: pathNames =", pathNames);
+    console.log("[sERP] fillCategorySelect: matched.id =", matched.id, "| type_id =", matched.type_id);
+
+    // Step 1: 清除现有选择
+    var clearBtn = catWrapper.querySelector(".ant-select-clear");
+    if (clearBtn) {
+      console.log("[sERP] 清除现有品类选择");
+      clearBtn.click();
+      return sleep(500).then(function () { return fillCategorySelect(matched); });
+    }
+
+    // Step 2: 先点击下拉框获取顶级品类列表
+    // 如果已经打开就先关闭再打开，确保从顶层开始
+    var openDropdown = document.querySelector(".ant-select-dropdown:not(.ant-select-dropdown-hidden)");
+    if (openDropdown) {
+      document.body.click(); // 关闭
+      return sleep(300).then(function () { return fillCategorySelect(matched); });
+    }
+
+    console.log("[sERP] 打开品类下拉...");
     selector.click();
-    console.log("[sERP] 已点击品类下拉框，等待下拉出现...");
 
-    return sleep(400).then(function () {
-      // Step 3: 在搜索框输入俄语品类名
-      var searchInput = catWrapper.querySelector(".ant-select-selection-search-input");
-      if (searchInput) {
-        var nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
-        nativeSetter.call(searchInput, matched.name || "");
-        searchInput.dispatchEvent(new Event("input", { bubbles: true }));
-        searchInput.dispatchEvent(new Event("change", { bubbles: true }));
-        // 额外触发 compositionend（有些 Vue 组件需要）
-        searchInput.dispatchEvent(new CompositionEvent("compositionend", { data: matched.name || "", bubbles: true }));
-        console.log("[sERP] 搜索框已输入:", matched.name);
+    // Step 3: 逐层导航
+    function navigateLevel(idx) {
+      if (idx >= pathNames.length) {
+        console.log("[sERP] 所有层级已导航完毕");
+        return Promise.resolve();
+      }
+
+      var levelName = pathNames[idx];
+      var isLast = (idx === pathNames.length - 1);
+      console.log("[sERP] ====== 导航第 " + (idx + 1) + "/" + pathNames.length + " 层: " + levelName + " ======");
+
+      // 如果非第一层，可能需要点击当前选项来加载子选项
+      // 对于第一层，下拉菜单应该已经打开并显示顶级品类
+
+      return waitForDropdownOptions(8000).then(function (result) {
+        if (!result || result.options.length === 0) {
+          console.log("[sERP] 第" + (idx + 1) + "层超时：未出现下拉选项");
+          document.body.click();
+          showToast("品类第" + (idx + 1) + "层未加载，请手动选择: " + levelName, "error");
+          return;
+        }
+
+        console.log("[sERP] 第" + (idx + 1) + "层: 找到 " + result.options.length + " 个下拉选项");
+
+        // 打印前几个选项帮助调试
+        result.options.slice(0, 5).forEach(function (o, i) {
+          console.log("[sERP]   选项[" + i + "]:", (o.textContent || "").trim().substring(0, 70));
+        });
+
+        // 在当前选项中查找匹配
+        var bestOption = findOptionByLevelName(result.options, levelName);
+
+        if (!bestOption) {
+          // 尝试在搜索框输入来缩小范围
+          var searchInput = catWrapper.querySelector(".ant-select-selection-search-input");
+          if (searchInput) {
+            var ruOnly = levelName.replace(/（.+?）$/, "").trim();
+            console.log("[sERP] 尝试搜索过滤:", ruOnly);
+            var nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+            nativeSetter.call(searchInput, ruOnly);
+            searchInput.dispatchEvent(new Event("input", { bubbles: true }));
+            searchInput.dispatchEvent(new Event("change", { bubbles: true }));
+            searchInput.dispatchEvent(new CompositionEvent("compositionend", { data: ruOnly, bubbles: true }));
+
+            return sleep(600).then(function () {
+              return waitForDropdownOptions(5000);
+            }).then(function (r2) {
+              if (r2 && r2.options.length > 0) {
+                var bo2 = findOptionByLevelName(r2.options, levelName);
+                if (bo2) { bestOption = bo2; }
+              }
+              if (!bestOption) {
+                console.log("[sERP] 搜索后仍未找到匹配项");
+                document.body.click();
+                showToast("未找到品类 \"" + levelName + "\"，请手动选择", "error");
+                return;
+              }
+              // Continue below with bestOption set
+              return clickAndProceed(bestOption, idx, isLast, levelName);
+            });
+          } else {
+            document.body.click();
+            showToast("未找到品类 \"" + levelName + "\"，请手动选择", "error");
+            return;
+          }
+        }
+
+        return clickAndProceed(bestOption, idx, isLast, levelName);
+      });
+    }
+
+    function clickAndProceed(bestOption, idx, isLast, levelName) {
+      console.log("[sERP] 点击: " + bestOption.textContent.trim().substring(0, 60));
+      bestOption.click();
+
+      if (isLast) {
+        // 最后一层 → 验证选择结果
+        return sleep(500).then(function () {
+          var si = catWrapper.querySelector(".ant-select-selection-item");
+          var newVal = si ? (si.getAttribute("title") || si.textContent || "").trim() : "";
+          console.log("[sERP] 最终选择值:", newVal);
+
+          if (newVal && newVal.length > 0) {
+            showToast("品类已自动选中: " + newVal, "success");
+            document.body.click(); // 关闭下拉
+          } else {
+            showToast("品类可能未正确选中，当前值: " + (newVal || "空"), "error");
+          }
+        });
       } else {
-        console.log("[sERP] 未找到搜索输入框");
-      }
-
-      // Step 4: 轮询等待下拉选项加载（店小秘会异步请求品类列表）
-      console.log("[sERP] 等待下拉选项加载...");
-      return waitForDropdownOptions(6000);
-    }).then(function (result) {
-      if (!result || result.options.length === 0) {
-        console.log("[sERP] 超时：下拉选项未出现");
-        document.body.click();
-        showToast("品类下拉选项未加载，请手动选择: \"" + (matched.name || "") + "\"", "error");
-        return;
-      }
-
-      console.log("[sERP] 找到", result.options.length, "个下拉选项");
-
-      // Step 5: 智能匹配 — 按俄语名 → 按 ID → 第一个
-      var best = null;
-      var mn = (matched.name || "").toLowerCase();
-      var mId = String(matched.id || "");
-
-      // 策略A: 俄语名包含匹配
-      result.options.forEach(function (o) {
-        if (!best && o.textContent.toLowerCase().indexOf(mn) !== -1) {
-          best = o;
-          console.log("[sERP] 策略A 匹配 (俄语名):", o.textContent.trim().substring(0, 60));
-        }
-      });
-
-      // 策略B: 品类 ID 匹配
-      if (!best) {
-        result.options.forEach(function (o) {
-          if (!best && o.textContent.indexOf(mId) !== -1) {
-            best = o;
-            console.log("[sERP] 策略B 匹配 (ID):", o.textContent.trim().substring(0, 60));
+        // 非最后一层 → 等待子选项加载，然后导航下一层
+        console.log("[sERP] 点击非叶子层，等待子选项出现...");
+        return sleep(600).then(function () {
+          // 检查下拉是否还开着（有些组件点击后会关闭）
+          var dd = document.querySelector(".ant-select-dropdown:not(.ant-select-dropdown-hidden)");
+          if (!dd) {
+            console.log("[sERP] 下拉已关闭，重新打开以加载子选项");
+            selector.click();
+            return sleep(500);
           }
+        }).then(function () {
+          return navigateLevel(idx + 1);
         });
       }
+    }
 
-      // 策略C: 任意文本包含匹配
-      if (!best) {
-        var shortName = mn.split(" ")[0];
-        result.options.forEach(function (o) {
-          var txt = o.textContent.toLowerCase();
-          if (!best && (txt.indexOf(shortName) !== -1 || txt.indexOf(mn.substring(0, 3)) !== -1)) {
-            best = o;
-            console.log("[sERP] 策略C 模糊匹配:", o.textContent.trim().substring(0, 60));
-          }
-        });
-      }
-
-      // 策略D: 选第一个
-      if (!best) {
-        best = result.options[0];
-        console.log("[sERP] 策略D 选第一个:", best.textContent.trim().substring(0, 60));
-      }
-
-      console.log("[sERP] 点击选项:", best.textContent.trim().substring(0, 60));
-      best.click();
-
-      return sleep(400).then(function () {
-        // Step 6: 验证选择
-        var si = catWrapper.querySelector(".ant-select-selection-item");
-        var newVal = si ? (si.getAttribute("title") || si.textContent || "").trim() : "";
-        console.log("[sERP] 选择后品类值:", newVal);
-
-        if (newVal && (newVal.indexOf(matched.name) !== -1 || matched.name.indexOf(newVal) !== -1 || newVal.length > 0)) {
-          showToast("品类已自动选中: " + newVal, "success");
-        } else {
-          showToast("品类可能未正确选中，当前: " + (newVal || "空"), "error");
-        }
-      });
-    });
+    return navigateLevel(0);
   }
 
   // ==================== 智能填充 ====================
