@@ -176,10 +176,23 @@
 
   // ==================== 产品 API ====================
   function fetchProducts() {
+    console.log("[sERP] 正在请求产品列表:", API_PRODUCTS);
     return fetch(API_PRODUCTS)
-      .then(function (res) { if (!res.ok) throw new Error("获取产品列表失败"); return res.json(); })
-      .then(function (data) { return data.products || []; })
-      .catch(function (e) { showToast("无法连接到 sERP 后端: " + e.message, "error"); return []; });
+      .then(function (res) {
+        console.log("[sERP] 产品列表响应状态:", res.status);
+        if (!res.ok) throw new Error("HTTP " + res.status + " 获取产品列表失败");
+        return res.json();
+      })
+      .then(function (data) {
+        var count = (data.products || []).length;
+        console.log("[sERP] 产品列表已加载:", count, "个产品");
+        return data.products || [];
+      })
+      .catch(function (e) {
+        console.error("[sERP] 产品列表加载失败:", e.message);
+        showToast("无法连接到 sERP 后端: " + e.message, "error");
+        return [];
+      });
   }
 
   // ==================== 产品选择弹窗 ====================
@@ -356,7 +369,15 @@
   btnSelect.addEventListener("click", function () {
     setBtnLoading(btnSelect, true); modalOverlay.classList.add("active");
     document.getElementById("serp-modal-list").innerHTML = '<div id="serp-modal-empty">正在加载产品列表...</div>';
-    fetchProducts().then(function (p) { allProducts = p; setBtnLoading(btnSelect, false); renderProductList(allProducts.length ? allProducts : []); if (!p.length) document.getElementById("serp-modal-list").innerHTML = '<div id="serp-modal-empty">没有找到正式产品，请先在 sERP 中采集并保存产品</div>'; });
+    fetchProducts().then(function (p) {
+      allProducts = p; setBtnLoading(btnSelect, false);
+      console.log("[sERP] 选品: 获取到", p.length, "个产品");
+      if (!p.length) {
+        document.getElementById("serp-modal-list").innerHTML = '<div id="serp-modal-empty">没有找到正式产品。<br><br>请确认：<br>1. sERP Flask 后端已启动 (127.0.0.1:5000)<br>2. 已在产品管理中保存过正式产品</div>';
+        return;
+      }
+      renderProductList(p);
+    });
   });
   btnCategory.addEventListener("click", function () { doMatchCategory(); });
   btnFill.addEventListener("click", function () { doAutoFill(); });
