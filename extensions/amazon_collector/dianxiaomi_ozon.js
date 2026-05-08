@@ -862,10 +862,8 @@
     if (!value && value !== 0) return false;
     value = String(value);
     try {
-      // 直接用 selector 查询（buildSelector 生成的已是有效 CSS selector）
       var el = document.querySelector(selector);
       if (!el) {
-        // 回退：尝试从 selector 中提取类名重试
         var parts = selector.split(".");
         if (parts.length > 1) {
           el = document.querySelector(parts[0] + "." + parts.slice(1).join("."));
@@ -873,21 +871,55 @@
       }
       if (!el) return false;
       var tag = el.tagName.toLowerCase();
+
+      function trigger(el, eventName) {
+        el.dispatchEvent(new Event(eventName, { bubbles: true }));
+      }
+
       if (tag === "input") {
-        if (el.type === "checkbox" || el.type === "radio") { el.checked = (value === "true" || value === "1" || value === "yes"); }
-        else { var ns = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set; ns.call(el, value); el.dispatchEvent(new Event("input", { bubbles: true })); el.dispatchEvent(new Event("change", { bubbles: true })); el.dispatchEvent(new Event("blur", { bubbles: true })); }
+        if (el.type === "checkbox" || el.type === "radio") {
+          el.checked = (value === "true" || value === "1" || value === "yes");
+          trigger(el, "change");
+          return true;
+        }
+        var ns = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+        // 先清空再填入，确保 Vue/React 受控组件正确响应
+        el.focus();
+        ns.call(el, "");
+        trigger(el, "input");
+        ns.call(el, value);
+        trigger(el, "input");
+        trigger(el, "change");
+        trigger(el, "blur");
         return true;
       }
       if (tag === "select") {
         var opts = Array.from(el.options), matched = false;
+        el.focus();
         var exact = opts.find(function (o) { return o.value === value; });
         if (exact) { el.value = value; matched = true; }
         if (!matched) { var fuzzy = opts.find(function (o) { return o.text.toLowerCase().indexOf(value.toLowerCase()) !== -1 || value.toLowerCase().indexOf(o.text.toLowerCase()) !== -1; }); if (fuzzy) { el.value = fuzzy.value; matched = true; } }
-        if (matched) { el.dispatchEvent(new Event("change", { bubbles: true })); el.dispatchEvent(new Event("input", { bubbles: true })); }
+        if (matched) { trigger(el, "change"); trigger(el, "input"); }
         return matched;
       }
-      if (tag === "textarea") { var ts = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set; ts.call(el, value); el.dispatchEvent(new Event("input", { bubbles: true })); el.dispatchEvent(new Event("change", { bubbles: true })); return true; }
-      if (el.isContentEditable) { el.textContent = value; el.dispatchEvent(new Event("input", { bubbles: true })); return true; }
+      if (tag === "textarea") {
+        var ts = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
+        el.focus();
+        ts.call(el, "");
+        trigger(el, "input");
+        ts.call(el, value);
+        trigger(el, "input");
+        trigger(el, "change");
+        return true;
+      }
+      if (el.isContentEditable) {
+        el.focus();
+        el.textContent = "";
+        trigger(el, "input");
+        el.textContent = value;
+        trigger(el, "input");
+        return true;
+      }
       return false;
     } catch (e) { console.warn("[sERP] 填充失败:", selector, e); return false; }
   }
@@ -911,7 +943,13 @@
 
   function positionResultsPanel() {
     var tbRect = toolbar.getBoundingClientRect();
-    resultsPanel.style.top = (tbRect.bottom + 8) + "px";
+    var top = tbRect.bottom + 8;
+    // 如果产品信息区已展开，放到它下面
+    if (productInfo.classList.contains("visible")) {
+      var piRect = productInfo.getBoundingClientRect();
+      top = piRect.bottom + 8;
+    }
+    resultsPanel.style.top = top + "px";
     resultsPanel.style.left = "8px";
   }
 
@@ -1002,21 +1040,25 @@
         return;
       }
 
-      // 构建字段查找表：selector → label
-      var fieldLabelMap = {};
-      formFields.forEach(function (f) {
-        fieldLabelMap[f.selector] = f.label || f.name || f.placeholder || f.selector;
+      // 构建字段查找表：selector → {label, order}
+      var fieldMeta = {};
+      formFields.forEach(function (f, idx) {
+        fieldMeta[f.selector] = {
+          label: f.label || f.name || f.placeholder || f.selector,
+          order: idx
+        };
       });
 
       allMappings.forEach(function (m, i) {
         var ok = fillFormField(m.selector, m.value);
-        var label = fieldLabelMap[m.selector] || m.selector;
+        var meta = fieldMeta[m.selector] || { label: m.selector, order: 9999 };
         if (ok) filledCount++;
         fillResults.push({
           selector: m.selector,
-          label: label,
+          label: meta.label,
           value: m.value,
           filled: ok,
+          order: meta.order,
           error: ok ? null : "元素未找到或填充失败"
         });
         setProgress(75 + (i / totalMappings) * 20);
@@ -1025,17 +1067,21 @@
       // 标记未匹配的字段
       var matchedSelectors = {};
       allMappings.forEach(function (m) { matchedSelectors[m.selector] = true; });
-      formFields.forEach(function (f) {
+      formFields.forEach(function (f, idx) {
         if (!matchedSelectors[f.selector]) {
           fillResults.push({
             selector: f.selector,
             label: f.label || f.name || f.placeholder || f.selector,
             value: "",
             filled: false,
+            order: idx,
             error: "LLM 未匹配此字段"
           });
         }
       });
+
+      // 按页面字段顺序排序
+      fillResults.sort(function (a, b) { return a.order - b.order; });
 
       setProgress(100);
       showToast("填充完成！成功 " + filledCount + "/" + fillResults.length + " 个字段", filledCount > 0 ? "success" : "error");
