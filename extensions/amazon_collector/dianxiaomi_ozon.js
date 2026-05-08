@@ -517,6 +517,38 @@
       }
       console.log("[sERP] 分类弹窗已打开");
 
+      // Step 2.5: 确保"初始类目"模式 + 清空搜索框（搜索会破坏列级联视图）
+      var modeSelectItem = modal.querySelector(".modal-body-header .ant-select-selection-item");
+      var modeText = modeSelectItem ? modeSelectItem.textContent.trim() : "";
+      var searchInput = modal.querySelector("input[name='searchCategory']");
+      var searchVal = searchInput ? searchInput.value : "";
+
+      if (searchVal) {
+        console.log("[sERP] 清空搜索框:", searchVal);
+        var ns = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+        ns.call(searchInput, "");
+        searchInput.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+
+      if (modeText !== "初始类目") {
+        console.log("[sERP] 切换到初始类目模式，当前:", modeText);
+        var selInput = modal.querySelector(".modal-body-header .ant-select input");
+        if (selInput) {
+          selInput.focus();
+          selInput.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", code: "Enter", keyCode: 13, bubbles: true }));
+          var dd = document.querySelector(".ant-select-dropdown:not(.ant-select-dropdown-hidden)");
+          if (dd) {
+            var opts = dd.querySelectorAll(".ant-select-item-option");
+            for (var oi = 0; oi < opts.length; oi++) {
+              if (opts[oi].textContent.trim() === "初始类目") {
+                opts[oi].click();
+                break;
+              }
+            }
+          }
+        }
+      }
+
       // Step 3: 逐层导航列
       function navigateColumn(idx) {
         if (idx >= pathNames.length) {
@@ -579,37 +611,6 @@
             }
             console.log("[sERP] 匹配失败，可用标题:", JSON.stringify(allTitles));
             console.log("[sERP] 查找目标:", JSON.stringify(ruName));
-            // 尝试弹窗搜索
-            var searchInput = document.querySelector(".ant-modal input[name='searchCategory']");
-            if (searchInput) {
-              console.log("[sERP] 弹窗搜索:", ruName);
-              var ns = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
-              ns.call(searchInput, ruName);
-              searchInput.dispatchEvent(new Event("input", { bubbles: true }));
-              // 点击"搜索"按钮
-              var sBtns = document.querySelectorAll(".ant-modal .ant-btn-primary");
-              for (var si = 0; si < sBtns.length; si++) {
-                if (sBtns[si].textContent.trim() === "搜索") {
-                  sBtns[si].click();
-                  break;
-                }
-              }
-              return sleep(1000).then(function () {
-                // 搜索后重新查找第一列
-                var firstCol = document.querySelector(".categories-box");
-                if (firstCol) {
-                  var found = findCategoryInColumn(firstCol, ruName);
-                  if (found) {
-                    console.log("[sERP] 搜索后找到:", ruName);
-                    found.scrollIntoView({ block: "nearest" });
-                    found.click();
-                    return sleep(600).then(function () { return navigateColumn(idx + 1); });
-                  }
-                }
-                showToast("未找到品类 \"" + ruName + "\"，请手动选择", "error");
-                return;
-              });
-            }
             showToast("未找到品类 \"" + ruName + "\"，请手动选择", "error");
             return;
           }
