@@ -1003,10 +1003,16 @@ def amazon_capture():
     images_dir = os.path.join(data_dir, "images")
     os.makedirs(images_dir, exist_ok=True)
 
-    # 保存产品数据
+    # 保存产品数据（不含图片URL，图片已下载到本地）
+    sanitized = dict(data)
+    sanitized["images"] = []
+    if sanitized.get("variantData"):
+        sanitized["variantData"] = [
+            {**v, "images": []} for v in sanitized["variantData"]
+        ]
     product_data_file = os.path.join(data_dir, "product_data.json")
     with open(product_data_file, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+        json.dump(sanitized, f, indent=2, ensure_ascii=False)
 
     collect_tasks[task_id] = {
         "status": "completed",
