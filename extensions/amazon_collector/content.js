@@ -326,6 +326,40 @@
       return $$("#feature-bullets .a-list-item, #feature-bullets li").map(function (el) { return text(el); }).filter(Boolean).slice(0, 10);
     },
 
+    /** "About this item" 段落文本（feature-bullets 的纯文本版） */
+    extractAboutItem: function () {
+      var items = $$("#feature-bullets .a-list-item, #feature-bullets li");
+      return items.map(function (el) { return text(el); }).filter(Boolean).join("\n");
+    },
+
+    /** Product Description — 产品描述正文（A+ 内容等） */
+    extractProductDescription: function () {
+      var el = document.getElementById("productDescription");
+      if (el) return text(el);
+      el = document.querySelector("#aplus_feature_div, #aplus .aplus-v2-description, [data-aplus]");
+      if (el) return text(el);
+      // A+ narrative cards
+      var cards = $$("#aplus_feature_div .card-content, #aplus_feature_div .aplus-module-content");
+      if (cards.length) return cards.map(function (c) { return text(c); }).filter(Boolean).join("\n");
+      return "";
+    },
+
+    /** Product Details / Technical Specs — 产品技术规格表 */
+    extractProductDetails: function () {
+      var rows = [];
+      // 标准 product details 表格
+      $$("#productDetails_techSpec_section_1 tr, #productDetails_detailBullets_sections1 tr, #prodDetails tr, #detailBullets_feature_div tr").forEach(function (tr) {
+        var th = tr.querySelector("th");
+        var td = tr.querySelector("td");
+        if (th && td) rows.push(text(th) + ": " + text(td));
+      });
+      if (rows.length) return rows.join("\n");
+
+      // 备用格式：detail-bullets wrapper
+      var bullets = $$("#detailBulletsWrapper_feature_div .a-list-item, #detailBullets_feature_div .a-list-item");
+      return bullets.map(function (el) { return text(el); }).filter(Boolean).join("\n");
+    },
+
     extractAll: function () {
       return {
         title: this.extractTitle(),
@@ -336,6 +370,9 @@
         images: this.extractImages(),
         variants: this.extractVariants(),
         bullets: this.extractBullets(),
+        about_item: this.extractAboutItem(),
+        product_description: this.extractProductDescription(),
+        product_details: this.extractProductDetails(),
         currentVariant: this.getCurrentVariant(),
       };
     },
@@ -799,6 +836,9 @@
       images: d.images || [],
       variants: d.variants || {},
       bullets: d.bullets || [],
+      about_item: d.about_item || "",
+      product_description: d.product_description || "",
+      product_details: d.product_details || "",
       description: d.description || "",
       currentVariant: d.currentVariant || "",
       collectedAt: new Date().toISOString(),
