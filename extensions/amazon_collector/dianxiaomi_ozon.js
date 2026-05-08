@@ -752,10 +752,12 @@
   }
 
   // ==================== 智能填充 ====================
-  function findLabel(el) {
+  function findLabel(el, skipWrapper) {
     if (el.id) { var lb = document.querySelector('label[for="' + el.id + '"]'); if (lb) return lb.textContent.trim(); }
-    var p = el.parentElement;
-    while (p) { if (p.tagName === "LABEL") return p.textContent.trim(); var prev = p.previousElementSibling; if (prev && prev.tagName === "LABEL") return prev.textContent.trim(); p = p.parentElement; }
+    if (!skipWrapper) {
+      var p = el.parentElement;
+      while (p) { if (p.tagName === "LABEL") return p.textContent.trim(); var prev = p.previousElementSibling; if (prev && prev.tagName === "LABEL") return prev.textContent.trim(); p = p.parentElement; }
+    }
     p = el.closest(".ant-form-item, .el-form-item, .form-group, .vxe-form-item");
     if (p) { var le = p.querySelector("label, .ant-form-item-label, .el-form-item__label"); if (le) return le.textContent.trim(); }
     return "";
@@ -815,6 +817,9 @@
       var label = findLabel(el);
       if (isSkippedField(label)) return;
       if (el.type === "checkbox" || el.type === "radio") {
+        // 复选框/单选框的 wrapper label 只是选项值（如"男士"），
+        // 真正的字段名是外层 .ant-form-item 的 label
+        label = findLabel(el, true);
         if (seenSelectors[sel]) return;
         var groupKey = label.replace(/\(.+?\)/, "").trim();
         if (seenSelectors[groupKey]) return;
