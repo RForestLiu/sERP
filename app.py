@@ -2141,9 +2141,10 @@ def auto_fill_analyze():
         field_desc = f"  - 标签: {label or name or '(无标签)'} | 选择器: {selector}"
         if placeholder:
             field_desc += f" | 占位: {placeholder}"
-        if tag == "select" and options:
-            option_texts = [o.get("text", o.get("value", "")) for o in options[:20]]
-            field_desc += f" | 选项: {', '.join(option_texts)}"
+        if options:
+            option_texts = [o.get("text", o.get("value", "")) for o in options[:30]]
+            if option_texts:
+                field_desc += f" | 选项: {', '.join(option_texts)}"
         fields_summary.append(field_desc)
 
     fields_text = "\n".join(fields_summary)
@@ -2155,6 +2156,12 @@ def auto_fill_analyze():
 1. 产品信息（标题、描述、属性等）
 2. 表单字段列表（每个字段包含标签、占位符、选项等）
 3. 表单字段标签可能包含 `[行上下文]`，用于区分多行SKU中相同名称的字段。例如 "统一计量单位中的商品数量 [变体: 红色-L]" 表示该字段属于红色L码变体
+
+## 字段标签说明
+- 普通文本字段：标签如 "产品名称"、"重量, г"
+- **checkbox-group**（多选组）：标签格式为 "属性名 (可选值: 选项A / 选项B / 选项C)"，从产品数据中判断哪些选项应勾选，**value 填应勾选的选项文本**（多个用逗号分隔，如 "天然皮革, 人造皮革"）。如果都不匹配则填 false
+- **radio-group**（单选组）：标签格式为 "属性名 (选项: 选项A / 选项B / 选项C)"，从产品数据中判断应选哪个选项，**value 填应选中的选项文本**
+- **select**（下拉框）：标签后可能包含 `| 选项: ...`，从选项列表中选取最接近的值
 
 ## 输出要求
 请分析每个表单字段，判断它对应产品数据中的哪个信息，然后给出填充值。
@@ -2171,13 +2178,14 @@ def auto_fill_analyze():
 - **分类/品类** → 匹配标签含"分类""品类""category"的字段
 - **数量/件数/个数** → 匹配标签含"数量""库存""件数""个数""quantity""count""pcs"的字段，从产品描述或常识推断
 - **对于 select 下拉框**：从选项列表中匹配最接近的值
-- **对于 checkbox**：返回匹配的选项文本或 true/false
+- **对于 checkbox-group**：从"可选值"列表中选择匹配产品数据的选项文本，多个用逗号分隔
+- **对于 radio-group**：从"选项"列表中选择最匹配产品数据的一个选项文本
 - **对于其他字段**：根据标签和占位符推断
 
 ### 重要规则：
 1. selector 必须从表单字段列表里**原样复制**"选择器"的值，不要自己编造
 2. 尽量为每个字段提供填充值，能推断的就推断（如皮革钱包 → 材质为"天然皮革"）
-3. 对于下拉框(select)，必须从提供的选项列表中选取值
+3. 对于下拉框(select)和选项组(checkbox-group/radio-group)，必须从提供的选项列表中选取值
 4. 所有值必须是字符串
 5. 明显无关的字段可跳过，但属性类字段尽量填充
 6. **单位换算**: 产品规格可能使用英制单位（oz盎司/lb磅/in英寸），Ozon 表单通常需要公制:

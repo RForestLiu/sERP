@@ -944,25 +944,85 @@
   function collectFormFields() {
     var fields = [];
     var seenSelectors = {};
-    document.querySelectorAll('input:not([type="hidden"]):not([type="file"])').forEach(function (el) {
+
+    // ===== 第一遍：收集 checkbox/radio，按 form-item 分组 =====
+    var checkboxGroups = {};  // { groupKey: { groupLabel, rowCtx, items: [{selector, optionLabel}] } }
+    var radioGroups = {};
+
+    document.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(function (el) {
+      if (!isVisibleField(el)) return;
+      var groupLabel = findLabel(el, true);  // form-item 标签（如"材料"）
+      if (isSkippedField(groupLabel)) return;
+      var optionLabel = findLabel(el);       // 单个 checkbox 的选项文本（如"天然皮革"）
+      if (!optionLabel) optionLabel = (el.parentElement ? el.parentElement.textContent : "").trim();
+      var sel = buildSelector(el);
+      var rowCtx = getRowContext(el);
+      var groupKey = (groupLabel + "|" + (rowCtx || "")).replace(/\(.+?\)/g, "").trim();
+
+      if (el.type === "checkbox") {
+        if (!checkboxGroups[groupKey]) checkboxGroups[groupKey] = { groupLabel: groupLabel, rowCtx: rowCtx, items: [] };
+        checkboxGroups[groupKey].items.push({ selector: sel, optionLabel: optionLabel, el: el });
+      } else {
+        if (!radioGroups[groupKey]) radioGroups[groupKey] = { groupLabel: groupLabel, rowCtx: rowCtx, items: [] };
+        radioGroups[groupKey].items.push({ selector: sel, optionLabel: optionLabel, el: el });
+      }
+    });
+
+    // checkbox 组：每个组生成一个字段，附带全部选项
+    Object.keys(checkboxGroups).forEach(function (key) {
+      var grp = checkboxGroups[key];
+      var optionLabels = grp.items.map(function (x) { return x.optionLabel; });
+      var selectors = grp.items.map(function (x) { return x.selector; });
+      var currentChecks = grp.items.filter(function (x) { return x.el.checked; }).map(function (x) { return x.optionLabel; });
+      var rowCtx = grp.rowCtx || "";
+      var fullLabel = grp.groupLabel
+        + (rowCtx ? " [" + rowCtx + "]" : "")
+        + " (可选值: " + optionLabels.join(" / ") + ")";
+      fields.push({
+        tag: "checkbox-group",
+        type: "checkbox",
+        label: fullLabel,
+        currentValue: currentChecks.join(", "),
+        selector: selectors[0],
+        selectors: selectors,
+        options: grp.items.map(function (x) { return { text: x.optionLabel, selector: x.selector }; })
+      });
+    });
+
+    // radio 组：每个组生成一个字段
+    Object.keys(radioGroups).forEach(function (key) {
+      var grp = radioGroups[key];
+      var optionLabels = grp.items.map(function (x) { return x.optionLabel; });
+      var selectors = grp.items.map(function (x) { return x.selector; });
+      var rowCtx = grp.rowCtx || "";
+      var fullLabel = grp.groupLabel
+        + (rowCtx ? " [" + rowCtx + "]" : "")
+        + " (选项: " + optionLabels.join(" / ") + ")";
+      fields.push({
+        tag: "radio-group",
+        type: "radio",
+        label: fullLabel,
+        currentValue: "",
+        selector: selectors[0],
+        selectors: selectors,
+        options: grp.items.map(function (x) { return { text: x.optionLabel, selector: x.selector }; })
+      });
+    });
+
+    // ===== 第二遍：其他 input（排除 checkbox/radio） =====
+    document.querySelectorAll('input:not([type="hidden"]):not([type="file"]):not([type="checkbox"]):not([type="radio"])').forEach(function (el) {
       if (!isVisibleField(el)) return;
       var sel = buildSelector(el);
       var label = findLabel(el);
       if (isSkippedField(label)) return;
-      // 如果在表格行内，附加行上下文以区分不同SKU
       var rowCtx = getRowContext(el);
       var fullLabel = label + (rowCtx ? " [" + rowCtx + "]" : "");
-      if (el.type === "checkbox" || el.type === "radio") {
-        label = findLabel(el, true);
-        fullLabel = label + (rowCtx ? " [" + rowCtx + "]" : "");
-        if (seenSelectors[sel]) return;
-        var groupKey = label.replace(/\(.+?\)/, "").trim();
-        if (seenSelectors[groupKey]) return;
-        seenSelectors[groupKey] = true;
-      }
+      if (seenSelectors[sel]) return;
       seenSelectors[sel] = true;
       fields.push({ tag: "input", type: el.type || "text", name: el.name || "", id: el.id || "", label: fullLabel, placeholder: el.placeholder || "", currentValue: el.value || "", selector: sel });
     });
+
+    // ===== select / textarea =====
     document.querySelectorAll("select").forEach(function (el) {
       if (!isVisibleField(el)) return;
       var label = findLabel(el);
@@ -982,7 +1042,7 @@
     return fields;
   }
 
-  function fillFormField(selector, value) {
+  function fillFormField(selector, value, fieldMeta) {
     if (!value && value !== 0) return false;
     value = String(value);
     try {
@@ -995,6 +1055,106 @@
       }
       if (!el) return false;
       var tag = el.tagName.toLowerCase();
+
+      function trigger(el, eventName) {
+        el.dispatchEvent(new Event(eventName, { bubbles: true }));
+      }
+
+      // ===== 归一化文本（用于跨语言模糊匹配） =====
+      function norm(s) {
+        return (s || "").toLowerCase().replace(/\s+/g, " ").replace(/[()（）]/g, "").trim();
+      }
+
+      // ===== 检测是否为 checkbox/radio 组（从 fieldMeta 或 DOM 判断） =====
+      var isCheckboxGroup = false;
+      var isRadioGroup = false;
+      var groupSelectors = [];
+      var groupOptions = [];
+
+      if (fieldMeta && fieldMeta.selectors && fieldMeta.selectors.length > 1) {
+        if (el.type === "checkbox") {
+          isCheckboxGroup = true;
+          groupSelectors = fieldMeta.selectors;
+          groupOptions = fieldMeta.options || [];
+        } else if (el.type === "radio") {
+          isRadioGroup = true;
+          groupSelectors = fieldMeta.selectors;
+          groupOptions = fieldMeta.options || [];
+        }
+      }
+      // fallback: 从 DOM 检测同 form-item 下的兄弟 checkbox/radio
+      if (!isCheckboxGroup && !isRadioGroup && (el.type === "checkbox" || el.type === "radio")) {
+        var formItemCheck = el.closest(".ant-form-item");
+        if (formItemCheck) {
+          var siblings = formItemCheck.querySelectorAll('input[type="' + el.type + '"]');
+          if (siblings.length > 1) {
+            if (el.type === "checkbox") isCheckboxGroup = true;
+            else isRadioGroup = true;
+            var self = this;
+            siblings.forEach(function (sib) {
+              var sel = buildSelector(sib);
+              groupSelectors.push(sel);
+              var optLabel = findLabel(sib) || (sib.parentElement ? sib.parentElement.textContent : "").trim();
+              groupOptions.push({ text: optLabel, selector: sel });
+            });
+          }
+        }
+      }
+
+      // ===== checkbox 组填充 =====
+      if (isCheckboxGroup) {
+        var vals = value.split(/[,，、/|]/).map(function (s) { return norm(s); }).filter(function (s) { return s.length > 0; });
+        if (vals.length === 0) vals = [norm(value)];
+        var anyChecked = false;
+
+        groupOptions.forEach(function (opt) {
+          var cb = document.querySelector(opt.selector);
+          if (!cb) return;
+          var optNorm = norm(opt.text);
+          var matched = vals.some(function (v) {
+            return optNorm.indexOf(v) !== -1 || v.indexOf(optNorm) !== -1;
+          });
+          // 额外策略：提取关键词匹配（取前3个字符以上做子串匹配）
+          if (!matched && v.length >= 2) {
+            matched = vals.some(function (v) {
+              return optNorm.indexOf(v.substring(0, 3)) !== -1 || v.indexOf(optNorm.substring(0, 3)) !== -1;
+            });
+          }
+          if (matched) {
+            cb.checked = true;
+            trigger(cb, "change");
+            anyChecked = true;
+          }
+        });
+
+        if (!anyChecked) {
+          // 全都不匹配：尝试布尔判定
+          var boolCheck = (value === "true" || value === "1" || value === "yes");
+          if (boolCheck && groupSelectors.length > 0) {
+            var firstCb = document.querySelector(groupSelectors[0]);
+            if (firstCb) { firstCb.checked = true; trigger(firstCb, "change"); anyChecked = true; }
+          }
+        }
+        return anyChecked;
+      }
+
+      // ===== radio 组填充 =====
+      if (isRadioGroup) {
+        var vNorm = norm(value);
+        var anySelected = false;
+        groupOptions.forEach(function (opt) {
+          var rb = document.querySelector(opt.selector);
+          if (!rb) return;
+          var optNorm = norm(opt.text);
+          var matched = optNorm.indexOf(vNorm) !== -1 || vNorm.indexOf(optNorm) !== -1;
+          if (matched) {
+            rb.checked = true;
+            trigger(rb, "change");
+            anySelected = true;
+          }
+        });
+        return anySelected;
+      }
 
       // 如果附近有"编辑JSON代码"开关，先点击进入 JSON 编辑模式
       if (tag === "textarea" || el.type === "textarea" || el.classList.contains("CodeMirror")) {
@@ -1012,28 +1172,24 @@
         }
       }
 
-      function trigger(el, eventName) {
-        el.dispatchEvent(new Event(eventName, { bubbles: true }));
-      }
-
+      // ===== 普通 input（text/number 等） =====
       if (tag === "input") {
         if (el.type === "checkbox" || el.type === "radio") {
+          // 单 checkbox/radio（非组）
           var boolVal = (value === "true" || value === "1" || value === "yes");
           if (boolVal || value === "false" || value === "0" || value === "no") {
             el.checked = boolVal;
             trigger(el, "change");
             return true;
           }
-          // 非布尔值：匹配 checkbox/radio 附近文本
-          var cbLabel = (findLabel(el, true) || "").toLowerCase();
-          var cbText = (el.parentElement ? el.parentElement.textContent : "").toLowerCase();
-          var vLower = value.toLowerCase();
-          el.checked = (cbLabel.indexOf(vLower) !== -1 || cbText.indexOf(vLower) !== -1 || vLower.indexOf(cbLabel) !== -1);
+          var cbOptLabel = norm(findLabel(el) || el.parentElement ? el.parentElement.textContent : "");
+          var cbFormLabel = norm(findLabel(el, true) || "");
+          var vLower = norm(value);
+          el.checked = (cbOptLabel.indexOf(vLower) !== -1 || vLower.indexOf(cbOptLabel) !== -1 || cbFormLabel.indexOf(vLower) !== -1 || vLower.indexOf(cbFormLabel) !== -1);
           trigger(el, "change");
           return true;
         }
         var ns = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
-        // 先清空再填入，确保 Vue/React 受控组件正确响应
         el.focus();
         ns.call(el, "");
         trigger(el, "input");
@@ -1043,15 +1199,58 @@
         trigger(el, "blur");
         return true;
       }
+
+      // ===== select =====
       if (tag === "select") {
         var opts = Array.from(el.options), matched = false;
         el.focus();
+
+        // 策略1: 精确匹配 value
         var exact = opts.find(function (o) { return o.value === value; });
         if (exact) { el.value = value; matched = true; }
-        if (!matched) { var fuzzy = opts.find(function (o) { return o.text.toLowerCase().indexOf(value.toLowerCase()) !== -1 || value.toLowerCase().indexOf(o.text.toLowerCase()) !== -1; }); if (fuzzy) { el.value = fuzzy.value; matched = true; } }
+
+        // 策略2: 精确匹配 option text（忽略大小写）
+        if (!matched) {
+          var textExact = opts.find(function (o) { return norm(o.text) === norm(value); });
+          if (textExact) { el.value = textExact.value; matched = true; }
+        }
+
+        // 策略3: 双向包含匹配
+        if (!matched) {
+          var vNorm = norm(value);
+          var fuzzy = opts.find(function (o) {
+            var oNorm = norm(o.text);
+            return oNorm.indexOf(vNorm) !== -1 || vNorm.indexOf(oNorm) !== -1;
+          });
+          if (fuzzy) { el.value = fuzzy.value; matched = true; }
+        }
+
+        // 策略4: 关键词匹配（取 value 前3字符做子串匹配）
+        if (!matched && value.length >= 3) {
+          var prefix = norm(value).substring(0, 3);
+          var kwMatch = opts.find(function (o) {
+            return norm(o.text).indexOf(prefix) !== -1;
+          });
+          if (kwMatch) { el.value = kwMatch.value; matched = true; }
+        }
+
+        // 策略5: 数字提取匹配（用于"10 г" → "10"这类情况）
+        if (!matched) {
+          var numVal = parseFloat(value);
+          if (!isNaN(numVal)) {
+            var numMatch = opts.find(function (o) {
+              var oNum = parseFloat(o.text);
+              return !isNaN(oNum) && Math.abs(oNum - numVal) < 0.01;
+            });
+            if (numMatch) { el.value = numMatch.value; matched = true; }
+          }
+        }
+
         if (matched) { trigger(el, "change"); trigger(el, "input"); }
         return matched;
       }
+
+      // ===== textarea =====
       if (tag === "textarea") {
         var ts = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
         el.focus();
@@ -1062,6 +1261,7 @@
         trigger(el, "change");
         return true;
       }
+
       if (el.isContentEditable) {
         el.focus();
         el.textContent = "";
@@ -1230,18 +1430,21 @@
         return;
       }
 
-      // 构建字段查找表：selector → {label, order}
+      // 构建字段查找表：selector → {label, order, selectors, options, tag}
       var fieldMeta = {};
       formFields.forEach(function (f, idx) {
         fieldMeta[f.selector] = {
           label: f.label || f.name || f.placeholder || f.selector,
-          order: idx
+          order: idx,
+          selectors: f.selectors || null,
+          options: f.options || null,
+          tag: f.tag || null
         };
       });
 
       allMappings.forEach(function (m, i) {
-        var ok = fillFormField(m.selector, m.value);
         var meta = fieldMeta[m.selector] || { label: m.selector, order: 9999 };
+        var ok = fillFormField(m.selector, m.value, meta);
         if (ok) filledCount++;
         fillResults.push({
           selector: m.selector,
