@@ -2075,6 +2075,7 @@ def auto_fill_analyze():
     product_data = data.get("product_data", {})
     manual_data = data.get("manual_data", {})
     form_fields = data.get("form_fields", [])
+    custom_prompts = data.get("custom_prompts", {})
 
     if not form_fields:
         return jsonify({"error": "表单字段列表不能为空"}), 400
@@ -2158,6 +2159,16 @@ def auto_fill_analyze():
 
 其中 selector 是表单字段列表中对应字段的"选择器"值（直接复制），value 是要填充的值。"""
 
+    # 构建自定义提示词段落
+    custom_prompt_block = ""
+    if custom_prompts:
+        parts = []
+        for key, label in [("title", "产品标题"), ("description", "产品描述"), ("json_text", "JSON文本")]:
+            if custom_prompts.get(key):
+                parts.append(f"### {label}填充提示\n{custom_prompts[key]}")
+        if parts:
+            custom_prompt_block = "\n## 用户自定义填充提示\n" + "\n\n".join(parts) + "\n"
+
     user_prompt = f"""## 产品信息
 SKC: {skc}
 标题: {product_title}
@@ -2167,7 +2178,7 @@ SKC: {skc}
 
 ### 人工登记数据
 {json.dumps(manual_data, ensure_ascii=False, indent=2)}
-
+{custom_prompt_block}
 ### 表单字段列表（共 {len(form_fields)} 个字段）
 {fields_text}
 

@@ -102,7 +102,30 @@
     "#serp-toast.error{background:#fee2e2;color:#dc2626;border:1px solid #fecaca;}",
     "#serp-toast.info{background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe;}",
     "/* ===== 进度条 ===== */",
-    "#serp-progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,#667eea,#764ba2);z-index:1000002;transition:width 0.3s ease;width:0%;}"
+    "#serp-progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,#667eea,#764ba2);z-index:1000002;transition:width 0.3s ease;width:0%;}",
+    "/* ===== 增加提示词面板 ===== */",
+    "#serp-hint-toggle{font-size:10px;color:#8b8b8b;cursor:pointer;text-align:center;padding:2px 4px;border:1px dashed #d9d9d9;border-radius:4px;transition:all 0.2s;}",
+    "#serp-hint-toggle:hover{color:#428bca;border-color:#428bca;}",
+    "#serp-hint-toggle.active{color:#428bca;border-color:#428bca;background:#f0f5ff;}",
+    "#serp-hint-panel{display:none;flex-direction:column;gap:4px;padding-top:2px;}",
+    "#serp-hint-panel.visible{display:flex;}",
+    "#serp-hint-panel .hint-label{font-size:9px;color:#999;margin-bottom:0;}",
+    "#serp-hint-panel textarea.serp-hint-input{width:110px;height:36px;border:1px solid #e8e8e8;border-radius:4px;font-size:10px;padding:3px 5px;resize:vertical;font-family:\"Microsoft YaHei\",sans-serif;box-sizing:border-box;outline:none;transition:border-color 0.2s;}",
+    "#serp-hint-panel textarea.serp-hint-input:focus{border-color:#428bca;box-shadow:0 0 0 2px rgba(66,139,202,0.1);}",
+    "/* ===== 填充结果面板 ===== */",
+    "#serp-results-panel{position:fixed;left:8px;top:auto;z-index:999989;background:#fff;border-radius:10px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,0.12);font-family:\"Microsoft YaHei\",sans-serif;font-size:12px;max-width:360px;max-height:400px;overflow-y:auto;display:none;}",
+    "#serp-results-panel.visible{display:block;}",
+    "#serp-results-panel .sr-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0;}",
+    "#serp-results-panel .sr-header .sr-title{font-weight:600;font-size:13px;color:#333;}",
+    "#serp-results-panel .sr-header .sr-close{background:none;border:none;font-size:16px;cursor:pointer;color:#999;padding:0 4px;line-height:1;}",
+    "#serp-results-panel .sr-header .sr-close:hover{color:#333;}",
+    "#serp-results-panel .sr-summary{font-size:11px;color:#666;margin-bottom:6px;line-height:1.5;}",
+    "#serp-results-panel .sr-summary .sr-ok{color:#16a34a;font-weight:600;}",
+    "#serp-results-panel .sr-summary .sr-fail{color:#dc2626;font-weight:600;}",
+    "#serp-results-panel .sr-item{display:flex;align-items:flex-start;gap:6px;padding:3px 0;border-bottom:1px solid #fafafa;font-size:11px;line-height:1.4;}",
+    "#serp-results-panel .sr-item .sr-icon{flex-shrink:0;width:16px;text-align:center;}",
+    "#serp-results-panel .sr-item .sr-label{color:#666;min-width:60px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}",
+    "#serp-results-panel .sr-item .sr-value{color:#333;word-break:break-all;flex:1;}"
   ].join("\n");
   document.head.appendChild(style);
 
@@ -125,6 +148,15 @@
       '<div class="pi-skc" id="serp-pi-skc"></div>' +
       '<div class="pi-title" id="serp-pi-title"></div>' +
       '<div class="pi-clear" id="serp-pi-clear">清除</div>' +
+    '</div>' +
+    '<div id="serp-hint-toggle" title="展开设置自定义提示词">💡 增加提示词</div>' +
+    '<div id="serp-hint-panel">' +
+      '<div class="hint-label">产品标题</div>' +
+      '<textarea class="serp-hint-input" id="serp-hint-title" placeholder="标题填充提示..."></textarea>' +
+      '<div class="hint-label">产品描述</div>' +
+      '<textarea class="serp-hint-input" id="serp-hint-desc" placeholder="描述填充提示..."></textarea>' +
+      '<div class="hint-label">JSON文本</div>' +
+      '<textarea class="serp-hint-input" id="serp-hint-json" placeholder="JSON属性填充提示..."></textarea>' +
     '</div>';
   document.body.appendChild(toolbar);
 
@@ -135,6 +167,17 @@
   var progressBar = document.createElement("div");
   progressBar.id = "serp-progress-bar";
   document.body.appendChild(progressBar);
+
+  var resultsPanel = document.createElement("div");
+  resultsPanel.id = "serp-results-panel";
+  resultsPanel.innerHTML =
+    '<div class="sr-header">' +
+      '<span class="sr-title">📋 填充结果</span>' +
+      '<button class="sr-close" id="serp-results-close">✕</button>' +
+    '</div>' +
+    '<div class="sr-summary" id="serp-results-summary"></div>' +
+    '<div id="serp-results-list"></div>';
+  document.body.appendChild(resultsPanel);
 
   var modalOverlay = document.createElement("div");
   modalOverlay.id = "serp-modal-overlay";
@@ -154,6 +197,11 @@
   var piSkc = document.getElementById("serp-pi-skc");
   var piTitle = document.getElementById("serp-pi-title");
   var piClear = document.getElementById("serp-pi-clear");
+  var hintToggle = document.getElementById("serp-hint-toggle");
+  var hintPanel = document.getElementById("serp-hint-panel");
+  var hintTitle = document.getElementById("serp-hint-title");
+  var hintDesc = document.getElementById("serp-hint-desc");
+  var hintJson = document.getElementById("serp-hint-json");
 
   // ==================== 工具函数 ====================
   function showToast(msg, type) {
@@ -765,27 +813,155 @@
     } catch (e) { console.warn("[sERP] 填充失败:", selector, e); return false; }
   }
 
+  function collectCustomPrompts() {
+    var prompts = {};
+    var t = (hintTitle.value || "").trim();
+    var d = (hintDesc.value || "").trim();
+    var j = (hintJson.value || "").trim();
+    if (t) prompts.title = t;
+    if (d) prompts.description = d;
+    if (j) prompts.json_text = j;
+    return prompts;
+  }
+
+  function positionResultsPanel() {
+    var tbRect = toolbar.getBoundingClientRect();
+    resultsPanel.style.top = (tbRect.bottom + 8) + "px";
+    resultsPanel.style.left = "8px";
+  }
+
+  function renderFillResults(allResults, totalFields) {
+    var filled = 0, failed = 0;
+    allResults.forEach(function (r) { if (r.filled) filled++; else failed++; });
+
+    var summary = document.getElementById("serp-results-summary");
+    summary.innerHTML =
+      "表单共 <b>" + totalFields + "</b> 个字段，" +
+      "LLM 匹配 <b>" + allResults.length + "</b> 个映射：" +
+      "<span class=\"sr-ok\">" + filled + " 成功</span>，" +
+      "<span class=\"sr-fail\">" + failed + " 未填充</span>";
+
+    var listEl = document.getElementById("serp-results-list");
+    listEl.innerHTML = allResults.map(function (r) {
+      var icon = r.filled ? "✅" : "❌";
+      var label = r.label || r.selector || "(未知)";
+      return '<div class="sr-item">' +
+        '<span class="sr-icon">' + icon + '</span>' +
+        '<span class="sr-label" title="' + (r.selector || "") + '">' + label + '</span>' +
+        '<span class="sr-value">' + (r.filled ? (r.value || "") : (r.error || "LLM 未匹配此字段")) + '</span>' +
+      '</div>';
+    }).join("");
+
+    positionResultsPanel();
+    resultsPanel.classList.add("visible");
+  }
+
   function doAutoFill() {
     if (!selectedProduct) { showToast("请先点击\"选品\"选择一个产品", "error"); return; }
     setBtnLoading(btnFill, true); setProgress(10);
-    showToast("正在分析产品 " + selectedProduct.skc + " 的表单字段...", "info");
-    var formFields = collectFormFields(); setProgress(30);
-    showToast("正在调用 DeepSeek 分析 " + formFields.length + " 个表单字段...", "info");
-    return bgFetch(API_AUTO_FILL, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ skc: selectedProduct.skc, product_title: selectedProduct.title, product_data: selectedProduct.product_data || {}, manual_data: selectedProduct.manual_data || {}, form_fields: formFields })
-    })
-    .then(function (r) { if (!r.ok) return r.json().then(function (e) { throw new Error(e.error || "分析失败"); }); return r.json(); })
-    .then(function (result) {
-      setProgress(60);
-      if (!result || !result.mappings) { setBtnLoading(btnFill, false); setProgress(0); showToast("分析失败，请重试", "error"); return; }
-      var filled = 0, total = result.mappings.length;
-      result.mappings.forEach(function (m, i) { if (fillFormField(m.selector, m.value)) filled++; setProgress(60 + (i / total) * 35); });
+    showToast("正在收集表单字段...", "info");
+    var formFields = collectFormFields();
+    if (!formFields.length) { setBtnLoading(btnFill, false); setProgress(0); showToast("未找到可填充的表单字段", "error"); return; }
+    setProgress(20);
+
+    var customPrompts = collectCustomPrompts();
+    var BATCH_SIZE = 10;
+    var batches = [];
+    for (var i = 0; i < formFields.length; i += BATCH_SIZE) {
+      batches.push(formFields.slice(i, i + BATCH_SIZE));
+    }
+
+    showToast("分 " + batches.length + " 批发送 " + formFields.length + " 个字段到 DeepSeek 分析...", "info");
+    var allMappings = [];
+    var batchPromises = [];
+    var baseProgress = 20;
+    var progressPerBatch = 50 / batches.length;
+
+    batches.forEach(function (batch, idx) {
+      var body = {
+        skc: selectedProduct.skc,
+        product_title: selectedProduct.title,
+        product_data: selectedProduct.product_data || {},
+        manual_data: selectedProduct.manual_data || {},
+        form_fields: batch
+      };
+      if (Object.keys(customPrompts).length > 0) {
+        body.custom_prompts = customPrompts;
+      }
+
+      var p = bgFetch(API_AUTO_FILL, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      })
+      .then(function (r) { if (!r.ok) return r.json().then(function (e) { throw new Error(e.error || "分析失败"); }); return r.json(); })
+      .then(function (result) {
+        if (result && result.mappings) {
+          allMappings.push.apply(allMappings, result.mappings);
+        }
+        setProgress(baseProgress + (idx + 1) * progressPerBatch);
+      });
+
+      batchPromises.push(p);
+    });
+
+    return Promise.all(batchPromises).then(function () {
+      setProgress(75);
+      var totalMappings = allMappings.length;
+      var fillResults = [];
+      var filledCount = 0;
+
+      if (!totalMappings) {
+        setBtnLoading(btnFill, false); setProgress(0);
+        showToast("未能自动填充任何字段", "error");
+        renderFillResults([], formFields.length);
+        return;
+      }
+
+      // 构建字段查找表：selector → label
+      var fieldLabelMap = {};
+      formFields.forEach(function (f) {
+        fieldLabelMap[f.selector] = f.label || f.name || f.placeholder || f.selector;
+      });
+
+      allMappings.forEach(function (m, i) {
+        var ok = fillFormField(m.selector, m.value);
+        var label = fieldLabelMap[m.selector] || m.selector;
+        if (ok) filledCount++;
+        fillResults.push({
+          selector: m.selector,
+          label: label,
+          value: m.value,
+          filled: ok,
+          error: ok ? null : "元素未找到或填充失败"
+        });
+        setProgress(75 + (i / totalMappings) * 20);
+      });
+
+      // 标记未匹配的字段
+      var matchedSelectors = {};
+      allMappings.forEach(function (m) { matchedSelectors[m.selector] = true; });
+      formFields.forEach(function (f) {
+        if (!matchedSelectors[f.selector]) {
+          fillResults.push({
+            selector: f.selector,
+            label: f.label || f.name || f.placeholder || f.selector,
+            value: "",
+            filled: false,
+            error: "LLM 未匹配此字段"
+          });
+        }
+      });
+
       setProgress(100);
-      showToast(filled > 0 ? "填充完成！成功填充 " + filled + "/" + total + " 个字段" : "未能自动填充任何字段", filled > 0 ? "success" : "error");
+      showToast("填充完成！成功 " + filledCount + "/" + fillResults.length + " 个字段", filledCount > 0 ? "success" : "error");
+      renderFillResults(fillResults, formFields.length);
       setBtnLoading(btnFill, false);
     })
-    .catch(function (e) { console.error("[sERP] 填充异常:", e); setBtnLoading(btnFill, false); setProgress(0); showToast("填充过程出错: " + e.message, "error"); });
+    .catch(function (e) {
+      console.error("[sERP] 填充异常:", e);
+      setBtnLoading(btnFill, false); setProgress(0);
+      showToast("填充过程出错: " + e.message, "error");
+    });
   }
 
   // ==================== 事件绑定 ====================
@@ -805,6 +981,14 @@
   btnCategory.addEventListener("click", function () { doMatchCategory(); });
   btnFill.addEventListener("click", function () { doAutoFill(); });
   piClear.addEventListener("click", function () { selectedProduct = null; updateProductUI(); showToast("已清除产品选择", "info"); });
+  hintToggle.addEventListener("click", function () {
+    var isOpen = hintPanel.classList.toggle("visible");
+    hintToggle.classList.toggle("active", isOpen);
+    hintToggle.textContent = isOpen ? "💡 收起提示词" : "💡 增加提示词";
+  });
+  document.getElementById("serp-results-close").addEventListener("click", function () {
+    resultsPanel.classList.remove("visible");
+  });
   document.getElementById("serp-modal-close").addEventListener("click", function () { modalOverlay.classList.remove("active"); });
   modalOverlay.addEventListener("click", function (e) { if (e.target === modalOverlay) modalOverlay.classList.remove("active"); });
   document.getElementById("serp-search-input").addEventListener("input", function (e) {
