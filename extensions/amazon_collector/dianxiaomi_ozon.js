@@ -946,19 +946,33 @@
     var seenSelectors = {};
 
     // ===== 第一遍：收集 checkbox/radio，按 form-item 分组 =====
-    var checkboxGroups = {};  // { groupKey: { groupLabel, rowCtx, items: [{selector, optionLabel}] } }
+    // { groupKey: { groupLabel, rowCtx, items: [{selector, optionLabel}] } }
+    var checkboxGroups = {};
     var radioGroups = {};
+    var loneCheckboxes = [];  // 无 groupLabel 或单选项的独立 checkbox
+    var loneRadios = [];
 
     document.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(function (el) {
       if (!isVisibleField(el)) return;
       var groupLabel = findLabel(el, true);  // form-item 标签（如"材料"）
       if (isSkippedField(groupLabel)) return;
-      var optionLabel = findLabel(el);       // 单个 checkbox 的选项文本（如"天然皮革"）
+      var optionLabel = findLabel(el);       // 单个选项的文本（如"天然皮革"）
       if (!optionLabel) optionLabel = (el.parentElement ? el.parentElement.textContent : "").trim();
       var sel = buildSelector(el);
       var rowCtx = getRowContext(el);
-      var groupKey = (groupLabel + "|" + (rowCtx || "")).replace(/\(.+?\)/g, "").trim();
 
+      // 无有效 groupLabel 的，作为独立字段收集（如 SKU 表格工具栏按钮）
+      if (!groupLabel || !groupLabel.trim()) {
+        var soloLabel = optionLabel + (rowCtx ? " [" + rowCtx + "]" : "");
+        if (el.type === "checkbox") {
+          loneCheckboxes.push({ selector: sel, label: soloLabel, el: el });
+        } else {
+          loneRadios.push({ selector: sel, label: soloLabel, el: el });
+        }
+        return;
+      }
+
+      var groupKey = (groupLabel + "|" + (rowCtx || "")).replace(/\(.+?\)/g, "").trim();
       if (el.type === "checkbox") {
         if (!checkboxGroups[groupKey]) checkboxGroups[groupKey] = { groupLabel: groupLabel, rowCtx: rowCtx, items: [] };
         checkboxGroups[groupKey].items.push({ selector: sel, optionLabel: optionLabel, el: el });
@@ -968,9 +982,33 @@
       }
     });
 
-    // checkbox 组：每个组生成一个字段，附带全部选项
+    // 独立 checkbox（无 group 或仅单个）：作为普通 input 字段
+    loneCheckboxes.forEach(function (item) {
+      if (seenSelectors[item.selector]) return;
+      seenSelectors[item.selector] = true;
+      fields.push({ tag: "input", type: "checkbox", label: item.label, currentValue: item.el.checked ? "true" : "", selector: item.selector });
+    });
+
+    // 独立 radio（无 group 或仅单个）
+    loneRadios.forEach(function (item) {
+      if (seenSelectors[item.selector]) return;
+      seenSelectors[item.selector] = true;
+      fields.push({ tag: "input", type: "radio", label: item.label, currentValue: item.el.checked ? "true" : "", selector: item.selector });
+    });
+
+    // checkbox 组：≥2 个选项才用组格式；单个的回退为普通 checkbox
     Object.keys(checkboxGroups).forEach(function (key) {
       var grp = checkboxGroups[key];
+      if (grp.items.length < 2) {
+        // 单选项：按普通 checkbox 收集
+        var single = grp.items[0];
+        if (!seenSelectors[single.selector]) {
+          seenSelectors[single.selector] = true;
+          var sLabel = grp.groupLabel + " - " + single.optionLabel + (grp.rowCtx ? " [" + grp.rowCtx + "]" : "");
+          fields.push({ tag: "input", type: "checkbox", label: sLabel, currentValue: single.el.checked ? "true" : "", selector: single.selector });
+        }
+        return;
+      }
       var optionLabels = grp.items.map(function (x) { return x.optionLabel; });
       var selectors = grp.items.map(function (x) { return x.selector; });
       var currentChecks = grp.items.filter(function (x) { return x.el.checked; }).map(function (x) { return x.optionLabel; });
@@ -989,9 +1027,18 @@
       });
     });
 
-    // radio 组：每个组生成一个字段
+    // radio 组：≥2 个选项才用组格式
     Object.keys(radioGroups).forEach(function (key) {
       var grp = radioGroups[key];
+      if (grp.items.length < 2) {
+        var single = grp.items[0];
+        if (!seenSelectors[single.selector]) {
+          seenSelectors[single.selector] = true;
+          var sLabel = grp.groupLabel + " - " + single.optionLabel + (grp.rowCtx ? " [" + grp.rowCtx + "]" : "");
+          fields.push({ tag: "input", type: "radio", label: sLabel, currentValue: single.el.checked ? "true" : "", selector: single.selector });
+        }
+        return;
+      }
       var optionLabels = grp.items.map(function (x) { return x.optionLabel; });
       var selectors = grp.items.map(function (x) { return x.selector; });
       var rowCtx = grp.rowCtx || "";
