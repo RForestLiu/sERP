@@ -353,16 +353,15 @@
     return best;
   }
 
-  // 防重入标记
+  // 防重入标记（仅阻止外部并发调用，内部递归调用通过 _isInternal 放行）
   var _fillCategoryRunning = false;
 
-  function fillCategorySelect(matched) {
-    // 防重入：如果已经在执行中，跳过
-    if (_fillCategoryRunning) {
+  function fillCategorySelect(matched, _isInternal) {
+    if (!_isInternal && _fillCategoryRunning) {
       console.log("[sERP] fillCategorySelect 已在执行中，跳过重复调用");
       return Promise.resolve();
     }
-    _fillCategoryRunning = true;
+    if (!_isInternal) _fillCategoryRunning = true;
 
     var catWrapper = document.querySelector(".category-item .ant-select");
     if (!catWrapper) { _fillCategoryRunning = false; showToast("未找到品类下拉框", "error"); return Promise.resolve(); }
@@ -393,7 +392,7 @@
       clearBtn.click();
       // 等待 DOM 更新后重试，但最多重试 3 次
       return sleep(500).then(function () {
-        return fillCategorySelect(matched);
+        return fillCategorySelect(matched, true);
       });
     }
 
@@ -403,7 +402,7 @@
       console.log("[sERP] 关闭已打开的下拉...");
       document.body.click();
       return sleep(400).then(function () {
-        return fillCategorySelect(matched);
+        return fillCategorySelect(matched, true);
       });
     }
 
@@ -511,9 +510,9 @@
     }
 
     return navigateLevel(0).then(function () {
-      _fillCategoryRunning = false;
+      if (!_isInternal) _fillCategoryRunning = false;
     }).catch(function (e) {
-      _fillCategoryRunning = false;
+      if (!_isInternal) _fillCategoryRunning = false;
       console.error("[sERP] fillCategorySelect 异常:", e);
     });
   }
