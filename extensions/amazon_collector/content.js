@@ -350,28 +350,6 @@
       return items.map(function (el) { return text(el); }).filter(Boolean).slice(0, 15);
     },
 
-    /** "About this item" 段落文本 */
-    extractAboutItem: function () {
-      // Reuse same selector chain as extractBullets
-      var selectors = [
-        "#pqv-feature-bullets li span.a-list-item",
-        "#pqv-feature-bullets .a-list-item",
-        "#feature-bullets .a-list-item",
-        "#feature-bullets li",
-        "#feature-bullets .a-section.a-spacing-small",
-        "#featurebullets_feature_div .a-list-item",
-        "#featurebullets_feature_div li",
-        "[data-a-expander-name='feature_bullets'] .a-list-item"
-      ];
-      var items = null;
-      for (var i = 0; i < selectors.length; i++) {
-        items = $$(selectors[i]);
-        if (items.length) break;
-      }
-      if (!items || !items.length) return "";
-      return items.map(function (el) { return text(el); }).filter(Boolean).join("\n");
-    },
-
     /** Product Description — 产品描述正文（A+ 内容等） */
     extractProductDescription: function () {
       // A+ content first (richer description with images), then product description
@@ -447,7 +425,6 @@
         images: this.extractImages(),
         variants: this.extractVariants(),
         bullets: this.extractBullets(),
-        about_item: this.extractAboutItem(),
         product_description: this.extractProductDescription(),
         product_details: this.extractProductDetails(),
         currentVariant: this.getCurrentVariant(),
@@ -913,7 +890,7 @@
       images: d.images || [],
       variants: d.variants || {},
       bullets: d.bullets || [],
-      about_item: d.about_item || "",
+      about_item: (d.bullets || []).join("\n"),
       product_description: d.product_description || "",
       product_details: d.product_details || {},
       description: d.description || "",
