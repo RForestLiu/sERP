@@ -59,16 +59,16 @@
   var style = document.createElement("style");
   style.textContent = [
     "/* ===== 左侧悬浮工具栏 ===== */",
-    "#serp-toolbar{position:fixed;left:8px;top:120px;z-index:999990;display:flex;flex-direction:column;gap:6px;background:#fff;border-radius:10px;padding:8px;box-shadow:0 4px 16px rgba(0,0,0,0.12);font-family:\"Microsoft YaHei\",sans-serif;user-select:none;}",
-    "#serp-toolbar .serp-tb-btn{width:48px;height:48px;border-radius:8px;border:1px solid #e8e8e8;background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:all 0.2s;font-size:11px;color:#666;line-height:1.2;gap:2px;padding:0;}",
+    "#serp-toolbar{position:fixed;left:8px;top:120px;z-index:999990;display:flex;flex-direction:row;align-items:flex-start;gap:6px;background:#fff;border-radius:10px;padding:8px;box-shadow:0 4px 16px rgba(0,0,0,0.12);font-family:\"Microsoft YaHei\",sans-serif;user-select:none;}",
+    "#serp-toolbar .serp-tb-btn{height:48px;min-width:56px;border-radius:8px;border:1px solid #e8e8e8;background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:all 0.2s;font-size:11px;color:#666;line-height:1.2;gap:2px;padding:0 6px;white-space:nowrap;}",
     "#serp-toolbar .serp-tb-btn:hover{background:#f0f5ff;border-color:#428bca;color:#428bca;}",
     "#serp-toolbar .serp-tb-btn:active{transform:scale(0.95);}",
     "#serp-toolbar .serp-tb-btn.loading{pointer-events:none;opacity:0.6;}",
-    "#serp-toolbar .serp-tb-btn .tb-icon{font-size:18px;line-height:1;}",
+    "#serp-toolbar .serp-tb-btn .tb-icon{font-size:16px;line-height:1;}",
     "#serp-toolbar .serp-tb-btn .tb-label{font-size:10px;line-height:1;}",
     "#serp-toolbar .serp-tb-btn.has-product{border-color:#52c41a;background:#f6ffed;color:#389e0d;}",
-    "/* 产品信息区 */",
-    "#serp-toolbar .serp-product-info{display:none;border-top:1px solid #f0f0f0;margin-top:2px;padding-top:6px;width:120px;}",
+    "/* 产品信息区 — 横向时放在按钮行下方 */",
+    "#serp-toolbar .serp-product-info{display:none;position:absolute;top:100%;left:0;margin-top:6px;background:#fff;border-radius:8px;padding:6px 8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);width:150px;}",
     "#serp-toolbar .serp-product-info.visible{display:block;}",
     "#serp-toolbar .serp-product-info .pi-label{font-size:9px;color:#999;margin-bottom:2px;}",
     "#serp-toolbar .serp-product-info .pi-skc{font-size:11px;font-weight:600;color:#428bca;word-break:break-all;}",
@@ -103,15 +103,21 @@
     "#serp-toast.info{background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe;}",
     "/* ===== 进度条 ===== */",
     "#serp-progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,#667eea,#764ba2);z-index:1000002;transition:width 0.3s ease;width:0%;}",
-    "/* ===== 增加提示词面板 ===== */",
-    "#serp-hint-toggle{font-size:10px;color:#8b8b8b;cursor:pointer;text-align:center;padding:2px 4px;border:1px dashed #d9d9d9;border-radius:4px;transition:all 0.2s;}",
+    "/* ===== 增加提示词面板（居中弹窗） ===== */",
+    "#serp-hint-toggle{font-size:10px;color:#8b8b8b;cursor:pointer;text-align:center;padding:2px 4px;border:1px dashed #d9d9d9;border-radius:4px;transition:all 0.2s;white-space:nowrap;}",
     "#serp-hint-toggle:hover{color:#428bca;border-color:#428bca;}",
     "#serp-hint-toggle.active{color:#428bca;border-color:#428bca;background:#f0f5ff;}",
-    "#serp-hint-panel{display:none;flex-direction:column;gap:4px;padding-top:2px;}",
-    "#serp-hint-panel.visible{display:flex;}",
-    "#serp-hint-panel .hint-label{font-size:9px;color:#999;margin-bottom:0;}",
-    "#serp-hint-panel textarea.serp-hint-input{width:110px;height:36px;border:1px solid #e8e8e8;border-radius:4px;font-size:10px;padding:3px 5px;resize:vertical;font-family:\"Microsoft YaHei\",sans-serif;box-sizing:border-box;outline:none;transition:border-color 0.2s;}",
-    "#serp-hint-panel textarea.serp-hint-input:focus{border-color:#428bca;box-shadow:0 0 0 2px rgba(66,139,202,0.1);}",
+    "#serp-hint-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000001;align-items:center;justify-content:center;}",
+    "#serp-hint-overlay.active{display:flex;}",
+    "#serp-hint-panel{background:#fff;border-radius:12px;width:520px;max-width:90vw;max-height:85vh;overflow-y:auto;padding:20px 24px;box-shadow:0 20px 60px rgba(0,0,0,0.3);font-family:\"Microsoft YaHei\",sans-serif;}",
+    "#serp-hint-panel .hint-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #e5e7eb;}",
+    "#serp-hint-panel .hint-header .hint-title{font-size:16px;font-weight:600;color:#333;}",
+    "#serp-hint-panel .hint-header .hint-close{background:none;border:none;font-size:20px;cursor:pointer;color:#999;padding:0 4px;}",
+    "#serp-hint-panel .hint-header .hint-close:hover{color:#333;}",
+    "#serp-hint-panel .hint-label{font-size:12px;color:#555;margin-bottom:4px;margin-top:10px;font-weight:500;}",
+    "#serp-hint-panel .hint-label:first-of-type{margin-top:0;}",
+    "#serp-hint-panel textarea.serp-hint-input{width:100%;height:60px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;padding:6px 10px;resize:vertical;font-family:\"Microsoft YaHei\",sans-serif;box-sizing:border-box;outline:none;transition:border-color 0.2s;}",
+    "#serp-hint-panel textarea.serp-hint-input:focus{border-color:#428bca;box-shadow:0 0 0 3px rgba(66,139,202,0.1);}",
     "/* ===== 填充结果面板 ===== */",
     "#serp-results-panel{position:fixed;left:8px;top:auto;z-index:999989;background:#fff;border-radius:10px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,0.12);font-family:\"Microsoft YaHei\",sans-serif;font-size:12px;max-width:360px;max-height:400px;overflow-y:auto;display:none;}",
     "#serp-results-panel.visible{display:block;}",
@@ -137,32 +143,18 @@
     '<button class="serp-tb-btn" id="serp-btn-select" title="选择产品">' +
       '<span class="tb-icon">📦</span><span class="tb-label">选品</span>' +
     '</button>' +
-    '<button class="serp-tb-btn" id="serp-btn-category" title="智能选择分类">' +
-      '<span class="tb-icon">🏷️</span><span class="tb-label">分类</span>' +
+    '<button class="serp-tb-btn" id="serp-btn-category" title="自动匹配品类">' +
+      '<span class="tb-icon">🏷️</span><span class="tb-label">自动分类</span>' +
     '</button>' +
-    '<button class="serp-tb-btn" id="serp-btn-fill" title="智能填充表单">' +
-      '<span class="tb-icon">✍️</span><span class="tb-label">填充</span>' +
+    '<button class="serp-tb-btn" id="serp-btn-fill" title="自动填充表单">' +
+      '<span class="tb-icon">✍️</span><span class="tb-label">自动填充</span>' +
     '</button>' +
+    '<div id="serp-hint-toggle" title="展开设置自定义提示词">💡</div>' +
     '<div class="serp-product-info" id="serp-product-info">' +
       '<div class="pi-label">已选产品</div>' +
       '<div class="pi-skc" id="serp-pi-skc"></div>' +
       '<div class="pi-title" id="serp-pi-title"></div>' +
       '<div class="pi-clear" id="serp-pi-clear">清除</div>' +
-    '</div>' +
-    '<div id="serp-hint-toggle" title="展开设置自定义提示词">💡 增加提示词</div>' +
-    '<div id="serp-hint-panel">' +
-      '<div class="hint-label">产品标题</div>' +
-      '<textarea class="serp-hint-input" id="serp-hint-title" placeholder="标题填充提示..."></textarea>' +
-      '<div class="hint-label">产品描述</div>' +
-      '<textarea class="serp-hint-input" id="serp-hint-desc" placeholder="描述填充提示..."></textarea>' +
-      '<div class="hint-label">JSON文本</div>' +
-      '<textarea class="serp-hint-input" id="serp-hint-json" placeholder="JSON属性填充提示..."></textarea>' +
-      '<div class="hint-label">主题标签</div>' +
-      '<textarea class="serp-hint-input" id="serp-hint-hashtag" placeholder="主题标签填充提示..."></textarea>' +
-      '<div class="hint-label">平台提示词 <span style="color:#999;font-size:9px">(同平台通用)</span></div>' +
-      '<textarea class="serp-hint-input" id="serp-hint-platform" placeholder="平台通用填充提示..."></textarea>' +
-      '<div class="hint-label">店铺提示词 <span style="color:#999;font-size:9px">(当前店铺)</span></div>' +
-      '<textarea class="serp-hint-input" id="serp-hint-store" placeholder="当前店铺填充提示..."></textarea>' +
     '</div>';
   document.body.appendChild(toolbar);
 
@@ -184,6 +176,29 @@
     '<div class="sr-summary" id="serp-results-summary"></div>' +
     '<div id="serp-results-list"></div>';
   document.body.appendChild(resultsPanel);
+
+  var hintOverlay = document.createElement("div");
+  hintOverlay.id = "serp-hint-overlay";
+  hintOverlay.innerHTML =
+    '<div id="serp-hint-panel">' +
+      '<div class="hint-header">' +
+        '<span class="hint-title">💡 填充提示词</span>' +
+        '<button class="hint-close" id="serp-hint-close">✕</button>' +
+      '</div>' +
+      '<div class="hint-label">产品标题</div>' +
+      '<textarea class="serp-hint-input" id="serp-hint-title" placeholder="标题填充提示..."></textarea>' +
+      '<div class="hint-label">产品描述</div>' +
+      '<textarea class="serp-hint-input" id="serp-hint-desc" placeholder="描述填充提示..."></textarea>' +
+      '<div class="hint-label">JSON文本</div>' +
+      '<textarea class="serp-hint-input" id="serp-hint-json" placeholder="JSON属性填充提示..."></textarea>' +
+      '<div class="hint-label">主题标签</div>' +
+      '<textarea class="serp-hint-input" id="serp-hint-hashtag" placeholder="主题标签填充提示..."></textarea>' +
+      '<div class="hint-label">平台提示词 <span style="color:#999;font-size:11px">(同平台通用)</span></div>' +
+      '<textarea class="serp-hint-input" id="serp-hint-platform" placeholder="平台通用填充提示..."></textarea>' +
+      '<div class="hint-label">店铺提示词 <span style="color:#999;font-size:11px">(当前店铺)</span></div>' +
+      '<textarea class="serp-hint-input" id="serp-hint-store" placeholder="当前店铺填充提示..."></textarea>' +
+    '</div>';
+  document.body.appendChild(hintOverlay);
 
   var modalOverlay = document.createElement("div");
   modalOverlay.id = "serp-modal-overlay";
@@ -1052,9 +1067,15 @@
   btnFill.addEventListener("click", function () { doAutoFill(); });
   piClear.addEventListener("click", function () { selectedProduct = null; updateProductUI(); showToast("已清除产品选择", "info"); });
   hintToggle.addEventListener("click", function () {
-    var isOpen = hintPanel.classList.toggle("visible");
-    hintToggle.classList.toggle("active", isOpen);
-    hintToggle.textContent = isOpen ? "💡 收起提示词" : "💡 增加提示词";
+    hintOverlay.classList.add("active");
+    hintToggle.classList.add("active");
+  });
+  document.getElementById("serp-hint-close").addEventListener("click", function () {
+    hintOverlay.classList.remove("active");
+    hintToggle.classList.remove("active");
+  });
+  hintOverlay.addEventListener("click", function (e) {
+    if (e.target === hintOverlay) { hintOverlay.classList.remove("active"); hintToggle.classList.remove("active"); }
   });
   document.getElementById("serp-results-close").addEventListener("click", function () {
     resultsPanel.classList.remove("visible");

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "sERP ExtensionHelper",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "description": "sERP 浏览器助手：多平台采集 (Amazon/1688/WB/Ozon) + 店小秘 Ozon 智能上架",
   "permissions": ["storage"],
   "background": {
