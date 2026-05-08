@@ -249,16 +249,30 @@
     });
   }
 
+  // ==================== 平台检测 ====================
+  function detectPlatform() {
+    // 从 store_id 前缀检测平台：ozon_anling → ozon, wb_xxx → wb
+    var storeId = detectStoreId();
+    if (!storeId) return null;
+    var parts = storeId.split("_");
+    return parts[0] || null;
+  }
+
   // ==================== 智能分类 ====================
+  // 通用入口：检测平台 → 调用后端匹配 → 分派平台策略填充
   function doMatchCategory() {
     if (!selectedProduct) { showToast("请先点击\"选品\"选择一个产品", "error"); return; }
     var storeId = detectStoreId();
     if (!storeId) { showToast("无法识别当前店铺", "error"); return; }
+    var platform = detectPlatform();
+    if (!platform) { showToast("无法识别当前平台", "error"); return; }
+
     setBtnLoading(btnCategory, true);
-    showToast("正在匹配 Ozon 品类...", "info");
+    showToast("正在匹配品类...", "info");
+
     var prodData = selectedProduct.product_data || {};
     var desc = (prodData.about_item || "") + " " + (prodData.product_description || "");
-    return bgFetch(FLASK_BASE + "/api/ozon/" + storeId + "/match-category", {
+    return bgFetch(FLASK_BASE + "/api/" + platform + "/" + storeId + "/match-category", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ product_title: selectedProduct.title || "", product_category: selectedProduct.category || "", product_description: desc.trim() })
     })
@@ -267,10 +281,23 @@
       if (!data.success || !data.best_match || !data.best_match.id) { showToast("品类匹配失败: " + (data.error || data.warning || "无匹配结果"), "error"); return; }
       var m = data.best_match;
       showToast("已匹配品类: " + (m.path || m.name) + " (ID: " + m.id + ")", "success");
-      return fillCategorySelect(m);
+      // 分派到平台策略
+      return fillCategorySelect(m, platform);
     })
     .catch(function (e) { console.error("[sERP] 品类匹配异常:", e); showToast("品类匹配失败: " + e.message, "error"); })
     .then(function () { setBtnLoading(btnCategory, false); });
+  }
+
+  // ===== 平台策略分发 =====
+  function fillCategorySelect(matched, platform) {
+    if (!platform) platform = detectPlatform();
+    switch (platform) {
+      case "ozon": return fillCategorySelect_ozon(matched);
+      // 后续平台在这里加 case: case "wb": return fillCategorySelect_wb(matched);
+      default:
+        showToast("平台 \"" + platform + "\" 的品类选择尚未支持", "error");
+        return Promise.resolve();
+    }
   }
 
   // 等待元素出现（轮询，超时返回 null）
@@ -411,10 +438,12 @@
     return best;
   }
 
-  // 防重入标记（仅阻止外部并发调用，内部递归调用通过 _isInternal 放行）
+  // ================================================================
+  //  Ozon 平台策略：Modal 弹窗 + 多列级联面板
+  // ================================================================
   var _fillCategoryRunning = false;
 
-  function fillCategorySelect(matched, _isInternal) {
+  function fillCategorySelect_ozon(matched, _isInternal) {
     if (!_isInternal && _fillCategoryRunning) {
       console.log("[sERP] fillCategorySelect 已在执行中，跳过重复调用");
       return Promise.resolve();
@@ -447,7 +476,7 @@
     if (existingModal) {
       var closeX = existingModal.querySelector(".ant-modal-close");
       if (closeX) closeX.click();
-      return sleep(400).then(function () { return fillCategorySelect(matched, true); });
+      return sleep(400).then(function () { return fillCategorySelect_ozon(matched, true); });
     }
 
     console.log("[sERP] 点击\"选择分类\"按钮...");
