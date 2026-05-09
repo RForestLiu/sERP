@@ -2136,9 +2136,9 @@ def auto_fill_analyze():
         ftype = f.get("type", "")
         name = f.get("name", "")
         options = f.get("options", [])
-        selector = f.get("selector", "")
+        fidx = f.get("index", len(fields_summary))
 
-        field_desc = f"  - 标签: {label or name or '(无标签)'} | 选择器: {selector}"
+        field_desc = f"  [{fidx}] 标签: {label or name or '(无标签)'}"
         if placeholder:
             field_desc += f" | 占位: {placeholder}"
         if options:
@@ -2154,7 +2154,7 @@ def auto_fill_analyze():
 ## 输入格式
 你将收到：
 1. 产品信息（标题、描述、属性等）
-2. 表单字段列表（每个字段包含标签、占位符、选项等）
+2. 表单字段列表（每个字段以 [序号] 开头，包含标签、占位符、选项等）
 3. 表单字段标签可能包含 `[行上下文]`，用于区分多行SKU中相同名称的字段。例如 "统一计量单位中的商品数量 [变体: 红色-L]" 表示该字段属于红色L码变体
 
 ## 字段标签说明
@@ -2183,7 +2183,7 @@ def auto_fill_analyze():
 - **对于其他字段**：根据标签和占位符推断
 
 ### 重要规则：
-1. selector 必须从表单字段列表里**原样复制**"选择器"的值，不要自己编造
+1. index 必须是表单字段列表里对应字段的 **[序号]** 值，直接填数字
 2. 尽量为每个字段提供填充值，能推断的就推断（如皮革钱包 → 材质为"天然皮革"）
 3. 对于下拉框(select)和选项组(checkbox-group/radio-group)，必须从提供的选项列表中选取值
 4. 所有值必须是字符串
@@ -2195,9 +2195,9 @@ def auto_fill_analyze():
    - 如果产品规格已有公制数值，直接用公制
 
 请严格按照以下 JSON 格式返回，不要包含其他内容：
-{"mappings": [{"selector": "...", "value": "..."}, ...]}
+{"mappings": [{"index": <序号>, "value": "..."}, ...]}
 
-其中 selector 是表单字段列表中对应字段的"选择器"值（直接复制），value 是要填充的值。"""
+其中 index 是表单字段列表中对应字段的 [序号] 数字，value 是要填充的值。"""
 
     # 构建自定义提示词段落
     custom_prompt_block = ""
@@ -2267,9 +2267,10 @@ SKC: {skc}
         # 验证 mappings 格式
         validated_mappings = []
         for m in mappings:
-            if isinstance(m, dict) and "selector" in m:
+            if isinstance(m, dict) and m.get("value"):
                 validated_mappings.append({
-                    "selector": m.get("selector", ""),
+                    "index": m.get("index", -1),
+                    "label": m.get("label", ""),
                     "value": m.get("value", "")
                 })
 

@@ -287,7 +287,7 @@ function runTests() {
   var materialGroup = cbGroups.find(function(g) { return g.label.indexOf('材料') !== -1; });
   if (materialGroup) {
     assert('材料组包含 4 个选项', materialGroup.options.length === 4, materialGroup.options.length);
-    assert('材料组有 4 个 selectors', materialGroup.selectors.length === 4, materialGroup.selectors.length);
+    assert('材料组有 4 个 _fids', materialGroup._fids.length === 4, materialGroup._fids.length);
     var optTexts = materialGroup.options.map(function(o) { return o.text; });
     assert('选项包含"天然皮革"', optTexts.some(function(t) { return t.indexOf('天然皮革') !== -1; }));
     assert('选项包含"人造皮革"', optTexts.some(function(t) { return t.indexOf('人造皮革') !== -1; }));
@@ -317,61 +317,48 @@ function runTests() {
   });
   assert('没有空标签或垃圾字段', emptyLabelFields.length === 0, emptyLabelFields.length + ' 个垃圾: ' + JSON.stringify(emptyLabelFields.map(function(f) { return f.label; })));
 
-  // 测试 3e: 所有 selector 都能找回元素
-  var brokenSelectors = [];
+  // 测试 3e: 所有字段的 _fid 都能找回元素
+  var brokenFids = [];
   fields.forEach(function(f) {
-    var el = document.querySelector(f.selector);
+    var el = document.querySelector(f._fid);
     if (!el) {
-      brokenSelectors.push({ label: f.label, selector: f.selector });
+      brokenFids.push({ label: f.label, _fid: f._fid });
     }
   });
-  assert('所有字段的 selector 都能在 DOM 中找到元素', brokenSelectors.length === 0, brokenSelectors.length + ' 个失效: ' + JSON.stringify(brokenSelectors.slice(0, 5)));
+  assert('所有字段的 _fid 都能在 DOM 中找到元素', brokenFids.length === 0, brokenFids.length + ' 个失效: ' + JSON.stringify(brokenFids.slice(0, 5)));
 
   // ====== 测试 4: fillFormField() ======
-  section('测试 4: fillFormField() — 填充执行');
-
-  // 构建 fieldMeta（模拟 doAutoFill 中的元数据）
-  var fieldMeta = {};
-  fields.forEach(function(f, idx) {
-    fieldMeta[f.selector] = {
-      label: f.label || f.name || f.selector,
-      order: idx,
-      selectors: f.selectors || null,
-      options: f.options || null,
-      tag: f.tag || null
-    };
-  });
+  section('测试 4: fillFormField() — 填充执行（索引驱动）');
 
   // 4a: 填充文本字段
   var nameField = txtFields.find(function(f) { return f.label.indexOf('产品名称') !== -1; });
   if (nameField) {
-    var meta = fieldMeta[nameField.selector];
-    var ok = fillFormField(nameField.selector, 'Тестовый кошелек', meta);
+    var ok = fillFormField(nameField.index, 'Тестовый кошелек');
+    var nameEl = resolveFieldByIndex(nameField.index);
     assert('文本字段填充成功', ok === true);
-    assert('文本字段值正确', document.querySelector(nameField.selector).value === 'Тестовый кошелек');
+    assert('文本字段值正确', nameEl && nameEl.el && nameEl.el.value === 'Тестовый кошелек');
   }
 
   // 4b: 填充价格
   var priceField = txtFields.find(function(f) { return f.label.indexOf('价格') !== -1 && f.label.indexOf('₽') !== -1; });
   if (priceField) {
-    fillFormField(priceField.selector, '2500', fieldMeta[priceField.selector]);
-    assert('价格填充成功', document.querySelector(priceField.selector).value === '2500');
+    fillFormField(priceField.index, '2500');
+    var priceEl = resolveFieldByIndex(priceField.index);
+    assert('价格填充成功', priceEl && priceEl.el && priceEl.el.value === '2500');
   }
 
   // 4c: 填充 select
   var colorField = selFields.find(function(f) { return f.label.indexOf('颜色') !== -1; });
   if (colorField) {
-    var colorMeta = fieldMeta[colorField.selector];
-    var okColor = fillFormField(colorField.selector, '红色 (Красный)', colorMeta);
-    var selEl = document.querySelector(colorField.selector);
+    var okColor = fillFormField(colorField.index, '红色 (Красный)');
+    var colorEl = resolveFieldByIndex(colorField.index);
     assert('颜色下拉填充成功', okColor === true);
-    assert('颜色下拉值为 red', selEl.value === 'red', 'value=' + selEl.value);
+    assert('颜色下拉值为 red', colorEl && colorEl.el && colorEl.el.value === 'red', 'value=' + (colorEl ? colorEl.el.value : 'null'));
   }
 
   // 4d: 填充 radio 组
   if (audienceGroup) {
-    var rdMeta = fieldMeta[audienceGroup.selector];
-    var okRd = fillFormField(audienceGroup.selector, '成人(Взрослая)', rdMeta);
+    var okRd = fillFormField(audienceGroup.index, '成人(Взрослая)');
     var adultRadio = document.querySelector('.radio-audience input[value="adult"]');
     var childRadio = document.querySelector('.radio-audience input[value="child"]');
     assert('radio 组填充成功', okRd === true);
@@ -381,65 +368,65 @@ function runTests() {
 
   // 4e: 填充 checkbox 组 — 单值
   if (materialGroup) {
-    var cbMeta = fieldMeta[materialGroup.selector];
     // 重置
-    materialGroup.selectors.forEach(function(s) {
-      var el = document.querySelector(s);
+    materialGroup._fids.forEach(function(fid) {
+      var el = document.querySelector(fid);
       if (el) el.checked = false;
     });
-    var okCb = fillFormField(materialGroup.selector, '天然皮革', cbMeta);
+    var okCb = fillFormField(materialGroup.index, '天然皮革');
     assert('checkbox 组单值填充成功', okCb === true);
 
     // 验证哪个被勾选了
-    var leatherCb = materialGroup.options.find(function(o) { return o.text.indexOf('天然皮革') !== -1; });
-    var fauxCb = materialGroup.options.find(function(o) { return o.text.indexOf('人造皮革') !== -1; });
-    assert('天然皮革被勾选', leatherCb && document.querySelector(leatherCb.selector).checked === true);
-    assert('人造皮革未被勾选', fauxCb && document.querySelector(fauxCb.selector).checked === false);
+    var leatherOpt = materialGroup.options.find(function(o) { return o.text.indexOf('天然皮革') !== -1; });
+    var fauxOpt = materialGroup.options.find(function(o) { return o.text.indexOf('人造皮革') !== -1; });
+    assert('天然皮革被勾选', leatherOpt && document.querySelector(leatherOpt._fid).checked === true);
+    assert('人造皮革未被勾选', fauxOpt && document.querySelector(fauxOpt._fid).checked === false);
   }
 
   // 4f: 填充 checkbox 组 — 多值（逗号分隔）
   if (materialGroup) {
-    var cbMeta2 = fieldMeta[materialGroup.selector];
-    materialGroup.selectors.forEach(function(s) {
-      var el = document.querySelector(s);
+    materialGroup._fids.forEach(function(fid) {
+      var el = document.querySelector(fid);
       if (el) el.checked = false;
     });
-    var okCb2 = fillFormField(materialGroup.selector, '天然皮革, 织物', cbMeta2);
+    var okCb2 = fillFormField(materialGroup.index, '天然皮革, 织物');
     assert('checkbox 组多值填充成功', okCb2 === true);
 
-    var leatherCb = materialGroup.options.find(function(o) { return o.text.indexOf('天然皮革') !== -1; });
-    var fabricCb = materialGroup.options.find(function(o) { return o.text.indexOf('织物') !== -1; });
-    var fauxCb = materialGroup.options.find(function(o) { return o.text.indexOf('人造皮革') !== -1; });
-    assert('天然皮革被勾选', leatherCb && document.querySelector(leatherCb.selector).checked === true);
-    assert('织物被勾选', fabricCb && document.querySelector(fabricCb.selector).checked === true);
-    assert('人造皮革未被勾选', fauxCb && document.querySelector(fauxCb.selector).checked === false);
+    var leatherOpt2 = materialGroup.options.find(function(o) { return o.text.indexOf('天然皮革') !== -1; });
+    var fabricOpt = materialGroup.options.find(function(o) { return o.text.indexOf('织物') !== -1; });
+    var fauxOpt2 = materialGroup.options.find(function(o) { return o.text.indexOf('人造皮革') !== -1; });
+    assert('天然皮革被勾选', leatherOpt2 && document.querySelector(leatherOpt2._fid).checked === true);
+    assert('织物被勾选', fabricOpt && document.querySelector(fabricOpt._fid).checked === true);
+    assert('人造皮革未被勾选', fauxOpt2 && document.querySelector(fauxOpt2._fid).checked === false);
   }
 
   // 4g: 填充 select — 模糊匹配
   var brandField = selFields.find(function(f) { return f.label.indexOf('品牌') !== -1; });
   if (brandField) {
-    var brandMeta = fieldMeta[brandField.selector];
     // 先重置
-    document.querySelector(brandField.selector).value = '';
-    var okBrand = fillFormField(brandField.selector, 'foxlover', brandMeta);  // 模糊匹配
+    var brandEl = resolveFieldByIndex(brandField.index);
+    if (brandEl && brandEl.el) brandEl.el.value = '';
+    var okBrand = fillFormField(brandField.index, 'foxlover');  // 模糊匹配
     assert('品牌模糊匹配成功', okBrand === true);
-    assert('品牌值为 foxlover', document.querySelector(brandField.selector).value === 'foxlover', document.querySelector(brandField.selector).value);
+    var brandEl2 = resolveFieldByIndex(brandField.index);
+    assert('品牌值为 foxlover', brandEl2 && brandEl2.el && brandEl2.el.value === 'foxlover', brandEl2 ? brandEl2.el.value : 'null');
   }
 
   // 4h: 填充布尔 checkbox（单个）
   var freeShipCb = singleCb.find(function(f) { return f.label.indexOf('包邮') !== -1; });
   if (freeShipCb) {
-    var shipMeta = fieldMeta[freeShipCb.selector];
-    var okShip = fillFormField(freeShipCb.selector, 'true', shipMeta);
+    var okShip = fillFormField(freeShipCb.index, 'true');
     assert('单个 checkbox true 填充成功', okShip === true);
-    assert('包邮 checkbox 被勾选', document.querySelector(freeShipCb.selector).checked === true);
+    var shipEl = resolveFieldByIndex(freeShipCb.index);
+    assert('包邮 checkbox 被勾选', shipEl && shipEl.el && shipEl.el.checked === true);
   }
 
   // 4i: 填充 textarea
   var descField = taFields.find(function(f) { return f.label.indexOf('描述') !== -1; });
   if (descField) {
-    fillFormField(descField.selector, 'Тестовое описание товара', fieldMeta[descField.selector]);
-    assert('文本域填充成功', document.querySelector(descField.selector).value === 'Тестовое описание товара');
+    fillFormField(descField.index, 'Тестовое описание товара');
+    var descEl = resolveFieldByIndex(descField.index);
+    assert('文本域填充成功', descEl && descEl.el && descEl.el.value === 'Тестовое описание товара');
   }
 
   // ====== 测试 5: SKU 行上下文 ======

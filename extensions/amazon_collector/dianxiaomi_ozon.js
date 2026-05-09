@@ -54,6 +54,7 @@
   // ==================== 状态 ====================
   var selectedProduct = null;
   var allProducts = [];
+  var _fieldMap = {};  // index → {fid, el, selectors, options, tag, label, type}
 
   // ==================== CSS 注入 ====================
   var style = document.createElement("style");
@@ -1003,16 +1004,16 @@
       if (isSkippedField(groupLabel)) return;
       var optionLabel = findLabel(el);       // 单个选项的文本（如"天然皮革"）
       if (!optionLabel) optionLabel = (el.parentElement ? el.parentElement.textContent : "").trim();
-      var sel = buildSelector(el);
+      var sel = _serpFidSelector(el);       // 内部使用 data-serp-fid
       var rowCtx = getRowContext(el);
 
       // 无有效 groupLabel 的，作为独立字段收集（如 SKU 表格工具栏按钮）
       if (!groupLabel || !groupLabel.trim()) {
         var soloLabel = optionLabel + (rowCtx ? " [" + rowCtx + "]" : "");
         if (el.type === "checkbox") {
-          loneCheckboxes.push({ selector: sel, label: soloLabel, el: el });
+          loneCheckboxes.push({ _fid: sel, label: soloLabel, el: el, selector: sel });
         } else {
-          loneRadios.push({ selector: sel, label: soloLabel, el: el });
+          loneRadios.push({ _fid: sel, label: soloLabel, el: el, selector: sel });
         }
         return;
       }
@@ -1020,25 +1021,25 @@
       var groupKey = (groupLabel + "|" + (rowCtx || "")).replace(/\(.+?\)/g, "").trim();
       if (el.type === "checkbox") {
         if (!checkboxGroups[groupKey]) checkboxGroups[groupKey] = { groupLabel: groupLabel, rowCtx: rowCtx, items: [] };
-        checkboxGroups[groupKey].items.push({ selector: sel, optionLabel: optionLabel, el: el });
+        checkboxGroups[groupKey].items.push({ _fid: sel, optionLabel: optionLabel, el: el });
       } else {
         if (!radioGroups[groupKey]) radioGroups[groupKey] = { groupLabel: groupLabel, rowCtx: rowCtx, items: [] };
-        radioGroups[groupKey].items.push({ selector: sel, optionLabel: optionLabel, el: el });
+        radioGroups[groupKey].items.push({ _fid: sel, optionLabel: optionLabel, el: el });
       }
     });
 
     // 独立 checkbox（无 group 或仅单个）：作为普通 input 字段
     loneCheckboxes.forEach(function (item) {
-      if (seenSelectors[item.selector]) return;
-      seenSelectors[item.selector] = true;
-      fields.push({ tag: "input", type: "checkbox", label: item.label, currentValue: item.el.checked ? "true" : "", selector: item.selector });
+      if (seenSelectors[item._fid]) return;
+      seenSelectors[item._fid] = true;
+      fields.push({ tag: "input", type: "checkbox", label: item.label, currentValue: item.el.checked ? "true" : "", _fid: item._fid, el: item.el });
     });
 
     // 独立 radio（无 group 或仅单个）
     loneRadios.forEach(function (item) {
-      if (seenSelectors[item.selector]) return;
-      seenSelectors[item.selector] = true;
-      fields.push({ tag: "input", type: "radio", label: item.label, currentValue: item.el.checked ? "true" : "", selector: item.selector });
+      if (seenSelectors[item._fid]) return;
+      seenSelectors[item._fid] = true;
+      fields.push({ tag: "input", type: "radio", label: item.label, currentValue: item.el.checked ? "true" : "", _fid: item._fid, el: item.el });
     });
 
     // checkbox 组：≥2 个选项才用组格式；单个的回退为普通 checkbox
@@ -1047,15 +1048,16 @@
       if (grp.items.length < 2) {
         // 单选项：按普通 checkbox 收集
         var single = grp.items[0];
-        if (!seenSelectors[single.selector]) {
-          seenSelectors[single.selector] = true;
+        if (!seenSelectors[single._fid]) {
+          seenSelectors[single._fid] = true;
           var sLabel = grp.groupLabel + " - " + single.optionLabel + (grp.rowCtx ? " [" + grp.rowCtx + "]" : "");
-          fields.push({ tag: "input", type: "checkbox", label: sLabel, currentValue: single.el.checked ? "true" : "", selector: single.selector });
+          fields.push({ tag: "input", type: "checkbox", label: sLabel, currentValue: single.el.checked ? "true" : "", _fid: single._fid, el: single.el });
         }
         return;
       }
       var optionLabels = grp.items.map(function (x) { return x.optionLabel; });
-      var selectors = grp.items.map(function (x) { return x.selector; });
+      var fids = grp.items.map(function (x) { return x._fid; });
+      var els = grp.items.map(function (x) { return x.el; });
       var currentChecks = grp.items.filter(function (x) { return x.el.checked; }).map(function (x) { return x.optionLabel; });
       var rowCtx = grp.rowCtx || "";
       var fullLabel = grp.groupLabel
@@ -1066,9 +1068,10 @@
         type: "checkbox",
         label: fullLabel,
         currentValue: currentChecks.join(", "),
-        selector: selectors[0],
-        selectors: selectors,
-        options: grp.items.map(function (x) { return { text: x.optionLabel, selector: x.selector }; })
+        _fid: fids[0],
+        _fids: fids,
+        _els: els,
+        options: grp.items.map(function (x, i) { return { text: x.optionLabel, _fid: fids[i] }; })
       });
     });
 
@@ -1077,15 +1080,16 @@
       var grp = radioGroups[key];
       if (grp.items.length < 2) {
         var single = grp.items[0];
-        if (!seenSelectors[single.selector]) {
-          seenSelectors[single.selector] = true;
+        if (!seenSelectors[single._fid]) {
+          seenSelectors[single._fid] = true;
           var sLabel = grp.groupLabel + " - " + single.optionLabel + (grp.rowCtx ? " [" + grp.rowCtx + "]" : "");
-          fields.push({ tag: "input", type: "radio", label: sLabel, currentValue: single.el.checked ? "true" : "", selector: single.selector });
+          fields.push({ tag: "input", type: "radio", label: sLabel, currentValue: single.el.checked ? "true" : "", _fid: single._fid, el: single.el });
         }
         return;
       }
       var optionLabels = grp.items.map(function (x) { return x.optionLabel; });
-      var selectors = grp.items.map(function (x) { return x.selector; });
+      var fids = grp.items.map(function (x) { return x._fid; });
+      var els = grp.items.map(function (x) { return x.el; });
       var rowCtx = grp.rowCtx || "";
       var fullLabel = grp.groupLabel
         + (rowCtx ? " [" + rowCtx + "]" : "")
@@ -1095,102 +1099,100 @@
         type: "radio",
         label: fullLabel,
         currentValue: "",
-        selector: selectors[0],
-        selectors: selectors,
-        options: grp.items.map(function (x) { return { text: x.optionLabel, selector: x.selector }; })
+        _fid: fids[0],
+        _fids: fids,
+        _els: els,
+        options: grp.items.map(function (x, i) { return { text: x.optionLabel, _fid: fids[i] }; })
       });
     });
 
     // ===== 第二遍：其他 input（排除 checkbox/radio） =====
     document.querySelectorAll('input:not([type="hidden"]):not([type="file"]):not([type="checkbox"]):not([type="radio"])').forEach(function (el) {
       if (!isVisibleField(el)) return;
-      var sel = buildSelector(el);
+      var fid = _serpFidSelector(el);
       var label = findLabel(el);
       if (isSkippedField(label)) return;
       var rowCtx = getRowContext(el);
       var fullLabel = label + (rowCtx ? " [" + rowCtx + "]" : "");
-      if (seenSelectors[sel]) return;
-      seenSelectors[sel] = true;
-      fields.push({ tag: "input", type: el.type || "text", name: el.name || "", id: el.id || "", label: fullLabel, placeholder: el.placeholder || "", currentValue: el.value || "", selector: sel });
+      if (seenSelectors[fid]) return;
+      seenSelectors[fid] = true;
+      fields.push({ tag: "input", type: el.type || "text", name: el.name || "", id: el.id || "", label: fullLabel, placeholder: el.placeholder || "", currentValue: el.value || "", _fid: fid, el: el });
     });
 
     // ===== select / textarea =====
     document.querySelectorAll("select").forEach(function (el) {
       if (!isVisibleField(el)) return;
+      var fid = _serpFidSelector(el);
       var label = findLabel(el);
       if (isSkippedField(label)) return;
       var rowCtx = getRowContext(el);
       var fullLabel = label + (rowCtx ? " [" + rowCtx + "]" : "");
-      fields.push({ tag: "select", name: el.name || "", id: el.id || "", label: fullLabel, currentValue: el.value || "", options: Array.from(el.options).map(function (o) { return { value: o.value, text: o.text }; }), selector: buildSelector(el) });
+      fields.push({ tag: "select", name: el.name || "", id: el.id || "", label: fullLabel, currentValue: el.value || "", options: Array.from(el.options).map(function (o) { return { value: o.value, text: o.text }; }), _fid: fid, el: el });
     });
     document.querySelectorAll("textarea").forEach(function (el) {
       if (!isVisibleField(el)) return;
+      var fid = _serpFidSelector(el);
       var label = findLabel(el);
       if (isSkippedField(label)) return;
       var rowCtx = getRowContext(el);
       var fullLabel = label + (rowCtx ? " [" + rowCtx + "]" : "");
-      fields.push({ tag: "textarea", name: el.name || "", id: el.id || "", label: fullLabel, placeholder: el.placeholder || "", currentValue: el.value || "", selector: buildSelector(el) });
+      fields.push({ tag: "textarea", name: el.name || "", id: el.id || "", label: fullLabel, placeholder: el.placeholder || "", currentValue: el.value || "", _fid: fid, el: el });
     });
+
+    // ===== 构建索引和字段映射表 =====
+    _buildFieldMap(fields);
     return fields;
   }
 
-  function fillFormField(selector, value, fieldMeta) {
+  function _buildFieldMap(fields) {
+    _fieldMap = {};
+    fields.forEach(function (f, idx) {
+      f.index = idx;
+      _fieldMap[idx] = {
+        fid: f._fid,
+        el: f.el,
+        els: f._els || null,
+        fids: f._fids || null,
+        options: f.options || null,
+        tag: f.tag,
+        label: f.label,
+        type: f.type
+      };
+    });
+  }
+
+  /** 按索引解析字段 — 优先直接 DOM 引用，失效时回退到 data-serp-fid */
+  function resolveFieldByIndex(index) {
+    var entry = _fieldMap[index];
+    if (!entry) return null;
+    // 优先用持有的 DOM 引用
+    if (entry.el && entry.el.isConnected) return entry;
+    // 回退到 data-serp-fid 查询
+    if (entry.fid) {
+      var el = document.querySelector(entry.fid);
+      if (el) { entry.el = el; return entry; }
+    }
+    return null;
+  }
+
+  function fillFormField(index, value) {
     if (!value && value !== 0) return false;
     value = String(value);
     try {
-      var el = document.querySelector(selector);
-      if (!el) {
-        var parts = selector.split(".");
-        if (parts.length > 1) {
-          el = document.querySelector(parts[0] + "." + parts.slice(1).join("."));
-        }
-      }
+      var entry = resolveFieldByIndex(index);
+      if (!entry) { console.warn("[sERP] 解析字段失败: index=" + index); return false; }
+      var el = entry.el;
       if (!el) return false;
       var tag = el.tagName.toLowerCase();
+      var isCheckboxGroup = (entry.tag === "checkbox-group" && entry.els && entry.els.length > 1);
+      var isRadioGroup = (entry.tag === "radio-group" && entry.els && entry.els.length > 1);
 
       function trigger(el, eventName) {
         el.dispatchEvent(new Event(eventName, { bubbles: true }));
       }
 
-      // ===== 归一化文本（用于跨语言模糊匹配） =====
       function norm(s) {
         return (s || "").toLowerCase().replace(/\s+/g, " ").replace(/[()（）]/g, "").trim();
-      }
-
-      // ===== 检测是否为 checkbox/radio 组（从 fieldMeta 或 DOM 判断） =====
-      var isCheckboxGroup = false;
-      var isRadioGroup = false;
-      var groupSelectors = [];
-      var groupOptions = [];
-
-      if (fieldMeta && fieldMeta.selectors && fieldMeta.selectors.length > 1) {
-        if (el.type === "checkbox") {
-          isCheckboxGroup = true;
-          groupSelectors = fieldMeta.selectors;
-          groupOptions = fieldMeta.options || [];
-        } else if (el.type === "radio") {
-          isRadioGroup = true;
-          groupSelectors = fieldMeta.selectors;
-          groupOptions = fieldMeta.options || [];
-        }
-      }
-      // fallback: 从 DOM 检测同 form-item 下的兄弟 checkbox/radio
-      if (!isCheckboxGroup && !isRadioGroup && (el.type === "checkbox" || el.type === "radio")) {
-        var formItemCheck = el.closest(".ant-form-item");
-        if (formItemCheck) {
-          var siblings = formItemCheck.querySelectorAll('input[type="' + el.type + '"]');
-          if (siblings.length > 1) {
-            if (el.type === "checkbox") isCheckboxGroup = true;
-            else isRadioGroup = true;
-            var self = this;
-            siblings.forEach(function (sib) {
-              var sel = buildSelector(sib);
-              groupSelectors.push(sel);
-              var optLabel = findLabel(sib) || (sib.parentElement ? sib.parentElement.textContent : "").trim();
-              groupOptions.push({ text: optLabel, selector: sel });
-            });
-          }
-        }
       }
 
       // ===== checkbox 组填充 =====
@@ -1199,14 +1201,16 @@
         if (vals.length === 0) vals = [norm(value)];
         var anyChecked = false;
 
-        groupOptions.forEach(function (opt) {
-          var cb = document.querySelector(opt.selector);
-          if (!cb) return;
-          var optNorm = norm(opt.text);
+        entry.els.forEach(function (cb, i) {
+          if (!cb || !cb.isConnected) {
+            cb = document.querySelector(entry.fids[i]);
+            if (cb) entry.els[i] = cb; else return;
+          }
+          var optText = (entry.options && entry.options[i]) ? entry.options[i].text : "";
+          var optNorm = norm(optText);
           var matched = vals.some(function (v) {
             return optNorm.indexOf(v) !== -1 || v.indexOf(optNorm) !== -1;
           });
-          // 额外策略：取前3字符做关键词匹配
           if (!matched) {
             matched = vals.some(function (v) {
               if (v.length < 2) return false;
@@ -1221,11 +1225,10 @@
         });
 
         if (!anyChecked) {
-          // 全都不匹配：尝试布尔判定
           var boolCheck = (value === "true" || value === "1" || value === "yes");
-          if (boolCheck && groupSelectors.length > 0) {
-            var firstCb = document.querySelector(groupSelectors[0]);
-            if (firstCb) { firstCb.checked = true; trigger(firstCb, "change"); anyChecked = true; }
+          if (boolCheck && entry.els.length > 0) {
+            var firstCb = entry.els[0];
+            if (firstCb && firstCb.isConnected) { firstCb.checked = true; trigger(firstCb, "change"); anyChecked = true; }
           }
         }
         return anyChecked;
@@ -1233,14 +1236,16 @@
 
       // ===== radio 组填充 =====
       if (isRadioGroup) {
-        var vNorm = norm(value);
+        var vNormRd = norm(value);
         var anySelected = false;
-        groupOptions.forEach(function (opt) {
-          var rb = document.querySelector(opt.selector);
-          if (!rb) return;
-          var optNorm = norm(opt.text);
-          var matched = optNorm.indexOf(vNorm) !== -1 || vNorm.indexOf(optNorm) !== -1;
-          if (matched) {
+        entry.els.forEach(function (rb, i) {
+          if (!rb || !rb.isConnected) {
+            rb = document.querySelector(entry.fids[i]);
+            if (rb) entry.els[i] = rb; else return;
+          }
+          var optText = (entry.options && entry.options[i]) ? entry.options[i].text : "";
+          var optNorm = norm(optText);
+          if (optNorm.indexOf(vNormRd) !== -1 || vNormRd.indexOf(optNorm) !== -1) {
             rb.checked = true;
             trigger(rb, "change");
             anySelected = true;
@@ -1249,7 +1254,7 @@
         return anySelected;
       }
 
-      // 如果附近有"编辑JSON代码"开关，先点击进入 JSON 编辑模式
+      // JSON 编辑器开关
       if (tag === "textarea" || el.type === "textarea" || el.classList.contains("CodeMirror")) {
         var formItem = el.closest(".ant-form-item");
         var jsonToggle = (formItem || document).querySelector(".ant-switch, [class*='json-toggle'], [class*='code-toggle']");
@@ -1268,7 +1273,6 @@
       // ===== 普通 input（text/number 等） =====
       if (tag === "input") {
         if (el.type === "checkbox" || el.type === "radio") {
-          // 单 checkbox/radio（非组）
           var boolVal = (value === "true" || value === "1" || value === "yes");
           if (boolVal || value === "false" || value === "0" || value === "no") {
             el.checked = boolVal;
@@ -1282,14 +1286,17 @@
           trigger(el, "change");
           return true;
         }
-        var ns = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+        // 键盘驱动输入：先聚焦清空，再 insertText
         el.focus();
-        ns.call(el, "");
-        trigger(el, "input");
-        ns.call(el, value);
+        el.select();
+        try { document.execCommand("selectAll"); } catch (e) {}
+        try { document.execCommand("insertText", false, value); } catch (e) {
+          // fallback: 原生 setter + 事件
+          var ns = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+          ns.call(el, value);
+        }
         trigger(el, "input");
         trigger(el, "change");
-        trigger(el, "blur");
         return true;
       }
 
@@ -1298,17 +1305,14 @@
         var opts = Array.from(el.options), matched = false;
         el.focus();
 
-        // 策略1: 精确匹配 value
         var exact = opts.find(function (o) { return o.value === value; });
         if (exact) { el.value = value; matched = true; }
 
-        // 策略2: 精确匹配 option text（忽略大小写）
         if (!matched) {
           var textExact = opts.find(function (o) { return norm(o.text) === norm(value); });
           if (textExact) { el.value = textExact.value; matched = true; }
         }
 
-        // 策略3: 双向包含匹配
         if (!matched) {
           var vNorm = norm(value);
           var fuzzy = opts.find(function (o) {
@@ -1318,16 +1322,12 @@
           if (fuzzy) { el.value = fuzzy.value; matched = true; }
         }
 
-        // 策略4: 关键词匹配（取 value 前3字符做子串匹配）
         if (!matched && value.length >= 3) {
           var prefix = norm(value).substring(0, 3);
-          var kwMatch = opts.find(function (o) {
-            return norm(o.text).indexOf(prefix) !== -1;
-          });
+          var kwMatch = opts.find(function (o) { return norm(o.text).indexOf(prefix) !== -1; });
           if (kwMatch) { el.value = kwMatch.value; matched = true; }
         }
 
-        // 策略5: 数字提取匹配（用于"10 г" → "10"这类情况）
         if (!matched) {
           var numVal = parseFloat(value);
           if (!isNaN(numVal)) {
@@ -1345,11 +1345,13 @@
 
       // ===== textarea =====
       if (tag === "textarea") {
-        var ts = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
         el.focus();
-        ts.call(el, "");
-        trigger(el, "input");
-        ts.call(el, value);
+        el.select();
+        try { document.execCommand("selectAll"); } catch (e) {}
+        try { document.execCommand("insertText", false, value); } catch (e) {
+          var ts = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
+          ts.call(el, value);
+        }
         trigger(el, "input");
         trigger(el, "change");
         return true;
@@ -1357,14 +1359,12 @@
 
       if (el.isContentEditable) {
         el.focus();
-        el.textContent = "";
-        trigger(el, "input");
         el.textContent = value;
         trigger(el, "input");
         return true;
       }
       return false;
-    } catch (e) { console.warn("[sERP] 填充失败:", selector, e); return false; }
+    } catch (e) { console.warn("[sERP] 填充失败: index=" + index, e); return false; }
   }
 
   function collectCustomPrompts() {
@@ -1431,10 +1431,10 @@
     var listEl = document.getElementById("serp-results-list");
     listEl.innerHTML = allResults.map(function (r) {
       var icon = r.filled ? "✅" : "❌";
-      var label = r.label || r.selector || "(未知)";
+      var label = r.label || ("字段 " + r.index) || "(未知)";
       return '<div class="sr-item">' +
         '<span class="sr-icon">' + icon + '</span>' +
-        '<span class="sr-label" title="' + (r.selector || "") + '">' + label + '</span>' +
+        '<span class="sr-label" title="字段 #' + (r.index != null ? r.index : "") + '">' + label + '</span>' +
         '<span class="sr-value">' + (r.filled ? (r.value || "") : (r.error || "LLM 未匹配此字段")) + '</span>' +
       '</div>';
     }).join("");
@@ -1511,132 +1511,100 @@
 
     var customPrompts = await collectCustomPrompts();
 
-    // 关键字段标签匹配：产品标题、产品描述、主题标签、JSON富文本
-    var KEY_PATTERNS = ["产品标题", "产品描述", "主题标签", "json", "#хештеги", "название", "описание"];
-    function isKeyField(f) {
-      var lbl = (f.label || f.name || "").toLowerCase();
-      for (var k = 0; k < KEY_PATTERNS.length; k++) {
-        if (lbl.indexOf(KEY_PATTERNS[k].toLowerCase()) !== -1) return true;
-      }
-      return false;
+    // 构建发送给 LLM 的字段列表（去掉内部字段）
+    function _fieldForLLM(f) {
+      var clean = { index: f.index, label: f.label, tag: f.tag, type: f.type };
+      if (f.placeholder) clean.placeholder = f.placeholder;
+      if (f.name) clean.name = f.name;
+      if (f.options) clean.options = f.options.map(function (o) { return { text: o.text, value: o.value }; });
+      return clean;
+    }
+    var llmFields = formFields.map(_fieldForLLM);
+
+    showToast("发送 " + llmFields.length + " 个字段到 DeepSeek 分析...", "info");
+    setProgress(30);
+
+    var body = {
+      skc: selectedProduct.skc,
+      product_title: selectedProduct.title,
+      product_data: selectedProduct.product_data || {},
+      manual_data: selectedProduct.manual_data || {},
+      form_fields: llmFields
+    };
+    if (Object.keys(customPrompts).length > 0) {
+      body.custom_prompts = customPrompts;
     }
 
-    var keyFields = [];
-    var restFields = [];
-    formFields.forEach(function (f) {
-      if (isKeyField(f)) keyFields.push(f);
-      else restFields.push(f);
-    });
-
-    var BATCH_SIZE = 5;
-    var batches = [];
-    if (keyFields.length) batches.push(keyFields);
-    for (var i = 0; i < restFields.length; i += BATCH_SIZE) {
-      batches.push(restFields.slice(i, i + BATCH_SIZE));
-    }
-
-    showToast("分 " + batches.length + " 批发送 " + formFields.length + " 个字段到 DeepSeek 分析...", "info");
-    var allMappings = [];
-    var batchPromises = [];
-    var baseProgress = 20;
-    var progressPerBatch = 50 / batches.length;
-
-    batches.forEach(function (batch, idx) {
-      var body = {
-        skc: selectedProduct.skc,
-        product_title: selectedProduct.title,
-        product_data: selectedProduct.product_data || {},
-        manual_data: selectedProduct.manual_data || {},
-        form_fields: batch
-      };
-      if (Object.keys(customPrompts).length > 0) {
-        body.custom_prompts = customPrompts;
-      }
-
-      var p = bgFetch(API_AUTO_FILL, {
+    try {
+      var r = await bgFetch(API_AUTO_FILL, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body)
-      })
-      .then(function (r) { if (!r.ok) return r.json().then(function (e) { throw new Error(e.error || "分析失败"); }); return r.json(); })
-      .then(function (result) {
-        if (result && result.mappings) {
-          allMappings.push.apply(allMappings, result.mappings);
-        }
-        setProgress(baseProgress + (idx + 1) * progressPerBatch);
       });
-
-      batchPromises.push(p);
-    });
-
-    return Promise.all(batchPromises).then(function () {
+      if (!r.ok) {
+        var e = await r.json();
+        throw new Error(e.error || "分析失败");
+      }
+      var result = await r.json();
+      var mappings = result.mappings || [];
       setProgress(75);
-      var totalMappings = allMappings.length;
-      var fillResults = [];
-      var filledCount = 0;
 
-      if (!totalMappings) {
+      if (!mappings.length) {
         setBtnLoading(btnFill, false); setProgress(0);
         showToast("未能自动填充任何字段", "error");
         renderFillResults([], formFields.length);
         return;
       }
 
-      // 构建字段查找表：selector → {label, order, selectors, options, tag}
-      var fieldMeta = {};
-      formFields.forEach(function (f, idx) {
-        fieldMeta[f.selector] = {
-          label: f.label || f.name || f.placeholder || f.selector,
-          order: idx,
-          selectors: f.selectors || null,
-          options: f.options || null,
-          tag: f.tag || null
-        };
-      });
+      // 构建 index → label 查找表用于结果展示
+      var idxToLabel = {};
+      formFields.forEach(function (f) { idxToLabel[f.index] = f.label; });
 
-      allMappings.forEach(function (m, i) {
-        var meta = fieldMeta[m.selector] || { label: m.selector, order: 9999 };
-        var ok = fillFormField(m.selector, m.value, meta);
+      var fillResults = [];
+      var filledCount = 0;
+
+      mappings.forEach(function (m, i) {
+        var idx = m.index;
+        var label = m.label || idxToLabel[idx] || ("字段 " + idx);
+        var ok = fillFormField(idx, m.value);
         if (ok) filledCount++;
         fillResults.push({
-          selector: m.selector,
-          label: meta.label,
+          index: idx,
+          label: label,
           value: m.value,
           filled: ok,
-          order: meta.order,
+          order: idx,
           error: ok ? null : "元素未找到或填充失败"
         });
-        setProgress(75 + (i / totalMappings) * 20);
+        setProgress(75 + (i / mappings.length) * 20);
       });
 
       // 标记未匹配的字段
-      var matchedSelectors = {};
-      allMappings.forEach(function (m) { matchedSelectors[m.selector] = true; });
-      formFields.forEach(function (f, idx) {
-        if (!matchedSelectors[f.selector]) {
+      var matchedIndices = {};
+      mappings.forEach(function (m) { matchedIndices[m.index] = true; });
+      formFields.forEach(function (f) {
+        if (!matchedIndices[f.index]) {
           fillResults.push({
-            selector: f.selector,
-            label: f.label || f.name || f.placeholder || f.selector,
+            index: f.index,
+            label: f.label,
             value: "",
             filled: false,
-            order: idx,
+            order: f.index,
             error: "LLM 未匹配此字段"
           });
         }
       });
 
-      // 按页面字段顺序排序
       fillResults.sort(function (a, b) { return a.order - b.order; });
 
       setProgress(100);
       showToast("填充完成！成功 " + filledCount + "/" + fillResults.length + " 个字段", filledCount > 0 ? "success" : "error");
       renderFillResults(fillResults, formFields.length);
       setBtnLoading(btnFill, false);
-    })
-    .catch(function (e) {
+    } catch (e) {
       console.error("[sERP] 填充异常:", e);
       setBtnLoading(btnFill, false); setProgress(0);
       showToast("填充过程出错: " + e.message, "error");
-    });
+    }
   }
 
   // ==================== 事件绑定 ====================
