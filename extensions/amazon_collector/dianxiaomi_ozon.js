@@ -1201,6 +1201,20 @@
         if (vals.length === 0) vals = [norm(value)];
         var anyChecked = false;
 
+        // 先清空全部勾选，再按 LLM 返回值勾选（与 text input 的 clear-then-fill 对齐）
+        entry.els.forEach(function (cb, i) {
+          if (!cb || !cb.isConnected) {
+            cb = document.querySelector(entry.fids[i]);
+            if (cb) entry.els[i] = cb;
+          }
+          if (cb && cb.isConnected) {
+            cb.checked = false;
+            trigger(cb, "change");
+          }
+        });
+
+        console.log("[sERP] checkbox-group fill: index=" + index + " label=" + entry.label + " value=" + value + " vals=" + JSON.stringify(vals));
+
         entry.els.forEach(function (cb, i) {
           if (!cb || !cb.isConnected) {
             cb = document.querySelector(entry.fids[i]);
@@ -1217,6 +1231,7 @@
               return optNorm.indexOf(v.substring(0, 3)) !== -1 || v.indexOf(optNorm.substring(0, 3)) !== -1;
             });
           }
+          console.log("[sERP]   cb[" + i + "] optText=" + optText + " optNorm=" + optNorm + " matched=" + matched);
           if (matched) {
             cb.checked = true;
             trigger(cb, "change");
@@ -1225,12 +1240,14 @@
         });
 
         if (!anyChecked) {
+          console.log("[sERP] checkbox-group: no match, trying boolean fallback, value=" + value);
           var boolCheck = (value === "true" || value === "1" || value === "yes");
           if (boolCheck && entry.els.length > 0) {
             var firstCb = entry.els[0];
             if (firstCb && firstCb.isConnected) { firstCb.checked = true; trigger(firstCb, "change"); anyChecked = true; }
           }
         }
+        console.log("[sERP] checkbox-group result: anyChecked=" + anyChecked);
         return anyChecked;
       }
 
@@ -1238,6 +1255,21 @@
       if (isRadioGroup) {
         var vNormRd = norm(value);
         var anySelected = false;
+
+        // 先清空全部选择，再按 LLM 返回值选中（与 text input 的 clear-then-fill 对齐）
+        entry.els.forEach(function (rb, i) {
+          if (!rb || !rb.isConnected) {
+            rb = document.querySelector(entry.fids[i]);
+            if (rb) entry.els[i] = rb;
+          }
+          if (rb && rb.isConnected) {
+            rb.checked = false;
+            trigger(rb, "change");
+          }
+        });
+
+        console.log("[sERP] radio-group fill: index=" + index + " label=" + entry.label + " value=" + value + " vNormRd=" + vNormRd);
+
         entry.els.forEach(function (rb, i) {
           if (!rb || !rb.isConnected) {
             rb = document.querySelector(entry.fids[i]);
@@ -1245,12 +1277,15 @@
           }
           var optText = (entry.options && entry.options[i]) ? entry.options[i].text : "";
           var optNorm = norm(optText);
-          if (optNorm.indexOf(vNormRd) !== -1 || vNormRd.indexOf(optNorm) !== -1) {
+          var matched = (optNorm.indexOf(vNormRd) !== -1 || vNormRd.indexOf(optNorm) !== -1);
+          console.log("[sERP]   rb[" + i + "] optText=" + optText + " optNorm=" + optNorm + " matched=" + matched);
+          if (matched) {
             rb.checked = true;
             trigger(rb, "change");
             anySelected = true;
           }
         });
+        console.log("[sERP] radio-group result: anySelected=" + anySelected);
         return anySelected;
       }
 
@@ -1277,13 +1312,16 @@
           if (boolVal || value === "false" || value === "0" || value === "no") {
             el.checked = boolVal;
             trigger(el, "change");
+            console.log("[sERP] single " + el.type + " boolean: index=" + index + " label=" + entry.label + " value=" + value + " checked=" + boolVal);
             return true;
           }
-          var cbOptLabel = norm(findLabel(el) || el.parentElement ? el.parentElement.textContent : "");
+          // 修正运算符优先级：|| 优先级高于 ?:，必须加括号确保 findLabel 为空时走 parentElement.textContent 回退
+          var cbOptLabel = norm(findLabel(el) || (el.parentElement ? el.parentElement.textContent : ""));
           var cbFormLabel = norm(findLabel(el, true) || "");
           var vLower = norm(value);
           el.checked = (cbOptLabel.indexOf(vLower) !== -1 || vLower.indexOf(cbOptLabel) !== -1 || cbFormLabel.indexOf(vLower) !== -1 || vLower.indexOf(cbFormLabel) !== -1);
           trigger(el, "change");
+          console.log("[sERP] single " + el.type + " text-match: index=" + index + " label=" + entry.label + " value=" + value + " vLower=" + vLower + " cbOptLabel=" + cbOptLabel + " cbFormLabel=" + cbFormLabel + " checked=" + el.checked);
           return true;
         }
         // 键盘驱动输入：先聚焦清空，再 insertText
@@ -1565,15 +1603,27 @@
       mappings.forEach(function (m, i) {
         var idx = m.index;
         var label = m.label || idxToLabel[idx] || ("字段 " + idx);
+        // 填充前预检：字段是否可解析
+        var preEntry = resolveFieldByIndex(idx);
         var ok = fillFormField(idx, m.value);
         if (ok) filledCount++;
+        var errorMsg = null;
+        if (!ok) {
+          if (!preEntry) {
+            errorMsg = "DOM 断连：元素已从页面卸载";
+          } else if (!preEntry.el || !preEntry.el.isConnected) {
+            errorMsg = "DOM 断连：元素引用失效";
+          } else {
+            errorMsg = "值不匹配：\"" + String(m.value) + "\" 未命中任何选项";
+          }
+        }
         fillResults.push({
           index: idx,
           label: label,
           value: m.value,
           filled: ok,
           order: idx,
-          error: ok ? null : "元素未找到或填充失败"
+          error: errorMsg
         });
         setProgress(75 + (i / mappings.length) * 20);
       });
