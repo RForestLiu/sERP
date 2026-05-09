@@ -1195,13 +1195,22 @@
         return (s || "").toLowerCase().replace(/\s+/g, " ").replace(/[()（）]/g, "").trim();
       }
 
+      // 带词边界的 indexOf：避免 "3 个卡槽" 误匹配 "13 个卡槽"
+      function indexOfWord(haystack, needle) {
+        var idx = haystack.indexOf(needle);
+        if (idx === -1) return -1;
+        // 匹配位置必须从词边界开始（前一个字符不能是字母/数字）
+        if (idx > 0 && /[\w]/.test(haystack.charAt(idx - 1))) return -1;
+        return idx;
+      }
+
       // ===== checkbox 组填充 =====
       if (isCheckboxGroup) {
         var vals = value.split(/[,，、/|]/).map(function (s) { return norm(s); }).filter(function (s) { return s.length > 0; });
         if (vals.length === 0) vals = [norm(value)];
         var anyChecked = false;
 
-        // 先清空全部勾选，再按 LLM 返回值勾选（与 text input 的 clear-then-fill 对齐）
+        // 先静默清空全部勾选（不触发 change 事件，避免店小秘 JS 重新预填）
         entry.els.forEach(function (cb, i) {
           if (!cb || !cb.isConnected) {
             cb = document.querySelector(entry.fids[i]);
@@ -1209,7 +1218,6 @@
           }
           if (cb && cb.isConnected) {
             cb.checked = false;
-            trigger(cb, "change");
           }
         });
 
@@ -1223,12 +1231,12 @@
           var optText = (entry.options && entry.options[i]) ? entry.options[i].text : "";
           var optNorm = norm(optText);
           var matched = vals.some(function (v) {
-            return optNorm.indexOf(v) !== -1 || v.indexOf(optNorm) !== -1;
+            return indexOfWord(optNorm, v) !== -1 || indexOfWord(v, optNorm) !== -1;
           });
           if (!matched) {
             matched = vals.some(function (v) {
               if (v.length < 2) return false;
-              return optNorm.indexOf(v.substring(0, 3)) !== -1 || v.indexOf(optNorm.substring(0, 3)) !== -1;
+              return indexOfWord(optNorm, v.substring(0, 3)) !== -1 || indexOfWord(v, optNorm.substring(0, 3)) !== -1;
             });
           }
           console.log("[sERP]   cb[" + i + "] optText=" + optText + " optNorm=" + optNorm + " matched=" + matched);
@@ -1256,7 +1264,7 @@
         var vNormRd = norm(value);
         var anySelected = false;
 
-        // 先清空全部选择，再按 LLM 返回值选中（与 text input 的 clear-then-fill 对齐）
+        // 先静默清空全部选择（不触发 change 事件，避免店小秘 JS 重新预填）
         entry.els.forEach(function (rb, i) {
           if (!rb || !rb.isConnected) {
             rb = document.querySelector(entry.fids[i]);
@@ -1264,7 +1272,6 @@
           }
           if (rb && rb.isConnected) {
             rb.checked = false;
-            trigger(rb, "change");
           }
         });
 
@@ -1277,7 +1284,7 @@
           }
           var optText = (entry.options && entry.options[i]) ? entry.options[i].text : "";
           var optNorm = norm(optText);
-          var matched = (optNorm.indexOf(vNormRd) !== -1 || vNormRd.indexOf(optNorm) !== -1);
+          var matched = (indexOfWord(optNorm, vNormRd) !== -1 || indexOfWord(vNormRd, optNorm) !== -1);
           console.log("[sERP]   rb[" + i + "] optText=" + optText + " optNorm=" + optNorm + " matched=" + matched);
           if (matched) {
             rb.checked = true;
@@ -1539,9 +1546,23 @@
     showToast("已提取 " + formFields.length + " 个字段", "info");
   }
 
+  // 全局静默清空所有勾选（不触发 change 事件，避免店小秘 JS 重新预填）
+  function clearAllCheckables() {
+    var all = document.querySelectorAll('input[type="checkbox"]:checked, input[type="radio"]:checked');
+    console.log("[sERP] clearAllCheckables: 找到 " + all.length + " 个已勾选的 checkbox/radio，正在静默清空...");
+    all.forEach(function (el) {
+      el.checked = false;
+      // 不触发事件，避免店小秘的自动填充监听器重新写入预填值
+    });
+  }
+
   async function doAutoFill() {
     if (!selectedProduct) { showToast("请先点击\"选品\"选择一个产品", "error"); return; }
     setBtnLoading(btnFill, true); setProgress(10);
+
+    // 第一步：静默清空所有已勾选的 checkbox/radio，消除店小秘预填充
+    clearAllCheckables();
+
     showToast("正在收集表单字段...", "info");
     var formFields = collectFormFields();
     if (!formFields.length) { setBtnLoading(btnFill, false); setProgress(0); showToast("未找到可填充的表单字段", "error"); return; }
