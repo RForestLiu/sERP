@@ -1188,9 +1188,10 @@
           var matched = vals.some(function (v) {
             return optNorm.indexOf(v) !== -1 || v.indexOf(optNorm) !== -1;
           });
-          // 额外策略：提取关键词匹配（取前3个字符以上做子串匹配）
-          if (!matched && v.length >= 2) {
+          // 额外策略：取前3字符做关键词匹配
+          if (!matched) {
             matched = vals.some(function (v) {
+              if (v.length < 2) return false;
               return optNorm.indexOf(v.substring(0, 3)) !== -1 || v.indexOf(optNorm.substring(0, 3)) !== -1;
             });
           }
