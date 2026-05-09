@@ -177,6 +177,9 @@
     '<button class="serp-tb-btn" id="serp-btn-extract" title="提取页面可填字段">' +
       '<span class="tb-icon">🔍</span><span class="tb-label">提取</span>' +
     '</button>' +
+    '<button class="serp-tb-btn" id="serp-btn-clear" title="清空所有已勾选的属性">' +
+      '<span class="tb-icon">🗑️</span><span class="tb-label">清空勾选</span>' +
+    '</button>' +
     '<button class="serp-tb-btn" id="serp-btn-fill" title="自动填充表单">' +
       '<span class="tb-icon">✍️</span><span class="tb-label">自动填充</span>' +
     '</button>' +
@@ -273,6 +276,7 @@
   var btnSelect = document.getElementById("serp-btn-select");
   var btnCategory = document.getElementById("serp-btn-category");
   var btnExtract = document.getElementById("serp-btn-extract");
+  var btnClear = document.getElementById("serp-btn-clear");
   var btnFill = document.getElementById("serp-btn-fill");
   var productInfo = document.getElementById("serp-product-info");
   var piSkc = document.getElementById("serp-pi-skc");
@@ -1694,6 +1698,11 @@
   });
   btnCategory.addEventListener("click", function () { doMatchCategory(); });
   btnExtract.addEventListener("click", function () { doExtractFields(); });
+  btnClear.addEventListener("click", function () {
+    clearAllCheckables();
+    var remaining = document.querySelectorAll('input[type="checkbox"]:checked, input[type="radio"]:checked').length;
+    showToast("已清空勾选" + (remaining > 0 ? "（" + remaining + " 个未能清除）" : ""), remaining > 0 ? "error" : "success");
+  });
   btnFill.addEventListener("click", function () { doAutoFill(); });
   piClear.addEventListener("click", function () { selectedProduct = null; updateProductUI(); showToast("已清除产品选择", "info"); });
   hintToggle.addEventListener("click", function () {
@@ -1731,6 +1740,7 @@
     if (!e.ctrlKey || !e.shiftKey) return;
     if (e.key.toLowerCase() === "s") { e.preventDefault(); btnSelect.click(); }
     else if (e.key.toLowerCase() === "c") { e.preventDefault(); btnCategory.click(); }
+    else if (e.key.toLowerCase() === "x") { e.preventDefault(); btnClear.click(); }
     else if (e.key.toLowerCase() === "f") { e.preventDefault(); btnFill.click(); }
   });
 
