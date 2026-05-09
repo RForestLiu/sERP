@@ -177,9 +177,6 @@
     '<button class="serp-tb-btn" id="serp-btn-extract" title="提取页面可填字段">' +
       '<span class="tb-icon">🔍</span><span class="tb-label">提取</span>' +
     '</button>' +
-    '<button class="serp-tb-btn" id="serp-btn-clear" title="清空所有已勾选的属性">' +
-      '<span class="tb-icon">🗑️</span><span class="tb-label">清空勾选</span>' +
-    '</button>' +
     '<button class="serp-tb-btn" id="serp-btn-fill" title="自动填充表单">' +
       '<span class="tb-icon">✍️</span><span class="tb-label">自动填充</span>' +
     '</button>' +
@@ -276,7 +273,6 @@
   var btnSelect = document.getElementById("serp-btn-select");
   var btnCategory = document.getElementById("serp-btn-category");
   var btnExtract = document.getElementById("serp-btn-extract");
-  var btnClear = document.getElementById("serp-btn-clear");
   var btnFill = document.getElementById("serp-btn-fill");
   var productInfo = document.getElementById("serp-product-info");
   var piSkc = document.getElementById("serp-pi-skc");
@@ -1214,17 +1210,6 @@
         if (vals.length === 0) vals = [norm(value)];
         var anyChecked = false;
 
-        // 先静默清空全部勾选（不触发 change 事件，避免店小秘 JS 重新预填）
-        entry.els.forEach(function (cb, i) {
-          if (!cb || !cb.isConnected) {
-            cb = document.querySelector(entry.fids[i]);
-            if (cb) entry.els[i] = cb;
-          }
-          if (cb && cb.isConnected) {
-            cb.checked = false;
-          }
-        });
-
         console.log("[sERP] checkbox-group fill: index=" + index + " label=" + entry.label + " value=" + value + " vals=" + JSON.stringify(vals));
 
         entry.els.forEach(function (cb, i) {
@@ -1267,17 +1252,6 @@
       if (isRadioGroup) {
         var vNormRd = norm(value);
         var anySelected = false;
-
-        // 先静默清空全部选择（不触发 change 事件，避免店小秘 JS 重新预填）
-        entry.els.forEach(function (rb, i) {
-          if (!rb || !rb.isConnected) {
-            rb = document.querySelector(entry.fids[i]);
-            if (rb) entry.els[i] = rb;
-          }
-          if (rb && rb.isConnected) {
-            rb.checked = false;
-          }
-        });
 
         console.log("[sERP] radio-group fill: index=" + index + " label=" + entry.label + " value=" + value + " vNormRd=" + vNormRd);
 
@@ -1550,22 +1524,9 @@
     showToast("已提取 " + formFields.length + " 个字段", "info");
   }
 
-  // 全局静默清空所有勾选（不触发 change 事件，避免店小秘 JS 重新预填）
-  function clearAllCheckables() {
-    var all = document.querySelectorAll('input[type="checkbox"]:checked, input[type="radio"]:checked');
-    console.log("[sERP] clearAllCheckables: 找到 " + all.length + " 个已勾选的 checkbox/radio，正在静默清空...");
-    all.forEach(function (el) {
-      el.checked = false;
-      // 不触发事件，避免店小秘的自动填充监听器重新写入预填值
-    });
-  }
-
   async function doAutoFill() {
     if (!selectedProduct) { showToast("请先点击\"选品\"选择一个产品", "error"); return; }
     setBtnLoading(btnFill, true); setProgress(10);
-
-    // 第一步：静默清空所有已勾选的 checkbox/radio，消除店小秘预填充
-    clearAllCheckables();
 
     showToast("正在收集表单字段...", "info");
     var formFields = collectFormFields();
@@ -1698,11 +1659,6 @@
   });
   btnCategory.addEventListener("click", function () { doMatchCategory(); });
   btnExtract.addEventListener("click", function () { doExtractFields(); });
-  btnClear.addEventListener("click", function () {
-    clearAllCheckables();
-    var remaining = document.querySelectorAll('input[type="checkbox"]:checked, input[type="radio"]:checked').length;
-    showToast("已清空勾选" + (remaining > 0 ? "（" + remaining + " 个未能清除）" : ""), remaining > 0 ? "error" : "success");
-  });
   btnFill.addEventListener("click", function () { doAutoFill(); });
   piClear.addEventListener("click", function () { selectedProduct = null; updateProductUI(); showToast("已清除产品选择", "info"); });
   hintToggle.addEventListener("click", function () {
@@ -1740,7 +1696,6 @@
     if (!e.ctrlKey || !e.shiftKey) return;
     if (e.key.toLowerCase() === "s") { e.preventDefault(); btnSelect.click(); }
     else if (e.key.toLowerCase() === "c") { e.preventDefault(); btnCategory.click(); }
-    else if (e.key.toLowerCase() === "x") { e.preventDefault(); btnClear.click(); }
     else if (e.key.toLowerCase() === "f") { e.preventDefault(); btnFill.click(); }
   });
 
