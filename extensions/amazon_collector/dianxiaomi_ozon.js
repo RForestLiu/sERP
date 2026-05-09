@@ -914,13 +914,31 @@
 
   var _serpFidCounter = 0;
   function buildSelector(el) {
-    if (el.id) return "#" + CSS.escape(el.id);
-    if (el.name) return el.tagName.toLowerCase() + '[name="' + el.name + '"]';
+    if (el.id) {
+      var idSel = "#" + CSS.escape(el.id);
+      return document.querySelectorAll(idSel).length === 1 ? idSel : _serpFidSelector(el);
+    }
+    if (el.name) {
+      var nameSel = el.tagName.toLowerCase() + '[name="' + el.name + '"]';
+      return document.querySelectorAll(nameSel).length === 1 ? nameSel : _serpFidSelector(el);
+    }
     var cls = Array.from(el.classList).filter(function (c) { return !c.startsWith("ant-") && !c.startsWith("el-") && !c.startsWith("vxe-") && !c.startsWith("css-"); });
-    if (cls.length) return el.tagName.toLowerCase() + "." + cls.map(function (c) { return CSS.escape(c); }).join(".");
-    if (el.placeholder) return el.tagName.toLowerCase() + '[placeholder="' + el.placeholder + '"]';
-    if (el.title) return el.tagName.toLowerCase() + '[title="' + el.title + '"]';
-    // 以上都不可用 → 打标签，用 data-serp-fid 属性选择器（鲁棒，不会被 LLM 损坏）
+    if (cls.length) {
+      var clsSel = el.tagName.toLowerCase() + "." + cls.map(function (c) { return CSS.escape(c); }).join(".");
+      if (document.querySelectorAll(clsSel).length === 1) return clsSel;
+      return _serpFidSelector(el);
+    }
+    if (el.placeholder) {
+      var phSel = el.tagName.toLowerCase() + '[placeholder="' + el.placeholder + '"]';
+      return document.querySelectorAll(phSel).length === 1 ? phSel : _serpFidSelector(el);
+    }
+    if (el.title) {
+      var tiSel = el.tagName.toLowerCase() + '[title="' + el.title + '"]';
+      return document.querySelectorAll(tiSel).length === 1 ? tiSel : _serpFidSelector(el);
+    }
+    return _serpFidSelector(el);
+  }
+  function _serpFidSelector(el) {
     if (!el.hasAttribute("data-serp-fid")) {
       _serpFidCounter++;
       el.setAttribute("data-serp-fid", "f" + _serpFidCounter);
