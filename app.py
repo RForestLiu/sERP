@@ -2282,7 +2282,8 @@ SKC: {skc}
                 {"role": "user", "content": usr_prompt}
             ],
             "temperature": 0.1,
-            "max_tokens": 16384
+            "max_tokens": 16384,
+            "response_format": {"type": "json_object"}
         }
         headers = {
             "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
@@ -2291,14 +2292,17 @@ SKC: {skc}
         try:
             resp = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=180)
             if resp.status_code != 200:
-                print(f"[auto-fill/{label}] API Error {resp.status_code}: {resp.text[:200]}")
+                print(f"[auto-fill/{label}] API Error {resp.status_code}: {resp.text[:500]}")
                 return []
             result = resp.json()
             choices = result.get("choices", [])
             if not choices:
+                print(f"[auto-fill/{label}] no choices in response")
                 return []
-            text = choices[0].get("message", {}).get("content", "")
+            msg = choices[0].get("message", {})
+            text = msg.get("content", "") or msg.get("reasoning_content", "")
             if not text:
+                print(f"[auto-fill/{label}] empty content AND reasoning_content, msg keys: {list(msg.keys())}")
                 return []
 
             cleaned = text.strip()
@@ -2323,7 +2327,7 @@ SKC: {skc}
             print(f"[auto-fill/{label}] filled {len(validated)} fields")
             return validated
         except json.JSONDecodeError:
-            print(f"[auto-fill/{label}] JSON parse failed")
+            print(f"[auto-fill/{label}] JSON parse failed, raw text (first 300 chars): {text[:300] if 'text' in dir() else 'N/A'}")
             return []
         except Exception as e:
             print(f"[auto-fill/{label}] Exception: {e}")
@@ -4129,7 +4133,8 @@ def auto_fill_ozon_fields():
                 {"role": "user", "content": user_prompt}
             ],
             "temperature": 0.1,
-            "max_tokens": 16384
+            "max_tokens": 16384,
+            "response_format": {"type": "json_object"}
         }
         headers = {
             "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
@@ -4138,14 +4143,17 @@ def auto_fill_ozon_fields():
         try:
             resp = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=180)
             if resp.status_code != 200:
-                logger.warning("[自动填充/%s] API Error %s: %s", label, resp.status_code, resp.text[:200])
+                logger.warning("[自动填充/%s] API Error %s: %s", label, resp.status_code, resp.text[:500])
                 return []
             result = resp.json()
             choices = result.get("choices", [])
             if not choices:
+                logger.warning("[自动填充/%s] no choices in response")
                 return []
-            text = choices[0].get("message", {}).get("content", "")
+            msg = choices[0].get("message", {})
+            text = msg.get("content", "") or msg.get("reasoning_content", "")
             if not text:
+                logger.warning("[自动填充/%s] empty content AND reasoning_content, msg keys: %s", label, list(msg.keys()))
                 return []
 
             cleaned = text.strip()
@@ -4169,7 +4177,7 @@ def auto_fill_ozon_fields():
             logger.info("[自动填充/%s] ✅ 填充 %s 个属性", label, len(validated))
             return validated
         except json.JSONDecodeError:
-            logger.warning("[自动填充/%s] JSON 解析失败: %s", label, text[:200] if 'text' in dir() else 'N/A')
+            logger.warning("[自动填充/%s] JSON 解析失败: %s", label, text[:300] if 'text' in dir() else 'N/A')
             return []
         except Exception as e:
             logger.error("[自动填充/%s] 异常: %s", label, e)
