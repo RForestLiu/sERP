@@ -2026,7 +2026,7 @@ def extract_from_text():
 {"weight_g": "", "size_spec": "", "spec": ""}"""
     
     payload = {
-        "model": "deepseek-chat",
+        "model": "deepseek-v4-pro",
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": text}
@@ -2276,7 +2276,7 @@ SKC: {skc}
     # ── 辅助函数：调用 DeepSeek 并解析返回 ──
     def _call_deepseek_fill(sys_prompt, usr_prompt, label="fill"):
         payload = {
-            "model": "deepseek-chat",
+            "model": "deepseek-v4-pro",
             "messages": [
                 {"role": "system", "content": sys_prompt},
                 {"role": "user", "content": usr_prompt}
@@ -2663,7 +2663,7 @@ def _translate_attr_descriptions(store_id, descriptions):
             "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
             "Content-Type": "application/json"
         }, json={
-            "model": "deepseek-chat",
+            "model": "deepseek-v4-pro",
             "messages": [{"role": "user", "content": prompt}],
             "temperature": 0.1,
             "max_tokens": 4096
@@ -2716,7 +2716,7 @@ def _translate_attr_names(store_id, attr_names):
             "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
             "Content-Type": "application/json"
         }, json={
-            "model": "deepseek-chat",
+            "model": "deepseek-v4-pro",
             "messages": [{"role": "user", "content": prompt}],
             "temperature": 0.1,
             "max_tokens": 4096
@@ -2921,7 +2921,7 @@ def _batch_translate_categories(translations, untranslated, trans_path, store_id
             "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
             "Content-Type": "application/json"
         }, json={
-            "model": "deepseek-chat",
+            "model": "deepseek-v4-pro",
             "messages": [{"role": "user", "content": trans_prompt}],
             "temperature": 0.1,
             "max_tokens": 32768
@@ -3376,7 +3376,7 @@ def ozon_match_category(store_id):
                 "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
                 "Content-Type": "application/json"
             }, json={
-                "model": "deepseek-chat",
+                "model": "deepseek-v4-pro",
                 "messages": [
                     {"role": "system", "content": "你是 Ozon 电商品类匹配专家。根据产品信息从候选品类中选择最匹配的一个。注意俄语+中文对照，产品信息是中文/英文。返回纯 JSON。"},
                     {"role": "user", "content": prompt}
@@ -4123,7 +4123,7 @@ def auto_fill_ozon_fields():
     # ── 辅助函数：调用 DeepSeek 并解析返回 ──
     def _call_deepseek_fill(sys_prompt, user_prompt, label="fill"):
         payload = {
-            "model": "deepseek-chat",
+            "model": "deepseek-v4-pro",
             "messages": [
                 {"role": "system", "content": sys_prompt},
                 {"role": "user", "content": user_prompt}
