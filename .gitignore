@@ -8,6 +8,7 @@ tasks/
 nohup.out
 error_log
 .DS_Store
+data/debug/
 data/ozon_cache/
 data/collect_collect_*/
 data/task_*/
@@ -21,3 +22,4 @@ nul
 品类翻译_按大类/
 .claude/settings.local.json
 
+.gstack/

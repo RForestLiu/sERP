@@ -41,6 +41,19 @@
     });
   }
 
+  // 带超时的 bgFetch 包装
+  function bgFetchWithTimeout(url, options, timeoutMs) {
+    timeoutMs = timeoutMs || 150000;  // default 150s
+    return Promise.race([
+      bgFetch(url, options),
+      new Promise(function (_, reject) {
+        setTimeout(function () {
+          reject(new Error("AI分析超时 (" + Math.round(timeoutMs / 1000) + "s)，请重试"));
+        }, timeoutMs);
+      })
+    ]);
+  }
+
   // 店铺中文名 → store_id 映射
   var STORE_CN_MAP = {
     "安凌": "ozon_anling",
@@ -183,6 +196,9 @@
     '<button class="serp-tb-btn" id="serp-btn-clear-form" title="清空所有表单字段">' +
       '<span class="tb-icon">🧹</span><span class="tb-label">清空</span>' +
     '</button>' +
+    '<button class="serp-tb-btn" id="serp-btn-send-html" title="发送当前页面HTML到后台分析">' +
+      '<span class="tb-icon">📄</span><span class="tb-label">发送HTML</span>' +
+    '</button>' +
     '<div id="serp-hint-toggle" title="展开设置自定义提示词">💡</div>' +
     '<div class="serp-product-info" id="serp-product-info">' +
       '<div class="pi-label">已选产品</div>' +
@@ -277,6 +293,7 @@
   var btnCategory = document.getElementById("serp-btn-category");
   var btnExtract = document.getElementById("serp-btn-extract");
   var btnFill = document.getElementById("serp-btn-fill");
+  var btnSendHtml = document.getElementById("serp-btn-send-html");
   var productInfo = document.getElementById("serp-product-info");
   var piSkc = document.getElementById("serp-pi-skc");
   var piTitle = document.getElementById("serp-pi-title");
@@ -400,6 +417,41 @@
           btn.classList.remove("saved");
         }, 1500);
       }
+    });
+  }
+
+  // ==================== Debug: 发送页面HTML到后台分析 ====================
+  function captureAndSendHTML() {
+    if (!selectedProduct) {
+      showToast("请先选择产品后再发送HTML", "error");
+      return;
+    }
+    setBtnLoading(btnSendHtml, true);
+
+    var html = document.documentElement.outerHTML;
+    var fieldsCount = typeof collectFormFields === "function" ? collectFormFields().length : 0;
+    var payload = {
+      html: html,
+      url: window.location.href,
+      note: "sku=" + (selectedProduct.skc || "") + " title=" + (selectedProduct.title || "").substring(0, 80),
+      form_fields_count: fieldsCount
+    };
+
+    bgFetch(FLASK_BASE + "/api/debug/capture-html", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }).then(function (r) {
+      setBtnLoading(btnSendHtml, false);
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    }).then(function (data) {
+      showToast("HTML已发送: " + (data.file || "ok") + " (" + (data.size || 0) + " bytes)", "info");
+      console.log("[sERP] HTML captured:", data.file, "size:", data.size);
+    }).catch(function (err) {
+      setBtnLoading(btnSendHtml, false);
+      showToast("发送失败: " + err.message, "error");
+      console.error("[sERP] HTML capture error:", err);
     });
   }
 
@@ -1896,8 +1948,8 @@
       }
     }
 
-    showToast("发送 " + llmFields.length + " 个字段到 DeepSeek 分析...", "info");
-    setProgress(30);
+    showToast("正在AI分析 " + llmFields.length + " 个字段（最长等待150秒）...", "info");
+    setProgress(25);
 
     var body = {
       skc: selectedProduct.skc,
@@ -1926,10 +1978,12 @@
     body.variant_list = variantList;
 
     try {
-      var r = await bgFetch(API_AUTO_FILL, {
+      setProgress(30);
+      var r = await bgFetchWithTimeout(API_AUTO_FILL, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body)
-      });
+      }, 150000);
+      setProgress(65);
       if (!r.ok) {
         var e = await r.json();
         throw new Error(e.error || "分析失败");
@@ -2073,6 +2127,7 @@
   btnExtract.addEventListener("click", function () { doExtractFields(); });
   btnFill.addEventListener("click", function () { doAutoFill(); });
   document.getElementById("serp-btn-clear-form").addEventListener("click", function () { clearAllFormFields(); });
+  btnSendHtml.addEventListener("click", function () { captureAndSendHTML(); });
   piClear.addEventListener("click", function () { selectedProduct = null; updateProductUI(); showToast("已清除产品选择", "info"); });
   hintToggle.addEventListener("click", function () {
     hintOverlay.classList.add("active");
@@ -2110,9 +2165,10 @@
     if (e.key.toLowerCase() === "s") { e.preventDefault(); btnSelect.click(); }
     else if (e.key.toLowerCase() === "c") { e.preventDefault(); btnCategory.click(); }
     else if (e.key.toLowerCase() === "f") { e.preventDefault(); btnFill.click(); }
+    else if (e.key.toLowerCase() === "h") { e.preventDefault(); btnSendHtml.click(); }
   });
 
   loadAllHints();
   console.log("[sERP ExtensionHelper] 店小秘 Ozon 智能助手已加载");
-  console.log("[sERP ExtensionHelper] 左侧工具栏: 选品 → 分类 → 填充 | 快捷键: Ctrl+Shift+S/C/F");
+  console.log("[sERP ExtensionHelper] 左侧工具栏: 选品 → 分类 → 填充 → 发送HTML | 快捷键: Ctrl+Shift+S/C/F/H");
 })();

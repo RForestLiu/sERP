@@ -43,6 +43,7 @@ logging.config.dictConfig({
     'disable_existing_loggers': False,
 })
 
+from pathlib import Path
 from urllib.parse import quote
 
 from flask import Flask, request, jsonify, render_template, send_from_directory
@@ -2274,23 +2275,26 @@ SKC: {skc}
 请分析以上表单字段，为每个字段提供填充值。"""
 
     # ── 辅助函数：调用 DeepSeek 并解析返回 ──
-    def _call_deepseek_fill(sys_prompt, usr_prompt, label="fill"):
+    def _call_deepseek_fill(sys_prompt, usr_prompt, label="fill", model="deepseek-v4-pro"):
         payload = {
-            "model": "deepseek-v4-pro",
+            "model": model,
             "messages": [
                 {"role": "system", "content": sys_prompt},
                 {"role": "user", "content": usr_prompt}
             ],
             "temperature": 0.1,
-            "max_tokens": 16384,
+            "max_tokens": 8192,
             "response_format": {"type": "json_object"}
         }
+        # v4-pro 禁用思考 token，跳过 chain-of-thought 直接输出 JSON
+        if model == "deepseek-v4-pro":
+            payload["thinking"] = {"type": "disabled"}
         headers = {
             "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
             "Content-Type": "application/json"
         }
         try:
-            resp = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=180)
+            resp = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=120)
             if resp.status_code != 200:
                 print(f"[auto-fill/{label}] API Error {resp.status_code}: {resp.text[:500]}")
                 return []
@@ -2348,14 +2352,25 @@ SKC: {skc}
         all_mappings = []
 
         if important_fields and regular_fields:
-            # Dual-batch mode: important fields first, then regular
-            imp_mappings = _call_deepseek_fill(system_prompt, user_prompt, label="important")
-            all_mappings.extend(imp_mappings)
-            if imp_mappings:
-                reg_mappings = _call_deepseek_fill(
-                    _build_regular_system_prompt(), user_prompt, label="regular"
+            # Parallel dual-batch: important + regular run concurrently
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                future_imp = executor.submit(
+                    _call_deepseek_fill, system_prompt, user_prompt, "important"
                 )
-                all_mappings.extend(reg_mappings)
+                future_reg = executor.submit(
+                    _call_deepseek_fill, _build_regular_system_prompt(), user_prompt, "regular"
+                )
+                try:
+                    imp_mappings = future_imp.result(timeout=150)
+                    all_mappings.extend(imp_mappings)
+                except Exception as e:
+                    logger.warning("[auto-fill] important batch failed: %s", e)
+
+                try:
+                    reg_mappings = future_reg.result(timeout=150)
+                    all_mappings.extend(reg_mappings)
+                except Exception as e:
+                    logger.warning("[auto-fill] regular batch failed: %s", e)
 
         if not all_mappings:
             # Unified fallback: all fields in one call
@@ -4125,23 +4140,26 @@ def auto_fill_ozon_fields():
                 len(important_attrs), len(regular_attrs), skc)
 
     # ── 辅助函数：调用 DeepSeek 并解析返回 ──
-    def _call_deepseek_fill(sys_prompt, user_prompt, label="fill"):
+    def _call_deepseek_fill(sys_prompt, user_prompt, label="fill", model="deepseek-v4-pro"):
         payload = {
-            "model": "deepseek-v4-pro",
+            "model": model,
             "messages": [
                 {"role": "system", "content": sys_prompt},
                 {"role": "user", "content": user_prompt}
             ],
             "temperature": 0.1,
-            "max_tokens": 16384,
+            "max_tokens": 8192,
             "response_format": {"type": "json_object"}
         }
+        # v4-pro 禁用思考 token，跳过 chain-of-thought 直接输出 JSON
+        if model == "deepseek-v4-pro":
+            payload["thinking"] = {"type": "disabled"}
         headers = {
             "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
             "Content-Type": "application/json"
         }
         try:
-            resp = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=180)
+            resp = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=120)
             if resp.status_code != 200:
                 logger.warning("[自动填充/%s] API Error %s: %s", label, resp.status_code, resp.text[:500])
                 return []
@@ -4193,8 +4211,8 @@ def auto_fill_ozon_fields():
     important_count = 0
     regular_count = 0
 
-    # ── Batch 1: 重要属性（标题/描述/标签/富文本）专用 prompt ──
-    if important_attrs:
+    # ── 构建批次 prompt 的函数 ──
+    def _build_important_batch():
         imp_summary = []
         for attr in important_attrs:
             label = f"ID:{attr.get('id')} 名称:{attr.get('name')}"
@@ -4256,13 +4274,9 @@ SKC: {skc}
 {chr(10).join(imp_summary)}
 
 请为以上每个属性提供高质量填充值。"""
+        return _call_deepseek_fill(imp_system, imp_user, label="重要属性")
 
-        batch1 = _call_deepseek_fill(imp_system, imp_user, label="重要属性")
-        all_mappings.extend(batch1)
-        important_count = len(batch1)
-
-    # ── Batch 2: 常规属性（材质/颜色/重量/尺寸等）通用 prompt ──
-    if regular_attrs:
+    def _build_regular_batch():
         reg_summary = []
         for attr in regular_attrs:
             label = f"ID:{attr.get('id')} 名称:{attr.get('name')}"
@@ -4299,8 +4313,32 @@ SKC: {skc}
 {chr(10).join(reg_summary)}
 
 请为以上每个属性提供填充值。"""
+        return _call_deepseek_fill(reg_system, reg_user, label="常规属性")
 
-        batch2 = _call_deepseek_fill(reg_system, reg_user, label="常规属性")
+    # ── 并行执行两个批次 ──
+    if important_attrs and regular_attrs:
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            future_imp = executor.submit(_build_important_batch)
+            future_reg = executor.submit(_build_regular_batch)
+            try:
+                batch1 = future_imp.result(timeout=150)
+                all_mappings.extend(batch1)
+                important_count = len(batch1)
+            except Exception as e:
+                logger.warning("[自动填充] 重要属性批次失败: %s", e)
+
+            try:
+                batch2 = future_reg.result(timeout=150)
+                all_mappings.extend(batch2)
+                regular_count = len(batch2)
+            except Exception as e:
+                logger.warning("[自动填充] 常规属性批次失败: %s", e)
+    elif important_attrs:
+        batch1 = _build_important_batch()
+        all_mappings.extend(batch1)
+        important_count = len(batch1)
+    elif regular_attrs:
+        batch2 = _build_regular_batch()
         all_mappings.extend(batch2)
         regular_count = len(batch2)
 
@@ -5177,6 +5215,46 @@ def logistics_calculate():
 def ozon_listing_page():
     """Ozon 产品上架页面"""
     return render_template("ozon_listing.html")
+
+
+# ==================== Debug: 页面HTML捕获分析 ====================
+
+@app.route("/api/debug/capture-html", methods=["POST"])
+def debug_capture_html():
+    """接收扩展发送的页面HTML，保存到 data/debug/ 供分析"""
+    data = request.get_json(silent=True) or {}
+    html = data.get("html", "")
+    url = data.get("url", "")
+    note = data.get("note", "")
+    form_fields_count = len(data.get("form_fields", []))
+
+    if not html:
+        return jsonify({"error": "html 不能为空"}), 400
+
+    debug_dir = Path("data/debug")
+    debug_dir.mkdir(parents=True, exist_ok=True)
+
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    safe_url = url.replace("https://", "").replace("http://", "").replace("/", "_").replace(":", "_")[:80] if url else "unknown"
+    filename = f"page_{ts}_{safe_url}.html"
+    filepath = debug_dir / filename
+
+    # 注入元信息注释到 HTML 顶部
+    meta_comment = f"<!-- debug capture: {ts} | url: {url} | note: {note} | form_fields: {form_fields_count} -->\n"
+    filepath.write_text(meta_comment + html, encoding="utf-8")
+
+    meta_path = debug_dir / f"page_{ts}_{safe_url}.json"
+    meta_path.write_text(json.dumps({
+        "timestamp": ts,
+        "url": url,
+        "note": note,
+        "form_fields_count": form_fields_count,
+        "html_size": len(html),
+        "file": filename
+    }, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    logger.info("[Debug] HTML saved: %s | size=%s | url=%s", filename, len(html), url)
+    return jsonify({"ok": True, "file": filename, "size": len(html)})
 
 
 # 应用实例导入：从 main.py 启动应用
