@@ -180,6 +180,9 @@
     '<button class="serp-tb-btn" id="serp-btn-fill" title="自动填充表单">' +
       '<span class="tb-icon">✍️</span><span class="tb-label">自动填充</span>' +
     '</button>' +
+    '<button class="serp-tb-btn" id="serp-btn-clear-form" title="清空所有表单字段">' +
+      '<span class="tb-icon">🧹</span><span class="tb-label">清空</span>' +
+    '</button>' +
     '<div id="serp-hint-toggle" title="展开设置自定义提示词">💡</div>' +
     '<div class="serp-product-info" id="serp-product-info">' +
       '<div class="pi-label">已选产品</div>' +
@@ -723,7 +726,15 @@
       console.log("[sERP] fillCategorySelect 已在执行中，跳过重复调用");
       return Promise.resolve();
     }
-    if (!_isInternal) _fillCategoryRunning = true;
+    if (!_isInternal) {
+        _fillCategoryRunning = true;
+        setTimeout(function() {
+            if (_fillCategoryRunning) {
+                console.warn("[sERP] fillCategorySelect lock safety-timeout triggered after 30s");
+                _fillCategoryRunning = false;
+            }
+        }, 30000);
+    }
 
     // 解析路径
     var pathNames = [];
@@ -854,6 +865,7 @@
         return waitForCategoryColumn(idx, 8000).then(function (column) {
           if (!column) {
             showToast("第" + (idx + 1) + "层分类列未出现，请手动选择", "error");
+            if (!_isInternal) _fillCategoryRunning = false;
             return;
           }
 
@@ -879,6 +891,7 @@
             console.log("[sERP] 匹配失败，可用标题:", JSON.stringify(allTitles));
             console.log("[sERP] 查找目标:", JSON.stringify(ruName));
             showToast("未找到品类 \"" + ruName + "\"，请手动选择", "error");
+            if (!_isInternal) _fillCategoryRunning = false;
             return;
           }
 
@@ -985,6 +998,61 @@
     var rowText = (row.textContent || "").trim();
     if (rowText && rowText.length < 80) return rowText;
     return null;
+  }
+
+  function countSkuRows() {
+    var rows = document.querySelectorAll(".ant-table-tbody tr.ant-table-row");
+    var count = 0;
+    rows.forEach(function(r) {
+      if (r.querySelector("input, .ant-select")) count++;
+    });
+    return count;
+  }
+
+  async function clickAddVariantButton() {
+    // Strategy 1: Look for button text "添加变种" / "添加规格" / "+"
+    var buttons = document.querySelectorAll("button, .ant-btn, a");
+    for (var i = 0; i < buttons.length; i++) {
+      var txt = (buttons[i].textContent || "").trim();
+      if (txt.indexOf("添加变种") !== -1 || txt.indexOf("添加规格") !== -1 || txt === "+") {
+        buttons[i].click();
+        await sleep(500);
+        return true;
+      }
+    }
+    // Strategy 2: Look for icon buttons near SKU table
+    var skuTable = document.querySelector(".ant-table");
+    if (skuTable) {
+      var iconBtns = skuTable.querySelectorAll(".anticon-plus, [class*='add-variant'], [class*='add-sku']");
+      for (var j = 0; j < iconBtns.length; j++) {
+        iconBtns[j].click();
+        await sleep(500);
+        return true;
+      }
+    }
+    console.warn("[sERP] 未找到添加变种按钮");
+    return false;
+  }
+
+  async function ensureSkuRows(neededCount) {
+    var existing = countSkuRows();
+    if (existing >= neededCount) {
+      console.log("[sERP] SKU行数充足: 现有" + existing + " >= 需要" + neededCount);
+      return true;
+    }
+    console.log("[sERP] SKU行数不足: 现有" + existing + " < 需要" + neededCount + "，开始创建...");
+    var rowsToAdd = neededCount - existing;
+    var added = 0;
+    for (var i = 0; i < rowsToAdd; i++) {
+      var clicked = await clickAddVariantButton();
+      if (!clicked) break;
+      added++;
+    }
+    if (added > 0) {
+      console.log("[sERP] 已添加 " + added + " 个SKU行");
+      await sleep(500);
+    }
+    return added === rowsToAdd;
   }
 
   function collectFormFields() {
@@ -1116,6 +1184,30 @@
       var fullLabel = label + (rowCtx ? " [" + rowCtx + "]" : "");
       if (seenSelectors[fid]) return;
       seenSelectors[fid] = true;
+
+      // 检测 AntSelect：.ant-select 包裹的 input，排除 dropdown 内的搜索框
+      var antSelect = el.closest(".ant-select");
+      if (antSelect && !el.closest(".ant-select-dropdown")) {
+        var selectMode = antSelect.classList.contains("ant-select-multiple") ? "multiple" : "single";
+        var showSearch = antSelect.classList.contains("ant-select-show-search");
+        var currentVal = "";
+        var selItem = antSelect.querySelector(".ant-select-selection-item");
+        if (selItem) currentVal = (selItem.textContent || "").trim();
+        fields.push({
+          tag: "select",
+          renderMode: "AntSelect",
+          type: "select",
+          label: fullLabel,
+          selectMode: selectMode,
+          showSearch: showSearch,
+          currentValue: currentVal,
+          _el: antSelect,
+          _fid: _serpFidSelector(antSelect),
+          options: []
+        });
+        return;
+      }
+
       fields.push({ tag: "input", type: el.type || "text", name: el.name || "", id: el.id || "", label: fullLabel, placeholder: el.placeholder || "", currentValue: el.value || "", _fid: fid, el: el });
     });
 
@@ -1150,13 +1242,14 @@
       f.index = idx;
       _fieldMap[idx] = {
         fid: f._fid,
-        el: f.el,
+        el: f._el || f.el,
         els: f._els || null,
         fids: f._fids || null,
         options: f.options || null,
         tag: f.tag,
         label: f.label,
-        type: f.type
+        type: f.type,
+        renderMode: f.renderMode || null
       };
     });
   }
@@ -1172,10 +1265,104 @@
       var el = document.querySelector(entry.fid);
       if (el) { entry.el = el; return entry; }
     }
+    // 回退到 fids 数组恢复
+    if (entry.fids && entry.fids.length > 0) {
+      var els = [];
+      var allFound = true;
+      for (var i = 0; i < entry.fids.length; i++) {
+        var el_i = document.querySelector(entry.fids[i]);
+        if (el_i) { els.push(el_i); } else { allFound = false; break; }
+      }
+      if (allFound && els.length > 0) {
+        entry.els = els;
+        entry.el = els[0];
+        return entry;
+      }
+    }
     return null;
   }
 
-  function fillFormField(index, value) {
+  function waitForDropdown(timeoutMs) {
+    var deadline = Date.now() + (timeoutMs || 500);
+    return new Promise(function (resolve) {
+      function check() {
+        var dd = document.querySelector(".ant-select-dropdown:not(.ant-select-dropdown-hidden)");
+        if (dd) { resolve(dd); return; }
+        if (Date.now() > deadline) { resolve(null); return; }
+        setTimeout(check, 50);
+      }
+      check();
+    });
+  }
+
+  async function fillAntSelect(container, value) {
+    var selector = container.querySelector(".ant-select-selector");
+    if (!selector) { console.warn("[sERP] 未找到 AntSelect selector"); return false; }
+
+    var searchInput = container.querySelector(".ant-select-selection-search-input");
+    var maxRetries = 2;
+    for (var attempt = 0; attempt <= maxRetries; attempt++) {
+        if (!container.classList.contains("ant-select-open")) {
+            selector.click();
+            await sleep(150);
+        }
+        if (searchInput && container.classList.contains("ant-select-show-search")) {
+            if (document.activeElement !== searchInput) {
+                searchInput.focus();
+            }
+            var ns = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+            ns.call(searchInput, value);
+            searchInput.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+        var dropdown = await waitForDropdown(800);
+        if (dropdown) {
+            // 匹配选项：精确文本 → 标准化 → 子串
+            var items = dropdown.querySelectorAll(".ant-select-item-option:not(.ant-select-item-option-disabled)");
+            var vNorm = (value || "").toLowerCase().replace(/\s+/g, " ").trim();
+            var matched = null;
+
+            items.forEach(function (item) {
+              if (matched) return;
+              if (item.textContent.trim() === value) matched = item;
+            });
+            if (!matched) {
+              items.forEach(function (item) {
+                if (matched) return;
+                var n = item.textContent.toLowerCase().replace(/\s+/g, " ").trim();
+                if (n === vNorm) matched = item;
+              });
+            }
+            if (!matched) {
+              items.forEach(function (item) {
+                if (matched) return;
+                var n = item.textContent.toLowerCase().replace(/\s+/g, " ").trim();
+                if (n.indexOf(vNorm) !== -1 || vNorm.indexOf(n) !== -1) matched = item;
+              });
+            }
+
+            if (matched) {
+              matched.click();
+              return true;
+            }
+
+            // 匹配失败：输出可用选项便于排查
+            var available = [];
+            items.forEach(function (item) { available.push(item.textContent.trim()); });
+            console.warn("[sERP] AntSelect 选项未匹配: value=" + value + " vNorm=" + vNorm + " available=" + JSON.stringify(available));
+            break;
+        }
+        if (attempt < maxRetries) {
+            console.warn("[sERP] AntSelect 下拉未出现，重试 " + (attempt + 1) + "/" + maxRetries + ": value=" + value);
+            if (container.classList.contains("ant-select-open")) {
+                document.body.click();
+                await sleep(300);
+            }
+        }
+    }
+    return false;
+  }
+
+  async function fillFormField(index, value) {
     if (!value && value !== 0) return false;
     value = String(value);
     try {
@@ -1199,8 +1386,9 @@
       function indexOfWord(haystack, needle) {
         var idx = haystack.indexOf(needle);
         if (idx === -1) return -1;
-        // 匹配位置必须从词边界开始（前一个字符不能是字母/数字）
         if (idx > 0 && /[\w]/.test(haystack.charAt(idx - 1))) return -1;
+        var endIdx = idx + needle.length;
+        if (endIdx < haystack.length && /[\w]/.test(haystack.charAt(endIdx))) return -1;
         return idx;
       }
 
@@ -1321,6 +1509,11 @@
         trigger(el, "input");
         trigger(el, "change");
         return true;
+      }
+
+      // AntSelect 填充（renderMode 存储在 _buildFieldMap 中）
+      if (entry.renderMode === "AntSelect") {
+        return await fillAntSelect(el, value);
       }
 
       // ===== select =====
@@ -1524,6 +1717,150 @@
     showToast("已提取 " + formFields.length + " 个字段", "info");
   }
 
+  function clearAllFormFields() {
+    var cleared = 0;
+
+    // Text/number inputs
+    document.querySelectorAll('input[type="text"], input[type="number"], input:not([type])').forEach(function (el) {
+      if (!el.offsetParent) return;
+      var ns = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+      ns.call(el, "");
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      cleared++;
+    });
+
+    // Checkboxes & radios
+    document.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(function (el) {
+      if (!el.offsetParent) return;
+      if (el.checked) {
+        el.checked = false;
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+        cleared++;
+      }
+    });
+
+    // Textareas
+    document.querySelectorAll("textarea").forEach(function (el) {
+      if (!el.offsetParent) return;
+      var ns = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
+      ns.call(el, "");
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      cleared++;
+    });
+
+    // AntSelect clear icons
+    document.querySelectorAll(".ant-select-allow-clear .ant-select-clear").forEach(function (el) {
+      el.click();
+      cleared++;
+    });
+
+    showToast("已清空 " + cleared + " 个字段", "info");
+  }
+
+  function precomputeDeterministicValues(formFields, productData, manualData) {
+    var deterministic = {};  // fieldIndex -> value
+    var pd = (productData && productData.product_details) || {};
+
+    formFields.forEach(function(f) {
+      var label = (f.label || "").toLowerCase();
+      var value = null;
+
+      // Weight with unit conversion
+      if (label.indexOf("重量") !== -1 || label.indexOf("вес") !== -1 || label.indexOf("weight") !== -1) {
+        if (manualData && manualData.weight_g && String(manualData.weight_g).trim()) {
+          value = String(manualData.weight_g).trim();
+        } else if (pd.weight) {
+          var w = parseFloat(pd.weight);
+          if (!isNaN(w)) {
+            var unit = (pd.weight_unit || "").toLowerCase();
+            if (unit.indexOf("oz") !== -1) value = String(Math.round(w * 28.35));
+            else if (unit.indexOf("lb") !== -1) value = String(Math.round(w * 453.6));
+            else value = String(w);
+          }
+        }
+      }
+
+      // Length
+      if ((label.indexOf("长") !== -1 || label.indexOf("длина") !== -1 || label.indexOf("length") !== -1) && !(label.indexOf("波长") !== -1)) {
+        if (pd.length) value = _convertDimension(pd.length, pd.dimension_unit);
+      }
+      // Width
+      if (label.indexOf("宽") !== -1 || label.indexOf("ширина") !== -1 || label.indexOf("width") !== -1) {
+        if (pd.width) value = _convertDimension(pd.width, pd.dimension_unit);
+      }
+      // Height
+      if (label.indexOf("高") !== -1 || label.indexOf("высота") !== -1 || label.indexOf("height") !== -1) {
+        if (pd.height) value = _convertDimension(pd.height, pd.dimension_unit);
+      }
+
+      // Country of origin
+      if (label.indexOf("原产国") !== -1 || label.indexOf("страна") !== -1 || (label.indexOf("产地") !== -1 && label.indexOf("原产地") === -1)) {
+        value = "Китай";
+      }
+
+      // Quantity
+      if (label.indexOf("数量") !== -1 || label.indexOf("количество") !== -1 || label.indexOf("quantity") !== -1) {
+        if (manualData && manualData.quantity && String(manualData.quantity).trim()) {
+          value = String(manualData.quantity).trim();
+        } else {
+          value = "1";
+        }
+      }
+
+      if (value !== null) {
+        deterministic[f.index] = value;
+      }
+    });
+
+    return deterministic;
+  }
+
+  function _convertDimension(val, unit) {
+    var v = parseFloat(val);
+    if (isNaN(v)) return String(val);
+    var u = (unit || "").toLowerCase();
+    if (u.indexOf("in") !== -1) return String(Math.round(v * 2.54 * 10) / 10);
+    return String(v);
+  }
+
+  async function verifyAndRetry(index, expectedValue) {
+    var entry = resolveFieldByIndex(index);
+    if (!entry || !entry.el) return false;
+
+    var actualValue = "";
+    var el = entry.el;
+
+    if ((entry.tag === "input" || !entry.tag) && el.tagName === "INPUT" && el.type !== "checkbox" && el.type !== "radio") {
+      actualValue = el.value || "";
+    } else if (el.tagName === "TEXTAREA" || entry.tag === "textarea") {
+      actualValue = el.value || "";
+    } else if (el.tagName === "SELECT" || entry.tag === "select") {
+      actualValue = el.value || "";
+      var antSelect = el.closest ? el.closest(".ant-select") : null;
+      if (antSelect) {
+        var selItem = antSelect.querySelector(".ant-select-selection-item");
+        if (selItem) actualValue = (selItem.textContent || "").trim();
+      }
+    } else if (entry.tag === "checkbox-group" || entry.tag === "radio-group") {
+      if (entry.els && entry.els.length > 0) {
+        var checked = [];
+        entry.els.forEach(function(cb) { if (cb.checked) checked.push((cb.nextElementSibling || cb.parentElement).textContent.trim()); });
+        actualValue = checked.join(",");
+      }
+    }
+
+    var expNorm = (expectedValue || "").trim().toLowerCase();
+    var actNorm = actualValue.trim().toLowerCase();
+
+    if (!expNorm || !actNorm) return true;  // Can't verify empty
+    if (expNorm === actNorm || actNorm.indexOf(expNorm) !== -1 || expNorm.indexOf(actNorm) !== -1) {
+      return true;
+    }
+
+    console.warn("[sERP] 验证失败: index=" + index + " expected=" + expNorm + " actual=" + actNorm);
+    return false;
+  }
+
   async function doAutoFill() {
     if (!selectedProduct) { showToast("请先点击\"选品\"选择一个产品", "error"); return; }
     setBtnLoading(btnFill, true); setProgress(10);
@@ -1545,6 +1882,20 @@
     }
     var llmFields = formFields.map(_fieldForLLM);
 
+    // Phase 2: Ensure enough SKU rows for variants
+    var variants = (selectedProduct.product_data && selectedProduct.product_data.variants) || {};
+    var variantValues = variants.values || [];
+    if (variantValues.length > 1) {
+      var ensured = await ensureSkuRows(variantValues.length);
+      if (ensured) {
+        // Re-collect fields since new DOM elements were added
+        formFields = collectFormFields();
+        llmFields = formFields.map(_fieldForLLM);
+      } else {
+        console.warn("[sERP] 变种行创建不完全，继续填充现有行");
+      }
+    }
+
     showToast("发送 " + llmFields.length + " 个字段到 DeepSeek 分析...", "info");
     setProgress(30);
 
@@ -1559,6 +1910,21 @@
       body.custom_prompts = customPrompts;
     }
 
+    var variantList = [];
+    var variants = (selectedProduct.product_data && selectedProduct.product_data.variants) || {};
+    var variantValues = variants.values || [];
+    if (variantValues.length > 0) {
+      variantValues.forEach(function(v) {
+        variantList.push({
+          name: v.name || v.variantName || "",
+          price: v.price || "",
+          stock: v.stock || "",
+          attributes: v.attributes || {}
+        });
+      });
+    }
+    body.variant_list = variantList;
+
     try {
       var r = await bgFetch(API_AUTO_FILL, {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -1571,6 +1937,20 @@
       var result = await r.json();
       var mappings = result.mappings || [];
       setProgress(75);
+
+      // Layer 1: Pre-fill deterministic values (before LLM mappings)
+      var deterministicMap = precomputeDeterministicValues(formFields, selectedProduct.product_data, selectedProduct.manual_data);
+      var detIdxSet = {};
+      var detCount = 0;
+      for (var detIdxStr in deterministicMap) {
+        if (deterministicMap.hasOwnProperty(detIdxStr)) {
+          var detIdx = parseInt(detIdxStr);
+          detIdxSet[detIdx] = true;
+          var detOk = await fillFormField(detIdx, deterministicMap[detIdxStr]);
+          if (detOk) detCount++;
+        }
+      }
+      console.log("[sERP] 确定性填充: " + detCount + " 个字段, 映射: " + JSON.stringify(deterministicMap));
 
       if (!mappings.length) {
         setBtnLoading(btnFill, false); setProgress(0);
@@ -1586,15 +1966,47 @@
       var fillResults = [];
       var filledCount = 0;
 
-      mappings.forEach(function (m, i) {
+      for (var mi = 0; mi < mappings.length; mi++) {
+        var m = mappings[mi];
         var idx = m.index;
         var label = m.label || idxToLabel[idx] || ("字段 " + idx);
-        // 填充前预检：字段是否可解析
-        var preEntry = resolveFieldByIndex(idx);
-        var ok = fillFormField(idx, m.value);
-        if (ok) filledCount++;
+
+        if (detIdxSet[idx]) {
+          fillResults.push({ index: idx, label: label, value: m.value, filled: true, order: idx, error: null });
+          continue;
+        }
+
+        var ok = false;
+        for (var retry = 0; retry <= 2; retry++) {
+          if (retry > 0) {
+            console.log("[sERP] 字段填充重试 " + retry + "/2: index=" + idx + " value=" + m.value);
+            await sleep(300 * Math.pow(2, retry - 1));
+          }
+          var preEntry = resolveFieldByIndex(idx);
+          if (!preEntry || !preEntry.el || !preEntry.el.isConnected) {
+            if (retry === 0) {
+              var reEntry = resolveFieldByIndex(idx);
+              if (!reEntry || !reEntry.el) break;
+            } else {
+              break;
+            }
+          }
+          ok = await fillFormField(idx, m.value);
+          if (ok) break;
+        }
+
+        if (ok) {
+          filledCount++;
+          // Layer 3: Post-fill verification (non-blocking)
+          verifyAndRetry(idx, m.value).then(function(verified) {
+            if (!verified) {
+              console.warn("[sERP] 字段验证失败: index=" + idx + " label=" + label);
+            }
+          });
+        }
         var errorMsg = null;
         if (!ok) {
+          var preEntry = resolveFieldByIndex(idx);
           if (!preEntry) {
             errorMsg = "DOM 断连：元素已从页面卸载";
           } else if (!preEntry.el || !preEntry.el.isConnected) {
@@ -1611,8 +2023,8 @@
           order: idx,
           error: errorMsg
         });
-        setProgress(75 + (i / mappings.length) * 20);
-      });
+        setProgress(75 + (mi / mappings.length) * 20);
+      }
 
       // 标记未匹配的字段
       var matchedIndices = {};
@@ -1660,6 +2072,7 @@
   btnCategory.addEventListener("click", function () { doMatchCategory(); });
   btnExtract.addEventListener("click", function () { doExtractFields(); });
   btnFill.addEventListener("click", function () { doAutoFill(); });
+  document.getElementById("serp-btn-clear-form").addEventListener("click", function () { clearAllFormFields(); });
   piClear.addEventListener("click", function () { selectedProduct = null; updateProductUI(); showToast("已清除产品选择", "info"); });
   hintToggle.addEventListener("click", function () {
     hintOverlay.classList.add("active");
