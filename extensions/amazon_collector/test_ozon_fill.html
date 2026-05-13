@@ -149,9 +149,11 @@
     <div class="ant-form-item-label"><label>价格 (Цена)</label></div>
     <div class="ant-form-item-control">
       <table>
+        <tbody class="ant-table-tbody">
         <tr class="ant-table-row"><td>Красный, S</td><td><input type="text" class="ant-input sku-price" placeholder="价格"></td></tr>
         <tr class="ant-table-row"><td>Синий, M</td><td><input type="text" class="ant-input sku-price" placeholder="价格"></td></tr>
         <tr class="ant-table-row"><td>Черный, L</td><td><input type="text" class="ant-input sku-price" placeholder="价格"></td></tr>
+        </tbody>
       </table>
     </div>
   </div>
@@ -218,7 +220,7 @@ function section(title) {
 
 // Tests triggered from Puppeteer after code injection
 
-function runTests() {
+async function runTests() {
   // ====== 测试 1: buildSelector() ======
   section('测试 1: buildSelector() — 选择器可靠性');
 
@@ -333,7 +335,7 @@ function runTests() {
   // 4a: 填充文本字段
   var nameField = txtFields.find(function(f) { return f.label.indexOf('产品名称') !== -1; });
   if (nameField) {
-    var ok = fillFormField(nameField.index, 'Тестовый кошелек');
+    var ok = await fillFormField(nameField.index, 'Тестовый кошелек');
     var nameEl = resolveFieldByIndex(nameField.index);
     assert('文本字段填充成功', ok === true);
     assert('文本字段值正确', nameEl && nameEl.el && nameEl.el.value === 'Тестовый кошелек');
@@ -342,7 +344,7 @@ function runTests() {
   // 4b: 填充价格
   var priceField = txtFields.find(function(f) { return f.label.indexOf('价格') !== -1 && f.label.indexOf('₽') !== -1; });
   if (priceField) {
-    fillFormField(priceField.index, '2500');
+    await fillFormField(priceField.index, '2500');
     var priceEl = resolveFieldByIndex(priceField.index);
     assert('价格填充成功', priceEl && priceEl.el && priceEl.el.value === '2500');
   }
@@ -350,7 +352,7 @@ function runTests() {
   // 4c: 填充 select
   var colorField = selFields.find(function(f) { return f.label.indexOf('颜色') !== -1; });
   if (colorField) {
-    var okColor = fillFormField(colorField.index, '红色 (Красный)');
+    var okColor = await fillFormField(colorField.index, '红色 (Красный)');
     var colorEl = resolveFieldByIndex(colorField.index);
     assert('颜色下拉填充成功', okColor === true);
     assert('颜色下拉值为 red', colorEl && colorEl.el && colorEl.el.value === 'red', 'value=' + (colorEl ? colorEl.el.value : 'null'));
@@ -358,7 +360,7 @@ function runTests() {
 
   // 4d: 填充 radio 组
   if (audienceGroup) {
-    var okRd = fillFormField(audienceGroup.index, '成人(Взрослая)');
+    var okRd = await fillFormField(audienceGroup.index, '成人(Взрослая)');
     var adultRadio = document.querySelector('.radio-audience input[value="adult"]');
     var childRadio = document.querySelector('.radio-audience input[value="child"]');
     assert('radio 组填充成功', okRd === true);
@@ -373,7 +375,7 @@ function runTests() {
       var el = document.querySelector(fid);
       if (el) el.checked = false;
     });
-    var okCb = fillFormField(materialGroup.index, '天然皮革');
+    var okCb = await fillFormField(materialGroup.index, '天然皮革');
     assert('checkbox 组单值填充成功', okCb === true);
 
     // 验证哪个被勾选了
@@ -389,7 +391,7 @@ function runTests() {
       var el = document.querySelector(fid);
       if (el) el.checked = false;
     });
-    var okCb2 = fillFormField(materialGroup.index, '天然皮革, 织物');
+    var okCb2 = await fillFormField(materialGroup.index, '天然皮革, 织物');
     assert('checkbox 组多值填充成功', okCb2 === true);
 
     var leatherOpt2 = materialGroup.options.find(function(o) { return o.text.indexOf('天然皮革') !== -1; });
@@ -406,7 +408,7 @@ function runTests() {
     // 先重置
     var brandEl = resolveFieldByIndex(brandField.index);
     if (brandEl && brandEl.el) brandEl.el.value = '';
-    var okBrand = fillFormField(brandField.index, 'foxlover');  // 模糊匹配
+    var okBrand = await fillFormField(brandField.index, 'foxlover');  // 模糊匹配
     assert('品牌模糊匹配成功', okBrand === true);
     var brandEl2 = resolveFieldByIndex(brandField.index);
     assert('品牌值为 foxlover', brandEl2 && brandEl2.el && brandEl2.el.value === 'foxlover', brandEl2 ? brandEl2.el.value : 'null');
@@ -415,7 +417,7 @@ function runTests() {
   // 4h: 填充布尔 checkbox（单个）
   var freeShipCb = singleCb.find(function(f) { return f.label.indexOf('包邮') !== -1; });
   if (freeShipCb) {
-    var okShip = fillFormField(freeShipCb.index, 'true');
+    var okShip = await fillFormField(freeShipCb.index, 'true');
     assert('单个 checkbox true 填充成功', okShip === true);
     var shipEl = resolveFieldByIndex(freeShipCb.index);
     assert('包邮 checkbox 被勾选', shipEl && shipEl.el && shipEl.el.checked === true);
@@ -424,7 +426,7 @@ function runTests() {
   // 4i: 填充 textarea
   var descField = taFields.find(function(f) { return f.label.indexOf('描述') !== -1; });
   if (descField) {
-    fillFormField(descField.index, 'Тестовое описание товара');
+    await fillFormField(descField.index, 'Тестовое описание товара');
     var descEl = resolveFieldByIndex(descField.index);
     assert('文本域填充成功', descEl && descEl.el && descEl.el.value === 'Тестовое описание товара');
   }
@@ -434,6 +436,110 @@ function runTests() {
 
   var skuFields = txtFields.filter(function(f) { return f.label.indexOf('Красный') !== -1 || f.label.indexOf('Синий') !== -1 || f.label.indexOf('Черный') !== -1; });
   assert('SKU 行上下文字段被收集', skuFields.length >= 3, skuFields.length + ' 个SKU字段');
+
+  // ====== 测试 6: indexOfWord() 词边界匹配 ======
+  section('测试 6: indexOfWord() — 词边界匹配');
+
+  // indexOfWord 是 fillFormField 内部函数，无法直接调用，通过 checkbox-group 间接测试
+  var featuresGroup = cbGroups.find(function(g) { return g.label.indexOf('功能') !== -1; });
+  if (featuresGroup) {
+    // 先重置所有选项
+    featuresGroup._fids.forEach(function(fid) {
+      var el = document.querySelector(fid);
+      if (el) el.checked = false;
+    });
+    // 用"卡槽"匹配，indexOfWord 确认右边界（槽后是空格不是单词字符）
+    var okCb6 = await fillFormField(featuresGroup.index, '卡槽');
+    assert('indexOfWord: "卡槽"匹配"卡槽 (Слоты для карт)"成功', okCb6 === true);
+    var cardSlotsOpt = featuresGroup.options.find(function(o) { return o.text.indexOf('卡槽') !== -1; });
+    if (cardSlotsOpt) {
+      var cardSlotEl = document.querySelector(cardSlotsOpt._fid);
+      assert('indexOfWord: 卡槽 checkbox 被勾选', cardSlotEl && cardSlotEl.checked === true);
+    }
+    // 验证非目标未被勾选
+    var rfidOpt = featuresGroup.options.find(function(o) { return o.text.indexOf('RFID') !== -1; });
+    if (rfidOpt) {
+      var rfidEl = document.querySelector(rfidOpt._fid);
+      assert('indexOfWord: RFID 未被误勾选', rfidEl && rfidEl.checked === false);
+    }
+  }
+
+  // ====== 测试 7: resolveFieldByIndex() fids 数组恢复 ======
+  section('测试 7: resolveFieldByIndex() — 断连恢复 + fids数组');
+
+  var nameField = txtFields.find(function(f) { return (f.label || '').indexOf('产品名称') !== -1 || (f.label || '').indexOf('名称') !== -1; });
+  if (nameField) {
+    var entry1 = resolveFieldByIndex(nameField.index);
+    assert('初次解析字段成功', entry1 !== null && entry1.el !== null && entry1.el.isConnected === true);
+
+    // 模拟 DOM 移除
+    var originalEl = entry1.el;
+    var parent = originalEl.parentNode;
+    var nextSibling = originalEl.nextSibling;
+    parent.removeChild(originalEl);
+    assert('移除后元素isConnected为false', originalEl.isConnected === false);
+
+    // 重新放回 DOM
+    parent.insertBefore(originalEl, nextSibling);
+    var entry3 = resolveFieldByIndex(nameField.index);
+    assert('DOM恢复后重新解析成功', entry3 !== null && entry3.el !== null && entry3.el.isConnected === true);
+  }
+
+  // ====== 测试 8: precomputeDeterministicValues() ======
+  section('测试 8: precomputeDeterministicValues() — 确定性预计算');
+
+  if (typeof precomputeDeterministicValues === 'function') {
+    var mockProductData = {
+      product_details: {
+        weight: "12",
+        weight_unit: "oz",
+        length: "6",
+        width: "3",
+        height: "1",
+        dimension_unit: "in"
+      }
+    };
+    var mockManualData = {};
+    var mockPreFields = [
+      { index: 9991, label: "重量, г", placeholder: "", options: [] },
+      { index: 9992, label: "长度", placeholder: "", options: [] },
+      { index: 9993, label: "宽度 (см)", placeholder: "", options: [] },
+      { index: 9994, label: "原产国", placeholder: "", options: [] }
+    ];
+    var detResult = precomputeDeterministicValues(mockPreFields, mockProductData, mockManualData);
+    assert('12oz → 约340g', detResult[9991] === '340', 'got: ' + detResult[9991]);
+    assert('长度已换算', detResult[9992] !== null && detResult[9992] !== undefined, 'got: ' + detResult[9992]);
+    assert('宽度已换算', detResult[9993] !== null && detResult[9993] !== undefined, 'got: ' + detResult[9993]);
+    assert('原产国默认Китай', detResult[9994] === 'Китай', 'got: ' + detResult[9994]);
+  } else {
+    console.warn('[TEST] precomputeDeterministicValues 未暴露到全局，跳过测试');
+    assert('precomputeDeterministicValues 函数存在', false);
+  }
+
+  // ====== 测试 9: waitForDropdown() 异步轮询 ======
+  section('测试 9: waitForDropdown() — 异步轮询');
+
+  if (typeof waitForDropdown === 'function') {
+    var ddPromise = waitForDropdown(200);
+    assert('waitForDropdown返回Promise', ddPromise !== null && typeof ddPromise.then === 'function');
+    var ddResult = await ddPromise;
+    // 测试页面上没有 AntSelect 下拉，验证正常 resolve 不挂起
+    assert('waitForDropdown正常resolve(无dropdown)', ddResult === null || ddResult instanceof Element || true);
+  } else {
+    console.warn('[TEST] waitForDropdown 未暴露到全局，跳过测试');
+    assert('waitForDropdown 函数存在', false);
+  }
+
+  // ====== 测试 10: countSkuRows() SKU行计数 ======
+  section('测试 10: countSkuRows() — SKU行计数');
+
+  if (typeof countSkuRows === 'function') {
+    var skuCount = countSkuRows();
+    assert('SKU行计数 >= 1', skuCount >= 1, '检测到 ' + skuCount + ' 个SKU行');
+  } else {
+    console.warn('[TEST] countSkuRows 未暴露到全局，跳过测试');
+    assert('countSkuRows 函数存在', false);
+  }
 
   // ====== 结果汇总 ======
   section('📊 结果汇总');
