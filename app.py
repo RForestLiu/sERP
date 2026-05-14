@@ -2115,6 +2115,28 @@ def auto_fill_analyze():
     rating = product_data.get("rating", "")
     variants = product_data.get("variants", {})
 
+    # 从 product_details 中提取含单位的字段，生成换算提示
+    unit_hints = []
+    if product_details and isinstance(product_details, dict):
+        weight_keys = [k for k in product_details.keys() if any(w in k.lower() for w in ["weight", "重量", "вес", "масса"])]
+        dim_keys = [k for k in product_details.keys() if any(d in k.lower() for d in ["dimension", "size", "размер", "尺寸", "length", "長", "width", "寬", "height", "高", "depth", "深"])]
+        unit_keys = weight_keys + dim_keys
+        for k in unit_keys[:8]:
+            val = product_details[k]
+            if val and isinstance(val, str):
+                val_lower = val.lower()
+                hint = f"  - {k}: {val}"
+                if any(u in val_lower for u in ["oz", "ounce", "盎司", "lb", "pound", "磅"]):
+                    hint += " → 需换算为克(g): 1oz≈28.35g, 1lb≈453.6g"
+                elif any(u in val_lower for u in ["in", "inch", "英寸", '"', "ft", "feet", "英尺"]):
+                    hint += " → 需换算为厘米(cm): 1in≈2.54cm"
+                unit_hints.append(hint)
+        # 也检查 attributes 中的单位字段
+        if attrs and isinstance(attrs, dict):
+            for k, v in attrs.items():
+                if isinstance(v, str) and any(u in v.lower() for u in ["oz", "lb", "in", "inch", "pound", "ounce"]):
+                    unit_hints.append(f"  - {k}: {v} → 注意单位换算")
+
     product_texts = [
         "品牌: " + brand if brand else "",
         "品类: " + category if category else "",
@@ -2123,6 +2145,7 @@ def auto_fill_analyze():
         about_item,
         product_description,
         description,
+        ("### 单位换算提醒（重点关注以下字段）\n" + "\n".join(unit_hints)) if unit_hints else "",
         "### 产品规格 (含原始单位，填充时注意换算)\n" + json.dumps(product_details, ensure_ascii=False, indent=2) if product_details else "",
     ]
 
@@ -2203,7 +2226,15 @@ def auto_fill_analyze():
 你将收到：
 1. 产品信息（标题、描述、属性等）
 2. 表单字段列表（每个字段以 [序号] 开头，包含标签、占位符、选项等）
-3. 表单字段标签可能包含 `[行上下文]`，用于区分多行SKU中相同名称的字段。例如 "统一计量单位中的商品数量 [变体: 红色-L]" 表示该字段属于红色L码变体
+3. 变体列表 variant_list（结构化变体数据，含名称/价格/库存/属性）
+4. 变体行映射 variant_row_summary（row_contexts 列表对应表单SKU行，variant_count 为应有变体数）
+5. 表单字段标签可能包含 `[行上下文]`，用于区分多行SKU中相同名称的字段。例如 "统一计量单位中的商品数量 [红色, L]" 表示该字段属于红色L码变体行
+
+## SKU多行填充规则
+- variant_row_summary 中的 row_contexts 列表按表单SKU行顺序排列（第0行→第1行→...）
+- variant_list 的第i个变体对应表单的第i个SKU行
+- 每个SKU行的字段标签都带 `[行上下文]` 后缀，根据行上下文匹配对应变体的属性
+- 如果缺少某变体的特定数据（如变体2无价格），用产品级数据或推断填充
 
 ## 字段标签说明
 - 普通文本字段：标签如 "产品名称"、"重量, г"
@@ -2259,6 +2290,20 @@ def auto_fill_analyze():
         if parts:
             custom_prompt_block = "\n## 用户自定义填充提示\n" + "\n\n".join(parts) + "\n"
 
+    # 变体行映射信息
+    variant_row_summary = data.get("variant_row_summary", {})
+    variant_summary_block = ""
+    if variant_row_summary:
+        row_ctxs = variant_row_summary.get("row_contexts", [])
+        vc = variant_row_summary.get("variant_count", 0)
+        note = variant_row_summary.get("note", "")
+        variant_summary_block = f"""
+### 变体行映射
+表单SKU行上下文: {json.dumps(row_ctxs, ensure_ascii=False)}
+变体总数: {vc}
+说明: {note}
+"""
+
     user_prompt = f"""## 产品信息
 SKC: {skc}
 标题: {product_title}
@@ -2268,7 +2313,7 @@ SKC: {skc}
 {hints_text}
 ### 人工登记数据
 {json.dumps(manual_data, ensure_ascii=False, indent=2)}
-{custom_prompt_block}
+{custom_prompt_block}{variant_summary_block}
 ### 表单字段列表（共 {len(form_fields)} 个字段）
 {fields_text}
 

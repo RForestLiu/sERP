@@ -494,9 +494,31 @@
 
   // ==================== 店铺检测 ====================
   function detectStoreId() {
+    // Try multiple selector strategies to find the store name in DOM
+    var name = null;
     var storeItems = document.querySelectorAll(".shop-form-item .ant-select-selection-item");
-    if (!storeItems.length) return null;
-    var name = (storeItems[0].getAttribute("title") || storeItems[0].textContent || "").trim();
+    if (storeItems.length) {
+      name = (storeItems[0].getAttribute("title") || storeItems[0].textContent || "").trim();
+    }
+    // Fallback: broader ant-select-selection-item search
+    if (!name) {
+      var allSelectionItems = document.querySelectorAll(".ant-select-selection-item");
+      for (var i = 0; i < allSelectionItems.length; i++) {
+        var t = (allSelectionItems[i].getAttribute("title") || allSelectionItems[i].textContent || "").trim();
+        if (t && (t.indexOf("安") !== -1 || t.indexOf("an") !== -1 || t.indexOf("ozon") !== -1 || t.indexOf("Ozon") !== -1)) {
+          name = t;
+          break;
+        }
+      }
+    }
+    // Fallback: URL-based detection
+    if (!name) {
+      var href = window.location.href;
+      var urlM = href.match(/store[=_](\w+)/i) || href.match(/\/([a-z]+_\w+)\//);
+      if (urlM) name = urlM[1];
+    }
+    if (!name) return null;
+
     for (var key in STORE_CN_MAP) {
       if (STORE_CN_MAP.hasOwnProperty(key) && name.indexOf(key) !== -1) return STORE_CN_MAP[key];
     }
@@ -974,7 +996,35 @@
       while (p) { if (p.tagName === "LABEL") return p.textContent.trim(); var prev = p.previousElementSibling; if (prev && prev.tagName === "LABEL") return prev.textContent.trim(); p = p.parentElement; }
     }
     p = el.closest(".ant-form-item, .el-form-item, .form-group, .vxe-form-item");
-    if (p) { var le = p.querySelector("label, .ant-form-item-label, .el-form-item__label"); if (le) return le.textContent.trim(); }
+    if (p) {
+      // 优先取 ant-form-item-label > label 的纯文本（排除 required 星号等装饰元素）
+      var labelCol = p.querySelector(".ant-form-item-label, .el-form-item__label");
+      if (labelCol) {
+        var labelEl = labelCol.querySelector("label");
+        if (labelEl) {
+          var txt = (labelEl.textContent || "").replace(/[\s*:：]+$/g, "").trim();
+          if (txt) return txt;
+        }
+      }
+      var le = p.querySelector("label");
+      if (le) return le.textContent.trim();
+    }
+    // 回退：Dianxiaomi checkbox-group-with-search — 向上查找 checkbox-wrapper 的兄弟 label
+    var cw = el.closest(".checkbox-wrapper, .checkbox-group-with-search");
+    if (cw) {
+      var cwParent = cw.parentElement;
+      while (cwParent && !cwParent.matches(".ant-form-item, .ant-col")) {
+        cwParent = cwParent.parentElement;
+      }
+      if (cwParent) {
+        var prevSib = cwParent.previousElementSibling;
+        if (prevSib) {
+          var prevLabel = prevSib.querySelector("label") || prevSib;
+          var prevTxt = (prevLabel.textContent || "").replace(/[\s*:：]+$/g, "").trim();
+          if (prevTxt) return prevTxt;
+        }
+      }
+    }
     return "";
   }
 
@@ -1022,9 +1072,15 @@
     // 过滤隐藏弹窗内的元素
     var modal = el.closest(".ant-modal");
     if (modal && modal.offsetParent === null) return false;
-    // 过滤不可见元素
-    if (el.offsetParent === null) return false;
-    return true;
+    // 主检查：offsetParent 不为 null → 可见
+    if (el.offsetParent !== null) return true;
+    // 回退：CSS containment / fixed positioning 可能导致 offsetParent 为 null，
+    // 但元素实际可见。用 bounding rect 做二次校验
+    try {
+      var rect = el.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) return true;
+    } catch (e) {}
+    return false;
   }
 
   // 跳过这些已经由其他按钮专门处理的字段，避免二次填充
@@ -1040,14 +1096,33 @@
   function getRowContext(el) {
     var row = el.closest(".ant-table-row, tr[class*=\"ant-table\"]");
     if (!row) return null;
-    // 尝试从行首单元格获取变体名称（通常是第一列或包含名称的列）
+
+    // Strategy 1: Look for variant name column — short text cell, often the 1st or 2nd column
+    var cells = row.querySelectorAll("td");
+    for (var i = 0; i < Math.min(cells.length, 4); i++) {
+      var txt = (cells[i].textContent || "").replace(/[\s​]+/g, " ").trim();
+      // Variant name is typically short (1-40 chars), non-numeric, and not a button cluster
+      if (txt && txt.length >= 1 && txt.length <= 40 && !/^\d/.test(txt) && !/^(复制|删除|移除|操作)/.test(txt)) {
+        return txt;
+      }
+    }
+
+    // Strategy 2: Look for ant-select with variant value
+    var antSelects = row.querySelectorAll(".ant-select-selection-item");
+    for (var j = 0; j < antSelects.length; j++) {
+      var stxt = (antSelects[j].textContent || "").trim();
+      if (stxt && stxt.length < 40 && !/^(请选择|Выбрать)/i.test(stxt)) return stxt;
+    }
+
+    // Strategy 3: first-child fallback with generous length limit
     var nameCell = row.querySelector("td:first-child, th:first-child");
     if (nameCell) {
-      var txt = (nameCell.textContent || "").trim();
-      if (txt && txt.length < 60) return txt;
+      var ftxt = (nameCell.textContent || "").replace(/[\s​]+/g, " ").trim();
+      if (ftxt && ftxt.length < 60) return ftxt;
     }
-    // 回退：取整行的精简文本
-    var rowText = (row.textContent || "").trim();
+
+    // Strategy 4: row text (compact)
+    var rowText = (row.textContent || "").replace(/[\s​]+/g, " ").trim();
     if (rowText && rowText.length < 80) return rowText;
     return null;
   }
@@ -1285,6 +1360,23 @@
 
     // ===== 构建索引和字段映射表 =====
     _buildFieldMap(fields);
+
+    // 诊断日志：汇总各类字段采集数量
+    var stats = { input: 0, select: 0, textarea: 0, "checkbox-group": 0, "radio-group": 0, "lone-checkbox": 0, "lone-radio": 0 };
+    fields.forEach(function (f) {
+      if (f.tag === "checkbox-group" || f.tag === "radio-group") stats[f.tag] = (stats[f.tag] || 0) + 1;
+      else if (f.type === "checkbox") stats["lone-checkbox"]++;
+      else if (f.type === "radio") stats["lone-radio"]++;
+      else stats[f.tag] = (stats[f.tag] || 0) + 1;
+    });
+    console.log("[sERP] collectFormFields: total=" + fields.length +
+      " input=" + (stats.input || 0) + " select=" + (stats.select || 0) +
+      " textarea=" + (stats.textarea || 0) +
+      " checkbox-group=" + (stats["checkbox-group"] || 0) +
+      " radio-group=" + (stats["radio-group"] || 0) +
+      " lone-cb=" + (stats["lone-checkbox"] || 0) +
+      " lone-rd=" + (stats["lone-radio"] || 0));
+
     return fields;
   }
 
@@ -1641,13 +1733,15 @@
     var storeId = detectStoreId();
     var category = detectCategory();
 
+    console.log("[sERP] collectCustomPrompts: platform=" + platform + " store=" + storeId + " category=" + category);
+
     var keys = [];
     if (platform) keys.push("serp_hint_platform_" + platform);
     if (storeId) {
       keys.push("serp_hint_store_" + storeId);
       if (category) keys.push("serp_hint_category_" + storeId + "_" + category);
     }
-    if (!keys.length) return Promise.resolve({});
+    if (!keys.length) { console.log("[sERP] collectCustomPrompts: no keys to read, returning empty"); return Promise.resolve({}); }
 
     return new Promise(function (resolve) {
       chrome.storage.local.get(keys, function (data) {
@@ -1668,6 +1762,7 @@
           var cd = data["serp_hint_category_" + storeId + "_" + category];
           if (cd.prompt) prompts.category = cd.prompt;
         }
+        console.log("[sERP] collectCustomPrompts: resolved keys=" + keys.join(",") + " prompts=" + JSON.stringify(Object.keys(prompts)));
         resolve(prompts);
       });
     });
@@ -1977,6 +2072,28 @@
     }
     body.variant_list = variantList;
 
+    // Build variant_row_mapping: summarize unique row contexts from form fields
+    var rowCtxSet = {};
+    var rowCtxOrder = [];
+    formFields.forEach(function(f) {
+      var label = f.label || "";
+      var m = label.match(/\[([^\]]+)\]$/);
+      if (m) {
+        var ctx = m[1];
+        if (!rowCtxSet[ctx]) {
+          rowCtxSet[ctx] = true;
+          rowCtxOrder.push(ctx);
+        }
+      }
+    });
+    if (rowCtxOrder.length > 0 && variantList.length > 0) {
+      body.variant_row_summary = {
+        row_contexts: rowCtxOrder,
+        variant_count: variantList.length,
+        note: "行上下文 [row_ctx] 对应表单SKU行。variant_list第i个变体应填入第i行(从0开始)。如果行数和变体数不一致，用产品数据推断。"
+      };
+    }
+
     try {
       setProgress(30);
       var r = await bgFetchWithTimeout(API_AUTO_FILL, {
@@ -2024,6 +2141,9 @@
         var m = mappings[mi];
         var idx = m.index;
         var label = m.label || idxToLabel[idx] || ("字段 " + idx);
+
+        // 进度更新: 75→95 按比例
+        setProgress(75 + Math.round((mi / mappings.length) * 20));
 
         if (detIdxSet[idx]) {
           fillResults.push({ index: idx, label: label, value: m.value, filled: true, order: idx, error: null });
