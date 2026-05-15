@@ -1457,6 +1457,12 @@
     var searchInput = container.querySelector(".ant-select-selection-search-input");
     var maxRetries = 2;
     for (var attempt = 0; attempt <= maxRetries; attempt++) {
+        // 关闭任何残留的下拉（避免前一个字段的下拉被误认为当前字段的）
+        var staleDropdown = document.querySelector(".ant-select-dropdown:not(.ant-select-dropdown-hidden)");
+        if (staleDropdown && !container.contains(staleDropdown)) {
+            document.body.click();
+            await sleep(200);
+        }
         if (!container.classList.contains("ant-select-open")) {
             selector.click();
             await sleep(150);
@@ -1568,15 +1574,18 @@
           if (!matched) {
             // CJK-prefix fallback: 只比较中文/数字前缀，避免 substring(0,3) 过度匹配
             // 例: "3 个卡槽3 отделения..." vs "3 个钞票隔间3 отделения..." → 中文不同 → 不匹配
-            function cjkCore(s) {
-              var m = s.match(/^([\d\s一-鿿㐀-䶿（）()，,、.-]+)/);
-              return m ? m[1].replace(/\s+/g, " ").trim() : "";
-            }
-            var vCjk = cjkCore(v);
-            var oCjk = cjkCore(optNorm);
-            if (vCjk.length >= 2 && oCjk.length >= 2) {
-              matched = vCjk === oCjk || indexOfWord(oCjk, vCjk) !== -1 || indexOfWord(vCjk, oCjk) !== -1;
-            }
+            matched = vals.some(function (v2) {
+              function cjkCore(s) {
+                var m = s.match(/^([\d\s一-鿿㐀-䶿（）()，,、.-]+)/);
+                return m ? m[1].replace(/\s+/g, " ").trim() : "";
+              }
+              var vCjk = cjkCore(v2);
+              var oCjk = cjkCore(optNorm);
+              if (vCjk.length >= 2 && oCjk.length >= 2) {
+                return vCjk === oCjk || indexOfWord(oCjk, vCjk) !== -1 || indexOfWord(vCjk, oCjk) !== -1;
+              }
+              return false;
+            });
           }
           console.log("[sERP]   cb[" + i + "] optText=" + optText + " optNorm=" + optNorm + " matched=" + matched);
           if (matched) {
