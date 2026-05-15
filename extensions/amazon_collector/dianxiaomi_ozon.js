@@ -1566,10 +1566,17 @@
             return indexOfWord(optNorm, v) !== -1 || indexOfWord(v, optNorm) !== -1;
           });
           if (!matched) {
-            matched = vals.some(function (v) {
-              if (v.length < 2) return false;
-              return indexOfWord(optNorm, v.substring(0, 3)) !== -1 || indexOfWord(v, optNorm.substring(0, 3)) !== -1;
-            });
+            // CJK-prefix fallback: 只比较中文/数字前缀，避免 substring(0,3) 过度匹配
+            // 例: "3 个卡槽3 отделения..." vs "3 个钞票隔间3 отделения..." → 中文不同 → 不匹配
+            function cjkCore(s) {
+              var m = s.match(/^([\d\s一-鿿㐀-䶿（）()，,、.-]+)/);
+              return m ? m[1].replace(/\s+/g, " ").trim() : "";
+            }
+            var vCjk = cjkCore(v);
+            var oCjk = cjkCore(optNorm);
+            if (vCjk.length >= 2 && oCjk.length >= 2) {
+              matched = vCjk === oCjk || indexOfWord(oCjk, vCjk) !== -1 || indexOfWord(vCjk, oCjk) !== -1;
+            }
           }
           console.log("[sERP]   cb[" + i + "] optText=" + optText + " optNorm=" + optNorm + " matched=" + matched);
           if (matched) {
