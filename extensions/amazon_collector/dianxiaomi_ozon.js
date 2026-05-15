@@ -429,7 +429,18 @@
     setBtnLoading(btnSendHtml, true);
 
     var html = document.documentElement.outerHTML;
-    var fieldsCount = typeof collectFormFields === "function" ? collectFormFields().length : 0;
+    var fields = typeof collectFormFields === "function" ? collectFormFields() : [];
+    var fieldsCount = fields.length;
+
+    // 诊断日志
+    console.log("[sERP] captureAndSendHTML: fieldsCount=" + fieldsCount + " url=" + window.location.href);
+    if (fieldsCount > 0) {
+      var typeCounts = {};
+      fields.forEach(function(f) { typeCounts[f.tag] = (typeCounts[f.tag] || 0) + 1; });
+      console.log("[sERP] captureAndSendHTML: field types=" + JSON.stringify(typeCounts));
+      console.log("[sERP] captureAndSendHTML: field labels=" + JSON.stringify(fields.map(function(f) { return "[" + f.index + "] " + f.tag + " " + f.label; })));
+    }
+
     var payload = {
       html: html,
       url: window.location.href,
@@ -1439,7 +1450,7 @@
     });
   }
 
-  async function fillAntSelect(container, value) {
+  async function fillAntSelect(container, value, label) {
     var selector = container.querySelector(".ant-select-selector");
     if (!selector) { console.warn("[sERP] 未找到 AntSelect selector"); return false; }
 
@@ -1492,7 +1503,7 @@
             // 匹配失败：输出可用选项便于排查
             var available = [];
             items.forEach(function (item) { available.push(item.textContent.trim()); });
-            console.warn("[sERP] AntSelect 选项未匹配: value=" + value + " vNorm=" + vNorm + " available=" + JSON.stringify(available));
+            console.warn("[sERP] AntSelect 选项未匹配: label=" + (label || "?") + " value=" + value + " vNorm=" + vNorm + " available=" + JSON.stringify(available));
             break;
         }
         if (attempt < maxRetries) {
@@ -1657,7 +1668,7 @@
 
       // AntSelect 填充（renderMode 存储在 _buildFieldMap 中）
       if (entry.renderMode === "AntSelect") {
-        return await fillAntSelect(el, value);
+        return await fillAntSelect(el, value, entry.label);
       }
 
       // ===== select =====
@@ -1940,8 +1951,12 @@
         if (pd.height) value = _convertDimension(pd.height, pd.dimension_unit);
       }
 
-      // Country of origin
-      if (label.indexOf("原产国") !== -1 || label.indexOf("страна") !== -1 || (label.indexOf("产地") !== -1 && label.indexOf("原产地") === -1)) {
+      // Country of origin — require specific context to avoid false matches
+      // "страна" alone may appear in unrelated fields (store selectors, etc.)
+      if (label.indexOf("原产国") !== -1 ||
+          label.indexOf("страна-изготовитель") !== -1 ||
+          (label.indexOf("страна") !== -1 && (label.indexOf("изготовитель") !== -1 || label.indexOf("производства") !== -1)) ||
+          (label.indexOf("产地") !== -1 && label.indexOf("原产地") === -1)) {
         value = "Китай";
       }
 
