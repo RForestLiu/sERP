@@ -739,15 +739,20 @@
         return true;
       }
 
-      // Find and click the trigger button
-      var btn = $(".btnDetailText--nrkiv")
+      // Find and click the trigger button (click parent <button>, not inner <span>)
+      var span = $(".btnDetailText--nrkiv")
         || this._findByText(["Характеристики", "описание"])
         || this._findByText(["Характеристики"]);
-      if (!btn) return false;
+      if (!span) { console.log("[sERP WB] Drawer button not found"); return false; }
+      var btn = span.closest("button") || span;
+      console.log("[sERP WB] Clicking drawer button:", (btn.className || btn.tagName).substring(0, 60));
       btn.click();
 
-      // Check if content appeared (React renders synchronously after click)
-      var found = $(".descriptionText--JBcnf") || this._findLongTextInDrawer();
+      // Check immediately (React 18 may flush synchronously within event handler)
+      var descEl = $(".descriptionText--JBcnf");
+      var longText = this._findLongTextInDrawer();
+      var found = descEl || longText;
+      console.log("[sERP WB] After click — descEl:", !!descEl, "longText:", !!longText);
       this._drawerOpened = !!found;
       return this._drawerOpened;
     },
@@ -1085,12 +1090,7 @@
       });
   }
 
-  function collectCurrent() {
-    if (UI.collecting) return;
-    UI.collecting = true;
-    setButtons(false);
-    setStatus("采集中...");
-
+  function doCollect() {
     var data = buildPayload();
     if (!data.title) {
       setStatus("未找到产品标题", true);
@@ -1118,6 +1118,36 @@
       UI.collecting = false;
       setButtons(true);
     });
+  }
+
+  function collectCurrent() {
+    if (UI.collecting) return;
+    UI.collecting = true;
+    setButtons(false);
+    setStatus("采集中...");
+
+    // WB: Floating UI drawer may be unmounted after React hydration.
+    // Poll until the drawer opens (React renders asynchronously after click).
+    if (PLATFORM === "wildberries" && !X._drawerOpened) {
+      console.log("[sERP WB] Single collect — ensuring drawer open...");
+      (function poll(attempt) {
+        if (X._ensureDrawerOpen()) {
+          console.log("[sERP WB] Drawer ready, collecting");
+          doCollect();
+          return;
+        }
+        if (attempt < 12) {
+          setStatus("等待弹窗打开...");
+          setTimeout(function () { poll(attempt + 1); }, 250);
+          return;
+        }
+        console.log("[sERP WB] Drawer failed to open after retries, collecting anyway");
+        doCollect();
+      })(0);
+      return;
+    }
+
+    doCollect();
   }
 
   /** Fetch a variant ASIN page and extract images + price from HTML */
