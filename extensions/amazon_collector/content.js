@@ -701,7 +701,7 @@
       return "";
     },
 
-    /** 点击 "Характеристики и описание" 按钮打开详情弹窗 */
+    /** 点击 "Характеристики и описание" 按钮打开详情弹窗（如需要） */
     _drawerOpened: false,
 
     _ensureDrawerOpen: function () {
@@ -713,16 +713,11 @@
       return this._drawerOpened;
     },
 
-    _closeDrawer: function () {
-      if (!this._drawerOpened) return;
-      var closeBtn = $(".mo-drawer__paper button.closeButton--jf9_x");
-      if (closeBtn) { closeBtn.click(); this._drawerOpened = false; }
-    },
-
     /** product_additional_information 区域的 table > th/td 规格参数 */
     extractProductDetails: function () {
       var result = {};
-      var section = $("[data-testid='product_additional_information']");
+      // 弹窗打开后优先从弹窗内读（字段更全），否则读主页面
+      var section = $(".mo-drawer__paper [data-testid='product_additional_information']") || $("[data-testid='product_additional_information']");
       if (!section) return result;
       var rows = $$("tr", section);
       rows.forEach(function (row) {
@@ -741,12 +736,12 @@
     extractDescription: function () {
       this._ensureDrawerOpen();
       var descEl = $(".descriptionText--JBcnf");
-      var text = descEl ? cleanText(descEl) : "";
-      this._closeDrawer();
-      return text;
+      return descEl ? cleanText(descEl) : "";
     },
 
     extractAll: function () {
+      // 先确保弹窗打开，再提取弹窗相关数据（描述+规格参数）
+      this._ensureDrawerOpen();
       return {
         title: this.extractTitle(),
         price: this.extractPrice(),
