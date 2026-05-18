@@ -578,16 +578,14 @@
 
     /** 提取最终售价（优先弹窗内 .price--Xne45，为当前产品真实价格） */
     extractPrice: function () {
-      // 弹窗内主产品价格（非推荐商品）
-      var mainPrice = $(".price--Xne45");
-      if (mainPrice) {
-        return text(mainPrice).replace(/&nbsp;/g, "").replace(/[₽руб\s]/g, "").trim();
+      var raw = "";
+      var el = $(".price--Xne45") || $(".priceWrap--pxdH1");
+      if (el) raw = text(el);
+      if (!raw) {
+        var meta = $("meta[itemprop='price']");
+        if (meta) raw = attr(meta, "content");
       }
-      // 备选：首页 priceWrap
-      var el = $(".priceWrap--pxdH1");
-      if (el) {
-        return text(el).replace(/&nbsp;/g, "").replace(/[₽руб\s]/g, "").trim();
-      }
+      if (raw) return raw.replace(/&nbsp;/g, "").replace(/[₽руб\s]/g, "").trim();
       return "";
     },
 
@@ -704,12 +702,48 @@
     /** 点击 "Характеристики и описание" 按钮打开详情弹窗（如需要） */
     _drawerOpened: false,
 
+    _findByText: function (texts, root) {
+      var els = (root || document).querySelectorAll("button, span, div");
+      for (var i = 0; i < els.length; i++) {
+        var t = els[i].textContent;
+        var ok = true;
+        for (var j = 0; j < texts.length; j++) {
+          if (t.indexOf(texts[j]) === -1) { ok = false; break; }
+        }
+        if (ok) return els[i];
+      }
+      return null;
+    },
+
+    _findLongTextInDrawer: function () {
+      var paper = $(".mo-drawer__paper");
+      if (!paper) return null;
+      var all = paper.querySelectorAll("p, span, div");
+      var best = null, bestLen = 0;
+      for (var k = 0; k < all.length; k++) {
+        var t = all[k].textContent.trim();
+        if (t.length > bestLen) { bestLen = t.length; best = all[k]; }
+      }
+      return bestLen > 100 ? best : null;
+    },
+
     _ensureDrawerOpen: function () {
-      if ($(".descriptionText--JBcnf")) return true;
-      var btn = $(".btnDetailText--nrkiv");
+      // Already open?
+      if ($(".descriptionText--JBcnf") || this._findLongTextInDrawer()) {
+        this._drawerOpened = true;
+        return true;
+      }
+
+      // Find and click the trigger button
+      var btn = $(".btnDetailText--nrkiv")
+        || this._findByText(["Характеристики", "описание"])
+        || this._findByText(["Характеристики"]);
       if (!btn) return false;
       btn.click();
-      this._drawerOpened = !!$(".descriptionText--JBcnf");
+
+      // Check if content appeared (React renders synchronously after click)
+      var found = $(".descriptionText--JBcnf") || this._findLongTextInDrawer();
+      this._drawerOpened = !!found;
       return this._drawerOpened;
     },
 
@@ -735,12 +769,11 @@
     /** 从 "Характеристики и описание" 弹窗提取文字描述 */
     extractDescription: function () {
       this._ensureDrawerOpen();
-      var descEl = $(".descriptionText--JBcnf");
+      var descEl = $(".descriptionText--JBcnf") || this._findLongTextInDrawer();
       return descEl ? cleanText(descEl) : "";
     },
 
     extractAll: function () {
-      // 先确保弹窗打开，再提取弹窗相关数据（描述+规格参数）
       this._ensureDrawerOpen();
       return {
         title: this.extractTitle(),
@@ -1412,9 +1445,14 @@
     var variantName = state.stack[state.nextIdx - 1].value;
 
     function tryCollect(attempt) {
-      X._ensureDrawerOpen();
+      var drawerReady = X._ensureDrawerOpen();
+      if (!drawerReady && attempt < 8) {
+        console.log("[sERP traversal] Drawer not ready, retry " + (attempt + 1));
+        setTimeout(function () { tryCollect(attempt + 1); }, 800);
+        return;
+      }
       var data = X.extractAll();
-      var hasData = (data.images && data.images.length > 0) || data.product_description;
+      var hasData = data.product_description || (data.images && data.images.length > 0);
       if (!hasData && attempt < 8) {
         console.log("[sERP traversal] Page not ready, retry " + (attempt + 1));
         setTimeout(function () { tryCollect(attempt + 1); }, 800);
