@@ -594,7 +594,7 @@
 
       // 扫描页面 HTML 全文中的 basket CDN URL
       var html = document.documentElement.outerHTML;
-      var re = /https?:\/\/basket-\d+\.wbbasket\.ru\/vol\d+\/part\d+\/(\d+)\/images\/(\w+)\/(\d+)\./g;
+      var re = /https?:\/\/basket-\d+\.(?:wbbasket\.ru|wbcontent\.net)\/vol\d+\/part\d+\/(\d+)\/images\/(\w+)\/(\d+)\./g;
       var m;
       while ((m = re.exec(html)) !== null) {
         var pid = m[1], size = m[2], num = parseInt(m[3]);
@@ -705,11 +705,11 @@
     _drawerOpened: false,
 
     _ensureDrawerOpen: function () {
-      if ($(".mo-drawer__paper")) return true;
+      if ($(".descriptionText--JBcnf")) return true;
       var btn = $(".btnDetailText--nrkiv");
       if (!btn) return false;
       btn.click();
-      this._drawerOpened = !!$(".mo-drawer__paper");
+      this._drawerOpened = !!$(".descriptionText--JBcnf");
       return this._drawerOpened;
     },
 
@@ -1172,20 +1172,29 @@
       if (!res.ok) throw new Error("HTTP " + res.status);
       return res.text();
     }).then(function (html) {
-      var images = [];
+      console.log("[sERP] fetchWBVariant: HTML size=" + html.length + " for " + url);
+
       var byPid = {};
-      var re = /https?:\/\/basket-\d+\.wbbasket\.ru\/vol\d+\/part\d+\/(\d+)\/images\/big\/(\d+)\.webp/g;
+      // Match both CDN domains, all image sizes (big/c246x328/tm)
+      var re = /https?:\/\/basket-\d+\.(?:wbbasket\.ru|wbcontent\.net)\/vol\d+\/part\d+\/(\d+)\/images\/(big|c246x328|tm)\/(\d+)\.webp/g;
       var m;
       while ((m = re.exec(html)) !== null) {
-        var pid = m[1], num = parseInt(m[2]);
-        if (!byPid[pid]) byPid[pid] = { base: m[0].substring(0, m[0].lastIndexOf("/images/")), maxNum: 0 };
+        var pid = m[1], size = m[2], num = parseInt(m[3]);
+        if (!byPid[pid]) byPid[pid] = { base: m[0].substring(0, m[0].lastIndexOf("/images/")), maxNum: 0, hasBig: false };
         byPid[pid].maxNum = Math.max(byPid[pid].maxNum, num);
+        if (size === "big") byPid[pid].hasBig = true;
       }
+
+      console.log("[sERP] fetchWBVariant: CDN product IDs found:", Object.keys(byPid).length, Object.keys(byPid));
+
+      // Pick main product: prefer one with big images, then most images
       var mainPid = null, bestScore = 0;
       for (var pid in byPid) {
-        var score = byPid[pid].maxNum;
+        var score = byPid[pid].maxNum + (byPid[pid].hasBig ? 100 : 0);
         if (score > bestScore) { bestScore = score; mainPid = pid; }
       }
+
+      var images = [];
       if (mainPid) {
         var base = byPid[mainPid].base;
         for (var n = 1; n <= byPid[mainPid].maxNum; n++) {
@@ -1193,6 +1202,9 @@
         }
       }
 
+      console.log("[sERP] fetchWBVariant: images=" + images.length);
+
+      // Extract price from JSON or priceWrap HTML
       var price = "";
       var pm = html.match(/"priceToPay"\s*:\s*"(\d+)"/);
       if (pm) price = pm[1];
@@ -1200,6 +1212,7 @@
         var pm2 = html.match(/priceWrap--pxdH1[^>]*>[^<]*<[^>]*>[^<]*<[^>]*>[\s\S]*?(\d[\d\s]*)₽/);
         if (pm2) price = pm2[1].replace(/\s/g, "");
       }
+      console.log("[sERP] fetchWBVariant: price=" + price);
 
       return { images: images, price: price };
     });
