@@ -562,12 +562,17 @@
       return /\/catalog\/\d+\/detail\.aspx/.test(href);
     },
 
-    /** 从 <title> 提取产品名，移除价格后缀 */
+    /** 从 URL 提取当前产品 ID */
+    extractProductId: function () {
+      var m = href.match(/\/catalog\/(\d+)\/detail\.aspx/);
+      return m ? m[1] : "";
+    },
+
+    /** 从 <title> 提取产品名，移除 "купить за N ₽ ..." 后缀 */
     extractTitle: function () {
       var t = document.title || "";
-      // 截掉 " купить за ... ₽ в интернет-магазине Wildberries"
-      var idx = t.indexOf(" купить за");
-      if (idx > 0) t = t.substring(0, idx).trim();
+      var m = t.match(/^(.+?)\s+купить\s+за\s+\d/);
+      if (m) return m[1].trim();
       return t;
     },
 
@@ -588,16 +593,17 @@
       return "";
     },
 
-    /** 从 WBBasket CDN URL 中提取主产品图片并构造超清链接 */
+    /** 从 WBBasket CDN URL 中提取当前产品图片并构造超清链接 */
     extractImages: function () {
+      var currentPid = this.extractProductId();
       var byPid = {};
 
-      // 扫描页面 HTML 全文中的 basket CDN URL
       var html = document.documentElement.outerHTML;
       var re = /https?:\/\/basket-\d+\.(?:wbbasket\.ru|wbcontent\.net)\/vol\d+\/part\d+\/(\d+)\/images\/(\w+)\/(\d+)\./g;
       var m;
       while ((m = re.exec(html)) !== null) {
         var pid = m[1], size = m[2], num = parseInt(m[3]);
+        if (currentPid && pid !== currentPid) continue;
         if (!byPid[pid]) {
           byPid[pid] = { base: m[0].substring(0, m[0].lastIndexOf("/images/")), maxNum: 0, hasBig: false };
         }
@@ -605,7 +611,6 @@
         if (size === "big") byPid[pid].hasBig = true;
       }
 
-      // 主产品 = 图片最多 + 优先选有 big 尺寸的
       var mainPid = null, bestScore = 0;
       for (var pid in byPid) {
         var score = byPid[pid].maxNum + (byPid[pid].hasBig ? 100 : 0);
@@ -623,24 +628,21 @@
       return [];
     },
 
-    /** 从颜色色块链接中提取变体列表（每个颜色 = 独立 product ID） */
+    /** 从颜色变体滑块中提取变体列表（仅 data-nm-id 锚点，排除推荐商品卡片） */
     extractVariants: function () {
       var v = {};
       var colors = [];
       var urls = {};
       var seen = {};
 
-      var links = $$("a[href*='/catalog/'][href*='/detail.aspx']");
+      var links = $$("a[data-nm-id]");
       links.forEach(function (a) {
         var img = $("img", a);
         var alt = img ? attr(img, "alt") : "";
         if (!alt) return;
         // alt 格式: "Кошелек маленький серый из экозамши"
-        // 提取颜色词: 去掉 "Кошелек" 前缀 和 "из экозамши" 后缀
-        var name = alt
-          .replace(/^Кошелек\s+(маленький|большой)\s+/i, "")
-          .replace(/\s+из\s+экозамши$/i, "")
-          .trim();
+        // 提取颜色词: 去掉 "из <material>" 后缀，取最后一个词
+        var name = alt.replace(/\s+из\s+\S+$/i, "").split(/\s+/).pop();
         if (name && !seen[name]) {
           seen[name] = true;
           colors.push(name);
@@ -665,7 +667,7 @@
     /** 点击颜色变体色块 → 导航到该颜色的产品页 */
     clickVariant: function (type, value) {
       if (type !== "color") return false;
-      var links = $$("a[href*='/catalog/'][href*='/detail.aspx']");
+      var links = $$("a[data-nm-id]");
       for (var i = 0; i < links.length; i++) {
         var img = $("img", links[i]);
         var alt = img ? attr(img, "alt") : "";
@@ -979,6 +981,14 @@
 
   function buildPayload() {
     var d = X.extractAll();
+    // 净化 variants：移除内部导航用的 urls，仅保留产品信息
+    var cleanVariants = {};
+    if (d.variants) {
+      if (d.variants.colors) cleanVariants.colors = d.variants.colors;
+      if (d.variants.sizes) cleanVariants.sizes = d.variants.sizes;
+      if (d.variants.styles) cleanVariants.styles = d.variants.styles;
+      if (d.variants.skus) cleanVariants.skus = d.variants.skus;
+    }
     return {
       url: href,
       platform: PLATFORM,
@@ -988,7 +998,7 @@
       rating: d.rating || "",
       category: d.category || "",
       images: d.images || [],
-      variants: d.variants || {},
+      variants: cleanVariants,
       bullets: d.bullets || [],
       about_item: (d.bullets || []).join("\n"),
       product_description: d.product_description || "",
