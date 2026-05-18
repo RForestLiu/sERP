@@ -576,19 +576,17 @@
       return t;
     },
 
-    /** 从 .priceWrap--pxdH1 提取最终售价 */
+    /** 提取最终售价（优先弹窗内 .price--Xne45，为当前产品真实价格） */
     extractPrice: function () {
+      // 弹窗内主产品价格（非推荐商品）
+      var mainPrice = $(".price--Xne45");
+      if (mainPrice) {
+        return text(mainPrice).replace(/&nbsp;/g, "").replace(/[₽руб\s]/g, "").trim();
+      }
+      // 备选：首页 priceWrap
       var el = $(".priceWrap--pxdH1");
       if (el) {
         return text(el).replace(/&nbsp;/g, "").replace(/[₽руб\s]/g, "").trim();
-      }
-      // 备选：b 标签含卢布符号
-      var prices = $$("b[class*='danger']");
-      for (var i = 0; i < prices.length; i++) {
-        var s = text(prices[i]);
-        if (/[₽руб]/.test(s)) {
-          return s.replace(/&nbsp;/g, "").replace(/[₽руб\s]/g, "").trim();
-        }
       }
       return "";
     },
@@ -1275,6 +1273,27 @@
       return;
     }
 
+    // WB: navigation-based traversal (navigate to each variant page, collect from live DOM)
+    if (PLATFORM === "wildberries") {
+      var wbUrls = variants.urls || {};
+      var missing = false;
+      for (var wi = 1; wi < stack.length; wi++) {
+        if (!wbUrls[stack[wi].value]) {
+          console.warn("[sERP] No URL for variant:", stack[wi].value);
+          missing = true;
+        }
+      }
+      if (missing) {
+        setStatus("部分变体缺少URL", true);
+        UI.collecting = false;
+        setButtons(true);
+        return;
+      }
+      setStatus("开始遍历 " + UI.total + " 个变体...");
+      startWBTraversal(wbUrls, stack, allVariants);
+      return;
+    }
+
     // Fetch remaining variants
     var variantUrls = variants.urls || {};
     var colorToAsin = PLATFORM === "amazon" ? getColorToAsinFromDOM() : {};
@@ -1365,9 +1384,113 @@
     });
   }
 
+  // ==================== WB NAVIGATION TRAVERSAL ====================
+
+  var WB_TRAVERSAL_KEY = "serp_wb_traversal";
+
+  function startWBTraversal(variantUrls, stack, allVariants) {
+    var state = {
+      platform: PLATFORM,
+      variantUrls: variantUrls,
+      stack: stack.map(function (s) { return { type: s.type, value: s.value }; }),
+      allVariants: allVariants,
+      originalUrl: window.location.href,
+      total: stack.length,
+      nextIdx: 1
+    };
+    var setObj = {};
+    setObj[WB_TRAVERSAL_KEY] = state;
+    chrome.storage.local.set(setObj, function () {
+      console.log("[sERP traversal] Starting. Next: idx 1/" + state.total + " -> " + stack[1].value);
+      window.location.href = variantUrls[stack[1].value];
+    });
+  }
+
+  function continueWBTraversal(state) {
+    console.log("[sERP traversal] Continue " + state.nextIdx + "/" + state.total);
+
+    var variantName = state.stack[state.nextIdx - 1].value;
+
+    function tryCollect(attempt) {
+      X._ensureDrawerOpen();
+      var data = X.extractAll();
+      var hasData = (data.images && data.images.length > 0) || data.product_description;
+      if (!hasData && attempt < 8) {
+        console.log("[sERP traversal] Page not ready, retry " + (attempt + 1));
+        setTimeout(function () { tryCollect(attempt + 1); }, 800);
+        return;
+      }
+      console.log("[sERP traversal] Collected: " + variantName + " (" + (data.images ? data.images.length : 0) + " images)");
+
+      state.allVariants.push({
+        variantName: variantName,
+        url: window.location.href,
+        price: data.price || "",
+        images: data.images || [],
+        variantInfo: { type: "color", value: variantName },
+        currentVariant: data.currentVariant || "",
+        product_details: data.product_details || {},
+        product_description: data.product_description || ""
+      });
+
+      if (state.nextIdx < state.total) {
+        state.nextIdx++;
+        var nextName = state.stack[state.nextIdx - 1].value;
+        var nextUrl = state.variantUrls[nextName];
+        console.log("[sERP traversal] Next: idx " + state.nextIdx + "/" + state.total + " -> " + nextName);
+        var setObj = {};
+        setObj[WB_TRAVERSAL_KEY] = state;
+        chrome.storage.local.set(setObj, function () {
+          window.location.href = nextUrl;
+        });
+      } else {
+        finishWBTraversal(state);
+      }
+    }
+
+    tryCollect(0);
+  }
+
+  function finishWBTraversal(state) {
+    console.log("[sERP traversal] Done. Sending batch: " + state.allVariants.length + " variants");
+
+    var stack = state.stack;
+    state.allVariants.sort(function (a, b) {
+      var ai = stack.findIndex(function (s) { return s.value === a.variantName; });
+      var bi = stack.findIndex(function (s) { return s.value === b.variantName; });
+      return ai - bi;
+    });
+
+    var batch = buildPayload();
+    batch.variantData = state.allVariants;
+    batch.images = [];
+
+    chrome.storage.local.remove(WB_TRAVERSAL_KEY, function () {
+      sendToSERP(batch).then(function (result) {
+        if (result && result.status === "ok") {
+          console.log("[sERP traversal] Batch sent OK");
+        }
+        window.location.href = state.originalUrl;
+      }).catch(function () {
+        window.location.href = state.originalUrl;
+      });
+    });
+  }
+
   // ==================== MAIN ====================
 
-  injectUI();
-  console.log("[sERP Collector] Ready — " + PLATFORM + " product page");
+  if (PLATFORM === "wildberries") {
+    chrome.storage.local.get(WB_TRAVERSAL_KEY, function (result) {
+      if (result[WB_TRAVERSAL_KEY]) {
+        continueWBTraversal(result[WB_TRAVERSAL_KEY]);
+        return;
+      }
+      injectUI();
+      console.log("[sERP Collector] Ready — " + PLATFORM + " product page");
+    });
+  } else {
+    injectUI();
+    console.log("[sERP Collector] Ready — " + PLATFORM + " product page");
+  }
 
 })();
