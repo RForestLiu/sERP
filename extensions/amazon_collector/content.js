@@ -579,11 +579,16 @@
     /** 提取最终售价（优先弹窗内 .price--Xne45，为当前产品真实价格） */
     extractPrice: function () {
       var raw = "";
+      // 优先: 已知 class（可能因 CSS module hash 变化而失效）
       var el = $(".price--Xne45") || $(".priceWrap--pxdH1");
       if (el) raw = text(el);
+      // 备选: CSS module 模糊匹配 [class*="price--"]
       if (!raw) {
-        var meta = $("meta[itemprop='price']");
-        if (meta) raw = attr(meta, "content");
+        var candidates = $$("[class*=\"price--\"]");
+        for (var i = 0; i < candidates.length && !raw; i++) {
+          var t = text(candidates[i]);
+          if (/^\d[\d\s]*$/.test(t) && parseInt(t.replace(/\s/g, "")) > 0) raw = t;
+        }
       }
       if (raw) return raw.replace(/&nbsp;/g, "").replace(/[₽руб\s]/g, "").trim();
       return "";
