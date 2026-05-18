@@ -556,97 +556,194 @@
     },
   };
 
-  // ---------- Wildberries ----------
+  // ---------- Wildberries (2026 refresh) ----------
   EXTRACTORS.wildberries = {
     isProductPage: function () {
       return /\/catalog\/\d+\/detail\.aspx/.test(href);
     },
 
+    /** 从 <title> 提取产品名，移除价格后缀 */
     extractTitle: function () {
-      return text($(".product-page__title") || $("h1.product-title") || $("h1"));
+      var t = document.title || "";
+      // 截掉 " купить за ... ₽ в интернет-магазине Wildberries"
+      var idx = t.indexOf(" купить за");
+      if (idx > 0) t = t.substring(0, idx).trim();
+      return t;
     },
 
+    /** 从 .priceWrap--pxdH1 提取最终售价 */
     extractPrice: function () {
-      // Final price (after discounts)
-      var el = $(".price-block__final-price") ||
-               $(".product-page__price-block .price-block__price") ||
-               $(".final-price");
-      if (!el) {
-        // Try the main price block
-        el = $(".price-block__price");
+      var el = $(".priceWrap--pxdH1");
+      if (el) {
+        return text(el).replace(/&nbsp;/g, "").replace(/[₽руб\s]/g, "").trim();
       }
-      return text(el) || "";
+      // 备选：b 标签含卢布符号
+      var prices = $$("b[class*='danger']");
+      for (var i = 0; i < prices.length; i++) {
+        var s = text(prices[i]);
+        if (/[₽руб]/.test(s)) {
+          return s.replace(/&nbsp;/g, "").replace(/[₽руб\s]/g, "").trim();
+        }
+      }
+      return "";
     },
 
+    /** 从 WBBasket CDN URL 中提取主产品图片并构造超清链接 */
     extractImages: function () {
-      var images = [], seen = {};
-      function add(url) {
-        if (!url || seen[url] || url.indexOf("data:image") === 0) return;
-        // WB uses image buckets, try to get high-res
-        var h = url.replace(/\/c\d+x\d+\/new\//, "/c2460x3280/new/");
-        if (!seen[h]) { seen[h] = true; images.push(h); }
+      var byPid = {};
+
+      // 扫描页面 HTML 全文中的 basket CDN URL
+      var html = document.documentElement.outerHTML;
+      var re = /https?:\/\/basket-\d+\.wbbasket\.ru\/vol\d+\/part\d+\/(\d+)\/images\/(\w+)\/(\d+)\./g;
+      var m;
+      while ((m = re.exec(html)) !== null) {
+        var pid = m[1], size = m[2], num = parseInt(m[3]);
+        if (!byPid[pid]) {
+          byPid[pid] = { base: m[0].substring(0, m[0].lastIndexOf("/images/")), maxNum: 0, hasBig: false };
+        }
+        byPid[pid].maxNum = Math.max(byPid[pid].maxNum, num);
+        if (size === "big") byPid[pid].hasBig = true;
       }
-      $$(".product-page__gallery img, .j-zoom-image, .photo-list img, .carousel img").forEach(function (img) {
-        add(attr(img, "data-src") || attr(img, "src") || img.src);
-      });
-      // Also check background images in gallery
-      $$(".product-page__gallery [style*='url']").forEach(function (el) {
-        var m = (el.style.backgroundImage || "").match(/url\(["']?([^"')]+)["']?\)/);
-        if (m) add(m[1]);
-      });
-      return images;
+
+      // 主产品 = 图片最多 + 优先选有 big 尺寸的
+      var mainPid = null, bestScore = 0;
+      for (var pid in byPid) {
+        var score = byPid[pid].maxNum + (byPid[pid].hasBig ? 100 : 0);
+        if (score > bestScore) { bestScore = score; mainPid = pid; }
+      }
+
+      if (mainPid) {
+        var images = [];
+        var base = byPid[mainPid].base;
+        for (var n = 1; n <= byPid[mainPid].maxNum; n++) {
+          images.push(base + "/images/big/" + n + ".webp");
+        }
+        return images;
+      }
+      return [];
     },
 
+    /** 从颜色色块链接中提取变体列表（每个颜色 = 独立 product ID） */
     extractVariants: function () {
       var v = {};
-      var colors = $$(".color-list .j-color, .colors-list__item, .product-page__color-selector li, .swiper-slide.j-color");
-      if (colors.length) v.colors = colors.map(function (el) { return attr(el, "data-color-name") || attr(el, "title") || text(el); }).filter(Boolean);
-      var sizes = $$(".sizes-list .j-size, .sizes-list__item, .product-page__size-selector li");
-      if (sizes.length) v.sizes = sizes.map(function (el) { return attr(el, "data-size-name") || text(el); }).filter(Boolean);
+      var colors = [];
+      var urls = {};
+      var seen = {};
+
+      var links = $$("a[href*='/catalog/'][href*='/detail.aspx']");
+      links.forEach(function (a) {
+        var img = $("img", a);
+        var alt = img ? attr(img, "alt") : "";
+        if (!alt) return;
+        // alt 格式: "Кошелек маленький серый из экозамши"
+        // 提取颜色词: 去掉 "Кошелек" 前缀 和 "из экозамши" 后缀
+        var name = alt
+          .replace(/^Кошелек\s+(маленький|большой)\s+/i, "")
+          .replace(/\s+из\s+экозамши$/i, "")
+          .trim();
+        if (name && !seen[name]) {
+          seen[name] = true;
+          colors.push(name);
+          urls[name] = a.href;
+        }
+      });
+
+      if (colors.length) v.colors = colors;
+      if (Object.keys(urls).length) v.urls = urls;
       return v;
     },
 
+    /** 从 title 标签解析当前颜色 */
     getCurrentVariant: function () {
-      var parts = [];
-      var color = $(".color-list .j-color.active, .colors-list__item.selected, .j-color.active");
-      if (color) parts.push(attr(color, "data-color-name") || text(color));
-      var size = $(".sizes-list .j-size.active, .sizes-list__item.selected, .j-size.active");
-      if (size) parts.push(attr(size, "data-size-name") || text(size));
-      return parts.join(" / ") || "default";
+      var t = document.title || "";
+      // title 格式: "Кошелек маленький серый из экозамши Caserra 210344524 ..."
+      var m = t.match(/Кошелек\s+(?:маленький|большой)\s+(\S+)/i);
+      if (m) return m[1];
+      return "default";
     },
 
+    /** 点击颜色变体色块 → 导航到该颜色的产品页 */
     clickVariant: function (type, value) {
-      var items;
-      if (type === "color") {
-        items = $$(".color-list .j-color, .colors-list__item, .j-color");
-      } else if (type === "size") {
-        items = $$(".sizes-list .j-size, .sizes-list__item, .j-size");
-      }
-      if (!items) return false;
-      for (var i = 0; i < items.length; i++) {
-        var name = attr(items[i], "data-color-name") || attr(items[i], "data-size-name") || text(items[i]);
-        if (name.trim() === value || name.indexOf(value) !== -1) {
-          items[i].click();
+      if (type !== "color") return false;
+      var links = $$("a[href*='/catalog/'][href*='/detail.aspx']");
+      for (var i = 0; i < links.length; i++) {
+        var img = $("img", links[i]);
+        var alt = img ? attr(img, "alt") : "";
+        if (alt.indexOf(value) !== -1) {
+          links[i].click();
           return true;
         }
       }
       return false;
     },
 
+    /** 面包屑最后一项 = 品牌 */
     extractBrand: function () {
-      return text($(".product-page__brand a") || $(".brand-link"));
+      var crumbs = $$("[itemprop='name']");
+      if (crumbs.length > 0) return text(crumbs[crumbs.length - 1]);
+      return "";
     },
 
+    /** 面包屑中间项 = 分类路径（去掉"Главная"首项和品牌末项） */
     extractCategory: function () {
-      return $$(".breadcrumbs__list a, .breadcrumb a").map(function (el) { return text(el); }).join(" > ");
+      var crumbs = $$("[itemprop='name']");
+      var parts = [];
+      for (var i = 1; i < crumbs.length - 1; i++) {
+        parts.push(text(crumbs[i]));
+      }
+      return parts.join(" > ");
     },
 
+    /** H1 含评分数字 */
     extractRating: function () {
-      return text($(".product-rating .star-rate__count") || $(".product-page__rating span"));
+      var h1 = text($("h1"));
+      if (h1 && /^\d[\d,.]*$/.test(h1)) return h1;
+      return "";
     },
 
+    /** 点击 "Характеристики и описание" 按钮打开详情弹窗 */
+    _drawerOpened: false,
+
+    _ensureDrawerOpen: function () {
+      if ($(".mo-drawer__paper")) return true;
+      var btn = $(".btnDetailText--nrkiv");
+      if (!btn) return false;
+      btn.click();
+      this._drawerOpened = !!$(".mo-drawer__paper");
+      return this._drawerOpened;
+    },
+
+    _closeDrawer: function () {
+      if (!this._drawerOpened) return;
+      var closeBtn = $(".mo-drawer__paper button.closeButton--jf9_x");
+      if (closeBtn) { closeBtn.click(); this._drawerOpened = false; }
+    },
+
+    /** product_additional_information 区域的 table > th/td 规格参数 */
+    extractProductDetails: function () {
+      var result = {};
+      var section = $("[data-testid='product_additional_information']");
+      if (!section) return result;
+      var rows = $$("tr", section);
+      rows.forEach(function (row) {
+        var th = $("th", row);
+        var td = $("td", row);
+        if (th && td) {
+          var key = text(th).replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_а-яё]/gi, "").toLowerCase();
+          var val = text(td);
+          if (key && val && !result[key]) result[key] = val;
+        }
+      });
+      return result;
+    },
+
+    /** 从 "Характеристики и описание" 弹窗提取文字描述 */
     extractDescription: function () {
-      return $$(".product-details .product-params li").map(function (el) { return text(el); }).join("; ");
+      this._ensureDrawerOpen();
+      var descEl = $(".descriptionText--JBcnf");
+      var text = descEl ? cleanText(descEl) : "";
+      this._closeDrawer();
+      return text;
     },
 
     extractAll: function () {
@@ -659,8 +756,9 @@
         images: this.extractImages(),
         variants: this.extractVariants(),
         bullets: [],
+        product_description: this.extractDescription(),
+        product_details: this.extractProductDetails(),
         currentVariant: this.getCurrentVariant(),
-        description: this.extractDescription(),
       };
     },
   };
@@ -790,6 +888,8 @@
       "#serp-collector-btns .btn-collect:hover{background:#ffaa22;}",
       "#serp-collector-btns .btn-all{background:#e74c3c;color:#fff;}",
       "#serp-collector-btns .btn-all:hover{background:#ff5c4c;}",
+      ".btn-send-html{background:#27ae60;color:#fff;padding:6px 8px;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;width:100%;transition:all .15s;}",
+      ".btn-send-html:hover{background:#2ecc71;}",
       "#serp-collector-btns button:disabled{opacity:.5;cursor:not-allowed;}",
       "#serp-collector-status{font-size:11px;color:#aaa;min-height:16px;}",
       "#serp-collector-minimize{background:none;border:none;color:#666;cursor:pointer;font-size:16px;padding:0 2px;}",
@@ -807,6 +907,7 @@
       '<button class="btn-collect" id="serp-btn-collect">采集</button>',
       '<button class="btn-all" id="serp-btn-all">全部规格</button>',
       '</div>',
+      '<button class="btn-send-html" id="serp-btn-send-html">发送HTML</button>',
       '<div id="serp-collector-status">就绪</div>',
       '</div>',
     ].join("");
@@ -823,6 +924,10 @@
     document.getElementById("serp-btn-all").addEventListener("click", function () {
       if (UI.collecting) return;
       collectAllVariants();
+    });
+    document.getElementById("serp-btn-send-html").addEventListener("click", function () {
+      if (UI.collecting) return;
+      sendHTMLToSERP();
     });
     document.getElementById("serp-collector-minimize").addEventListener("click", function () {
       var panel = document.getElementById("serp-collector-panel");
@@ -897,6 +1002,46 @@
       currentVariant: d.currentVariant || "",
       collectedAt: new Date().toISOString(),
     };
+  }
+
+  function sendHTMLToSERP() {
+    if (UI.collecting) return;
+    UI.collecting = true;
+    setButtons(false);
+    setStatus("获取HTML中...");
+
+    var html = document.documentElement.outerHTML;
+    var payload = {
+      url: href,
+      platform: PLATFORM || "unknown",
+      html: html,
+      title: document.title,
+      sentAt: new Date().toISOString(),
+    };
+
+    console.log("[sERP Collector] Sending HTML, size:", (html.length / 1024).toFixed(1), "KB");
+
+    fetch(SERP_URL.replace("browser_capture", "send_html"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).then(function (r) { return r.json(); })
+      .then(function (result) {
+        if (result && result.status === "ok") {
+          showToast("HTML已发送 ✓ (" + (html.length / 1024).toFixed(0) + "KB)");
+          setStatus("HTML已发送 ✓");
+        } else {
+          showToast("发送失败", true);
+          setStatus("失败", true);
+        }
+        UI.collecting = false;
+        setButtons(true);
+      }).catch(function () {
+        showToast("sERP 未运行", true);
+        setStatus("sERP 未运行", true);
+        UI.collecting = false;
+        setButtons(true);
+      });
   }
 
   function collectCurrent() {
@@ -1021,6 +1166,45 @@
     return map;
   }
 
+  /** Fetch WB variant page HTML and extract images + price */
+  function fetchWBVariantData(url) {
+    return fetch(url).then(function (res) {
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.text();
+    }).then(function (html) {
+      var images = [];
+      var byPid = {};
+      var re = /https?:\/\/basket-\d+\.wbbasket\.ru\/vol\d+\/part\d+\/(\d+)\/images\/big\/(\d+)\.webp/g;
+      var m;
+      while ((m = re.exec(html)) !== null) {
+        var pid = m[1], num = parseInt(m[2]);
+        if (!byPid[pid]) byPid[pid] = { base: m[0].substring(0, m[0].lastIndexOf("/images/")), maxNum: 0 };
+        byPid[pid].maxNum = Math.max(byPid[pid].maxNum, num);
+      }
+      var mainPid = null, bestScore = 0;
+      for (var pid in byPid) {
+        var score = byPid[pid].maxNum;
+        if (score > bestScore) { bestScore = score; mainPid = pid; }
+      }
+      if (mainPid) {
+        var base = byPid[mainPid].base;
+        for (var n = 1; n <= byPid[mainPid].maxNum; n++) {
+          images.push(base + "/images/big/" + n + ".webp");
+        }
+      }
+
+      var price = "";
+      var pm = html.match(/"priceToPay"\s*:\s*"(\d+)"/);
+      if (pm) price = pm[1];
+      else {
+        var pm2 = html.match(/priceWrap--pxdH1[^>]*>[^<]*<[^>]*>[^<]*<[^>]*>[\s\S]*?(\d[\d\s]*)₽/);
+        if (pm2) price = pm2[1].replace(/\s/g, "");
+      }
+
+      return { images: images, price: price };
+    });
+  }
+
   function collectAllVariants() {
     var variants = X.extractAll().variants;
     var stack = [];
@@ -1073,24 +1257,36 @@
       return;
     }
 
-    // Fetch remaining variants via XHR
-    var colorToAsin = getColorToAsinFromDOM();
-    console.log("[sERP] colorToAsin mapping:", JSON.stringify(colorToAsin));
+    // Fetch remaining variants
+    var variantUrls = variants.urls || {};
+    var colorToAsin = PLATFORM === "amazon" ? getColorToAsinFromDOM() : {};
+    console.log("[sERP] variant fetch mode:", PLATFORM === "amazon" ? "ASIN" : "URL", "colorToAsin:", JSON.stringify(colorToAsin), "urls:", JSON.stringify(variantUrls));
 
     var pending = [];
     for (var i = 1; i < stack.length; i++) {
-      (function (variantName, asin, idx) {
-      if (!asin) {
-        console.warn("[sERP] No ASIN found for variant:", variantName);
+      (function (variantName, asin, url, idx) {
+      if (!asin && !url) {
+        console.warn("[sERP] No ASIN/URL found for variant:", variantName);
         return;
       }
 
       setStatus("变体 " + (idx + 1) + "/" + UI.total + ": 请求 " + variantName + "...");
 
-      var promise = fetchVariantData(asin).then(function (data) {
+      var fetchFn, fetchArg, resultUrl;
+      if (asin) {
+        fetchFn = fetchVariantData;
+        fetchArg = asin;
+        resultUrl = window.location.origin + "/dp/" + asin;
+      } else {
+        fetchFn = fetchWBVariantData;
+        fetchArg = url;
+        resultUrl = url;
+      }
+
+      var promise = fetchFn(fetchArg).then(function (data) {
         allVariants.push({
           variantName: variantName,
-          url: window.location.origin + "/dp/" + asin,
+          url: resultUrl,
           price: data.price,
           images: data.images,
           variantInfo: { type: "color", value: variantName }
@@ -1101,7 +1297,7 @@
         console.error("[sERP] Failed to fetch variant", variantName, ":", err.message);
         allVariants.push({
           variantName: variantName,
-          url: window.location.href,
+          url: resultUrl,
           price: "",
           images: [],
           variantInfo: { type: "color", value: variantName },
@@ -1111,7 +1307,7 @@
       });
 
       pending.push(promise);
-      })(stack[i].value, colorToAsin[stack[i].value], i);
+      })(stack[i].value, colorToAsin[stack[i].value], variantUrls[stack[i].value], i);
     }
 
     Promise.all(pending).then(function () {
