@@ -53,7 +53,7 @@ sERP/
 │
 ├── data/                    # 数据存储（自动创建）
 │   ├── products.json        # 正式产品数据
-│   ├── stores.json          # 店铺列表及 Ozon 凭证
+│   ├── stores.json          # 店铺列表（凭证使用 .env 环境变量占位符）
 │   ├── tasks.json           # 图片处理任务列表
 │   ├── collect_tasks.json   # 采集任务持久化
 │   ├── ozon_cache/          # Ozon 品类树/翻译缓存
@@ -88,8 +88,10 @@ playwright install chromium
 
 ```bash
 cp .env.example .env
-# 编辑 .env，填入 API Key
+# 编辑 .env，填入 OPENAI_API_KEY、DEEPSEEK_API_KEY 和 Ozon 店铺凭证
 ```
+
+`data/stores.json` 只保存 `${ENV_NAME}` 占位符，真实 Ozon 凭证放在本机 `.env`，不要提交到 git。
 
 ### 3. 启动服务
 

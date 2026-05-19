@@ -754,7 +754,33 @@ def _save_sync_state(state):
         pass
 
 def _load_stores():
-    """加载店铺列表"""
+    """加载店铺列表，并解析环境变量形式的凭证占位符。"""
+    if os.path.exists(STORES_FILE):
+        try:
+            with open(STORES_FILE, "r", encoding="utf-8") as f:
+                stores = json.load(f)
+            return [_resolve_store_credentials(store) for store in stores]
+        except:
+            pass
+    return []
+
+
+def _resolve_env_ref(value):
+    """Resolve ${ENV_NAME} placeholders from local environment variables."""
+    if isinstance(value, str) and value.startswith("${") and value.endswith("}"):
+        return os.getenv(value[2:-1], "")
+    return value
+
+
+def _resolve_store_credentials(store):
+    resolved = dict(store)
+    for key in ("client_id", "api_key"):
+        resolved[key] = _resolve_env_ref(resolved.get(key, ""))
+    return resolved
+
+
+def _load_store_configs():
+    """加载店铺原始配置，不解析凭证占位符，用于安全写回配置文件。"""
     if os.path.exists(STORES_FILE):
         try:
             with open(STORES_FILE, "r", encoding="utf-8") as f:
@@ -762,6 +788,14 @@ def _load_stores():
         except:
             pass
     return []
+
+
+def _public_store(store):
+    public = dict(store)
+    public["credentials_configured"] = bool(store.get("client_id") and store.get("api_key"))
+    public["client_id"] = ""
+    public["api_key"] = ""
+    return public
 
 def _next_store_status(current):
     """循环切换店铺状态"""
@@ -1996,7 +2030,7 @@ def auto_extract_product(skc):
 @app.route("/api/stores", methods=["GET"])
 def get_stores():
     """获取所有店铺列表"""
-    return jsonify(_load_stores())
+    return jsonify([_public_store(store) for store in _load_stores()])
 
 
 @app.route("/api/extract_from_text", methods=["POST"])
@@ -2437,26 +2471,25 @@ SKC: {skc}
 
 @app.route("/api/stores/<store_id>", methods=["GET"])
 def get_store(store_id):
-    """获取单个店铺详情（含 Ozon 凭证）"""
+    """获取单个店铺详情（不返回 Ozon 凭证明文）"""
     stores = _load_stores()
     store = next((s for s in stores if s["id"] == store_id), None)
     if not store:
         return jsonify({"error": "店铺不存在"}), 404
-    return jsonify(store)
+    return jsonify(_public_store(store))
 
 
 @app.route("/api/stores/<store_id>", methods=["PUT"])
 def update_store(store_id):
-    """更新店铺信息（含 Ozon 凭证）"""
+    """更新店铺信息。凭证请通过 .env 配置，避免写入已跟踪 JSON。"""
     data = request.get_json()
-    stores = _load_stores()
+    stores = _load_store_configs()
     store = next((s for s in stores if s["id"] == store_id), None)
     if not store:
         return jsonify({"error": "店铺不存在"}), 404
     
     # 更新允许的字段
-    for key in ["client_id", "api_key", "label", "name"]:
-
+    for key in ["label", "name"]:
         if key in data:
             store[key] = data[key]
     
