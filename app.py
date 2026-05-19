@@ -248,15 +248,37 @@ def upload_ref_image(task_id, ref_index):
     if not f or f.filename == "":
         return jsonify({"error": "未选择图片"}), 400
 
-    # 使用固定文件名 _ref_1.jpg / _ref_2.jpg
-    ext = os.path.splitext(f.filename)[1] or ".jpg"
-    safe_name = f"_ref_{ref_index}{ext}"
-    save_path = os.path.join(task_folder(task_id), "source_images", safe_name)
+    source_dir = os.path.join(task_folder(task_id), "source_images")
+    data = load_task_data(task_id)
+    field = f"ref_image_{ref_index}"
+    old_path = data.get(field, "")
+
+    # 删除旧参考图和历史固定名，避免同 URL 被浏览器缓存成第一次上传的图。
+    old_candidates = []
+    if old_path:
+        old_candidates.append(os.path.join(task_folder(task_id), old_path))
+    old_candidates.extend(
+        os.path.join(source_dir, name)
+        for name in os.listdir(source_dir)
+        if name.startswith(f"_ref_{ref_index}.") or name.startswith(f"_ref_{ref_index}_")
+    )
+    for old_file in old_candidates:
+        try:
+            old_abs = os.path.abspath(old_file)
+            source_abs = os.path.abspath(source_dir)
+            if os.path.commonpath([old_abs, source_abs]) == source_abs and os.path.isfile(old_abs):
+                os.remove(old_abs)
+        except Exception as e:
+            logger.warning("[上传参考图] 删除旧参考图失败: %s", e)
+
+    ext = os.path.splitext(f.filename)[1].lower() or ".jpg"
+    if ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"):
+        ext = ".jpg"
+    safe_name = f"_ref_{ref_index}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:6]}{ext}"
+    save_path = os.path.join(source_dir, safe_name)
     f.save(save_path)
 
     # 更新 task_data.json
-    data = load_task_data(task_id)
-    field = f"ref_image_{ref_index}"
     data[field] = f"source_images/{safe_name}"
     save_task_data(task_id, data)
 
@@ -1039,12 +1061,7 @@ def amazon_capture():
     os.makedirs(images_dir, exist_ok=True)
 
     # 保存产品数据（不含图片URL，图片已下载到本地）
-    sanitized = dict(data)
-    sanitized["images"] = []
-    if sanitized.get("variantData"):
-        sanitized["variantData"] = [
-            {**v, "images": []} for v in sanitized["variantData"]
-        ]
+    sanitized = _sanitize_product_payload(data)
     product_data_file = os.path.join(data_dir, "product_data.json")
     with open(product_data_file, "w", encoding="utf-8") as f:
         json.dump(sanitized, f, indent=2, ensure_ascii=False)
@@ -1158,6 +1175,37 @@ PLATFORM_REFERER = {
 }
 
 
+def _compact_variant_entry(variant):
+    """保留变体业务信息，移除图片 URL 等采集噪声。"""
+    if not isinstance(variant, dict):
+        return {}
+    keep_keys = (
+        "variantName",
+        "price",
+        "variantInfo",
+        "currentVariant",
+        "product_details",
+        "product_description",
+        "_error",
+    )
+    compact = {k: variant.get(k) for k in keep_keys if variant.get(k) not in (None, "", [], {})}
+    images = variant.get("images", [])
+    if isinstance(images, list) and images:
+        compact["image_count"] = len(images)
+    return compact
+
+
+def _sanitize_product_payload(data):
+    """产品数据只保留可填表/可展示的信息，图片 URL 交给 images_mapping 管理。"""
+    sanitized = dict(data)
+    sanitized["images"] = []
+    if sanitized.get("variantData"):
+        sanitized["variantData"] = [
+            _compact_variant_entry(v) for v in sanitized["variantData"] if isinstance(v, dict)
+        ]
+    return sanitized
+
+
 @app.route("/api/collect/browser_capture", methods=["POST"])
 @cross_origin()
 def browser_capture():
@@ -1186,12 +1234,7 @@ def browser_capture():
 
     product_data_file = os.path.join(data_dir, "product_data.json")
     # 保存时移除图片URL（图片已下载到本地，无需在数据中保留冗长的URL）
-    sanitized = dict(data)
-    sanitized["images"] = []
-    if sanitized.get("variantData"):
-        sanitized["variantData"] = [
-            {**v, "images": []} for v in sanitized["variantData"]
-        ]
+    sanitized = _sanitize_product_payload(data)
     with open(product_data_file, "w", encoding="utf-8") as f:
         json.dump(sanitized, f, indent=2, ensure_ascii=False)
 
@@ -1223,7 +1266,7 @@ def browser_capture():
             "images_mapping": None,
             "images_dir": images_dir,
             "source": "browser_extension",
-            "variants": variant_data,
+            "variants": [_compact_variant_entry(v) for v in variant_data] if variant_data else [],
         },
     }
     _save_collect_tasks()
@@ -2222,10 +2265,22 @@ def auto_fill_analyze():
         if placeholder:
             field_desc += f" | 占位: {placeholder}"
         if options:
-            option_texts = [o.get("text", o.get("value", "")) for o in options[:30]]
+            option_texts = []
+            for o in options[:30]:
+                if isinstance(o, dict):
+                    option_texts.append(o.get("text") or o.get("value") or "")
+                else:
+                    option_texts.append(str(o))
+            option_texts = [t for t in option_texts if t]
             if option_texts:
                 field_desc += f" | 选项: {', '.join(option_texts)}"
         fields_summary.append(field_desc)
+    valid_field_indices = set()
+    for i, f in enumerate(form_fields):
+        try:
+            valid_field_indices.add(int(f.get("index", i)))
+        except (TypeError, ValueError):
+            valid_field_indices.add(i)
 
     fields_text = "\n".join(fields_summary)
 
@@ -2402,10 +2457,16 @@ SKC: {skc}
             validated = []
             for m in mappings:
                 if isinstance(m, dict) and m.get("value"):
+                    try:
+                        m_index = int(m.get("index", -1))
+                    except (TypeError, ValueError):
+                        continue
+                    if m_index not in valid_field_indices:
+                        continue
                     validated.append({
-                        "index": m.get("index", -1),
+                        "index": m_index,
                         "label": m.get("label", ""),
-                        "value": m.get("value", "")
+                        "value": str(m.get("value", ""))
                     })
             print(f"[auto-fill/{label}] filled {len(validated)} fields")
             return validated
@@ -2455,12 +2516,22 @@ SKC: {skc}
             # Unified fallback: all fields in one call
             all_mappings = _call_deepseek_fill(system_prompt, user_prompt, label="unified")
 
+        # important 批次先进入，常规批次重复命中同一字段时不覆盖，避免二次错填。
+        deduped_mappings = []
+        seen_indices = set()
+        for m in all_mappings:
+            idx = m.get("index")
+            if idx in seen_indices:
+                continue
+            seen_indices.add(idx)
+            deduped_mappings.append(m)
+
         return jsonify({
             "success": True,
             "skc": skc,
-            "mappings": all_mappings,
+            "mappings": deduped_mappings,
             "total_fields": len(form_fields),
-            "filled_fields": len(all_mappings)
+            "filled_fields": len(deduped_mappings)
         })
 
     except Exception as e:

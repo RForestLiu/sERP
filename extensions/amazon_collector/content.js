@@ -42,6 +42,16 @@
   function attr(el, name) {
     return el ? el.getAttribute(name) || "" : "";
   }
+  function uniqueStrings(items) {
+    var seen = {}, out = [];
+    (items || []).forEach(function (item) {
+      var v = String(item || "").replace(/\s+/g, " ").trim();
+      if (!v || seen[v]) return;
+      seen[v] = true;
+      out.push(v);
+    });
+    return out;
+  }
 
   /** Wait for DOM to stabilize after a variant click */
   function waitForUpdate(timeout) {
@@ -347,7 +357,7 @@
         if (items.length) break;
       }
       if (!items || !items.length) return [];
-      return items.map(function (el) { return text(el); }).filter(Boolean).slice(0, 15);
+      return uniqueStrings(items.map(function (el) { return cleanText(el); })).slice(0, 15);
     },
 
     /** Product Description — 产品描述正文（A+ 内容等） */
@@ -732,14 +742,19 @@
       return bestLen > 100 ? best : null;
     },
 
-    _ensureDrawerOpen: function () {
-      // Already open?
-      if ($(".descriptionText--JBcnf") || this._findLongTextInDrawer()) {
-        this._drawerOpened = true;
-        return true;
-      }
+    _findDescriptionEl: function () {
+      return $(".mo-drawer__paper [data-testid='product-page-description']") ||
+        $(".mo-drawer__paper .descriptionText--JBcnf") ||
+        $("[data-testid='product-page-description']") ||
+        $(".descriptionText--JBcnf") ||
+        this._findLongTextInDrawer();
+    },
 
-      // Find and click the trigger button (click parent <button>, not inner <span>)
+    _isDrawerReady: function () {
+      return !!(this._findDescriptionEl() || $(".mo-drawer__paper [data-testid='product_additional_information']"));
+    },
+
+    _clickDrawerButton: function () {
       var span = $(".btnDetailText--nrkiv")
         || this._findByText(["Характеристики", "описание"])
         || this._findByText(["Характеристики"]);
@@ -747,14 +762,49 @@
       var btn = span.closest("button") || span;
       console.log("[sERP WB] Clicking drawer button:", (btn.className || btn.tagName).substring(0, 60));
       btn.click();
+      return true;
+    },
+
+    _ensureDrawerOpen: function () {
+      // Already open?
+      if (this._isDrawerReady()) {
+        this._drawerOpened = true;
+        return true;
+      }
+
+      if (!this._clickDrawerButton()) return false;
 
       // Check immediately (React 18 may flush synchronously within event handler)
-      var descEl = $(".descriptionText--JBcnf");
-      var longText = this._findLongTextInDrawer();
-      var found = descEl || longText;
-      console.log("[sERP WB] After click — descEl:", !!descEl, "longText:", !!longText);
+      var found = this._isDrawerReady();
+      console.log("[sERP WB] After click — drawerReady:", found);
       this._drawerOpened = !!found;
       return this._drawerOpened;
+    },
+
+    waitForDrawerOpen: function (timeout) {
+      timeout = timeout || 5000;
+      var self = this;
+      if (self._ensureDrawerOpen()) return Promise.resolve(true);
+      return new Promise(function (resolve) {
+        var start = Date.now();
+        var clickedAt = 0;
+        var timer = setInterval(function () {
+          if (self._isDrawerReady()) {
+            clearInterval(timer);
+            self._drawerOpened = true;
+            resolve(true);
+            return;
+          }
+          if (Date.now() - clickedAt > 1200) {
+            self._clickDrawerButton();
+            clickedAt = Date.now();
+          }
+          if (Date.now() - start > timeout) {
+            clearInterval(timer);
+            resolve(false);
+          }
+        }, 250);
+      });
     },
 
     /** product_additional_information 区域的 table > th/td 规格参数 */
@@ -779,7 +829,7 @@
     /** 从 "Характеристики и описание" 弹窗提取文字描述 */
     extractDescription: function () {
       this._ensureDrawerOpen();
-      var descEl = $(".descriptionText--JBcnf") || this._findLongTextInDrawer();
+      var descEl = this._findDescriptionEl();
       return descEl ? cleanText(descEl) : "";
     },
 
@@ -1128,28 +1178,22 @@
 
     // WB: Floating UI drawer may be unmounted after React hydration.
     // Poll until the drawer opens (React renders asynchronously after click).
-    if (PLATFORM === "wildberries" && !X._drawerOpened) {
+    if (PLATFORM === "wildberries" && X.waitForDrawerOpen && !X._drawerOpened) {
       console.log("[sERP WB] Single collect — ensuring drawer open...");
-      (function poll(attempt) {
-        if (X._ensureDrawerOpen()) {
+      X.waitForDrawerOpen(6000).then(function (ready) {
+        if (ready) {
           console.log("[sERP WB] Drawer ready, collecting");
-          doCollect();
-          return;
+        } else {
+          console.log("[sERP WB] Drawer failed to open after retries, collecting anyway");
         }
-        if (attempt < 12) {
-          setStatus("等待弹窗打开...");
-          setTimeout(function () { poll(attempt + 1); }, 250);
-          return;
-        }
-        console.log("[sERP WB] Drawer failed to open after retries, collecting anyway");
         doCollect();
-      })(0);
+      });
+      setStatus("等待弹窗打开...");
       return;
     }
 
     doCollect();
   }
-
   /** Fetch a variant ASIN page and extract images + price from HTML */
   function fetchVariantData(asin) {
     var base = window.location.origin;
@@ -1289,7 +1333,20 @@
     });
   }
 
-  function collectAllVariants() {
+  function collectAllVariants(force) {
+    if (PLATFORM === "wildberries" && X.waitForDrawerOpen && !X._drawerOpened && !force) {
+      UI.collecting = true;
+      UI.cancelled = false;
+      setButtons(false);
+      setStatus("等待弹窗打开...");
+      X.waitForDrawerOpen(6000).then(function () {
+        UI.collecting = false;
+        setButtons(true);
+        collectAllVariants(true);
+      });
+      return;
+    }
+
     var variants = X.extractAll().variants;
     var stack = [];
     if (variants.colors && variants.colors.length) {

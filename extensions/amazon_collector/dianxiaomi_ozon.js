@@ -1020,6 +1020,8 @@
       var le = p.querySelector("label");
       if (le) return le.textContent.trim();
     }
+    var tableHeader = getTableHeaderLabel(el);
+    if (tableHeader) return tableHeader;
     // 回退：Dianxiaomi checkbox-group-with-search — 向上查找 checkbox-wrapper 的兄弟 label
     var cw = el.closest(".checkbox-wrapper, .checkbox-group-with-search");
     if (cw) {
@@ -1074,6 +1076,7 @@
   }
 
   function isVisibleField(el) {
+    if (el.closest("#serp-toolbar, #serp-modal-overlay, #serp-hint-overlay, #serp-results-panel, #serp-extract-panel")) return false;
     // 过滤下拉弹出层内的元素（不属于表单本身）
     if (el.closest(".ant-select-dropdown")) return false;
     if (el.closest(".ant-dropdown")) return false;
@@ -1094,6 +1097,27 @@
     return false;
   }
 
+  function getTableHeaderLabel(el) {
+    var row = el.closest("tr");
+    var cell = el.closest("td, th");
+    var table = el.closest("table");
+    if (!row || !cell || !table) return "";
+
+    var cells = Array.from(row.children).filter(function (c) {
+      return c.tagName === "TD" || c.tagName === "TH";
+    });
+    var idx = cells.indexOf(cell);
+    if (idx < 0) return "";
+
+    var headers = Array.from(table.querySelectorAll("thead th"));
+    if (!headers[idx]) return "";
+    return (headers[idx].textContent || "")
+      .replace(/一键生成|高级|批量/g, "")
+      .replace(/[()（）·]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
   // 跳过这些已经由其他按钮专门处理的字段，避免二次填充
   function isSkippedField(label) {
     var kw = (label || "").toLowerCase().replace(/\s+/g, "");
@@ -1105,7 +1129,7 @@
 
   // 获取字段所在表格行的上下文（用于区分多个SKU行中的同名字段）
   function getRowContext(el) {
-    var row = el.closest(".ant-table-row, tr[class*=\"ant-table\"]");
+    var row = el.closest(".ant-table-row, tr[class*=\"ant-table\"], .skuData-body tr, table.myj-table tbody tr, tr");
     if (!row) return null;
 
     // Strategy 1: Look for variant name column — short text cell, often the 1st or 2nd column
@@ -1139,7 +1163,7 @@
   }
 
   function countSkuRows() {
-    var rows = document.querySelectorAll(".ant-table-tbody tr.ant-table-row");
+    var rows = document.querySelectorAll(".ant-table-tbody tr.ant-table-row, .skuData-body tr, table.myj-table tbody tr");
     var count = 0;
     rows.forEach(function(r) {
       if (r.querySelector("input, .ant-select")) count++;
@@ -2055,7 +2079,12 @@
       var clean = { index: f.index, label: f.label, tag: f.tag, type: f.type };
       if (f.placeholder) clean.placeholder = f.placeholder;
       if (f.name) clean.name = f.name;
-      if (f.options) clean.options = f.options.map(function (o) { return { text: o.text, value: o.value }; });
+      if (f.options) {
+        clean.options = f.options.map(function (o) {
+          if (typeof o === "string") return { text: o, value: o };
+          return { text: o.text || o.value || "", value: o.value || o.text || "" };
+        });
+      }
       return clean;
     }
     var llmFields = formFields.map(_fieldForLLM);
