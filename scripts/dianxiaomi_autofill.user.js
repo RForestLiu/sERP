@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         店小秘 Ozon 产品自动填充助手
+// @name         店小秘 Ozon 智能助手
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
-// @description  在店小秘 Ozon 添加产品页面，通过 Flask 后端获取产品数据并用 DeepSeek 自动填充表单
+// @version      2.0.0
+// @description  左侧悬浮工具栏：选择产品 → 智能匹配品类 → 大模型自动填充表单
 // @author       sERP
 // @match        https://www.dianxiaomi.com/web/ozonProduct/add*
 // @match        https://www.dianxiaomi.com/web/ozonProduct/edit*
@@ -20,54 +20,158 @@
     const API_PRODUCTS = FLASK_BASE + '/api/products';
     const API_AUTO_FILL = FLASK_BASE + '/api/auto-fill/analyze';
 
+    // 店铺中文名 → store_id 映射
+    const STORE_CN_MAP = {
+        '安凌': 'ozon_anling',
+        'anling': 'ozon_anling',
+        '安美': 'ozon_anmei',
+        'anmei': 'ozon_anmei',
+        '安曼': 'ozon_anman',
+        'anman': 'ozon_anman'
+    };
+
+    // ==================== 状态 ====================
+    let selectedProduct = null;
+    let allProducts = [];
+
     // ==================== 样式 ====================
     GM_addStyle(`
-        /* 悬浮按钮 */
-        #serp-autofill-btn {
+        /* ===== 左侧悬浮工具栏 ===== */
+        #serp-toolbar {
             position: fixed;
-            bottom: 30px;
-            right: 30px;
-            z-index: 999999;
-            padding: 14px 24px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
-            transition: all 0.3s ease;
+            left: 8px;
+            top: 120px;
+            z-index: 999990;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            background: #fff;
+            border-radius: 10px;
+            padding: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
             font-family: "Microsoft YaHei", sans-serif;
-            letter-spacing: 0.5px;
+            user-select: none;
+            transition: transform 0.2s;
         }
-        #serp-autofill-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+        #serp-toolbar.collapsed {
+            transform: translateX(-72px);
         }
-        #serp-autofill-btn:active {
-            transform: translateY(0);
+        #serp-toolbar .serp-tb-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            border: 1px solid #e8e8e8;
+            background: #fff;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            position: relative;
+            font-size: 11px;
+            color: #666;
+            line-height: 1.2;
+            gap: 2px;
         }
-        #serp-autofill-btn.loading {
-            opacity: 0.7;
+        #serp-toolbar .serp-tb-btn:hover {
+            background: #f0f5ff;
+            border-color: #428bca;
+            color: #428bca;
+        }
+        #serp-toolbar .serp-tb-btn:active {
+            transform: scale(0.95);
+        }
+        #serp-toolbar .serp-tb-btn.loading {
             pointer-events: none;
+            opacity: 0.6;
         }
-        #serp-autofill-btn .spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top: 2px solid white;
-            border-radius: 50%;
-            animation: serp-spin 0.8s linear infinite;
-            margin-right: 8px;
-            vertical-align: middle;
+        #serp-toolbar .serp-tb-btn .tb-icon {
+            font-size: 18px;
+            line-height: 1;
         }
-        @keyframes serp-spin {
-            to { transform: rotate(360deg); }
+        #serp-toolbar .serp-tb-btn .tb-label {
+            font-size: 10px;
+            line-height: 1;
+        }
+        #serp-toolbar .serp-tb-btn.has-product {
+            border-color: #52c41a;
+            background: #f6ffed;
+            color: #389e0d;
         }
 
-        /* 产品选择弹窗 */
+        /* 产品信息区 */
+        #serp-toolbar .serp-product-info {
+            display: none;
+            border-top: 1px solid #f0f0f0;
+            margin-top: 2px;
+            padding-top: 6px;
+            width: 120px;
+        }
+        #serp-toolbar .serp-product-info.visible {
+            display: block;
+        }
+        #serp-toolbar .serp-product-info .pi-label {
+            font-size: 9px;
+            color: #999;
+            margin-bottom: 2px;
+        }
+        #serp-toolbar .serp-product-info .pi-skc {
+            font-size: 11px;
+            font-weight: 600;
+            color: #428bca;
+            word-break: break-all;
+        }
+        #serp-toolbar .serp-product-info .pi-title {
+            font-size: 10px;
+            color: #666;
+            word-break: break-word;
+            max-height: 40px;
+            overflow: hidden;
+            line-height: 1.3;
+            margin-top: 2px;
+        }
+        #serp-toolbar .serp-product-info .pi-clear {
+            font-size: 10px;
+            color: #ff4d4f;
+            cursor: pointer;
+            margin-top: 4px;
+            text-align: center;
+            border: 1px solid #ffccc7;
+            border-radius: 3px;
+            padding: 2px 6px;
+            transition: all 0.2s;
+        }
+        #serp-toolbar .serp-product-info .pi-clear:hover {
+            background: #fff1f0;
+        }
+
+        /* 折叠按钮 */
+        #serp-tb-toggle {
+            position: fixed;
+            left: 60px;
+            top: 142px;
+            z-index: 999989;
+            width: 16px;
+            height: 32px;
+            border-radius: 0 4px 4px 0;
+            border: 1px solid #e8e8e8;
+            border-left: none;
+            background: #fff;
+            cursor: pointer;
+            display: none;
+            font-size: 10px;
+            color: #999;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        #serp-tb-toggle:hover {
+            color: #428bca;
+            background: #f0f5ff;
+        }
+
+        /* ===== 产品选择弹窗 ===== */
         #serp-modal-overlay {
             display: none;
             position: fixed;
@@ -155,6 +259,10 @@
             border-color: #667eea;
             transform: translateX(2px);
         }
+        .serp-product-item.selected {
+            background: #f0f5ff;
+            border-color: #428bca;
+        }
         .serp-product-item .skc-badge {
             font-size: 12px;
             font-weight: bold;
@@ -196,7 +304,7 @@
             font-size: 14px;
         }
 
-        /* 填充状态提示 */
+        /* ===== Toast ===== */
         #serp-toast {
             position: fixed;
             top: 20px;
@@ -208,8 +316,7 @@
             font-family: "Microsoft YaHei", sans-serif;
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
             display: none;
-            max-width: 400px;
-            transition: all 0.3s;
+            max-width: 450px;
         }
         #serp-toast.success {
             background: #dcfce7;
@@ -227,7 +334,7 @@
             border: 1px solid #bfdbfe;
         }
 
-        /* 填充进度条 */
+        /* ===== 进度条 ===== */
         #serp-progress-bar {
             position: fixed;
             top: 0;
@@ -240,14 +347,34 @@
         }
     `);
 
-    // ==================== DOM 元素创建 ====================
-    // 悬浮按钮
-    const btn = document.createElement('button');
-    btn.id = 'serp-autofill-btn';
-    btn.innerHTML = '🚀 启用大模型填充数据';
-    document.body.appendChild(btn);
+    // ==================== 构建 DOM ====================
 
-    // Toast 提示
+    // 工具栏
+    const toolbar = document.createElement('div');
+    toolbar.id = 'serp-toolbar';
+    toolbar.innerHTML = `
+        <button class="serp-tb-btn" id="serp-btn-select" title="选择产品">
+            <span class="tb-icon">📦</span>
+            <span class="tb-label">选品</span>
+        </button>
+        <button class="serp-tb-btn" id="serp-btn-category" title="智能选择分类">
+            <span class="tb-icon">🏷️</span>
+            <span class="tb-label">分类</span>
+        </button>
+        <button class="serp-tb-btn" id="serp-btn-fill" title="智能填充表单">
+            <span class="tb-icon">✍️</span>
+            <span class="tb-label">填充</span>
+        </button>
+        <div class="serp-product-info" id="serp-product-info">
+            <div class="pi-label">已选产品</div>
+            <div class="pi-skc" id="serp-pi-skc"></div>
+            <div class="pi-title" id="serp-pi-title"></div>
+            <div class="pi-clear" id="serp-pi-clear">清除</div>
+        </div>
+    `;
+    document.body.appendChild(toolbar);
+
+    // Toast
     const toast = document.createElement('div');
     toast.id = 'serp-toast';
     document.body.appendChild(toast);
@@ -263,7 +390,7 @@
     modalOverlay.innerHTML = `
         <div id="serp-modal">
             <div id="serp-modal-header">
-                <h3>📋 选择要填充的产品</h3>
+                <h3>📋 选择产品</h3>
                 <button id="serp-modal-close">✕</button>
             </div>
             <div id="serp-modal-search">
@@ -276,13 +403,23 @@
     `;
     document.body.appendChild(modalOverlay);
 
+    // ==================== DOM 引用 ====================
+    const btnSelect = document.getElementById('serp-btn-select');
+    const btnCategory = document.getElementById('serp-btn-category');
+    const btnFill = document.getElementById('serp-btn-fill');
+    const productInfo = document.getElementById('serp-product-info');
+    const piSkc = document.getElementById('serp-pi-skc');
+    const piTitle = document.getElementById('serp-pi-title');
+    const piClear = document.getElementById('serp-pi-clear');
+
     // ==================== 工具函数 ====================
-    function showToast(msg, type = 'info') {
+    function showToast(msg, type) {
+        type = type || 'info';
         toast.textContent = msg;
         toast.className = type;
         toast.style.display = 'block';
         clearTimeout(toast._hideTimer);
-        toast._hideTimer = setTimeout(() => {
+        toast._hideTimer = setTimeout(function() {
             toast.style.display = 'none';
         }, 4000);
     }
@@ -290,40 +427,270 @@
     function setProgress(pct) {
         progressBar.style.width = Math.min(100, Math.max(0, pct)) + '%';
         if (pct >= 100) {
-            setTimeout(() => { progressBar.style.width = '0%'; }, 1000);
+            setTimeout(function() { progressBar.style.width = '0%'; }, 1000);
         }
     }
 
-    function setLoading(isLoading) {
-        if (isLoading) {
+    function setBtnLoading(btn, loading) {
+        if (loading) {
             btn.classList.add('loading');
-            btn.innerHTML = '<span class="spinner"></span> 正在处理...';
         } else {
             btn.classList.remove('loading');
-            btn.innerHTML = '🚀 启用大模型填充数据';
         }
+    }
+
+    function sleep(ms) {
+        return new Promise(function(resolve) { setTimeout(resolve, ms); });
+    }
+
+    function updateProductUI() {
+        if (selectedProduct) {
+            productInfo.classList.add('visible');
+            piSkc.textContent = selectedProduct.skc || '';
+            piTitle.textContent = selectedProduct.title || '未命名产品';
+            btnSelect.classList.add('has-product');
+        } else {
+            productInfo.classList.remove('visible');
+            piSkc.textContent = '';
+            piTitle.textContent = '';
+            btnSelect.classList.remove('has-product');
+        }
+    }
+
+    // ==================== 店铺检测 ====================
+    function detectStoreId() {
+        var storeItems = document.querySelectorAll('.shop-form-item .ant-select-selection-item');
+        if (!storeItems || storeItems.length === 0) return null;
+        var name = (storeItems[0].getAttribute('title') || storeItems[0].textContent || '').trim();
+        for (var key in STORE_CN_MAP) {
+            if (STORE_CN_MAP.hasOwnProperty(key) && name.indexOf(key) !== -1) {
+                return STORE_CN_MAP[key];
+            }
+        }
+        // fallback: try to extract from the store name directly
+        // e.g. "Ozon anling" → "ozon_anling"
+        var lowerName = name.toLowerCase().replace(/\s+/g, '_');
+        if (lowerName.indexOf('ozon_') !== -1) return lowerName;
+        return null;
     }
 
     // ==================== 获取产品列表 ====================
     async function fetchProducts() {
         try {
-            const res = await fetch(API_PRODUCTS);
+            var res = await fetch(API_PRODUCTS);
             if (!res.ok) throw new Error('获取产品列表失败');
-            const data = await res.json();
+            var data = await res.json();
             return data.products || [];
         } catch (e) {
-            showToast('❌ 无法连接到 Flask 后端: ' + e.message, 'error');
+            showToast('无法连接到 sERP 后端: ' + e.message, 'error');
             return [];
         }
     }
 
-    // ==================== 采集页面表单字段 ====================
-    function collectFormFields() {
-        const fields = [];
+    // ==================== 产品选择弹窗 ====================
+    function renderProductList(products) {
+        var listEl = document.getElementById('serp-modal-list');
+        if (products.length === 0) {
+            listEl.innerHTML = '<div id="serp-modal-empty">没有找到匹配的产品</div>';
+            return;
+        }
 
-        // 1. 收集所有 input
-        document.querySelectorAll('input:not([type="hidden"]):not([type="file"])').forEach(el => {
-            const label = findLabel(el);
+        listEl.innerHTML = products.map(function(p) {
+            var isSelected = selectedProduct && selectedProduct.skc === p.skc;
+            var cls = 'serp-product-item' + (isSelected ? ' selected' : '');
+            return '<div class="' + cls + '" data-skc="' + (p.skc || '') + '">' +
+                '<span class="skc-badge">' + (p.skc || '—') + '</span>' +
+                '<div class="product-info">' +
+                    '<div class="product-title">' + (p.title || '未命名产品') + '</div>' +
+                    '<div class="product-meta">' +
+                        (p.category || '其他') + ' · ' + (p.platform || '未知平台') +
+                        (p.price ? ' · ' + p.price : '') +
+                    '</div>' +
+                '</div>' +
+                '<span class="product-status">' + (p.store_status ? Object.values(p.store_status).filter(function(s) { return s === '已上架'; }).length + ' 店已上架' : '') + '</span>' +
+            '</div>';
+        }).join('');
+
+        // 点击事件
+        listEl.querySelectorAll('.serp-product-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                var skc = item.dataset.skc;
+                var product = allProducts.find(function(p) { return p.skc === skc; });
+                if (product) {
+                    selectedProduct = product;
+                    updateProductUI();
+                    modalOverlay.classList.remove('active');
+                    showToast('已选择产品: ' + (product.skc || ''), 'success');
+                }
+            });
+        });
+    }
+
+    // ==================== 智能选择分类 ====================
+    async function doMatchCategory() {
+        if (!selectedProduct) {
+            showToast('请先点击"选品"选择一个产品', 'error');
+            return;
+        }
+
+        var storeId = detectStoreId();
+        if (!storeId) {
+            showToast('无法识别当前店铺，请在店小秘页面选择 Ozon 店铺后再试', 'error');
+            return;
+        }
+
+        setBtnLoading(btnCategory, true);
+        showToast('正在匹配 Ozon 品类...', 'info');
+
+        try {
+            var prodData = selectedProduct.product_data || {};
+            var description = (prodData.about_item || '') + ' ' + (prodData.product_description || '');
+
+            var res = await fetch(FLASK_BASE + '/api/ozon/' + storeId + '/match-category', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    product_title: selectedProduct.title || '',
+                    product_category: selectedProduct.category || '',
+                    product_description: description.trim()
+                })
+            });
+
+            var data = await res.json();
+
+            if (!res.ok || !data.success || !data.best_match || !data.best_match.id) {
+                showToast('品类匹配失败: ' + (data.error || data.warning || '无匹配结果'), 'error');
+                return;
+            }
+
+            var matched = data.best_match;
+            showToast('已匹配品类: ' + (matched.path || matched.name) + ' (ID: ' + matched.id + ')', 'success');
+
+            // 尝试填写品类下拉框
+            await fillCategorySelect(matched);
+
+        } catch (e) {
+            console.error('品类匹配异常:', e);
+            showToast('品类匹配失败: ' + e.message, 'error');
+        } finally {
+            setBtnLoading(btnCategory, false);
+        }
+    }
+
+    async function fillCategorySelect(matched) {
+        var catWrapper = document.querySelector('.category-item .ant-select');
+        if (!catWrapper) {
+            showToast('未找到品类下拉框，请手动选择: ' + (matched.path || matched.name), 'error');
+            return;
+        }
+
+        // 打开下拉
+        var selector = catWrapper.querySelector('.ant-select-selector');
+        if (!selector) {
+            showToast('品类组件异常，请手动选择', 'error');
+            return;
+        }
+        selector.click();
+        await sleep(350);
+
+        // 在搜索框输入品类名称（俄语名）
+        var searchInput = catWrapper.querySelector('.ant-select-selection-search-input');
+        if (searchInput) {
+            var nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+            nativeSetter.call(searchInput, matched.name || '');
+            searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+            searchInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        await sleep(600);
+
+        // 查找并点击匹配的选项
+        var dropdown = document.querySelector('.ant-select-dropdown:not(.ant-select-dropdown-hidden)');
+        if (dropdown) {
+            var options = dropdown.querySelectorAll('.ant-select-item-option');
+            if (options.length > 0) {
+                // 优先找文本精确匹配的
+                var bestOption = null;
+                var matchName = (matched.name || '').toLowerCase();
+                options.forEach(function(opt) {
+                    var text = (opt.textContent || '').toLowerCase();
+                    if (text.indexOf(matchName) !== -1 && !bestOption) {
+                        bestOption = opt;
+                    }
+                });
+                if (!bestOption) bestOption = options[0];
+
+                bestOption.click();
+                await sleep(300);
+
+                // 验证是否选中
+                var selectedItem = catWrapper.querySelector('.ant-select-selection-item');
+                if (selectedItem) {
+                    var newVal = selectedItem.getAttribute('title') || selectedItem.textContent || '';
+                    if (newVal.indexOf(matched.name) !== -1 || matched.name.indexOf(newVal) !== -1) {
+                        showToast('品类已自动选中: ' + newVal, 'success');
+                        return;
+                    }
+                }
+            }
+        }
+
+        // 如果未能自动选中，给用户提示
+        document.body.click(); // 关闭下拉
+        showToast('请手动选择品类: 搜索 "' + (matched.name || '') + '" (ID: ' + matched.id + ')', 'error');
+    }
+
+    // ==================== 智能填充（表单字段） ====================
+
+    function findLabel(el) {
+        if (el.id) {
+            var label = document.querySelector('label[for="' + el.id + '"]');
+            if (label) return label.textContent.trim();
+        }
+        var parent = el.parentElement;
+        while (parent) {
+            if (parent.tagName === 'LABEL') {
+                return parent.textContent.trim();
+            }
+            var prev = parent.previousElementSibling;
+            if (prev && prev.tagName === 'LABEL') {
+                return prev.textContent.trim();
+            }
+            parent = parent.parentElement;
+        }
+        parent = el.closest('.ant-form-item, .el-form-item, .form-group, .vxe-form-item');
+        if (parent) {
+            var labelEl = parent.querySelector('label, .ant-form-item-label, .el-form-item__label');
+            if (labelEl) return labelEl.textContent.trim();
+        }
+        return '';
+    }
+
+    function buildSelector(el) {
+        if (el.id) return '#' + CSS.escape(el.id);
+        if (el.name) {
+            var tag = el.tagName.toLowerCase();
+            return tag + '[name="' + el.name + '"]';
+        }
+        var tag = el.tagName.toLowerCase();
+        var classes = Array.from(el.classList).filter(function(c) {
+            return !c.startsWith('ant-') && !c.startsWith('el-') && !c.startsWith('vxe-') && !c.startsWith('css-');
+        });
+        if (classes.length > 0) {
+            return tag + '.' + classes.map(function(c) { return CSS.escape(c); }).join('.');
+        }
+        var parent = el.parentElement;
+        if (parent) {
+            var idx = Array.from(parent.children).indexOf(el) + 1;
+            return tag + ':nth-child(' + idx + ')';
+        }
+        return tag;
+    }
+
+    function collectFormFields() {
+        var fields = [];
+
+        document.querySelectorAll('input:not([type="hidden"]):not([type="file"])').forEach(function(el) {
+            var label = findLabel(el);
             fields.push({
                 tag: 'input',
                 type: el.type || 'text',
@@ -337,13 +704,11 @@
             });
         });
 
-        // 2. 收集所有 select
-        document.querySelectorAll('select').forEach(el => {
-            const label = findLabel(el);
-            const options = Array.from(el.options).map(o => ({
-                value: o.value,
-                text: o.text
-            }));
+        document.querySelectorAll('select').forEach(function(el) {
+            var label = findLabel(el);
+            var options = Array.from(el.options).map(function(o) {
+                return { value: o.value, text: o.text };
+            });
             fields.push({
                 tag: 'select',
                 name: el.name || '',
@@ -356,9 +721,8 @@
             });
         });
 
-        // 3. 收集所有 textarea
-        document.querySelectorAll('textarea').forEach(el => {
-            const label = findLabel(el);
+        document.querySelectorAll('textarea').forEach(function(el) {
+            var label = findLabel(el);
             fields.push({
                 tag: 'textarea',
                 name: el.name || '',
@@ -374,106 +738,49 @@
         return fields;
     }
 
-    function findLabel(el) {
-        // 尝试通过 for 属性
-        if (el.id) {
-            const label = document.querySelector(`label[for="${el.id}"]`);
-            if (label) return label.textContent.trim();
-        }
-        // 尝试找父级 label
-        let parent = el.parentElement;
-        while (parent) {
-            if (parent.tagName === 'LABEL') {
-                return parent.textContent.trim();
-            }
-            // 查找相邻的前一个 label
-            const prev = parent.previousElementSibling;
-            if (prev && prev.tagName === 'LABEL') {
-                return prev.textContent.trim();
-            }
-            parent = parent.parentElement;
-        }
-        // 尝试找包含文本的父级 div/span
-        parent = el.closest('.ant-form-item, .el-form-item, .form-group, .vxe-form-item');
-        if (parent) {
-            const labelEl = parent.querySelector('label, .ant-form-item-label, .el-form-item__label');
-            if (labelEl) return labelEl.textContent.trim();
-        }
-        return '';
-    }
-
-    function buildSelector(el) {
-        // 优先使用 id
-        if (el.id) return `#${CSS.escape(el.id)}`;
-        // 使用 name
-        if (el.name) {
-            const tag = el.tagName.toLowerCase();
-            return `${tag}[name="${el.name}"]`;
-        }
-        // 使用 class + 索引
-        const tag = el.tagName.toLowerCase();
-        const classes = Array.from(el.classList).filter(c => !c.startsWith('ant-') && !c.startsWith('el-') && !c.startsWith('vxe-'));
-        if (classes.length > 0) {
-            return `${tag}.${classes.map(c => CSS.escape(c)).join('.')}`;
-        }
-        // 使用 nth-child
-        const parent = el.parentElement;
-        if (parent) {
-            const idx = Array.from(parent.children).indexOf(el) + 1;
-            return `${tag}:nth-child(${idx})`;
-        }
-        return tag;
-    }
-
-    // ==================== 填充表单 ====================
     function fillFormField(selector, value) {
         if (!value && value !== 0) return false;
         value = String(value);
 
         try {
-            let el = null;
+            var el = null;
 
-            // 尝试多种选择器
             if (selector.startsWith('#')) {
                 el = document.querySelector(selector);
-            } else if (selector.includes('[name=')) {
-                const match = selector.match(/^(\w+)\[name="([^"]+)"\]$/);
+            } else if (selector.indexOf('[name=') !== -1) {
+                var match = selector.match(/^(\w+)\[name="([^"]+)"\]$/);
                 if (match) {
-                    el = document.querySelector(`${match[1]}[name="${match[2]}"]`);
+                    el = document.querySelector(match[1] + '[name="' + match[2] + '"]');
                 }
             }
 
             if (!el) {
-                // 尝试通过标签名 + class 查找
-                const parts = selector.split('.');
-                const tag = parts[0];
+                var parts = selector.split('.');
+                var tag = parts[0];
                 if (parts.length > 1) {
-                    const cls = parts.slice(1).join('.');
-                    el = document.querySelector(`${tag}.${cls}`);
+                    var cls = parts.slice(1).join('.');
+                    el = document.querySelector(tag + '.' + cls);
                 }
             }
 
             if (!el) {
-                // 最后尝试通过 nth-child
-                const match = selector.match(/^(\w+):nth-child\((\d+)\)$/);
-                if (match) {
-                    const parent = document.querySelector(`body ${match[1]}:nth-child(${match[2]})`);
+                var m2 = selector.match(/^(\w+):nth-child\((\d+)\)$/);
+                if (m2) {
+                    var parent = document.querySelector('body ' + m2[1] + ':nth-child(' + m2[2] + ')');
                     if (parent) el = parent;
                 }
             }
 
             if (!el) return false;
 
-            // 根据标签类型填充
-            const tag = el.tagName.toLowerCase();
+            var tag = el.tagName.toLowerCase();
 
             if (tag === 'input') {
-                const inputType = el.type || 'text';
+                var inputType = el.type || 'text';
                 if (inputType === 'checkbox' || inputType === 'radio') {
                     el.checked = (value === 'true' || value === '1' || value === 'yes');
                 } else {
-                    // 触发原生 input 事件
-                    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+                    var nativeInputValueSetter = Object.getOwnPropertyDescriptor(
                         window.HTMLInputElement.prototype, 'value'
                     ).set;
                     nativeInputValueSetter.call(el, value);
@@ -485,29 +792,23 @@
             }
 
             if (tag === 'select') {
-                // 尝试匹配选项
-                const options = Array.from(el.options);
-                let matched = false;
-
-                // 精确匹配 value
-                const exactValue = options.find(o => o.value === value);
+                var options = Array.from(el.options);
+                var matched = false;
+                var exactValue = options.find(function(o) { return o.value === value; });
                 if (exactValue) {
                     el.value = value;
                     matched = true;
                 }
-
-                // 模糊匹配 text
                 if (!matched) {
-                    const fuzzyText = options.find(o =>
-                        o.text.toLowerCase().includes(value.toLowerCase()) ||
-                        value.toLowerCase().includes(o.text.toLowerCase())
-                    );
+                    var fuzzyText = options.find(function(o) {
+                        return o.text.toLowerCase().indexOf(value.toLowerCase()) !== -1 ||
+                               value.toLowerCase().indexOf(o.text.toLowerCase()) !== -1;
+                    });
                     if (fuzzyText) {
                         el.value = fuzzyText.value;
                         matched = true;
                     }
                 }
-
                 if (matched) {
                     el.dispatchEvent(new Event('change', { bubbles: true }));
                     el.dispatchEvent(new Event('input', { bubbles: true }));
@@ -516,16 +817,15 @@
             }
 
             if (tag === 'textarea') {
-                const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+                var nativeSetter = Object.getOwnPropertyDescriptor(
                     window.HTMLTextAreaElement.prototype, 'value'
                 ).set;
-                nativeInputValueSetter.call(el, value);
+                nativeSetter.call(el, value);
                 el.dispatchEvent(new Event('input', { bubbles: true }));
                 el.dispatchEvent(new Event('change', { bubbles: true }));
                 return true;
             }
 
-            // 对于富文本编辑器，尝试设置 contenteditable
             if (el.isContentEditable) {
                 el.textContent = value;
                 el.dispatchEvent(new Event('input', { bubbles: true }));
@@ -539,9 +839,8 @@
         }
     }
 
-    // ==================== 调用 DeepSeek 分析 ====================
     async function analyzeWithDeepSeek(product, formFields) {
-        const payload = {
+        var payload = {
             skc: product.skc,
             product_title: product.title,
             product_data: product.product_data || {},
@@ -550,154 +849,159 @@
         };
 
         try {
-            const res = await fetch(API_AUTO_FILL, {
+            var res = await fetch(API_AUTO_FILL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
             if (!res.ok) {
-                const err = await res.json();
+                var err = await res.json();
                 throw new Error(err.error || '分析失败');
             }
 
             return await res.json();
         } catch (e) {
-            showToast('❌ DeepSeek 分析失败: ' + e.message, 'error');
+            showToast('DeepSeek 分析失败: ' + e.message, 'error');
             return null;
         }
     }
 
-    // ==================== 执行填充 ====================
-    async function executeFill(product) {
-        setLoading(true);
+    async function doAutoFill() {
+        if (!selectedProduct) {
+            showToast('请先点击"选品"选择一个产品', 'error');
+            return;
+        }
+
+        setBtnLoading(btnFill, true);
         setProgress(10);
-        showToast(`🔄 正在分析产品 ${product.skc} 的表单字段...`, 'info');
+        showToast('正在分析产品 ' + selectedProduct.skc + ' 的表单字段...', 'info');
 
         // 1. 采集表单字段
-        const formFields = collectFormFields();
+        var formFields = collectFormFields();
         setProgress(30);
-        console.log('采集到表单字段:', formFields.length);
+        console.log('[sERP] 采集到表单字段:', formFields.length);
 
-        // 2. 调用 DeepSeek 分析
-        showToast(`🤖 正在调用 DeepSeek 分析 ${formFields.length} 个表单字段...`, 'info');
-        const result = await analyzeWithDeepSeek(product, formFields);
+        // 2. 调用 DeepSeek
+        showToast('正在调用 DeepSeek 分析 ' + formFields.length + ' 个表单字段...', 'info');
+        var result = await analyzeWithDeepSeek(selectedProduct, formFields);
         setProgress(60);
 
         if (!result || !result.mappings) {
-            setLoading(false);
+            setBtnLoading(btnFill, false);
             setProgress(0);
-            showToast('❌ 分析失败，请重试', 'error');
+            showToast('分析失败，请重试', 'error');
             return;
         }
 
         // 3. 执行填充
-        const mappings = result.mappings;
-        let filledCount = 0;
-        let totalCount = mappings.length;
+        var mappings = result.mappings;
+        var filledCount = 0;
+        var totalCount = mappings.length;
 
-        showToast(`🔄 正在填充 ${totalCount} 个字段...`, 'info');
+        showToast('正在填充 ' + totalCount + ' 个字段...', 'info');
 
-        mappings.forEach((mapping, index) => {
-            const success = fillFormField(mapping.selector, mapping.value);
+        mappings.forEach(function(mapping, index) {
+            var success = fillFormField(mapping.selector, mapping.value);
             if (success) filledCount++;
             setProgress(60 + (index / totalCount) * 35);
         });
 
         setProgress(100);
 
-        // 4. 显示结果
         if (filledCount > 0) {
-            showToast(`✅ 填充完成！成功填充 ${filledCount}/${totalCount} 个字段`, 'success');
+            showToast('填充完成！成功填充 ' + filledCount + '/' + totalCount + ' 个字段', 'success');
         } else {
-            showToast('⚠️ 未能自动填充任何字段，请手动检查', 'error');
+            showToast('未能自动填充任何字段，请手动检查', 'error');
         }
 
-        setLoading(false);
-    }
-
-    // ==================== 弹窗逻辑 ====================
-    let allProducts = [];
-
-    function renderProductList(products) {
-        const listEl = document.getElementById('serp-modal-list');
-        if (products.length === 0) {
-            listEl.innerHTML = '<div id="serp-modal-empty">没有找到匹配的产品</div>';
-            return;
-        }
-
-        listEl.innerHTML = products.map(p => `
-            <div class="serp-product-item" data-skc="${p.skc}">
-                <span class="skc-badge">${p.skc}</span>
-                <div class="product-info">
-                    <div class="product-title">${p.title || '未命名产品'}</div>
-                    <div class="product-meta">
-                        ${p.category || '其他'} · ${p.platform || '未知平台'} · ${p.price || '—'}
-                    </div>
-                </div>
-                <span class="product-status">${p.store_status ? Object.values(p.store_status).filter(s => s === '已上架').length + ' 店已上架' : ''}</span>
-            </div>
-        `).join('');
-
-        // 点击事件
-        listEl.querySelectorAll('.serp-product-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const skc = item.dataset.skc;
-                const product = allProducts.find(p => p.skc === skc);
-                if (product) {
-                    modalOverlay.classList.remove('active');
-                    executeFill(product);
-                }
-            });
-        });
+        setBtnLoading(btnFill, false);
     }
 
     // ==================== 事件绑定 ====================
-    // 悬浮按钮点击
-    btn.addEventListener('click', async () => {
-        setLoading(true);
+
+    // 选品按钮
+    btnSelect.addEventListener('click', async function() {
+        setBtnLoading(btnSelect, true);
         modalOverlay.classList.add('active');
 
-        const listEl = document.getElementById('serp-modal-list');
+        var listEl = document.getElementById('serp-modal-list');
         listEl.innerHTML = '<div id="serp-modal-empty">正在加载产品列表...</div>';
 
         allProducts = await fetchProducts();
-        setLoading(false);
+        setBtnLoading(btnSelect, false);
 
         if (allProducts.length === 0) {
-            listEl.innerHTML = '<div id="serp-modal-empty">⚠️ 没有找到正式产品，请先在 sERP 中采集并保存产品</div>';
+            listEl.innerHTML = '<div id="serp-modal-empty">没有找到正式产品，请先在 sERP 中采集并保存产品</div>';
             return;
         }
 
         renderProductList(allProducts);
     });
 
-    // 关闭弹窗
-    document.getElementById('serp-modal-close').addEventListener('click', () => {
+    // 智能分类按钮
+    btnCategory.addEventListener('click', function() {
+        doMatchCategory();
+    });
+
+    // 智能填充按钮
+    btnFill.addEventListener('click', function() {
+        doAutoFill();
+    });
+
+    // 清除已选产品
+    piClear.addEventListener('click', function() {
+        selectedProduct = null;
+        updateProductUI();
+        showToast('已清除产品选择', 'info');
+    });
+
+    // 弹窗关闭
+    document.getElementById('serp-modal-close').addEventListener('click', function() {
         modalOverlay.classList.remove('active');
     });
-    modalOverlay.addEventListener('click', (e) => {
+    modalOverlay.addEventListener('click', function(e) {
         if (e.target === modalOverlay) {
             modalOverlay.classList.remove('active');
         }
     });
 
     // 搜索过滤
-    document.getElementById('serp-search-input').addEventListener('input', (e) => {
-        const keyword = e.target.value.toLowerCase().trim();
+    document.getElementById('serp-search-input').addEventListener('input', function(e) {
+        var keyword = e.target.value.toLowerCase().trim();
         if (!keyword) {
             renderProductList(allProducts);
             return;
         }
-        const filtered = allProducts.filter(p =>
-            (p.skc || '').toLowerCase().includes(keyword) ||
-            (p.title || '').toLowerCase().includes(keyword) ||
-            (p.category || '').toLowerCase().includes(keyword)
-        );
+        var filtered = allProducts.filter(function(p) {
+            return (p.skc || '').toLowerCase().indexOf(keyword) !== -1 ||
+                   (p.title || '').toLowerCase().indexOf(keyword) !== -1 ||
+                   (p.category || '').toLowerCase().indexOf(keyword) !== -1;
+        });
         renderProductList(filtered);
     });
 
-    // ==================== 初始化提示 ====================
-    console.log('✅ 店小秘自动填充助手已加载');
-    console.log('📌 点击右下角 "🚀 启用大模型填充数据" 按钮开始');
+    // 键盘快捷键: Ctrl+Shift+S 选品, Ctrl+Shift+C 分类, Ctrl+Shift+F 填充
+    document.addEventListener('keydown', function(e) {
+        if (!e.ctrlKey || !e.shiftKey) return;
+        switch (e.key.toLowerCase()) {
+            case 's':
+                e.preventDefault();
+                btnSelect.click();
+                break;
+            case 'c':
+                e.preventDefault();
+                btnCategory.click();
+                break;
+            case 'f':
+                e.preventDefault();
+                btnFill.click();
+                break;
+        }
+    });
+
+    // ==================== 启动 ====================
+    console.log('[sERP] 店小秘 Ozon 智能助手 v2.0 已加载');
+    console.log('[sERP] 左侧工具栏: 选品 → 分类 → 填充');
+    console.log('[sERP] 快捷键: Ctrl+Shift+S 选品 | Ctrl+Shift+C 分类 | Ctrl+Shift+F 填充');
 })();

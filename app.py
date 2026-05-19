@@ -43,6 +43,7 @@ logging.config.dictConfig({
     'disable_existing_loggers': False,
 })
 
+from pathlib import Path
 from urllib.parse import quote
 
 from flask import Flask, request, jsonify, render_template, send_from_directory
@@ -1056,10 +1057,16 @@ def amazon_capture():
     images_dir = os.path.join(data_dir, "images")
     os.makedirs(images_dir, exist_ok=True)
 
-    # 保存产品数据
+    # 保存产品数据（不含图片URL，图片已下载到本地）
+    sanitized = dict(data)
+    sanitized["images"] = []
+    if sanitized.get("variantData"):
+        sanitized["variantData"] = [
+            {**v, "images": []} for v in sanitized["variantData"]
+        ]
     product_data_file = os.path.join(data_dir, "product_data.json")
     with open(product_data_file, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+        json.dump(sanitized, f, indent=2, ensure_ascii=False)
 
     collect_tasks[task_id] = {
         "status": "completed",
@@ -1197,10 +1204,17 @@ def browser_capture():
     os.makedirs(images_dir, exist_ok=True)
 
     product_data_file = os.path.join(data_dir, "product_data.json")
+    # 保存时移除图片URL（图片已下载到本地，无需在数据中保留冗长的URL）
+    sanitized = dict(data)
+    sanitized["images"] = []
+    if sanitized.get("variantData"):
+        sanitized["variantData"] = [
+            {**v, "images": []} for v in sanitized["variantData"]
+        ]
     with open(product_data_file, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+        json.dump(sanitized, f, indent=2, ensure_ascii=False)
 
-    # 计算总图片数
+    # 计算总图片数（基于原始 data）
     total_image_count = len(images)
     if variant_data:
         for v in variant_data:
@@ -2066,7 +2080,7 @@ def extract_from_text():
 {"weight_g": "", "size_spec": "", "spec": ""}"""
     
     payload = {
-        "model": "deepseek-chat",
+        "model": "deepseek-v4-pro",
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": text}
@@ -2128,6 +2142,7 @@ def auto_fill_analyze():
     product_data = data.get("product_data", {})
     manual_data = data.get("manual_data", {})
     form_fields = data.get("form_fields", [])
+    custom_prompts = data.get("custom_prompts", {})
 
     if not form_fields:
         return jsonify({"error": "表单字段列表不能为空"}), 400
@@ -2145,12 +2160,70 @@ def auto_fill_analyze():
     description = product_data.get("description", "")
 
     # 收集所有产品文本
+    product_details = product_data.get("product_details", {})
+    if product_details and isinstance(product_details, dict) and product_details.get("_raw"):
+        del product_details["_raw"]
+    brand = product_data.get("brand", "")
+    category = product_data.get("category", "")
+    rating = product_data.get("rating", "")
+    variants = product_data.get("variants", {})
+
+    # 从 product_details 中提取含单位的字段，生成换算提示
+    unit_hints = []
+    if product_details and isinstance(product_details, dict):
+        weight_keys = [k for k in product_details.keys() if any(w in k.lower() for w in ["weight", "重量", "вес", "масса"])]
+        dim_keys = [k for k in product_details.keys() if any(d in k.lower() for d in ["dimension", "size", "размер", "尺寸", "length", "長", "width", "寬", "height", "高", "depth", "深"])]
+        unit_keys = weight_keys + dim_keys
+        for k in unit_keys[:8]:
+            val = product_details[k]
+            if val and isinstance(val, str):
+                val_lower = val.lower()
+                hint = f"  - {k}: {val}"
+                if any(u in val_lower for u in ["oz", "ounce", "盎司", "lb", "pound", "磅"]):
+                    hint += " → 需换算为克(g): 1oz≈28.35g, 1lb≈453.6g"
+                elif any(u in val_lower for u in ["in", "inch", "英寸", '"', "ft", "feet", "英尺"]):
+                    hint += " → 需换算为厘米(cm): 1in≈2.54cm"
+                unit_hints.append(hint)
+        # 也检查 attributes 中的单位字段
+        if attrs and isinstance(attrs, dict):
+            for k, v in attrs.items():
+                if isinstance(v, str) and any(u in v.lower() for u in ["oz", "lb", "in", "inch", "pound", "ounce"]):
+                    unit_hints.append(f"  - {k}: {v} → 注意单位换算")
+
     product_texts = [
+        "品牌: " + brand if brand else "",
+        "品类: " + category if category else "",
+        "评分: " + rating if rating else "",
         product_title,
         about_item,
         product_description,
         description,
+        ("### 单位换算提醒（重点关注以下字段）\n" + "\n".join(unit_hints)) if unit_hints else "",
+        "### 产品规格 (含原始单位，填充时注意换算)\n" + json.dumps(product_details, ensure_ascii=False, indent=2) if product_details else "",
     ]
+
+    # 变体信息处理（优先使用结构化 variant_list）
+    variant_list = data.get("variant_list", [])
+    if variant_list:
+        variant_text = "### 变体列表（结构化）\n"
+        for i, v in enumerate(variant_list):
+            variant_text += f"  变体{i+1}: 名称={v.get('name','')}, 价格={v.get('price','')}, "
+            variant_text += f"库存={v.get('stock','')}, 属性={json.dumps(v.get('attributes',{}), ensure_ascii=False)}\n"
+        product_texts.append(variant_text)
+    else:
+        # Fallback: old raw JSON format
+        variants_fb = data.get("product_data", {}).get("variants", {})
+        if variants_fb and variants_fb.get("values"):
+            variant_text = "### 变体信息\n" + json.dumps(variants_fb, ensure_ascii=False, indent=2)
+            product_texts.append(variant_text)
+
+    # 提取确定性数据提示
+    deterministic_hints = _prefill_deterministic(manual_data, product_data)
+    hints_text = ""
+    if deterministic_hints:
+        hints_lines = [f"  - {k}: {v}" for k, v in deterministic_hints.items()]
+        hints_text = "\n### 已知确定数据（优先使用）\n" + "\n".join(hints_lines)
+
     product_text = "\n".join(t for t in product_texts if t)
 
     # 构建表单字段摘要
@@ -2162,23 +2235,65 @@ def auto_fill_analyze():
         ftype = f.get("type", "")
         name = f.get("name", "")
         options = f.get("options", [])
-        
-        field_desc = f"  - 标签: {label or name or '(无标签)'}"
+        fidx = f.get("index", len(fields_summary))
+
+        field_desc = f"  [{fidx}] 标签: {label or name or '(无标签)'}"
         if placeholder:
             field_desc += f" | 占位: {placeholder}"
-        if tag == "select" and options:
-            option_texts = [o.get("text", o.get("value", "")) for o in options[:20]]
-            field_desc += f" | 选项: {', '.join(option_texts)}"
+        if options:
+            option_texts = [o.get("text", o.get("value", "")) for o in options[:30]]
+            if option_texts:
+                field_desc += f" | 选项: {', '.join(option_texts)}"
         fields_summary.append(field_desc)
 
     fields_text = "\n".join(fields_summary)
 
+    # 拆分字段：重要字段 vs 常规字段
+    IMPORTANT_LABEL_KW = [
+        "название", "наименование", "name", "title", "名称", "标题", "полное название",
+        "название товара", "наименование товара",
+        "описание", "description", "描述", "说明", "аннотация", "описание товара",
+        "hashtag", "хэштег", "тег", "тэг", "标签", "метка", "поисковые теги",
+        "ключевые слова", "theme_tags",
+        "rich", "showcase", "json", "富文本", "контент", "описание в формате",
+        "раShowcase", "витрина",
+    ]
+    important_fields = []
+    regular_fields = []
+    for f in form_fields:
+        label = (f.get("label", "") + " " + f.get("placeholder", "")).lower()
+        if any(kw in label for kw in IMPORTANT_LABEL_KW):
+            important_fields.append(f)
+        else:
+            regular_fields.append(f)
+
     system_prompt = """你是一个电商产品表单自动填充助手。你的任务是根据产品数据，为店小秘 Ozon 产品添加页面的表单字段提供填充值。
+
+## 重要字段特殊规则
+- 产品名称(название/name/title): 翻译为俄语，50-100字符，不包含品牌名，关键词前置
+- 描述(описание/description): 4+1框架 —— 功能(1-2句) + 材质(1句) + 使用场景(1句) + 优势(1-2句) + 可选提示
+- 标签(hashtag/хэштег): 生成10-22个标签，每个≤28字符，#开头，空格分隔。方法：核心词→长尾词→场景词→受众词→特征词
+- 富文本(rich/json/showcase): 生成为raShowcase JSON格式
 
 ## 输入格式
 你将收到：
 1. 产品信息（标题、描述、属性等）
-2. 表单字段列表（每个字段包含标签、占位符、选项等）
+2. 表单字段列表（每个字段以 [序号] 开头，包含标签、占位符、选项等）
+3. 变体列表 variant_list（结构化变体数据，含名称/价格/库存/属性）
+4. 变体行映射 variant_row_summary（row_contexts 列表对应表单SKU行，variant_count 为应有变体数）
+5. 表单字段标签可能包含 `[行上下文]`，用于区分多行SKU中相同名称的字段。例如 "统一计量单位中的商品数量 [红色, L]" 表示该字段属于红色L码变体行
+
+## SKU多行填充规则
+- variant_row_summary 中的 row_contexts 列表按表单SKU行顺序排列（第0行→第1行→...）
+- variant_list 的第i个变体对应表单的第i个SKU行
+- 每个SKU行的字段标签都带 `[行上下文]` 后缀，根据行上下文匹配对应变体的属性
+- 如果缺少某变体的特定数据（如变体2无价格），用产品级数据或推断填充
+
+## 字段标签说明
+- 普通文本字段：标签如 "产品名称"、"重量, г"
+- **checkbox-group**（多选组）：标签格式为 "属性名 (可选值: 选项A / 选项B / 选项C)"，从产品数据中判断哪些选项应勾选，**value 填应勾选的选项文本**（多个用逗号分隔，如 "天然皮革, 人造皮革"）。如果都不匹配则填 false
+- **radio-group**（单选组）：标签格式为 "属性名 (选项: 选项A / 选项B / 选项C)"，从产品数据中判断应选哪个选项，**value 填应选中的选项文本**
+- **select**（下拉框）：标签后可能包含 `| 选项: ...`，从选项列表中选取最接近的值
 
 ## 输出要求
 请分析每个表单字段，判断它对应产品数据中的哪个信息，然后给出填充值。
@@ -2190,24 +2305,57 @@ def auto_fill_analyze():
 - **重量** → 匹配标签含"重量""weight""重さ"的字段
 - **尺寸/长宽高** → 匹配标签含"尺寸""长""宽""高""size""dimension"的字段
 - **颜色** → 匹配标签含"颜色""color""colour"的字段
-- **材质** → 匹配标签含"材质""材料""material"的字段
+- **材质/材料** → 匹配标签含"材质""材料""material""leather"的字段，从产品标题/描述推断
 - **品牌** → 匹配标签含"品牌""brand"的字段
 - **分类/品类** → 匹配标签含"分类""品类""category"的字段
-- **数量/库存** → 匹配标签含"数量""库存""quantity""stock"的字段
+- **数量/件数/个数** → 匹配标签含"数量""库存""件数""个数""quantity""count""pcs"的字段，从产品描述或常识推断
 - **对于 select 下拉框**：从选项列表中匹配最接近的值
-- **对于 checkbox**：返回 true/false
+- **对于 checkbox-group**：从"可选值"列表中选择匹配产品数据的选项文本，多个用逗号分隔
+- **对于 radio-group**：从"选项"列表中选择最匹配产品数据的一个选项文本
 - **对于其他字段**：根据标签和占位符推断
 
 ### 重要规则：
-1. 如果某个字段无法匹配到产品数据中的任何信息，返回空字符串
-2. 对于下拉框(select)，必须从提供的选项列表中选取值
-3. 所有值必须是字符串
-4. 不要编造数据，不确定的字段留空
+1. index 必须是表单字段列表里对应字段的 **[序号]** 值，直接填数字
+2. 尽量为每个字段提供填充值，能推断的就推断（如皮革钱包 → 材质为"天然皮革"）
+3. 对于下拉框(select)和选项组(checkbox-group/radio-group)，必须从提供的选项列表中选取值
+4. 所有值必须是字符串
+5. 明显无关的字段可跳过，但属性类字段尽量填充
+
+## 单位换算规则
+- 重量: 1 oz ≈ 28.35g, 1 lb ≈ 453.6g, 1 kg = 1000g。一律填写克(g)的纯数值
+- 尺寸: 1 in ≈ 2.54cm。一律填写厘米(cm)的纯数值
+- 若字段标签/placeholder已含单位(如"重量, г")，只填数值不含单位
+- 若产品规格已是公制，直接使用
+- 优先使用人工登记数据(manual_data)中的重量和尺寸
 
 请严格按照以下 JSON 格式返回，不要包含其他内容：
-{"mappings": [{"selector": "...", "value": "..."}, ...]}
+{"mappings": [{"index": <序号>, "value": "..."}, ...]}
 
-其中 selector 是表单字段的 CSS 选择器，value 是要填充的值。"""
+其中 index 是表单字段列表中对应字段的 [序号] 数字，value 是要填充的值。"""
+
+    # 构建自定义提示词段落
+    custom_prompt_block = ""
+    if custom_prompts:
+        parts = []
+        for key, label in [("title", "产品标题"), ("description", "产品描述"), ("json_text", "JSON文本"), ("hashtag", "主题标签"), ("platform", "平台"), ("store", "店铺"), ("category", "品类")]:
+            if custom_prompts.get(key):
+                parts.append(f"### {label}填充提示\n{custom_prompts[key]}")
+        if parts:
+            custom_prompt_block = "\n## 用户自定义填充提示\n" + "\n\n".join(parts) + "\n"
+
+    # 变体行映射信息
+    variant_row_summary = data.get("variant_row_summary", {})
+    variant_summary_block = ""
+    if variant_row_summary:
+        row_ctxs = variant_row_summary.get("row_contexts", [])
+        vc = variant_row_summary.get("variant_count", 0)
+        note = variant_row_summary.get("note", "")
+        variant_summary_block = f"""
+### 变体行映射
+表单SKU行上下文: {json.dumps(row_ctxs, ensure_ascii=False)}
+变体总数: {vc}
+说明: {note}
+"""
 
     user_prompt = f"""## 产品信息
 SKC: {skc}
@@ -2215,70 +2363,123 @@ SKC: {skc}
 
 ### 产品描述文本
 {product_text[:3000]}
-
+{hints_text}
 ### 人工登记数据
 {json.dumps(manual_data, ensure_ascii=False, indent=2)}
-
+{custom_prompt_block}{variant_summary_block}
 ### 表单字段列表（共 {len(form_fields)} 个字段）
 {fields_text}
 
 请分析以上表单字段，为每个字段提供填充值。"""
 
-    payload = {
-        "model": "deepseek-chat",
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ],
-        "temperature": 0.1,
-        "max_tokens": 4096
-    }
-
-    headers = {
-        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
-        "Content-Type": "application/json"
-    }
-
-    try:
-        resp = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=60)
-        if resp.status_code != 200:
-            return jsonify({"error": f"DeepSeek API Error {resp.status_code}: {resp.text}"}), 500
-
-        result = resp.json()
-        response_text = ""
-        choices = result.get("choices", [])
-        if choices:
-            response_text = choices[0].get("message", {}).get("content", "")
-
-        if not response_text:
-            return jsonify({"error": "模型未返回文本"}), 500
-
-        # 解析 JSON（清理 markdown 包裹后直接 json.loads）
-        cleaned = response_text.strip()
-        if cleaned.startswith("```"):
-            cleaned = re.sub(r'^```(?:json)?\s*\n?', '', cleaned)
-            cleaned = re.sub(r'\n?```$', '', cleaned)
+    # ── 辅助函数：调用 DeepSeek 并解析返回 ──
+    def _call_deepseek_fill(sys_prompt, usr_prompt, label="fill", model="deepseek-v4-pro"):
+        payload = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": sys_prompt},
+                {"role": "user", "content": usr_prompt}
+            ],
+            "temperature": 0.1,
+            "max_tokens": 8192,
+            "response_format": {"type": "json_object"}
+        }
+        # v4-pro 禁用思考 token，跳过 chain-of-thought 直接输出 JSON
+        if model == "deepseek-v4-pro":
+            payload["thinking"] = {"type": "disabled"}
+        headers = {
+            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+            "Content-Type": "application/json"
+        }
         try:
+            resp = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=120)
+            if resp.status_code != 200:
+                print(f"[auto-fill/{label}] API Error {resp.status_code}: {resp.text[:500]}")
+                return []
+            result = resp.json()
+            choices = result.get("choices", [])
+            if not choices:
+                print(f"[auto-fill/{label}] no choices in response")
+                return []
+            msg = choices[0].get("message", {})
+            text = msg.get("content", "") or msg.get("reasoning_content", "")
+            if not text:
+                print(f"[auto-fill/{label}] empty content AND reasoning_content, msg keys: {list(msg.keys())}")
+                return []
+
+            cleaned = text.strip()
+            if cleaned.startswith("```"):
+                cleaned = re.sub(r'^```(?:json)?\s*\n?', '', cleaned)
+                cleaned = re.sub(r'\n?```$', '', cleaned)
+            start = cleaned.find('{')
+            end = cleaned.rfind('}')
+            if start != -1 and end != -1 and end > start:
+                cleaned = cleaned[start:end + 1]
+
             parsed = json.loads(cleaned)
             mappings = parsed.get("mappings", [])
+            validated = []
+            for m in mappings:
+                if isinstance(m, dict) and m.get("value"):
+                    validated.append({
+                        "index": m.get("index", -1),
+                        "label": m.get("label", ""),
+                        "value": m.get("value", "")
+                    })
+            print(f"[auto-fill/{label}] filled {len(validated)} fields")
+            return validated
         except json.JSONDecodeError:
-            mappings = []
+            print(f"[auto-fill/{label}] JSON parse failed, raw text (first 300 chars): {text[:300] if 'text' in dir() else 'N/A'}")
+            return []
+        except Exception as e:
+            print(f"[auto-fill/{label}] Exception: {e}")
+            return []
 
-        # 验证 mappings 格式
-        validated_mappings = []
-        for m in mappings:
-            if isinstance(m, dict) and "selector" in m:
-                validated_mappings.append({
-                    "selector": m.get("selector", ""),
-                    "value": m.get("value", "")
-                })
+    def _build_regular_system_prompt():
+        return """你是电商产品表单填充助手，负责填充常规属性字段。
+
+## 规则
+1. select/checkbox-group/radio-group：从可选值中精确选取
+2. 材质/颜色：根据产品数据填充
+3. 重量/尺寸：填纯数字不含单位，优先用人工登记数据
+4. 不确定的字段留空，不编造
+
+返回 JSON: {"mappings": [{"index": <序号>, "value": "填充值"}, ...]}"""
+
+    try:
+        all_mappings = []
+
+        if important_fields and regular_fields:
+            # Parallel dual-batch: important + regular run concurrently
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                future_imp = executor.submit(
+                    _call_deepseek_fill, system_prompt, user_prompt, "important"
+                )
+                future_reg = executor.submit(
+                    _call_deepseek_fill, _build_regular_system_prompt(), user_prompt, "regular"
+                )
+                try:
+                    imp_mappings = future_imp.result(timeout=150)
+                    all_mappings.extend(imp_mappings)
+                except Exception as e:
+                    logger.warning("[auto-fill] important batch failed: %s", e)
+
+                try:
+                    reg_mappings = future_reg.result(timeout=150)
+                    all_mappings.extend(reg_mappings)
+                except Exception as e:
+                    logger.warning("[auto-fill] regular batch failed: %s", e)
+
+        if not all_mappings:
+            # Unified fallback: all fields in one call
+            all_mappings = _call_deepseek_fill(system_prompt, user_prompt, label="unified")
 
         return jsonify({
             "success": True,
             "skc": skc,
-            "mappings": validated_mappings,
+            "mappings": all_mappings,
             "total_fields": len(form_fields),
-            "filled_fields": len(validated_mappings)
+            "filled_fields": len(all_mappings)
         })
 
     except Exception as e:
@@ -2579,7 +2780,7 @@ def _translate_attr_descriptions(store_id, descriptions):
             "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
             "Content-Type": "application/json"
         }, json={
-            "model": "deepseek-chat",
+            "model": "deepseek-v4-pro",
             "messages": [{"role": "user", "content": prompt}],
             "temperature": 0.1,
             "max_tokens": 4096
@@ -2632,7 +2833,7 @@ def _translate_attr_names(store_id, attr_names):
             "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
             "Content-Type": "application/json"
         }, json={
-            "model": "deepseek-chat",
+            "model": "deepseek-v4-pro",
             "messages": [{"role": "user", "content": prompt}],
             "temperature": 0.1,
             "max_tokens": 4096
@@ -2837,7 +3038,7 @@ def _batch_translate_categories(translations, untranslated, trans_path, store_id
             "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
             "Content-Type": "application/json"
         }, json={
-            "model": "deepseek-chat",
+            "model": "deepseek-v4-pro",
             "messages": [{"role": "user", "content": trans_prompt}],
             "temperature": 0.1,
             "max_tokens": 32768
@@ -3292,7 +3493,7 @@ def ozon_match_category(store_id):
                 "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
                 "Content-Type": "application/json"
             }, json={
-                "model": "deepseek-chat",
+                "model": "deepseek-v4-pro",
                 "messages": [
                     {"role": "system", "content": "你是 Ozon 电商品类匹配专家。根据产品信息从候选品类中选择最匹配的一个。注意俄语+中文对照，产品信息是中文/英文。返回纯 JSON。"},
                     {"role": "user", "content": prompt}
@@ -3436,11 +3637,26 @@ def ozon_match_category(store_id):
                     else:
                         path_parts.append(p["name"])
 
+                node_path_names = []
+                node_path_ids = []
+                for p in path_nodes:
+                    pn = p.get("node", p)
+                    n_ru = _node_name(pn)
+                    n_cn = translations.get(str(p["id"]), "")
+                    n_cn_leaf = n_cn.split(" > ")[-1] if n_cn else ""
+                    if n_cn_leaf and n_cn_leaf != n_ru:
+                        node_path_names.append(f"{n_ru}（{n_cn_leaf}）")
+                    else:
+                        node_path_names.append(n_ru)
+                    node_path_ids.append(str(p["id"]))
+
                 best_match = {
                     "id": c.get("validation_id") or c["id"],
                     "type_id": c["id"] if c["id"] != (c.get("validation_id") or c["id"]) else None,
                     "name": c["name"],
                     "path": " > ".join(path_parts),
+                    "node_path_names": node_path_names,
+                    "node_path_ids": node_path_ids,
                     "reason": f"逐层匹配（共 {depth + 1} 层）→ {c['name']}（关键词验证）"
                 }
                 logger.info("[品类匹配] ✅ 验证通过: '%s'(ID=%s)", c["name"], c["id"])
@@ -3515,11 +3731,26 @@ def ozon_match_category(store_id):
                 else:
                     path_parts.append(p["name"])
 
+            node_path_names = []
+            node_path_ids = []
+            for p in path_nodes:
+                pn = p.get("node", p)
+                n_ru = _node_name(pn)
+                n_cn = translations.get(str(p["id"]), "")
+                n_cn_leaf = n_cn.split(" > ")[-1] if n_cn else ""
+                if n_cn_leaf and n_cn_leaf != n_ru:
+                    node_path_names.append(f"{n_ru}（{n_cn_leaf}）")
+                else:
+                    node_path_names.append(n_ru)
+                node_path_ids.append(str(p["id"]))
+
             best_match = {
                 "id": chosen.get("validation_id") or chosen["id"],
                 "type_id": chosen["id"] if chosen["id"] != (chosen.get("validation_id") or chosen["id"]) else None,
                 "name": chosen["name"],
                 "path": " > ".join(path_parts),
+                "node_path_names": node_path_names,
+                "node_path_ids": node_path_ids,
                 "reason": f"逐层匹配（共 {depth + 1} 层）→ {chosen['name']}"
             }
             logger.info("[品类匹配] ✅ 验证通过: '%s'(ID=%s)", chosen["name"], chosen["id"])
@@ -4007,31 +4238,38 @@ def auto_fill_ozon_fields():
                 len(important_attrs), len(regular_attrs), skc)
 
     # ── 辅助函数：调用 DeepSeek 并解析返回 ──
-    def _call_deepseek_fill(sys_prompt, user_prompt, label="fill"):
+    def _call_deepseek_fill(sys_prompt, user_prompt, label="fill", model="deepseek-v4-pro"):
         payload = {
-            "model": "deepseek-chat",
+            "model": model,
             "messages": [
                 {"role": "system", "content": sys_prompt},
                 {"role": "user", "content": user_prompt}
             ],
             "temperature": 0.1,
-            "max_tokens": 16384
+            "max_tokens": 8192,
+            "response_format": {"type": "json_object"}
         }
+        # v4-pro 禁用思考 token，跳过 chain-of-thought 直接输出 JSON
+        if model == "deepseek-v4-pro":
+            payload["thinking"] = {"type": "disabled"}
         headers = {
             "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
             "Content-Type": "application/json"
         }
         try:
-            resp = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=180)
+            resp = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=120)
             if resp.status_code != 200:
-                logger.warning("[自动填充/%s] API Error %s: %s", label, resp.status_code, resp.text[:200])
+                logger.warning("[自动填充/%s] API Error %s: %s", label, resp.status_code, resp.text[:500])
                 return []
             result = resp.json()
             choices = result.get("choices", [])
             if not choices:
+                logger.warning("[自动填充/%s] no choices in response")
                 return []
-            text = choices[0].get("message", {}).get("content", "")
+            msg = choices[0].get("message", {})
+            text = msg.get("content", "") or msg.get("reasoning_content", "")
             if not text:
+                logger.warning("[自动填充/%s] empty content AND reasoning_content, msg keys: %s", label, list(msg.keys()))
                 return []
 
             cleaned = text.strip()
@@ -4055,7 +4293,7 @@ def auto_fill_ozon_fields():
             logger.info("[自动填充/%s] ✅ 填充 %s 个属性", label, len(validated))
             return validated
         except json.JSONDecodeError:
-            logger.warning("[自动填充/%s] JSON 解析失败: %s", label, text[:200] if 'text' in dir() else 'N/A')
+            logger.warning("[自动填充/%s] JSON 解析失败: %s", label, text[:300] if 'text' in dir() else 'N/A')
             return []
         except Exception as e:
             logger.error("[自动填充/%s] 异常: %s", label, e)
@@ -4071,8 +4309,8 @@ def auto_fill_ozon_fields():
     important_count = 0
     regular_count = 0
 
-    # ── Batch 1: 重要属性（标题/描述/标签/富文本）专用 prompt ──
-    if important_attrs:
+    # ── 构建批次 prompt 的函数 ──
+    def _build_important_batch():
         imp_summary = []
         for attr in important_attrs:
             label = f"ID:{attr.get('id')} 名称:{attr.get('name')}"
@@ -4134,13 +4372,9 @@ SKC: {skc}
 {chr(10).join(imp_summary)}
 
 请为以上每个属性提供高质量填充值。"""
+        return _call_deepseek_fill(imp_system, imp_user, label="重要属性")
 
-        batch1 = _call_deepseek_fill(imp_system, imp_user, label="重要属性")
-        all_mappings.extend(batch1)
-        important_count = len(batch1)
-
-    # ── Batch 2: 常规属性（材质/颜色/重量/尺寸等）通用 prompt ──
-    if regular_attrs:
+    def _build_regular_batch():
         reg_summary = []
         for attr in regular_attrs:
             label = f"ID:{attr.get('id')} 名称:{attr.get('name')}"
@@ -4177,8 +4411,32 @@ SKC: {skc}
 {chr(10).join(reg_summary)}
 
 请为以上每个属性提供填充值。"""
+        return _call_deepseek_fill(reg_system, reg_user, label="常规属性")
 
-        batch2 = _call_deepseek_fill(reg_system, reg_user, label="常规属性")
+    # ── 并行执行两个批次 ──
+    if important_attrs and regular_attrs:
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            future_imp = executor.submit(_build_important_batch)
+            future_reg = executor.submit(_build_regular_batch)
+            try:
+                batch1 = future_imp.result(timeout=150)
+                all_mappings.extend(batch1)
+                important_count = len(batch1)
+            except Exception as e:
+                logger.warning("[自动填充] 重要属性批次失败: %s", e)
+
+            try:
+                batch2 = future_reg.result(timeout=150)
+                all_mappings.extend(batch2)
+                regular_count = len(batch2)
+            except Exception as e:
+                logger.warning("[自动填充] 常规属性批次失败: %s", e)
+    elif important_attrs:
+        batch1 = _build_important_batch()
+        all_mappings.extend(batch1)
+        important_count = len(batch1)
+    elif regular_attrs:
+        batch2 = _build_regular_batch()
         all_mappings.extend(batch2)
         regular_count = len(batch2)
 
@@ -5055,6 +5313,46 @@ def logistics_calculate():
 def ozon_listing_page():
     """Ozon 产品上架页面"""
     return render_template("ozon_listing.html")
+
+
+# ==================== Debug: 页面HTML捕获分析 ====================
+
+@app.route("/api/debug/capture-html", methods=["POST"])
+def debug_capture_html():
+    """接收扩展发送的页面HTML，保存到 data/debug/ 供分析"""
+    data = request.get_json(silent=True) or {}
+    html = data.get("html", "")
+    url = data.get("url", "")
+    note = data.get("note", "")
+    form_fields_count = len(data.get("form_fields", []))
+
+    if not html:
+        return jsonify({"error": "html 不能为空"}), 400
+
+    debug_dir = Path("data/debug")
+    debug_dir.mkdir(parents=True, exist_ok=True)
+
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    safe_url = url.replace("https://", "").replace("http://", "").replace("/", "_").replace(":", "_")[:80] if url else "unknown"
+    filename = f"page_{ts}_{safe_url}.html"
+    filepath = debug_dir / filename
+
+    # 注入元信息注释到 HTML 顶部
+    meta_comment = f"<!-- debug capture: {ts} | url: {url} | note: {note} | form_fields: {form_fields_count} -->\n"
+    filepath.write_text(meta_comment + html, encoding="utf-8")
+
+    meta_path = debug_dir / f"page_{ts}_{safe_url}.json"
+    meta_path.write_text(json.dumps({
+        "timestamp": ts,
+        "url": url,
+        "note": note,
+        "form_fields_count": form_fields_count,
+        "html_size": len(html),
+        "file": filename
+    }, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    logger.info("[Debug] HTML saved: %s | size=%s | url=%s", filename, len(html), url)
+    return jsonify({"ok": True, "file": filename, "size": len(html)})
 
 
 # 应用实例导入：从 main.py 启动应用

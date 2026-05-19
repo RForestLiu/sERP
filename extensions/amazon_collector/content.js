@@ -32,6 +32,13 @@
   function text(el) {
     return el ? el.textContent.trim() : "";
   }
+  /** 克隆元素并剔除 <style>/<script> 后取纯文本 */
+  function cleanText(el) {
+    if (!el) return "";
+    var clone = el.cloneNode(true);
+    clone.querySelectorAll("style, script, noscript, [style*='display:none'], [style*='display: none'], .aplus-carousel-nav, .aplus-pagination-dots").forEach(function (n) { n.remove(); });
+    return clone.textContent.replace(/[\s​‌]+/g, " ").trim();
+  }
   function attr(el, name) {
     return el ? el.getAttribute(name) || "" : "";
   }
@@ -323,7 +330,89 @@
     },
 
     extractBullets: function () {
-      return $$("#feature-bullets .a-list-item, #feature-bullets li").map(function (el) { return text(el); }).filter(Boolean).slice(0, 10);
+      // Try multiple selectors for "About this item" bullets
+      var selectors = [
+        "#pqv-feature-bullets li span.a-list-item",
+        "#pqv-feature-bullets .a-list-item",
+        "#feature-bullets .a-list-item",
+        "#feature-bullets li",
+        "#feature-bullets .a-section.a-spacing-small",
+        "#featurebullets_feature_div .a-list-item",
+        "#featurebullets_feature_div li",
+        "[data-a-expander-name='feature_bullets'] .a-list-item"
+      ];
+      var items = null;
+      for (var i = 0; i < selectors.length; i++) {
+        items = $$(selectors[i]);
+        if (items.length) break;
+      }
+      if (!items || !items.length) return [];
+      return items.map(function (el) { return text(el); }).filter(Boolean).slice(0, 15);
+    },
+
+    /** Product Description — 产品描述正文（A+ 内容等） */
+    extractProductDescription: function () {
+      // A+ content first (richer description with images), then product description
+      var el = document.querySelector("#aplus_feature_div, #aplus .aplus-v2-description, [data-aplus]");
+      if (el) { var t = cleanText(el); if (t.length > 50 && t.indexOf("Previous page") === -1 && t.indexOf("Product description") !== t.length - 18) return t; }
+      // Product description section — use .a-section children, not the wrapper
+      el = document.querySelector("#productDescription .a-section, #productDescription_feature_div .a-section");
+      if (el) { var t2 = cleanText(el); if (t2 && t2.indexOf("Previous page") === -1 && t2 !== "Product description") return t2; }
+      el = document.getElementById("productDescription");
+      if (el) { var t3 = cleanText(el); if (t3.length > 50 && t3.indexOf("Previous page") === -1) return t3; }
+      // A+ narrative cards
+      var cards = $$("#aplus_feature_div .card-content, #aplus_feature_div .aplus-module-content");
+      if (cards.length) return cards.map(function (c) { return cleanText(c); }).filter(Boolean).join("\n");
+      return "";
+    },
+
+    /** Product Details / Technical Specs — 返回结构化 JSON */
+    extractProductDetails: function () {
+      var result = {};
+
+      // 转为 key:value 的通用函数
+      function parseLines(text) {
+        var lines = text.split(/\n/);
+        lines.forEach(function (line) {
+          line = line.replace(/[‏‎]/g, "").trim();
+          if (!line) return;
+          var idx = line.indexOf(":");
+          if (idx === -1) return;
+          var key = line.slice(0, idx).replace(/[‏‎]/g, "").trim();
+          var val = line.slice(idx + 1).replace(/[‏‎]/g, "").trim();
+          if (!key || !val) return;
+          var normKey = key.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "").toLowerCase();
+          if (normKey && val && !result[normKey]) result[normKey] = val;
+        });
+      }
+
+      // 1. 现代 Voyager 布局表格
+      var trs = $$("#prodDetails table.prodDetTable tr, .prodDetTable tr, #productDetails_techSpec_section_1 tr, #productDetails_detailBullets_sections1 tr, #detailBullets_feature_div tr");
+      for (var i = 0; i < trs.length; i++) {
+        var th = trs[i].querySelector("th");
+        var td = trs[i].querySelector("td");
+        if (th && td) {
+          var tKey = cleanText(th).replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "").toLowerCase();
+          var tVal = cleanText(td);
+          if (tKey && tVal && !result[tKey]) result[tKey] = tVal;
+        }
+      }
+      if (Object.keys(result).length) return result;
+
+      // 2. detail-bullets 列表 → 按行解析 key:value
+      var bullets = $$("#detailBulletsWrapper_feature_div .a-list-item, #detailBullets_feature_div .a-list-item");
+      if (bullets.length) {
+        parseLines(bullets.map(function (el) { return cleanText(el); }).filter(Boolean).join("\n"));
+        if (Object.keys(result).length) return result;
+      }
+
+      // 3. 最后兜底：尝试从 #prodDetails 全文解析（可能有隐藏的表格文本）
+      var prodDetailsEl = document.getElementById("prodDetails");
+      if (prodDetailsEl) {
+        parseLines(cleanText(prodDetailsEl));
+      }
+
+      return result;
     },
 
     extractAll: function () {
@@ -336,6 +425,8 @@
         images: this.extractImages(),
         variants: this.extractVariants(),
         bullets: this.extractBullets(),
+        product_description: this.extractProductDescription(),
+        product_details: this.extractProductDetails(),
         currentVariant: this.getCurrentVariant(),
       };
     },
@@ -465,100 +556,235 @@
     },
   };
 
-  // ---------- Wildberries ----------
+  // ---------- Wildberries (2026 refresh) ----------
   EXTRACTORS.wildberries = {
     isProductPage: function () {
       return /\/catalog\/\d+\/detail\.aspx/.test(href);
     },
 
+    /** 从 URL 提取当前产品 ID */
+    extractProductId: function () {
+      var m = href.match(/\/catalog\/(\d+)\/detail\.aspx/);
+      return m ? m[1] : "";
+    },
+
+    /** 从 <title> 提取产品名，移除 "купить за N ₽ ..." 后缀 */
     extractTitle: function () {
-      return text($(".product-page__title") || $("h1.product-title") || $("h1"));
+      var t = document.title || "";
+      var m = t.match(/^(.+?)\s+купить\s+за\s+\d/);
+      if (m) return m[1].trim();
+      return t;
     },
 
+    /** 提取最终售价（优先弹窗内 .price--Xne45，为当前产品真实价格） */
     extractPrice: function () {
-      // Final price (after discounts)
-      var el = $(".price-block__final-price") ||
-               $(".product-page__price-block .price-block__price") ||
-               $(".final-price");
-      if (!el) {
-        // Try the main price block
-        el = $(".price-block__price");
+      var raw = "";
+      // 优先: 已知 class（可能因 CSS module hash 变化而失效）
+      var el = $(".price--Xne45") || $(".priceWrap--pxdH1");
+      if (el) raw = text(el);
+      // 备选: CSS module 模糊匹配 [class*="price--"]
+      if (!raw) {
+        var candidates = $$("[class*=\"price--\"]");
+        for (var i = 0; i < candidates.length && !raw; i++) {
+          var t = text(candidates[i]);
+          if (/^\d[\d\s]*$/.test(t) && parseInt(t.replace(/\s/g, "")) > 0) raw = t;
+        }
       }
-      return text(el) || "";
+      if (raw) return raw.replace(/&nbsp;/g, "").replace(/[₽руб\s]/g, "").trim();
+      return "";
     },
 
+    /** 从 WBBasket CDN URL 中提取当前产品图片并构造超清链接 */
     extractImages: function () {
-      var images = [], seen = {};
-      function add(url) {
-        if (!url || seen[url] || url.indexOf("data:image") === 0) return;
-        // WB uses image buckets, try to get high-res
-        var h = url.replace(/\/c\d+x\d+\/new\//, "/c2460x3280/new/");
-        if (!seen[h]) { seen[h] = true; images.push(h); }
+      var currentPid = this.extractProductId();
+      var byPid = {};
+
+      var html = document.documentElement.outerHTML;
+      var re = /https?:\/\/basket-\d+\.(?:wbbasket\.ru|wbcontent\.net)\/vol\d+\/part\d+\/(\d+)\/images\/(\w+)\/(\d+)\./g;
+      var m;
+      while ((m = re.exec(html)) !== null) {
+        var pid = m[1], size = m[2], num = parseInt(m[3]);
+        if (currentPid && pid !== currentPid) continue;
+        if (!byPid[pid]) {
+          byPid[pid] = { base: m[0].substring(0, m[0].lastIndexOf("/images/")), maxNum: 0, hasBig: false };
+        }
+        byPid[pid].maxNum = Math.max(byPid[pid].maxNum, num);
+        if (size === "big") byPid[pid].hasBig = true;
       }
-      $$(".product-page__gallery img, .j-zoom-image, .photo-list img, .carousel img").forEach(function (img) {
-        add(attr(img, "data-src") || attr(img, "src") || img.src);
-      });
-      // Also check background images in gallery
-      $$(".product-page__gallery [style*='url']").forEach(function (el) {
-        var m = (el.style.backgroundImage || "").match(/url\(["']?([^"')]+)["']?\)/);
-        if (m) add(m[1]);
-      });
-      return images;
+
+      var mainPid = null, bestScore = 0;
+      for (var pid in byPid) {
+        var score = byPid[pid].maxNum + (byPid[pid].hasBig ? 100 : 0);
+        if (score > bestScore) { bestScore = score; mainPid = pid; }
+      }
+
+      if (mainPid) {
+        var images = [];
+        var base = byPid[mainPid].base;
+        for (var n = 1; n <= byPid[mainPid].maxNum; n++) {
+          images.push(base + "/images/big/" + n + ".webp");
+        }
+        return images;
+      }
+      return [];
     },
 
+    /** 从颜色变体滑块中提取变体列表（仅 data-nm-id 锚点，排除推荐商品卡片） */
     extractVariants: function () {
       var v = {};
-      var colors = $$(".color-list .j-color, .colors-list__item, .product-page__color-selector li, .swiper-slide.j-color");
-      if (colors.length) v.colors = colors.map(function (el) { return attr(el, "data-color-name") || attr(el, "title") || text(el); }).filter(Boolean);
-      var sizes = $$(".sizes-list .j-size, .sizes-list__item, .product-page__size-selector li");
-      if (sizes.length) v.sizes = sizes.map(function (el) { return attr(el, "data-size-name") || text(el); }).filter(Boolean);
+      var colors = [];
+      var urls = {};
+      var seen = {};
+
+      var links = $$("a[data-nm-id]");
+      links.forEach(function (a) {
+        var img = $("img", a);
+        var alt = img ? attr(img, "alt") : "";
+        if (!alt) return;
+        // alt 格式: "Кошелек маленький серый из экозамши"
+        // 提取颜色词: 去掉 "из <material>" 后缀，取最后一个词
+        var name = alt.replace(/\s+из\s+\S+$/i, "").split(/\s+/).pop();
+        if (name && !seen[name]) {
+          seen[name] = true;
+          colors.push(name);
+          urls[name] = a.href;
+        }
+      });
+
+      if (colors.length) v.colors = colors;
+      if (Object.keys(urls).length) v.urls = urls;
       return v;
     },
 
+    /** 从 title 标签解析当前颜色 */
     getCurrentVariant: function () {
-      var parts = [];
-      var color = $(".color-list .j-color.active, .colors-list__item.selected, .j-color.active");
-      if (color) parts.push(attr(color, "data-color-name") || text(color));
-      var size = $(".sizes-list .j-size.active, .sizes-list__item.selected, .j-size.active");
-      if (size) parts.push(attr(size, "data-size-name") || text(size));
-      return parts.join(" / ") || "default";
+      var t = document.title || "";
+      // title 格式: "Кошелек маленький серый из экозамши Caserra 210344524 ..."
+      var m = t.match(/Кошелек\s+(?:маленький|большой)\s+(\S+)/i);
+      if (m) return m[1];
+      return "default";
     },
 
+    /** 点击颜色变体色块 → 导航到该颜色的产品页 */
     clickVariant: function (type, value) {
-      var items;
-      if (type === "color") {
-        items = $$(".color-list .j-color, .colors-list__item, .j-color");
-      } else if (type === "size") {
-        items = $$(".sizes-list .j-size, .sizes-list__item, .j-size");
-      }
-      if (!items) return false;
-      for (var i = 0; i < items.length; i++) {
-        var name = attr(items[i], "data-color-name") || attr(items[i], "data-size-name") || text(items[i]);
-        if (name.trim() === value || name.indexOf(value) !== -1) {
-          items[i].click();
+      if (type !== "color") return false;
+      var links = $$("a[data-nm-id]");
+      for (var i = 0; i < links.length; i++) {
+        var img = $("img", links[i]);
+        var alt = img ? attr(img, "alt") : "";
+        if (alt.indexOf(value) !== -1) {
+          links[i].click();
           return true;
         }
       }
       return false;
     },
 
+    /** 面包屑最后一项 = 品牌 */
     extractBrand: function () {
-      return text($(".product-page__brand a") || $(".brand-link"));
+      var crumbs = $$("[itemprop='name']");
+      if (crumbs.length > 0) return text(crumbs[crumbs.length - 1]);
+      return "";
     },
 
+    /** 面包屑中间项 = 分类路径（去掉"Главная"首项和品牌末项） */
     extractCategory: function () {
-      return $$(".breadcrumbs__list a, .breadcrumb a").map(function (el) { return text(el); }).join(" > ");
+      var crumbs = $$("[itemprop='name']");
+      var parts = [];
+      for (var i = 1; i < crumbs.length - 1; i++) {
+        parts.push(text(crumbs[i]));
+      }
+      return parts.join(" > ");
     },
 
+    /** H1 含评分数字 */
     extractRating: function () {
-      return text($(".product-rating .star-rate__count") || $(".product-page__rating span"));
+      var h1 = text($("h1"));
+      if (h1 && /^\d[\d,.]*$/.test(h1)) return h1;
+      return "";
     },
 
+    /** 点击 "Характеристики и описание" 按钮打开详情弹窗（如需要） */
+    _drawerOpened: false,
+
+    _findByText: function (texts, root) {
+      var els = (root || document).querySelectorAll("button, span, div");
+      for (var i = 0; i < els.length; i++) {
+        var t = els[i].textContent;
+        var ok = true;
+        for (var j = 0; j < texts.length; j++) {
+          if (t.indexOf(texts[j]) === -1) { ok = false; break; }
+        }
+        if (ok) return els[i];
+      }
+      return null;
+    },
+
+    _findLongTextInDrawer: function () {
+      var paper = $(".mo-drawer__paper");
+      if (!paper) return null;
+      var all = paper.querySelectorAll("p, span, div");
+      var best = null, bestLen = 0;
+      for (var k = 0; k < all.length; k++) {
+        var t = all[k].textContent.trim();
+        if (t.length > bestLen) { bestLen = t.length; best = all[k]; }
+      }
+      return bestLen > 100 ? best : null;
+    },
+
+    _ensureDrawerOpen: function () {
+      // Already open?
+      if ($(".descriptionText--JBcnf") || this._findLongTextInDrawer()) {
+        this._drawerOpened = true;
+        return true;
+      }
+
+      // Find and click the trigger button (click parent <button>, not inner <span>)
+      var span = $(".btnDetailText--nrkiv")
+        || this._findByText(["Характеристики", "описание"])
+        || this._findByText(["Характеристики"]);
+      if (!span) { console.log("[sERP WB] Drawer button not found"); return false; }
+      var btn = span.closest("button") || span;
+      console.log("[sERP WB] Clicking drawer button:", (btn.className || btn.tagName).substring(0, 60));
+      btn.click();
+
+      // Check immediately (React 18 may flush synchronously within event handler)
+      var descEl = $(".descriptionText--JBcnf");
+      var longText = this._findLongTextInDrawer();
+      var found = descEl || longText;
+      console.log("[sERP WB] After click — descEl:", !!descEl, "longText:", !!longText);
+      this._drawerOpened = !!found;
+      return this._drawerOpened;
+    },
+
+    /** product_additional_information 区域的 table > th/td 规格参数 */
+    extractProductDetails: function () {
+      var result = {};
+      // 弹窗打开后优先从弹窗内读（字段更全），否则读主页面
+      var section = $(".mo-drawer__paper [data-testid='product_additional_information']") || $("[data-testid='product_additional_information']");
+      if (!section) return result;
+      var rows = $$("tr", section);
+      rows.forEach(function (row) {
+        var th = $("th", row);
+        var td = $("td", row);
+        if (th && td) {
+          var key = text(th).replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_а-яё]/gi, "").toLowerCase();
+          var val = text(td);
+          if (key && val && !result[key]) result[key] = val;
+        }
+      });
+      return result;
+    },
+
+    /** 从 "Характеристики и описание" 弹窗提取文字描述 */
     extractDescription: function () {
-      return $$(".product-details .product-params li").map(function (el) { return text(el); }).join("; ");
+      this._ensureDrawerOpen();
+      var descEl = $(".descriptionText--JBcnf") || this._findLongTextInDrawer();
+      return descEl ? cleanText(descEl) : "";
     },
 
     extractAll: function () {
+      this._ensureDrawerOpen();
       return {
         title: this.extractTitle(),
         price: this.extractPrice(),
@@ -568,8 +794,9 @@
         images: this.extractImages(),
         variants: this.extractVariants(),
         bullets: [],
+        product_description: this.extractDescription(),
+        product_details: this.extractProductDetails(),
         currentVariant: this.getCurrentVariant(),
-        description: this.extractDescription(),
       };
     },
   };
@@ -699,6 +926,8 @@
       "#serp-collector-btns .btn-collect:hover{background:#ffaa22;}",
       "#serp-collector-btns .btn-all{background:#e74c3c;color:#fff;}",
       "#serp-collector-btns .btn-all:hover{background:#ff5c4c;}",
+      ".btn-send-html{background:#27ae60;color:#fff;padding:6px 8px;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;width:100%;transition:all .15s;}",
+      ".btn-send-html:hover{background:#2ecc71;}",
       "#serp-collector-btns button:disabled{opacity:.5;cursor:not-allowed;}",
       "#serp-collector-status{font-size:11px;color:#aaa;min-height:16px;}",
       "#serp-collector-minimize{background:none;border:none;color:#666;cursor:pointer;font-size:16px;padding:0 2px;}",
@@ -716,6 +945,7 @@
       '<button class="btn-collect" id="serp-btn-collect">采集</button>',
       '<button class="btn-all" id="serp-btn-all">全部规格</button>',
       '</div>',
+      '<button class="btn-send-html" id="serp-btn-send-html">发送HTML</button>',
       '<div id="serp-collector-status">就绪</div>',
       '</div>',
     ].join("");
@@ -732,6 +962,10 @@
     document.getElementById("serp-btn-all").addEventListener("click", function () {
       if (UI.collecting) return;
       collectAllVariants();
+    });
+    document.getElementById("serp-btn-send-html").addEventListener("click", function () {
+      if (UI.collecting) return;
+      sendHTMLToSERP();
     });
     document.getElementById("serp-collector-minimize").addEventListener("click", function () {
       var panel = document.getElementById("serp-collector-panel");
@@ -788,6 +1022,14 @@
 
   function buildPayload() {
     var d = X.extractAll();
+    // 净化 variants：移除内部导航用的 urls，仅保留产品信息
+    var cleanVariants = {};
+    if (d.variants) {
+      if (d.variants.colors) cleanVariants.colors = d.variants.colors;
+      if (d.variants.sizes) cleanVariants.sizes = d.variants.sizes;
+      if (d.variants.styles) cleanVariants.styles = d.variants.styles;
+      if (d.variants.skus) cleanVariants.skus = d.variants.skus;
+    }
     return {
       url: href,
       platform: PLATFORM,
@@ -797,20 +1039,58 @@
       rating: d.rating || "",
       category: d.category || "",
       images: d.images || [],
-      variants: d.variants || {},
+      variants: cleanVariants,
       bullets: d.bullets || [],
+      about_item: (d.bullets || []).join("\n"),
+      product_description: d.product_description || "",
+      product_details: d.product_details || {},
       description: d.description || "",
       currentVariant: d.currentVariant || "",
       collectedAt: new Date().toISOString(),
     };
   }
 
-  function collectCurrent() {
+  function sendHTMLToSERP() {
     if (UI.collecting) return;
     UI.collecting = true;
     setButtons(false);
-    setStatus("采集中...");
+    setStatus("获取HTML中...");
 
+    var html = document.documentElement.outerHTML;
+    var payload = {
+      url: href,
+      platform: PLATFORM || "unknown",
+      html: html,
+      title: document.title,
+      sentAt: new Date().toISOString(),
+    };
+
+    console.log("[sERP Collector] Sending HTML, size:", (html.length / 1024).toFixed(1), "KB");
+
+    fetch(SERP_URL.replace("browser_capture", "send_html"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).then(function (r) { return r.json(); })
+      .then(function (result) {
+        if (result && result.status === "ok") {
+          showToast("HTML已发送 ✓ (" + (html.length / 1024).toFixed(0) + "KB)");
+          setStatus("HTML已发送 ✓");
+        } else {
+          showToast("发送失败", true);
+          setStatus("失败", true);
+        }
+        UI.collecting = false;
+        setButtons(true);
+      }).catch(function () {
+        showToast("sERP 未运行", true);
+        setStatus("sERP 未运行", true);
+        UI.collecting = false;
+        setButtons(true);
+      });
+  }
+
+  function doCollect() {
     var data = buildPayload();
     if (!data.title) {
       setStatus("未找到产品标题", true);
@@ -838,6 +1118,36 @@
       UI.collecting = false;
       setButtons(true);
     });
+  }
+
+  function collectCurrent() {
+    if (UI.collecting) return;
+    UI.collecting = true;
+    setButtons(false);
+    setStatus("采集中...");
+
+    // WB: Floating UI drawer may be unmounted after React hydration.
+    // Poll until the drawer opens (React renders asynchronously after click).
+    if (PLATFORM === "wildberries" && !X._drawerOpened) {
+      console.log("[sERP WB] Single collect — ensuring drawer open...");
+      (function poll(attempt) {
+        if (X._ensureDrawerOpen()) {
+          console.log("[sERP WB] Drawer ready, collecting");
+          doCollect();
+          return;
+        }
+        if (attempt < 12) {
+          setStatus("等待弹窗打开...");
+          setTimeout(function () { poll(attempt + 1); }, 250);
+          return;
+        }
+        console.log("[sERP WB] Drawer failed to open after retries, collecting anyway");
+        doCollect();
+      })(0);
+      return;
+    }
+
+    doCollect();
   }
 
   /** Fetch a variant ASIN page and extract images + price from HTML */
@@ -927,6 +1237,58 @@
     return map;
   }
 
+  /** Fetch WB variant page HTML and extract images + price */
+  function fetchWBVariantData(url) {
+    return fetch(url).then(function (res) {
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.text();
+    }).then(function (html) {
+      console.log("[sERP] fetchWBVariant: HTML size=" + html.length + " for " + url);
+
+      var byPid = {};
+      // Match both CDN domains, all image sizes (big/c246x328/tm)
+      var re = /https?:\/\/basket-\d+\.(?:wbbasket\.ru|wbcontent\.net)\/vol\d+\/part\d+\/(\d+)\/images\/(big|c246x328|tm)\/(\d+)\.webp/g;
+      var m;
+      while ((m = re.exec(html)) !== null) {
+        var pid = m[1], size = m[2], num = parseInt(m[3]);
+        if (!byPid[pid]) byPid[pid] = { base: m[0].substring(0, m[0].lastIndexOf("/images/")), maxNum: 0, hasBig: false };
+        byPid[pid].maxNum = Math.max(byPid[pid].maxNum, num);
+        if (size === "big") byPid[pid].hasBig = true;
+      }
+
+      console.log("[sERP] fetchWBVariant: CDN product IDs found:", Object.keys(byPid).length, Object.keys(byPid));
+
+      // Pick main product: prefer one with big images, then most images
+      var mainPid = null, bestScore = 0;
+      for (var pid in byPid) {
+        var score = byPid[pid].maxNum + (byPid[pid].hasBig ? 100 : 0);
+        if (score > bestScore) { bestScore = score; mainPid = pid; }
+      }
+
+      var images = [];
+      if (mainPid) {
+        var base = byPid[mainPid].base;
+        for (var n = 1; n <= byPid[mainPid].maxNum; n++) {
+          images.push(base + "/images/big/" + n + ".webp");
+        }
+      }
+
+      console.log("[sERP] fetchWBVariant: images=" + images.length);
+
+      // Extract price from JSON or priceWrap HTML
+      var price = "";
+      var pm = html.match(/"priceToPay"\s*:\s*"(\d+)"/);
+      if (pm) price = pm[1];
+      else {
+        var pm2 = html.match(/priceWrap--pxdH1[^>]*>[^<]*<[^>]*>[^<]*<[^>]*>[\s\S]*?(\d[\d\s]*)₽/);
+        if (pm2) price = pm2[1].replace(/\s/g, "");
+      }
+      console.log("[sERP] fetchWBVariant: price=" + price);
+
+      return { images: images, price: price };
+    });
+  }
+
   function collectAllVariants() {
     var variants = X.extractAll().variants;
     var stack = [];
@@ -979,24 +1341,57 @@
       return;
     }
 
-    // Fetch remaining variants via XHR
-    var colorToAsin = getColorToAsinFromDOM();
-    console.log("[sERP] colorToAsin mapping:", JSON.stringify(colorToAsin));
+    // WB: navigation-based traversal (navigate to each variant page, collect from live DOM)
+    if (PLATFORM === "wildberries") {
+      var wbUrls = variants.urls || {};
+      var missing = false;
+      for (var wi = 1; wi < stack.length; wi++) {
+        if (!wbUrls[stack[wi].value]) {
+          console.warn("[sERP] No URL for variant:", stack[wi].value);
+          missing = true;
+        }
+      }
+      if (missing) {
+        setStatus("部分变体缺少URL", true);
+        UI.collecting = false;
+        setButtons(true);
+        return;
+      }
+      setStatus("开始遍历 " + UI.total + " 个变体...");
+      startWBTraversal(wbUrls, stack, allVariants);
+      return;
+    }
+
+    // Fetch remaining variants
+    var variantUrls = variants.urls || {};
+    var colorToAsin = PLATFORM === "amazon" ? getColorToAsinFromDOM() : {};
+    console.log("[sERP] variant fetch mode:", PLATFORM === "amazon" ? "ASIN" : "URL", "colorToAsin:", JSON.stringify(colorToAsin), "urls:", JSON.stringify(variantUrls));
 
     var pending = [];
     for (var i = 1; i < stack.length; i++) {
-      (function (variantName, asin, idx) {
-      if (!asin) {
-        console.warn("[sERP] No ASIN found for variant:", variantName);
+      (function (variantName, asin, url, idx) {
+      if (!asin && !url) {
+        console.warn("[sERP] No ASIN/URL found for variant:", variantName);
         return;
       }
 
       setStatus("变体 " + (idx + 1) + "/" + UI.total + ": 请求 " + variantName + "...");
 
-      var promise = fetchVariantData(asin).then(function (data) {
+      var fetchFn, fetchArg, resultUrl;
+      if (asin) {
+        fetchFn = fetchVariantData;
+        fetchArg = asin;
+        resultUrl = window.location.origin + "/dp/" + asin;
+      } else {
+        fetchFn = fetchWBVariantData;
+        fetchArg = url;
+        resultUrl = url;
+      }
+
+      var promise = fetchFn(fetchArg).then(function (data) {
         allVariants.push({
           variantName: variantName,
-          url: window.location.origin + "/dp/" + asin,
+          url: resultUrl,
           price: data.price,
           images: data.images,
           variantInfo: { type: "color", value: variantName }
@@ -1007,7 +1402,7 @@
         console.error("[sERP] Failed to fetch variant", variantName, ":", err.message);
         allVariants.push({
           variantName: variantName,
-          url: window.location.href,
+          url: resultUrl,
           price: "",
           images: [],
           variantInfo: { type: "color", value: variantName },
@@ -1017,7 +1412,7 @@
       });
 
       pending.push(promise);
-      })(stack[i].value, colorToAsin[stack[i].value], i);
+      })(stack[i].value, colorToAsin[stack[i].value], variantUrls[stack[i].value], i);
     }
 
     Promise.all(pending).then(function () {
@@ -1057,9 +1452,118 @@
     });
   }
 
+  // ==================== WB NAVIGATION TRAVERSAL ====================
+
+  var WB_TRAVERSAL_KEY = "serp_wb_traversal";
+
+  function startWBTraversal(variantUrls, stack, allVariants) {
+    var state = {
+      platform: PLATFORM,
+      variantUrls: variantUrls,
+      stack: stack.map(function (s) { return { type: s.type, value: s.value }; }),
+      allVariants: allVariants,
+      originalUrl: window.location.href,
+      total: stack.length,
+      nextIdx: 1
+    };
+    var setObj = {};
+    setObj[WB_TRAVERSAL_KEY] = state;
+    chrome.storage.local.set(setObj, function () {
+      console.log("[sERP traversal] Starting. Next: idx 1/" + state.total + " -> " + stack[1].value);
+      window.location.href = variantUrls[stack[1].value];
+    });
+  }
+
+  function continueWBTraversal(state) {
+    console.log("[sERP traversal] Continue " + state.nextIdx + "/" + state.total);
+
+    var variantName = state.stack[state.nextIdx - 1].value;
+
+    function tryCollect(attempt) {
+      var drawerReady = X._ensureDrawerOpen();
+      if (!drawerReady && attempt < 8) {
+        console.log("[sERP traversal] Drawer not ready, retry " + (attempt + 1));
+        setTimeout(function () { tryCollect(attempt + 1); }, 800);
+        return;
+      }
+      var data = X.extractAll();
+      var hasData = data.product_description || (data.images && data.images.length > 0);
+      if (!hasData && attempt < 8) {
+        console.log("[sERP traversal] Page not ready, retry " + (attempt + 1));
+        setTimeout(function () { tryCollect(attempt + 1); }, 800);
+        return;
+      }
+      console.log("[sERP traversal] Collected: " + variantName + " (" + (data.images ? data.images.length : 0) + " images)");
+
+      state.allVariants.push({
+        variantName: variantName,
+        url: window.location.href,
+        price: data.price || "",
+        images: data.images || [],
+        variantInfo: { type: "color", value: variantName },
+        currentVariant: data.currentVariant || "",
+        product_details: data.product_details || {},
+        product_description: data.product_description || ""
+      });
+
+      if (state.nextIdx < state.total) {
+        state.nextIdx++;
+        var nextName = state.stack[state.nextIdx - 1].value;
+        var nextUrl = state.variantUrls[nextName];
+        console.log("[sERP traversal] Next: idx " + state.nextIdx + "/" + state.total + " -> " + nextName);
+        var setObj = {};
+        setObj[WB_TRAVERSAL_KEY] = state;
+        chrome.storage.local.set(setObj, function () {
+          window.location.href = nextUrl;
+        });
+      } else {
+        finishWBTraversal(state);
+      }
+    }
+
+    tryCollect(0);
+  }
+
+  function finishWBTraversal(state) {
+    console.log("[sERP traversal] Done. Sending batch: " + state.allVariants.length + " variants");
+
+    var stack = state.stack;
+    state.allVariants.sort(function (a, b) {
+      var ai = stack.findIndex(function (s) { return s.value === a.variantName; });
+      var bi = stack.findIndex(function (s) { return s.value === b.variantName; });
+      return ai - bi;
+    });
+
+    var batch = buildPayload();
+    batch.variantData = state.allVariants;
+    batch.images = [];
+
+    chrome.storage.local.remove(WB_TRAVERSAL_KEY, function () {
+      sendToSERP(batch).then(function (result) {
+        if (result && result.status === "ok") {
+          console.log("[sERP traversal] Batch sent OK");
+        }
+        window.location.href = state.originalUrl;
+      }).catch(function () {
+        window.location.href = state.originalUrl;
+      });
+    });
+  }
+
   // ==================== MAIN ====================
 
-  injectUI();
-  console.log("[sERP Collector] Ready — " + PLATFORM + " product page");
+  if (PLATFORM === "wildberries") {
+    chrome.storage.local.get(WB_TRAVERSAL_KEY, function (result) {
+      if (result[WB_TRAVERSAL_KEY]) {
+        continueWBTraversal(result[WB_TRAVERSAL_KEY]);
+        return;
+      }
+      injectUI();
+      console.log("[sERP Collector] Ready — " + PLATFORM + " product page");
+    });
+  } else {
+    injectUI();
+    console.log("[sERP Collector] Ready — " + PLATFORM + " product page");
+  }
 
 })();

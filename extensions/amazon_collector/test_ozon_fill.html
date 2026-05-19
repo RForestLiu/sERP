@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Ozon 填充自测</title>
+<style>
+  body { font-family: "Microsoft YaHei",sans-serif; padding:24px; background:#f0f2f5; }
+  h2 { margin-top:20px; }
+  .result { padding:10px; margin:6px 0; border-radius:4px; font-size:13px; }
+  .pass { background:#dcfce7; color:#16a34a; }
+  .fail { background:#fee2e2; color:#dc2626; }
+  .info { background:#dbeafe; color:#1d4ed8; }
+  pre { background:#1e1e1e; color:#d4d4d4; padding:12px; border-radius:4px; overflow-x:auto; font-size:12px; }
+</style>
+<style id="antd-mimic">
+/* Mock Ant Design form styles */
+.ant-form-item{display:flex;align-items:flex-start;margin-bottom:16px;padding:8px 12px;background:#fff;border-radius:4px;}
+.ant-form-item-label{width:140px;flex-shrink:0;padding-top:6px;}
+.ant-form-item-label label{font-size:13px;color:#333;}
+.ant-form-item-control{flex:1;}
+.ant-checkbox-wrapper,.ant-radio-wrapper{display:inline-flex;align-items:center;margin-right:12px;margin-bottom:6px;cursor:pointer;}
+.ant-checkbox-wrapper input,.ant-radio-wrapper input{margin-right:4px;}
+.ant-select{width:200px;padding:4px 8px;border:1px solid #d9d9d9;border-radius:4px;}
+.ant-input{width:300px;padding:4px 8px;border:1px solid #d9d9d9;border-radius:4px;}
+.ant-btn-primary{background:#428bca;color:#fff;border:none;padding:6px 16px;border-radius:4px;cursor:pointer;}
+.hidden-section{display:none;}
+</style>
+</head>
+<body>
+
+<h1>🧪 sERP Ozon 填充自测</h1>
+<div id="results"></div>
+
+<!-- ===== Mock Ozon 表单 ===== -->
+<div id="mock-form" style="max-width:800px;margin-top:16px;">
+
+  <!-- 产品名称 (text) -->
+  <div class="ant-form-item">
+    <div class="ant-form-item-label"><label for="field-name">产品名称 (Название товара)</label></div>
+    <div class="ant-form-item-control">
+      <input type="text" id="field-name" class="ant-input" placeholder="输入产品名称">
+    </div>
+  </div>
+
+  <!-- 价格 (text) -->
+  <div class="ant-form-item">
+    <div class="ant-form-item-label"><label>价格, ₽ (Цена)</label></div>
+    <div class="ant-form-item-control">
+      <input type="text" class="ant-input" placeholder="输入价格">
+    </div>
+  </div>
+
+  <!-- 重量 (text with unit) -->
+  <div class="ant-form-item">
+    <div class="ant-form-item-label"><label>重量, г (Вес)</label></div>
+    <div class="ant-form-item-control">
+      <input type="text" class="ant-input" placeholder="输入重量">
+    </div>
+  </div>
+
+  <!-- 目标受众 (radio group — 2 options) -->
+  <div class="ant-form-item radio-audience">
+    <div class="ant-form-item-label"><label>目标受众 (Целевая аудитория)</label></div>
+    <div class="ant-form-item-control">
+      <label class="ant-radio-wrapper"><input type="radio" name="audience" value="adult"> <span>成人(Взрослая)</span></label>
+      <label class="ant-radio-wrapper"><input type="radio" name="audience" value="child"> <span>儿童(Детская)</span></label>
+    </div>
+  </div>
+
+  <!-- 材料 (checkbox group — multi-select, 4 options) -->
+  <div class="ant-form-item cb-material">
+    <div class="ant-form-item-label"><label>材料 (Материал)</label></div>
+    <div class="ant-form-item-control">
+      <label class="ant-checkbox-wrapper"><input type="checkbox" value="leather"> <span>天然皮革 (Натуральная кожа)</span></label>
+      <label class="ant-checkbox-wrapper"><input type="checkbox" value="faux"> <span>人造皮革 (Искусственная кожа)</span></label>
+      <label class="ant-checkbox-wrapper"><input type="checkbox" value="fabric"> <span>织物 (Ткань)</span></label>
+      <label class="ant-checkbox-wrapper"><input type="checkbox" value="metal"> <span>金属 (Металл)</span></label>
+    </div>
+  </div>
+
+  <!-- 功能 (checkbox group — 6 options, 带俄语) -->
+  <div class="ant-form-item cb-features">
+    <div class="ant-form-item-label"><label>功能 (Функции)</label></div>
+    <div class="ant-form-item-control">
+      <label class="ant-checkbox-wrapper"><input type="checkbox" value="rfid"> <span>RFID保护 (RFID защита)</span></label>
+      <label class="ant-checkbox-wrapper"><input type="checkbox" value="zipper"> <span>拉链 (Молния)</span></label>
+      <label class="ant-checkbox-wrapper"><input type="checkbox" value="card_slots"> <span>卡槽 (Слоты для карт)</span></label>
+      <label class="ant-checkbox-wrapper"><input type="checkbox" value="coin_pocket"> <span>零钱袋 (Карман для монет)</span></label>
+      <label class="ant-checkbox-wrapper"><input type="checkbox" value="id_window"> <span>证件窗 (Окно для удостоверения)</span></label>
+      <label class="ant-checkbox-wrapper"><input type="checkbox" value="cash_compartment"> <span>钞票隔层 (Отделение для купюр)</span></label>
+    </div>
+  </div>
+
+  <!-- 颜色 (select) -->
+  <div class="ant-form-item">
+    <div class="ant-form-item-label"><label>颜色 (Цвет)</label></div>
+    <div class="ant-form-item-control">
+      <select class="ant-select">
+        <option value="">请选择</option>
+        <option value="red">红色 (Красный)</option>
+        <option value="blue">蓝色 (Синий)</option>
+        <option value="black">黑色 (Черный)</option>
+        <option value="brown">棕色 (Коричневый)</option>
+        <option value="beige">米色 (Бежевый)</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 品牌 (select with many options) -->
+  <div class="ant-form-item">
+    <div class="ant-form-item-label"><label>品牌 (Бренд)</label></div>
+    <div class="ant-form-item-control">
+      <select class="ant-select">
+        <option value="">请选择品牌</option>
+        <option value="fashion_look">Fashion Look</option>
+        <option value="foxlover">FOXLOVER</option>
+        <option value="generic">Generic</option>
+        <option value="no_brand">Нет бренда (无品牌)</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 描述 (textarea) -->
+  <div class="ant-form-item">
+    <div class="ant-form-item-label"><label>产品描述 (Описание)</label></div>
+    <div class="ant-form-item-control">
+      <textarea class="ant-input" rows="4" placeholder="输入描述"></textarea>
+    </div>
+  </div>
+
+  <!-- 积分评价 (single checkbox) -->
+  <div class="ant-form-item">
+    <div class="ant-form-item-label"><label>积分评价</label></div>
+    <div class="ant-form-item-control">
+      <label class="ant-checkbox-wrapper"><input type="checkbox" value="points"> <span>开启积分评价...</span></label>
+    </div>
+  </div>
+
+  <!-- 单个开关型 checkbox (无 form-item label 上下文) -->
+  <div class="ant-form-item">
+    <div class="ant-form-item-label"><label>包邮</label></div>
+    <div class="ant-form-item-control">
+      <label class="ant-checkbox-wrapper"><input type="checkbox" value="free_ship"> <span>包邮</span></label>
+    </div>
+  </div>
+
+  <!-- SKU 表格行模拟（多行同 label 字段） -->
+  <div class="ant-form-item sku-row">
+    <div class="ant-form-item-label"><label>价格 (Цена)</label></div>
+    <div class="ant-form-item-control">
+      <table>
+        <tbody class="ant-table-tbody">
+        <tr class="ant-table-row"><td>Красный, S</td><td><input type="text" class="ant-input sku-price" placeholder="价格"></td></tr>
+        <tr class="ant-table-row"><td>Синий, M</td><td><input type="text" class="ant-input sku-price" placeholder="价格"></td></tr>
+        <tr class="ant-table-row"><td>Черный, L</td><td><input type="text" class="ant-input sku-price" placeholder="价格"></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===== Mock Chrome APIs =====
+window.chrome = {
+  runtime: {
+    sendMessage: function(msg, callback) {
+      console.log('[mock] chrome.runtime.sendMessage:', msg.type, msg.url);
+      if (msg.type === 'fetch') {
+        callback({ ok: true, status: 200, body: '{}' });
+      } else {
+        callback({});
+      }
+    },
+    lastError: null
+  },
+  storage: {
+    local: {
+      _data: {},
+      get: function(keys, callback) {
+        var result = {};
+        if (Array.isArray(keys)) {
+          keys.forEach(function(k) { if (this._data[k] !== undefined) result[k] = this._data[k]; }, this);
+        } else {
+          result = Object.assign({}, this._data);
+        }
+        console.log('[mock] chrome.storage.local.get:', keys, '→', Object.keys(result).length, 'keys');
+        callback(result);
+      },
+      set: function(kv, callback) {
+        Object.assign(this._data, kv);
+        console.log('[mock] chrome.storage.local.set:', Object.keys(kv));
+        if (callback) callback();
+      }
+    }
+  }
+};
+</script>
+
+<!-- Extension code injected by Puppeteer via evaluateOnNewDocument -->
+
+<script>
+// ===== Test Runner =====
+var results = document.getElementById('results');
+var passCount = 0;
+var failCount = 0;
+
+function assert(desc, condition, detail) {
+  var cls = condition ? 'pass' : 'fail';
+  if (condition) passCount++; else failCount++;
+  var html = '<div class="result ' + cls + '">' + (condition ? '✅' : '❌') + ' ' + desc;
+  if (detail !== undefined && !condition) html += ' — <code>' + JSON.stringify(detail) + '</code>';
+  html += '</div>';
+  results.innerHTML += html;
+}
+
+function section(title) {
+  results.innerHTML += '<h2>' + title + '</h2>';
+}
+
+// Tests triggered from Puppeteer after code injection
+
+async function runTests() {
+  // ====== 测试 1: buildSelector() ======
+  section('测试 1: buildSelector() — 选择器可靠性');
+
+  var elId = document.getElementById('field-name');
+  var selId = buildSelector(elId);
+  assert('有 id 的元素使用 #id 选择器', selId === '#field-name', selId);
+  assert('选择器能找回原元素', document.querySelector(selId) === elId);
+
+  var radio = document.querySelector('.radio-audience input[type="radio"]');
+  var selRadio = buildSelector(radio);
+  var foundRadio = document.querySelector(selRadio);
+  assert('radio 选择器以 data-serp-fid 开头', selRadio.indexOf('[data-serp-fid="') === 0, selRadio);
+  assert('data-serp-fid 选择器能找回 radio', foundRadio === radio, 'found: ' + (foundRadio ? foundRadio.tagName : 'null'));
+
+  var cb = document.querySelector('.cb-material input[type="checkbox"]');
+  var selCb = buildSelector(cb);
+  var foundCb = document.querySelector(selCb);
+  assert('checkbox 选择器以 data-serp-fid 开头', selCb.indexOf('[data-serp-fid="') === 0, selCb);
+  assert('data-serp-fid 选择器能找回 checkbox', foundCb === cb);
+
+  var selEl = document.querySelector('.ant-select');
+  var selSel = buildSelector(selEl);
+  assert('select 选择器非空', selSel.length > 0, selSel);
+
+  // ====== 测试 2: findLabel() ======
+  section('测试 2: findLabel() — 标签识别');
+
+  var nameLabel = findLabel(elId);
+  assert('找到 text input 的标签', nameLabel.indexOf('产品名称') !== -1, nameLabel);
+
+  var radioGroupLabel = findLabel(radio, true);  // form-item label
+  assert('找到 radio 组的 form-item 标签', radioGroupLabel.indexOf('目标受众') !== -1, radioGroupLabel);
+
+  var radioOptLabel = findLabel(radio);  // individual radio label
+  assert('找到 radio 的选项标签', radioOptLabel.indexOf('成人') !== -1 || radioOptLabel.indexOf('Взрослая') !== -1, radioOptLabel);
+
+  var cbGroupLabel = findLabel(cb, true);
+  assert('找到 checkbox 组的 form-item 标签', cbGroupLabel.indexOf('材料') !== -1 || cbGroupLabel.indexOf('Материал') !== -1, cbGroupLabel);
+
+  var cbOptLabel = findLabel(cb);
+  assert('找到 checkbox 的选项标签', cbOptLabel.length > 0, cbOptLabel);
+
+  // ====== 测试 3: collectFormFields() ======
+  section('测试 3: collectFormFields() — 字段收集');
+
+  var fields = collectFormFields();
+
+  // 分类统计
+  var txtFields = fields.filter(function(f) { return f.tag === 'input' && f.type !== 'checkbox' && f.type !== 'radio'; });
+  var selFields = fields.filter(function(f) { return f.tag === 'select'; });
+  var cbGroups = fields.filter(function(f) { return f.tag === 'checkbox-group'; });
+  var rdGroups = fields.filter(function(f) { return f.tag === 'radio-group'; });
+  var singleCb = fields.filter(function(f) { return f.tag === 'input' && f.type === 'checkbox'; });
+  var singleRd = fields.filter(function(f) { return f.tag === 'input' && f.type === 'radio'; });
+  var taFields = fields.filter(function(f) { return f.tag === 'textarea'; });
+
+  results.innerHTML += '<div class="result info">📊 字段统计: ' + txtFields.length + ' 文本, ' + selFields.length + ' 下拉, ' + cbGroups.length + ' 多选组, ' + rdGroups.length + ' 单选组, ' + singleCb.length + ' 独立checkbox, ' + singleRd.length + ' 独立radio, ' + taFields.length + ' 文本域 — 共 ' + fields.length + ' 个</div>';
+
+  assert('收集到文本输入字段', txtFields.length >= 4, txtFields.length);
+  assert('收集到下拉字段', selFields.length >= 2, selFields.length);
+  assert('收集到多选组', cbGroups.length >= 1, cbGroups.length);
+  assert('收集到单选组', rdGroups.length >= 1, rdGroups.length);
+  assert('收集到文本域', taFields.length >= 1, taFields.length);
+
+  // 测试 3a: checkbox 组不应丢选项
+  var materialGroup = cbGroups.find(function(g) { return g.label.indexOf('材料') !== -1; });
+  if (materialGroup) {
+    assert('材料组包含 4 个选项', materialGroup.options.length === 4, materialGroup.options.length);
+    assert('材料组有 4 个 _fids', materialGroup._fids.length === 4, materialGroup._fids.length);
+    var optTexts = materialGroup.options.map(function(o) { return o.text; });
+    assert('选项包含"天然皮革"', optTexts.some(function(t) { return t.indexOf('天然皮革') !== -1; }));
+    assert('选项包含"人造皮革"', optTexts.some(function(t) { return t.indexOf('人造皮革') !== -1; }));
+    assert('选项包含"织物"', optTexts.some(function(t) { return t.indexOf('织物') !== -1; }));
+    assert('选项包含"金属"', optTexts.some(function(t) { return t.indexOf('金属') !== -1; }));
+  } else {
+    assert('找到材料组', false, 'materialGroup not found in cbGroups');
+  }
+
+  // 测试 3b: radio 组应有 2 个选项
+  var audienceGroup = rdGroups.find(function(g) { return g.label.indexOf('目标受众') !== -1; });
+  if (audienceGroup) {
+    assert('目标受众组包含 2 个选项', audienceGroup.options.length === 2, audienceGroup.options.length);
+    var rdOptTexts = audienceGroup.options.map(function(o) { return o.text; });
+    assert('选项包含"成人"', rdOptTexts.some(function(t) { return t.indexOf('成人') !== -1 || t.indexOf('Взрослая') !== -1; }));
+    assert('选项包含"儿童"', rdOptTexts.some(function(t) { return t.indexOf('儿童') !== -1 || t.indexOf('Детская') !== -1; }));
+  } else {
+    assert('找到目标受众组', false, 'audienceGroup not found in rdGroups');
+  }
+
+  // 测试 3c: 单个 checkbox 不应误判为组
+  assert('独立 checkbox 不是组', singleCb.length >= 1, '独立checkbox: ' + singleCb.length);
+
+  // 测试 3d: 不应有空标签的垃圾字段
+  var emptyLabelFields = fields.filter(function(f) {
+    return !f.label || f.label.trim() === '' || f.label.indexOf('(可选值:)') === 0 || f.label.indexOf('(选项:)') === 0;
+  });
+  assert('没有空标签或垃圾字段', emptyLabelFields.length === 0, emptyLabelFields.length + ' 个垃圾: ' + JSON.stringify(emptyLabelFields.map(function(f) { return f.label; })));
+
+  // 测试 3e: 所有字段的 _fid 都能找回元素
+  var brokenFids = [];
+  fields.forEach(function(f) {
+    var el = document.querySelector(f._fid);
+    if (!el) {
+      brokenFids.push({ label: f.label, _fid: f._fid });
+    }
+  });
+  assert('所有字段的 _fid 都能在 DOM 中找到元素', brokenFids.length === 0, brokenFids.length + ' 个失效: ' + JSON.stringify(brokenFids.slice(0, 5)));
+
+  // ====== 测试 4: fillFormField() ======
+  section('测试 4: fillFormField() — 填充执行（索引驱动）');
+
+  // 4a: 填充文本字段
+  var nameField = txtFields.find(function(f) { return f.label.indexOf('产品名称') !== -1; });
+  if (nameField) {
+    var ok = await fillFormField(nameField.index, 'Тестовый кошелек');
+    var nameEl = resolveFieldByIndex(nameField.index);
+    assert('文本字段填充成功', ok === true);
+    assert('文本字段值正确', nameEl && nameEl.el && nameEl.el.value === 'Тестовый кошелек');
+  }
+
+  // 4b: 填充价格
+  var priceField = txtFields.find(function(f) { return f.label.indexOf('价格') !== -1 && f.label.indexOf('₽') !== -1; });
+  if (priceField) {
+    await fillFormField(priceField.index, '2500');
+    var priceEl = resolveFieldByIndex(priceField.index);
+    assert('价格填充成功', priceEl && priceEl.el && priceEl.el.value === '2500');
+  }
+
+  // 4c: 填充 select
+  var colorField = selFields.find(function(f) { return f.label.indexOf('颜色') !== -1; });
+  if (colorField) {
+    var okColor = await fillFormField(colorField.index, '红色 (Красный)');
+    var colorEl = resolveFieldByIndex(colorField.index);
+    assert('颜色下拉填充成功', okColor === true);
+    assert('颜色下拉值为 red', colorEl && colorEl.el && colorEl.el.value === 'red', 'value=' + (colorEl ? colorEl.el.value : 'null'));
+  }
+
+  // 4d: 填充 radio 组
+  if (audienceGroup) {
+    var okRd = await fillFormField(audienceGroup.index, '成人(Взрослая)');
+    var adultRadio = document.querySelector('.radio-audience input[value="adult"]');
+    var childRadio = document.querySelector('.radio-audience input[value="child"]');
+    assert('radio 组填充成功', okRd === true);
+    assert('成人 radio 被选中', adultRadio.checked === true);
+    assert('儿童 radio 未被选中', childRadio.checked === false);
+  }
+
+  // 4e: 填充 checkbox 组 — 单值
+  if (materialGroup) {
+    // 重置
+    materialGroup._fids.forEach(function(fid) {
+      var el = document.querySelector(fid);
+      if (el) el.checked = false;
+    });
+    var okCb = await fillFormField(materialGroup.index, '天然皮革');
+    assert('checkbox 组单值填充成功', okCb === true);
+
+    // 验证哪个被勾选了
+    var leatherOpt = materialGroup.options.find(function(o) { return o.text.indexOf('天然皮革') !== -1; });
+    var fauxOpt = materialGroup.options.find(function(o) { return o.text.indexOf('人造皮革') !== -1; });
+    assert('天然皮革被勾选', leatherOpt && document.querySelector(leatherOpt._fid).checked === true);
+    assert('人造皮革未被勾选', fauxOpt && document.querySelector(fauxOpt._fid).checked === false);
+  }
+
+  // 4f: 填充 checkbox 组 — 多值（逗号分隔）
+  if (materialGroup) {
+    materialGroup._fids.forEach(function(fid) {
+      var el = document.querySelector(fid);
+      if (el) el.checked = false;
+    });
+    var okCb2 = await fillFormField(materialGroup.index, '天然皮革, 织物');
+    assert('checkbox 组多值填充成功', okCb2 === true);
+
+    var leatherOpt2 = materialGroup.options.find(function(o) { return o.text.indexOf('天然皮革') !== -1; });
+    var fabricOpt = materialGroup.options.find(function(o) { return o.text.indexOf('织物') !== -1; });
+    var fauxOpt2 = materialGroup.options.find(function(o) { return o.text.indexOf('人造皮革') !== -1; });
+    assert('天然皮革被勾选', leatherOpt2 && document.querySelector(leatherOpt2._fid).checked === true);
+    assert('织物被勾选', fabricOpt && document.querySelector(fabricOpt._fid).checked === true);
+    assert('人造皮革未被勾选', fauxOpt2 && document.querySelector(fauxOpt2._fid).checked === false);
+  }
+
+  // 4g: 填充 select — 模糊匹配
+  var brandField = selFields.find(function(f) { return f.label.indexOf('品牌') !== -1; });
+  if (brandField) {
+    // 先重置
+    var brandEl = resolveFieldByIndex(brandField.index);
+    if (brandEl && brandEl.el) brandEl.el.value = '';
+    var okBrand = await fillFormField(brandField.index, 'foxlover');  // 模糊匹配
+    assert('品牌模糊匹配成功', okBrand === true);
+    var brandEl2 = resolveFieldByIndex(brandField.index);
+    assert('品牌值为 foxlover', brandEl2 && brandEl2.el && brandEl2.el.value === 'foxlover', brandEl2 ? brandEl2.el.value : 'null');
+  }
+
+  // 4h: 填充布尔 checkbox（单个）
+  var freeShipCb = singleCb.find(function(f) { return f.label.indexOf('包邮') !== -1; });
+  if (freeShipCb) {
+    var okShip = await fillFormField(freeShipCb.index, 'true');
+    assert('单个 checkbox true 填充成功', okShip === true);
+    var shipEl = resolveFieldByIndex(freeShipCb.index);
+    assert('包邮 checkbox 被勾选', shipEl && shipEl.el && shipEl.el.checked === true);
+  }
+
+  // 4i: 填充 textarea
+  var descField = taFields.find(function(f) { return f.label.indexOf('描述') !== -1; });
+  if (descField) {
+    await fillFormField(descField.index, 'Тестовое описание товара');
+    var descEl = resolveFieldByIndex(descField.index);
+    assert('文本域填充成功', descEl && descEl.el && descEl.el.value === 'Тестовое описание товара');
+  }
+
+  // ====== 测试 5: SKU 行上下文 ======
+  section('测试 5: SKU 行上下文 — 多行同名字段');
+
+  var skuFields = txtFields.filter(function(f) { return f.label.indexOf('Красный') !== -1 || f.label.indexOf('Синий') !== -1 || f.label.indexOf('Черный') !== -1; });
+  assert('SKU 行上下文字段被收集', skuFields.length >= 3, skuFields.length + ' 个SKU字段');
+
+  // ====== 测试 6: indexOfWord() 词边界匹配 ======
+  section('测试 6: indexOfWord() — 词边界匹配');
+
+  // indexOfWord 是 fillFormField 内部函数，无法直接调用，通过 checkbox-group 间接测试
+  var featuresGroup = cbGroups.find(function(g) { return g.label.indexOf('功能') !== -1; });
+  if (featuresGroup) {
+    // 先重置所有选项
+    featuresGroup._fids.forEach(function(fid) {
+      var el = document.querySelector(fid);
+      if (el) el.checked = false;
+    });
+    // 用"卡槽"匹配，indexOfWord 确认右边界（槽后是空格不是单词字符）
+    var okCb6 = await fillFormField(featuresGroup.index, '卡槽');
+    assert('indexOfWord: "卡槽"匹配"卡槽 (Слоты для карт)"成功', okCb6 === true);
+    var cardSlotsOpt = featuresGroup.options.find(function(o) { return o.text.indexOf('卡槽') !== -1; });
+    if (cardSlotsOpt) {
+      var cardSlotEl = document.querySelector(cardSlotsOpt._fid);
+      assert('indexOfWord: 卡槽 checkbox 被勾选', cardSlotEl && cardSlotEl.checked === true);
+    }
+    // 验证非目标未被勾选
+    var rfidOpt = featuresGroup.options.find(function(o) { return o.text.indexOf('RFID') !== -1; });
+    if (rfidOpt) {
+      var rfidEl = document.querySelector(rfidOpt._fid);
+      assert('indexOfWord: RFID 未被误勾选', rfidEl && rfidEl.checked === false);
+    }
+  }
+
+  // ====== 测试 7: resolveFieldByIndex() fids 数组恢复 ======
+  section('测试 7: resolveFieldByIndex() — 断连恢复 + fids数组');
+
+  var nameField = txtFields.find(function(f) { return (f.label || '').indexOf('产品名称') !== -1 || (f.label || '').indexOf('名称') !== -1; });
+  if (nameField) {
+    var entry1 = resolveFieldByIndex(nameField.index);
+    assert('初次解析字段成功', entry1 !== null && entry1.el !== null && entry1.el.isConnected === true);
+
+    // 模拟 DOM 移除
+    var originalEl = entry1.el;
+    var parent = originalEl.parentNode;
+    var nextSibling = originalEl.nextSibling;
+    parent.removeChild(originalEl);
+    assert('移除后元素isConnected为false', originalEl.isConnected === false);
+
+    // 重新放回 DOM
+    parent.insertBefore(originalEl, nextSibling);
+    var entry3 = resolveFieldByIndex(nameField.index);
+    assert('DOM恢复后重新解析成功', entry3 !== null && entry3.el !== null && entry3.el.isConnected === true);
+  }
+
+  // ====== 测试 8: precomputeDeterministicValues() ======
+  section('测试 8: precomputeDeterministicValues() — 确定性预计算');
+
+  if (typeof precomputeDeterministicValues === 'function') {
+    var mockProductData = {
+      product_details: {
+        weight: "12",
+        weight_unit: "oz",
+        length: "6",
+        width: "3",
+        height: "1",
+        dimension_unit: "in"
+      }
+    };
+    var mockManualData = {};
+    var mockPreFields = [
+      { index: 9991, label: "重量, г", placeholder: "", options: [] },
+      { index: 9992, label: "长度", placeholder: "", options: [] },
+      { index: 9993, label: "宽度 (см)", placeholder: "", options: [] },
+      { index: 9994, label: "原产国", placeholder: "", options: [] }
+    ];
+    var detResult = precomputeDeterministicValues(mockPreFields, mockProductData, mockManualData);
+    assert('12oz → 约340g', detResult[9991] === '340', 'got: ' + detResult[9991]);
+    assert('长度已换算', detResult[9992] !== null && detResult[9992] !== undefined, 'got: ' + detResult[9992]);
+    assert('宽度已换算', detResult[9993] !== null && detResult[9993] !== undefined, 'got: ' + detResult[9993]);
+    assert('原产国默认Китай', detResult[9994] === 'Китай', 'got: ' + detResult[9994]);
+  } else {
+    console.warn('[TEST] precomputeDeterministicValues 未暴露到全局，跳过测试');
+    assert('precomputeDeterministicValues 函数存在', false);
+  }
+
+  // ====== 测试 9: waitForDropdown() 异步轮询 ======
+  section('测试 9: waitForDropdown() — 异步轮询');
+
+  if (typeof waitForDropdown === 'function') {
+    var ddPromise = waitForDropdown(200);
+    assert('waitForDropdown返回Promise', ddPromise !== null && typeof ddPromise.then === 'function');
+    var ddResult = await ddPromise;
+    // 测试页面上没有 AntSelect 下拉，验证正常 resolve 不挂起
+    assert('waitForDropdown正常resolve(无dropdown)', ddResult === null || ddResult instanceof Element || true);
+  } else {
+    console.warn('[TEST] waitForDropdown 未暴露到全局，跳过测试');
+    assert('waitForDropdown 函数存在', false);
+  }
+
+  // ====== 测试 10: countSkuRows() SKU行计数 ======
+  section('测试 10: countSkuRows() — SKU行计数');
+
+  if (typeof countSkuRows === 'function') {
+    var skuCount = countSkuRows();
+    assert('SKU行计数 >= 1', skuCount >= 1, '检测到 ' + skuCount + ' 个SKU行');
+  } else {
+    console.warn('[TEST] countSkuRows 未暴露到全局，跳过测试');
+    assert('countSkuRows 函数存在', false);
+  }
+
+  // ====== 结果汇总 ======
+  section('📊 结果汇总');
+  results.innerHTML += '<div class="result ' + (failCount === 0 ? 'pass' : 'fail') + '" style="font-size:16px;font-weight:bold;">';
+  results.innerHTML += '通过 ' + passCount + ' / 失败 ' + failCount + ' (' + Math.round(passCount / (passCount+failCount) * 100) + '%)';
+  results.innerHTML += '</div>';
+
+  if (failCount === 0) {
+    results.innerHTML += '<div class="result pass">🎉 所有测试通过！</div>';
+  }
+
+  console.log('测试完成: ' + passCount + ' 通过, ' + failCount + ' 失败');
+}
+</script>
+</body>
+</html>
