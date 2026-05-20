@@ -1295,6 +1295,41 @@ def browser_capture():
     }), 200
 
 
+@app.route("/api/collect/send_html", methods=["POST", "OPTIONS"])
+@cross_origin()
+def collect_send_html():
+    """接收扩展发送的页面 HTML（用于新平台采集分析）"""
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "no data"}), 400
+
+    html_content = data.get("html", "")
+    if not html_content:
+        return jsonify({"error": "no html"}), 400
+
+    url = data.get("url", "")
+    platform = data.get("platform", "unknown")
+    title = data.get("title", "")
+
+    debug_dir = os.path.join(DATA_ROOT, "debug")
+    os.makedirs(debug_dir, exist_ok=True)
+
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    safe_name = re.sub(r"[^a-zA-Z0-9_\-一-鿿]", "_", title or "page")[:60]
+    filename = f"{platform}_{safe_name}_{ts}.html"
+    filepath = os.path.join(debug_dir, filename)
+
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.write(html_content)
+
+    logger.info(f"[send_html] {platform}: {title or url} -> {filename} ({len(html_content)} bytes)")
+    return jsonify({
+        "status": "ok",
+        "filename": filename,
+        "size": len(html_content),
+    }), 200
+
+
 def _download_variant_images(task_id, variant_data, images_dir, platform):
     """下载各变体图片到子目录: images/01_Name/, images/02_Name/..."""
     import requests as req_lib
@@ -2173,6 +2208,7 @@ def auto_fill_analyze():
 
     DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
     DEEPSEEK_API_URL = os.getenv("DEEPSEEK_API_URL", "https://api.deepseek.com/v1/chat/completions")
+    DEEPSEEK_AUTO_FILL_MODEL = os.getenv("DEEPSEEK_AUTO_FILL_MODEL", "deepseek-v4-flash")
 
     if not DEEPSEEK_API_KEY:
         return jsonify({"error": "DEEPSEEK_API_KEY not configured"}), 500
@@ -2282,6 +2318,54 @@ def auto_fill_analyze():
         except (TypeError, ValueError):
             valid_field_indices.add(i)
 
+    field_by_index = {}
+    for i, f in enumerate(form_fields):
+        try:
+            idx = int(f.get("index", i))
+        except (TypeError, ValueError):
+            idx = i
+        field_by_index[idx] = f
+
+    def _field_text_for_guard(field):
+        if not field:
+            return ""
+        return " ".join(str(field.get(k, "") or "") for k in ("label", "placeholder", "name", "tag", "type")).lower()
+
+    def _is_json_rich_field(field):
+        text = _field_text_for_guard(field)
+        if (field or {}).get("tag") == "json-editor":
+            return True
+        return any(k in text for k in ["json", "rich", "showcase", "富文本", "raShowcase", "витрина"])
+
+    def _is_product_description_field(field):
+        text = _field_text_for_guard(field)
+        if _is_json_rich_field(field):
+            return False
+        return any(k in text for k in ["description", "desc", "描述", "说明", "описание", "аннотация"])
+
+    def _looks_like_json_value(value):
+        s = str(value or "").strip()
+        if not s:
+            return False
+        if s[0] not in "{[":
+            return False
+        try:
+            json.loads(s)
+            return True
+        except Exception:
+            return s[0] == "{" and s[-1:] == "}"
+
+    def _validate_mapping_value(field, value):
+        if _is_json_rich_field(field):
+            try:
+                json.loads(str(value or "").strip())
+                return True, ""
+            except Exception:
+                return False, "JSON rich-text field must receive valid JSON only"
+        if _is_product_description_field(field) and _looks_like_json_value(value):
+            return False, "product description must be natural language, not JSON rich-text content"
+        return True, ""
+
     fields_text = "\n".join(fields_summary)
 
     # 拆分字段：重要字段 vs 常规字段
@@ -2370,6 +2454,15 @@ def auto_fill_analyze():
 其中 index 是表单字段列表中对应字段的 [序号] 数字，value 是要填充的值。"""
 
     # 构建自定义提示词段落
+    system_prompt += """
+
+## Hard validation contract
+- Fields whose label/tag/type contains JSON, rich, showcase, 富文本, raShowcase, or json-editor are JSON rich-text fields. Fill them with valid JSON only.
+- Fields whose label contains 产品描述, 描述, 说明, description, описание, or аннотация are normal product-description fields unless they are explicitly JSON rich-text fields. Fill them with natural language only.
+- Never put raShowcase/JSON rich-text content into a normal product-description field.
+- If both a normal product-description field and a JSON rich-text field exist, produce two different values: prose for the description field, JSON for the JSON field.
+"""
+
     custom_prompt_block = ""
     if custom_prompts:
         parts = []
@@ -2409,7 +2502,8 @@ SKC: {skc}
 请分析以上表单字段，为每个字段提供填充值。"""
 
     # ── 辅助函数：调用 DeepSeek 并解析返回 ──
-    def _call_deepseek_fill(sys_prompt, usr_prompt, label="fill", model="deepseek-v4-pro"):
+    def _call_deepseek_fill(sys_prompt, usr_prompt, label="fill", model=None):
+        model = model or DEEPSEEK_AUTO_FILL_MODEL
         payload = {
             "model": model,
             "messages": [
@@ -2454,7 +2548,14 @@ SKC: {skc}
 
             parsed = json.loads(cleaned)
             mappings = parsed.get("mappings", [])
+            if not isinstance(mappings, list):
+                if "format_retry" not in label:
+                    retry_prompt = usr_prompt + "\n\n上一次返回未通过校验：mappings 必须是数组。请只返回 JSON：{\"mappings\":[{\"index\":0,\"value\":\"...\"}]}"
+                    return _call_deepseek_fill(sys_prompt, retry_prompt, label + ":format_retry", model)
+                print(f"[auto-fill/{label}] invalid mappings type")
+                return []
             validated = []
+            rejected = []
             for m in mappings:
                 if isinstance(m, dict) and m.get("value"):
                     try:
@@ -2463,15 +2564,28 @@ SKC: {skc}
                         continue
                     if m_index not in valid_field_indices:
                         continue
+                    value = str(m.get("value", ""))
+                    ok_value, reason = _validate_mapping_value(field_by_index.get(m_index), value)
+                    if not ok_value:
+                        rejected.append({"index": m_index, "reason": reason})
+                        continue
                     validated.append({
                         "index": m_index,
                         "label": m.get("label", ""),
-                        "value": str(m.get("value", ""))
+                        "value": value
                     })
+            if rejected and "format_retry" not in label:
+                retry_prompt = usr_prompt + "\n\nPrevious response failed field validation: " + json.dumps(rejected, ensure_ascii=False) + "\nReturn JSON only. Keep normal product-description fields as natural-language prose. Put valid JSON only into JSON/rich/showcase/json-editor fields."
+                return _call_deepseek_fill(sys_prompt, retry_prompt, label + ":format_retry", model)
+            if rejected:
+                print(f"[auto-fill/{label}] rejected mappings: {rejected}")
             print(f"[auto-fill/{label}] filled {len(validated)} fields")
             return validated
         except json.JSONDecodeError:
             print(f"[auto-fill/{label}] JSON parse failed, raw text (first 300 chars): {text[:300] if 'text' in dir() else 'N/A'}")
+            if "format_retry" not in label:
+                retry_prompt = usr_prompt + "\n\n上一次返回不是合法 JSON。请只返回 JSON：{\"mappings\":[{\"index\":0,\"value\":\"...\"}]}"
+                return _call_deepseek_fill(sys_prompt, retry_prompt, label + ":format_retry", model)
             return []
         except Exception as e:
             print(f"[auto-fill/{label}] Exception: {e}")
@@ -3501,6 +3615,7 @@ def ozon_match_category(store_id):
 
     DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
     DEEPSEEK_API_URL = os.getenv("DEEPSEEK_API_URL", "https://api.deepseek.com/v1/chat/completions")
+    DEEPSEEK_CATEGORY_MODEL = os.getenv("DEEPSEEK_CATEGORY_MODEL", "deepseek-v4-flash")
 
     best_match = None
 
@@ -3517,9 +3632,12 @@ def ozon_match_category(store_id):
     if excluded_ids:
         logger.info("[品类匹配] 已排除 %s 个无属性品类", len(excluded_ids))
 
+    llm_last_error = {"message": ""}
+
     def _llm_pick(candidates, level_desc):
-        """让 DeepSeek 从候选列表中选一个最佳品类"""
+        """Ask DeepSeek to choose a category, validate JSON and retry once on format errors."""
         cand_lines = []
+        valid_ids = {str(c["id"]) for c in candidates}
         for c in candidates:
             display = c["name"]
             if c.get("cn") and c["cn"] != c["name"]:
@@ -3527,7 +3645,7 @@ def ozon_match_category(store_id):
             leaf_mark = "" if c["is_leaf"] else " [含子品类]"
             cand_lines.append(f"[{c['id']}] {display}{leaf_mark}")
 
-        prompt = f"""## 产品信息
+        base_prompt = f"""## 产品信息
 标题: {product_title or "未提供"}
 品类: {product_category or "未提供"}
 描述: {product_description[:300] if product_description else "未提供"}
@@ -3535,45 +3653,78 @@ def ozon_match_category(store_id):
 ## {level_desc}（共 {len(candidates)} 个）
 {chr(10).join(cand_lines)}
 
-请选出最匹配的一个品类，返回 JSON：
-{{"category_id": <ID>, "reason": "<理由>"}}
-都不合适返回 {{"category_id": null, "reason": "<原因>"}}"""
+请选择最匹配的一个品类。必须返回严格 JSON：
+{{"category_id": <候选列表中的ID或null>, "reason": "<简短理由>"}}
+如果都不合适，返回 {{"category_id": null, "reason": "<原因>"}}。
+"""
 
-        try:
-            resp = requests.post(DEEPSEEK_API_URL, headers={
-                "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
-                "Content-Type": "application/json"
-            }, json={
-                "model": "deepseek-v4-pro",
-                "messages": [
-                    {"role": "system", "content": "你是 Ozon 电商品类匹配专家。根据产品信息从候选品类中选择最匹配的一个。注意俄语+中文对照，产品信息是中文/英文。返回纯 JSON。"},
-                    {"role": "user", "content": prompt}
-                ],
-                "temperature": 0.1,
-                "max_tokens": 256
-            }, timeout=30)
+        validation_error = ""
+        for attempt in range(2):
+            prompt = base_prompt
+            if validation_error:
+                prompt += f"\n上一次返回未通过校验：{validation_error}\n请只修正 JSON 格式和 category_id，仍然必须从候选 ID 中选择。"
+            try:
+                resp = requests.post(DEEPSEEK_API_URL, headers={
+                    "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+                    "Content-Type": "application/json"
+                }, json={
+                    "model": DEEPSEEK_CATEGORY_MODEL,
+                    "messages": [
+                        {"role": "system", "content": "你是 Ozon 电商品类匹配专家。必须只返回 JSON 对象，字段为 category_id 和 reason；category_id 必须是候选列表里的 ID 或 null。"},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0.1,
+                    "max_tokens": 256,
+                    "response_format": {"type": "json_object"}
+                }, timeout=30)
 
-            if resp.status_code != 200:
-                logger.warning("[品类匹配] LLM API 错误: %s", resp.status_code)
+                if resp.status_code != 200:
+                    logger.warning("[品类匹配] LLM API 错误: %s", resp.status_code)
+                    llm_last_error["message"] = f"LLM API 错误: HTTP {resp.status_code}"
+                    return None
+                llm_result = resp.json()
+                choices = llm_result.get("choices", [])
+                if not choices:
+                    validation_error = "响应中没有 choices"
+                    continue
+                llm_text = choices[0].get("message", {}).get("content", "")
+                cleaned = llm_text.strip()
+                fence = chr(96) * 3
+                if cleaned.startswith(fence):
+                    cleaned = re.sub(r"^" + fence + r"(?:json)?\s*\n?", "", cleaned)
+                    cleaned = re.sub(r"\n?" + fence + r"$", "", cleaned)
+                start_json = cleaned.find("{")
+                end_json = cleaned.rfind("}")
+                if start_json != -1 and end_json != -1 and end_json > start_json:
+                    cleaned = cleaned[start_json:end_json + 1]
+                parsed = json.loads(cleaned)
+                if not isinstance(parsed, dict):
+                    validation_error = "顶层不是 JSON object"
+                    continue
+                if "category_id" not in parsed:
+                    validation_error = "缺少 category_id 字段"
+                    continue
+                chosen_id = parsed.get("category_id")
+                if chosen_id is None:
+                    logger.debug("[品类匹配] LLM 认为无合适品类: %s", parsed.get("reason", ""))
+                    return None
+                if str(chosen_id) not in valid_ids:
+                    validation_error = f"category_id {chosen_id} 不在候选列表"
+                    logger.warning("[品类匹配] LLM 返回无效 ID，准备重试: %s", validation_error)
+                    continue
+                logger.debug("[品类匹配] LLM 选择: id=%s, reason=%s", chosen_id, parsed.get("reason", ""))
+                return chosen_id
+            except (json.JSONDecodeError, ValueError, TypeError) as e:
+                validation_error = f"JSON 解析/结构错误: {e}"
+                logger.warning("[品类匹配] LLM 返回格式错误，准备重试: %s", validation_error)
+            except Exception as e:
+                logger.warning("[品类匹配] LLM 选择异常: %s", e)
+                llm_last_error["message"] = f"LLM 请求失败: {e}"
                 return None
-            llm_result = resp.json()
-            choices = llm_result.get("choices", [])
-            if not choices:
-                return None
-            llm_text = choices[0].get("message", {}).get("content", "")
-            cleaned = llm_text.strip()
-            if cleaned.startswith("```"):
-                cleaned = re.sub(r'^```(?:json)?\s*\n?', '', cleaned)
-                cleaned = re.sub(r'\n?```$', '', cleaned)
-            parsed = json.loads(cleaned)
-            chosen_id = parsed.get("category_id")
-            logger.debug("[品类匹配] LLM 选择: id=%s, reason=%s", chosen_id, parsed.get("reason", ""))
-            return chosen_id
-        except Exception as e:
-            logger.warning("[品类匹配] LLM 选择异常: %s", e)
-            return None
+        logger.warning("[品类匹配] LLM 返回连续未通过结构校验: %s", validation_error)
+        llm_last_error["message"] = f"LLM 返回结构不合法: {validation_error}"
+        return None
 
-    # 主循环：栈式回溯 — 当前层耗尽时自动返回上层尝试其他分支
     frame_stack = [{
         "nodes": tree,
         "parent_path": [],
@@ -3582,7 +3733,6 @@ def ozon_match_category(store_id):
         "llm_fails": 0
     }]
 
-    # 用于叶子批量验证的关键词评分
     title_lower = (product_title + " " + product_category).lower()
     title_words = set(title_lower.split())
 
@@ -3827,7 +3977,7 @@ def ozon_match_category(store_id):
         "best_match": best_match,
         "total_categories": 0,
         "elapsed": round(elapsed, 1),
-        "warning": "" if best_match else "已搜索全部品类树但未找到匹配品类，请手动选择或检查产品信息"
+        "warning": "" if best_match else (llm_last_error["message"] or "LLM 未返回可用匹配结果，请检查产品信息或重试")
     })
 
 

@@ -9,6 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
+  var SERP_EXTENSION_VERSION = "3.2.9";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -68,6 +69,7 @@
   var selectedProduct = null;
   var allProducts = [];
   var _fieldMap = {};  // index → {fid, el, selectors, options, tag, label, type}
+  var _categoryMatchRunning = false;
 
   // ==================== CSS 注入 ====================
   var style = document.createElement("style");
@@ -172,7 +174,24 @@
     "#serp-extract-panel .ex-tag.txt{background:#e6f7ff;color:#1890ff;}",
     "#serp-extract-panel .ex-tag.sel{background:#f6ffed;color:#52c41a;}",
     "#serp-extract-panel .ex-tag.cb{background:#fff7e6;color:#fa8c16;}",
-    "#serp-extract-panel .ex-tag.rd{background:#f9f0ff;color:#722ed1;}"
+    "#serp-extract-panel .ex-tag.rd{background:#f9f0ff;color:#722ed1;}",
+    "#serp-image-picker{position:fixed;left:8px;top:86px;z-index:999990;width:420px;max-height:620px;background:#fff;border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,0.16);font-family:\"Microsoft YaHei\",sans-serif;font-size:12px;display:none;overflow:hidden;}",
+    "#serp-image-picker.visible{display:block;}",
+    "#serp-image-picker .ip-header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #eee;}",
+    "#serp-image-picker .ip-title{font-size:13px;font-weight:600;color:#333;}",
+    "#serp-image-picker .ip-close{border:none;background:transparent;color:#888;font-size:18px;cursor:pointer;line-height:1;}",
+    "#serp-image-picker .ip-body{padding:10px 12px;max-height:510px;overflow:auto;}",
+    "#serp-image-picker .ip-set{border:1px solid #e5e7eb;border-radius:8px;margin-bottom:10px;padding:8px;background:#fafafa;}",
+    "#serp-image-picker .ip-set-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;color:#444;font-weight:600;}",
+    "#serp-image-picker .ip-use-set{border:1px solid #428bca;background:#fff;color:#428bca;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;}",
+    "#serp-image-picker .ip-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}",
+    "#serp-image-picker .ip-img{position:relative;border:2px solid transparent;border-radius:6px;overflow:hidden;background:#fff;aspect-ratio:1;cursor:pointer;}",
+    "#serp-image-picker .ip-img.selected{border-color:#16a34a;}",
+    "#serp-image-picker .ip-img img{width:100%;height:100%;object-fit:cover;display:block;}",
+    "#serp-image-picker .ip-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-top:1px solid #eee;background:#fff;}",
+    "#serp-image-picker .ip-copy{border:1px solid #16a34a;background:#16a34a;color:#fff;border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer;}",
+    "#serp-image-picker .ip-empty{color:#888;text-align:center;padding:28px 10px;}",
+    "#serp-ext-version{font-size:10px;color:#999;align-self:center;padding:0 2px;writing-mode:vertical-rl;letter-spacing:0;}"
   ].join("\n");
   document.head.appendChild(style);
 
@@ -193,12 +212,16 @@
     '<button class="serp-tb-btn" id="serp-btn-fill" title="自动填充表单">' +
       '<span class="tb-icon">✍️</span><span class="tb-label">自动填充</span>' +
     '</button>' +
+    '<button class="serp-tb-btn" id="serp-btn-images" title="选择变种图片集或单张图片">' +
+      '<span class="tb-icon">图</span><span class="tb-label">变种图</span>' +
+    '</button>' +
     '<button class="serp-tb-btn" id="serp-btn-clear-form" title="清空所有表单字段">' +
       '<span class="tb-icon">🧹</span><span class="tb-label">清空</span>' +
     '</button>' +
     '<button class="serp-tb-btn" id="serp-btn-send-html" title="发送当前页面HTML到后台分析">' +
       '<span class="tb-icon">📄</span><span class="tb-label">发送HTML</span>' +
     '</button>' +
+    '<div id="serp-ext-version" title="sERP extension version">v' + SERP_EXTENSION_VERSION + '</div>' +
     '<div id="serp-hint-toggle" title="展开设置自定义提示词">💡</div>' +
     '<div class="serp-product-info" id="serp-product-info">' +
       '<div class="pi-label">已选产品</div>' +
@@ -237,6 +260,20 @@
     '<div class="ex-summary" id="serp-extract-summary"></div>' +
     '<div id="serp-extract-sections"></div>';
   document.body.appendChild(extractPanel);
+
+  var imagePicker = document.createElement("div");
+  imagePicker.id = "serp-image-picker";
+  imagePicker.innerHTML =
+    '<div class="ip-header">' +
+      '<span class="ip-title">变种图片选择</span>' +
+      '<button class="ip-close" id="serp-image-close">×</button>' +
+    '</div>' +
+    '<div class="ip-body" id="serp-image-body"></div>' +
+    '<div class="ip-footer">' +
+      '<span id="serp-image-count">已选 0 张</span>' +
+      '<button class="ip-copy" id="serp-image-copy">复制图片URL</button>' +
+    '</div>';
+  document.body.appendChild(imagePicker);
 
   var hintOverlay = document.createElement("div");
   hintOverlay.id = "serp-hint-overlay";
@@ -293,6 +330,7 @@
   var btnCategory = document.getElementById("serp-btn-category");
   var btnExtract = document.getElementById("serp-btn-extract");
   var btnFill = document.getElementById("serp-btn-fill");
+  var btnImages = document.getElementById("serp-btn-images");
   var btnSendHtml = document.getElementById("serp-btn-send-html");
   var productInfo = document.getElementById("serp-product-info");
   var piSkc = document.getElementById("serp-pi-skc");
@@ -311,6 +349,10 @@
   var hintCtxStore = document.getElementById("hint-ctx-store");
   var hintCtxCategory = document.getElementById("hint-ctx-category");
   var hintSectionCategory = document.getElementById("hint-section-category");
+  var imageBody = document.getElementById("serp-image-body");
+  var imageCount = document.getElementById("serp-image-count");
+  var imageCopy = document.getElementById("serp-image-copy");
+  var selectedImageUrls = {};
 
   // ==================== 平台检测 ====================
   function detectPlatform() {
@@ -559,6 +601,110 @@
       });
   }
 
+  function escapeHtml(s) {
+    return String(s || "").replace(/[&<>"']/g, function (ch) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
+    });
+  }
+
+  function normalizeImageUrl(url) {
+    if (!url) return "";
+    if (/^https?:\/\//i.test(url)) return url;
+    if (url.charAt(0) === "/") return FLASK_BASE + url;
+    return FLASK_BASE + "/" + url.replace(/^\/+/, "");
+  }
+
+  function updateSelectedImageCount() {
+    var count = Object.keys(selectedImageUrls).length;
+    imageCount.textContent = "已选 " + count + " 张";
+  }
+
+  async function copyTextToClipboard(text) {
+    if (navigator.clipboard) {
+      try { await navigator.clipboard.writeText(text); return true; } catch (e) {}
+    }
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (copyErr) {}
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  function renderImagePickerSets(imageSets) {
+    selectedImageUrls = {};
+    updateSelectedImageCount();
+    if (!imageSets || !imageSets.length) {
+      imageBody.innerHTML = '<div class="ip-empty">当前产品没有可选择的图片集</div>';
+      return;
+    }
+    imageBody.innerHTML = imageSets.map(function (set, setIndex) {
+      var imgs = set.images || [];
+      var name = set.label || set.name || ("图片集 " + (setIndex + 1));
+      return '<div class="ip-set" data-set="' + setIndex + '">' +
+        '<div class="ip-set-head"><span>' + escapeHtml(name) + ' (' + imgs.length + ')</span><button class="ip-use-set" data-set="' + setIndex + '">选择本组</button></div>' +
+        '<div class="ip-grid">' + imgs.map(function (img, imgIndex) {
+          var url = normalizeImageUrl(img.url || img.path || img.file || img.filename || "");
+          return '<div class="ip-img" data-url="' + escapeHtml(url) + '" data-set="' + setIndex + '" data-img="' + imgIndex + '">' +
+            '<img src="' + escapeHtml(url) + '" loading="lazy">' +
+          '</div>';
+        }).join("") + '</div>' +
+      '</div>';
+    }).join("");
+
+    imageBody.querySelectorAll(".ip-img").forEach(function (node) {
+      node.addEventListener("click", function () {
+        var url = node.dataset.url;
+        if (!url) return;
+        if (selectedImageUrls[url]) {
+          delete selectedImageUrls[url];
+          node.classList.remove("selected");
+        } else {
+          selectedImageUrls[url] = true;
+          node.classList.add("selected");
+        }
+        updateSelectedImageCount();
+      });
+    });
+    imageBody.querySelectorAll(".ip-use-set").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var setId = btn.dataset.set;
+        imageBody.querySelectorAll('.ip-img[data-set="' + setId + '"]').forEach(function (node) {
+          var url = node.dataset.url;
+          if (url) {
+            selectedImageUrls[url] = true;
+            node.classList.add("selected");
+          }
+        });
+        updateSelectedImageCount();
+      });
+    });
+  }
+
+  async function openImagePicker() {
+    if (!selectedProduct || !selectedProduct.skc) {
+      showToast("请先选择产品，再选择变种图片", "error");
+      return;
+    }
+    imagePicker.classList.add("visible");
+    imageBody.innerHTML = '<div class="ip-empty">正在加载图片...</div>';
+    updateSelectedImageCount();
+    try {
+      var r = await bgFetch(FLASK_BASE + "/api/products/" + encodeURIComponent(selectedProduct.skc) + "/images");
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      var data = await r.json();
+      renderImagePickerSets(data.image_sets || []);
+    } catch (e) {
+      imageBody.innerHTML = '<div class="ip-empty">图片加载失败：' + escapeHtml(e.message) + '</div>';
+      showToast("图片加载失败: " + e.message, "error");
+    }
+  }
+
   // ==================== 产品选择弹窗 ====================
   function renderProductList(products) {
     var listEl = document.getElementById("serp-modal-list");
@@ -594,12 +740,17 @@
   // ==================== 智能分类 ====================
   // 通用入口：检测平台 → 调用后端匹配 → 分派平台策略填充
   function doMatchCategory() {
+    if (_categoryMatchRunning) {
+      showToast("正在匹配品类，请稍候...", "info");
+      return;
+    }
     if (!selectedProduct) { showToast("请先点击\"选品\"选择一个产品", "error"); return; }
     var storeId = detectStoreId();
     if (!storeId) { showToast("无法识别当前店铺", "error"); return; }
     var platform = detectPlatform();
     if (!platform) { showToast("无法识别当前平台", "error"); return; }
 
+    _categoryMatchRunning = true;
     setBtnLoading(btnCategory, true);
     showToast("正在匹配品类...", "info");
 
@@ -618,7 +769,7 @@
       return fillCategorySelect(m, platform);
     })
     .catch(function (e) { console.error("[sERP] 品类匹配异常:", e); showToast("品类匹配失败: " + e.message, "error"); })
-    .then(function () { setBtnLoading(btnCategory, false); });
+    .then(function () { _categoryMatchRunning = false; setBtnLoading(btnCategory, false); });
   }
 
   // ===== 平台策略分发 =====
@@ -1127,6 +1278,23 @@
         || kw.indexOf("类目") !== -1;
   }
 
+  function fieldBaseLabel(label) {
+    return (label || "")
+      .replace(/\s*\[[^\]]+\]\s*$/g, "")
+      .replace(/\s*\((?:可选值|选项):[\s\S]*$/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function isDictionarySearchInput(el) {
+    if (!el) return false;
+    if (el.classList.contains("ant-select-selection-search-input")) return true;
+    if ((el.placeholder || "").trim() === "搜索") return true;
+    var item = el.closest(".ant-form-item");
+    var txt = item ? (item.textContent || "") : "";
+    return txt.indexOf("更多属性值请搜索添加") !== -1;
+  }
+
   // 获取字段所在表格行的上下文（用于区分多个SKU行中的同名字段）
   function getRowContext(el) {
     var row = el.closest(".ant-table-row, tr[class*=\"ant-table\"], .skuData-body tr, table.myj-table tbody tr, tr");
@@ -1217,9 +1385,129 @@
     return added === rowsToAdd;
   }
 
+  function findVisibleContainerByText(patterns, selectors) {
+    selectors = selectors || [".ant-form-item", ".ant-card", ".ant-collapse-item", ".ant-row", "section", "div"];
+    var nodes = Array.from(document.querySelectorAll(selectors.join(","))).filter(function (node) {
+      return node && (node.offsetWidth || node.offsetHeight || node.getClientRects().length);
+    });
+    for (var i = 0; i < nodes.length; i++) {
+      var txt = (nodes[i].textContent || "").replace(/\s+/g, " ").trim();
+      if (!txt) continue;
+      for (var j = 0; j < patterns.length; j++) {
+        if (patterns[j].test(txt)) return nodes[i];
+      }
+    }
+    return null;
+  }
+
+  async function ensureVariantThemeSelected(variantValues) {
+    if (!variantValues || variantValues.length < 2) return true;
+    var themeBlock = findVisibleContainerByText([/变种主题|规格主题|variant theme|variation theme|тема/i]);
+    if (!themeBlock) {
+      console.warn("[sERP] variant theme block not found");
+      return false;
+    }
+    var preferred = ["颜色", "Color", "colour", "Цвет", "цвет товара"];
+    var antSelect = themeBlock.querySelector(".ant-select");
+    if (antSelect) {
+      for (var i = 0; i < preferred.length; i++) {
+        if (await fillAntSelect(antSelect, preferred[i], "variant theme")) {
+          await sleep(500);
+          return true;
+        }
+      }
+    }
+    var nativeSelect = themeBlock.querySelector("select");
+    if (nativeSelect) {
+      var opts = Array.from(nativeSelect.options);
+      var match = opts.find(function (o) { return /颜色|color|colour|цвет/i.test(o.textContent || o.value || ""); });
+      if (match) {
+        nativeSelect.value = match.value;
+        nativeSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        await sleep(500);
+        return true;
+      }
+    }
+    var input = themeBlock.querySelector("input:not([type]), input[type='text']");
+    if (input) {
+      input.focus();
+      input.select();
+      try { document.execCommand("insertText", false, "颜色"); } catch (e) {
+        var ns = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+        ns.call(input, "颜色");
+      }
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+      await sleep(500);
+      return true;
+    }
+    return false;
+  }
+
+  async function clickCreateVariantRowsButton() {
+    var scope = findVisibleContainerByText([/变种属性|规格属性|variant/i], [".ant-card", ".ant-collapse-item", "section", "div"]) || document;
+    var buttons = Array.from(scope.querySelectorAll("button, .ant-btn, a")).filter(function (btn) {
+      return btn && (btn.offsetWidth || btn.offsetHeight || btn.getClientRects().length);
+    });
+    for (var i = 0; i < buttons.length; i++) {
+      var txt = (buttons[i].textContent || "").replace(/\s+/g, " ").trim();
+      if (/创建|生成|添加|确认|应用|Create|Generate|Add/i.test(txt) && /变种|规格|SKU|variant/i.test((scope.textContent || "") + " " + txt)) {
+        buttons[i].click();
+        await sleep(800);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  async function ensureVariantRowsForProduct(variantValues) {
+    if (!variantValues || variantValues.length < 2) return true;
+    var themeOk = await ensureVariantThemeSelected(variantValues);
+    if (themeOk) await clickCreateVariantRowsButton();
+    var rowsOk = await ensureSkuRows(variantValues.length);
+    if (!themeOk && !rowsOk) {
+      showToast("未能自动创建变种行，请先在“变种主题”选择颜色后重试", "error");
+    }
+    return rowsOk;
+  }
+
+  function getProductVariantValues(productData) {
+    var result = [];
+    var seen = {};
+    function add(name, price, attrs) {
+      name = String(name || "").trim();
+      if (!name || seen[name]) return;
+      seen[name] = true;
+      result.push({ name: name, variantName: name, price: price || "", attributes: attrs || {} });
+    }
+    var pd = productData || {};
+    var variants = pd.variants || {};
+    if (Array.isArray(variants.values)) {
+      variants.values.forEach(function (v) {
+        if (typeof v === "string") add(v);
+        else add(v.name || v.variantName || v.value, v.price, v.attributes || {});
+      });
+    }
+    ["colors", "sizes", "styles", "skus"].forEach(function (key) {
+      if (Array.isArray(variants[key])) {
+        variants[key].forEach(function (v) {
+          if (typeof v === "string") add(v);
+          else add(v.name || v.variantName || v.value, v.price, v.attributes || {});
+        });
+      }
+    });
+    if (Array.isArray(pd.variantData)) {
+      pd.variantData.forEach(function (v) {
+        if (v && typeof v === "object") add(v.variantName || v.currentVariant, v.price, v.variantInfo || {});
+      });
+    }
+    return result;
+  }
+
   function collectFormFields() {
     var fields = [];
     var seenSelectors = {};
+    var groupedBaseLabels = {};
 
     // ===== 第一遍：收集 checkbox/radio，按 form-item 分组 =====
     // { groupKey: { groupLabel, rowCtx, items: [{selector, optionLabel}] } }
@@ -1240,6 +1528,7 @@
       // 无有效 groupLabel 的，作为独立字段收集（如 SKU 表格工具栏按钮）
       if (!groupLabel || !groupLabel.trim()) {
         var soloLabel = optionLabel + (rowCtx ? " [" + rowCtx + "]" : "");
+        if (/^(设置sku标题|颜色样本|条形码)$/.test(fieldBaseLabel(soloLabel))) return;
         if (el.type === "checkbox") {
           loneCheckboxes.push({ _fid: sel, label: soloLabel, el: el, selector: sel });
         } else {
@@ -1285,6 +1574,7 @@
         }
         return;
       }
+      groupedBaseLabels[fieldBaseLabel(grp.groupLabel)] = true;
       var optionLabels = grp.items.map(function (x) { return x.optionLabel; });
       var fids = grp.items.map(function (x) { return x._fid; });
       var els = grp.items.map(function (x) { return x.el; });
@@ -1317,6 +1607,7 @@
         }
         return;
       }
+      groupedBaseLabels[fieldBaseLabel(grp.groupLabel)] = true;
       var optionLabels = grp.items.map(function (x) { return x.optionLabel; });
       var fids = grp.items.map(function (x) { return x._fid; });
       var els = grp.items.map(function (x) { return x.el; });
@@ -1339,17 +1630,21 @@
     // ===== 第二遍：其他 input（排除 checkbox/radio） =====
     document.querySelectorAll('input:not([type="hidden"]):not([type="file"]):not([type="checkbox"]):not([type="radio"])').forEach(function (el) {
       if (!isVisibleField(el)) return;
+      if (isDictionarySearchInput(el)) return;
       var fid = _serpFidSelector(el);
       var label = findLabel(el);
       if (isSkippedField(label)) return;
       var rowCtx = getRowContext(el);
-      var fullLabel = label + (rowCtx ? " [" + rowCtx + "]" : "");
+      var extra = el.placeholder && el.placeholder !== "请输入" ? " " + el.placeholder : "";
+      var fullLabel = label + extra + (rowCtx ? " [" + rowCtx + "]" : "");
       if (seenSelectors[fid]) return;
       seenSelectors[fid] = true;
 
       // 检测 AntSelect：.ant-select 包裹的 input，排除 dropdown 内的搜索框
       var antSelect = el.closest(".ant-select");
       if (antSelect && !el.closest(".ant-select-dropdown")) {
+        if (groupedBaseLabels[fieldBaseLabel(label)]) return;
+        if (fieldBaseLabel(label).indexOf("JSON富文本") !== -1) return;
         var selectMode = antSelect.classList.contains("ant-select-multiple") ? "multiple" : "single";
         var showSearch = antSelect.classList.contains("ant-select-show-search");
         var currentVal = "";
@@ -1393,6 +1688,21 @@
       fields.push({ tag: "textarea", name: el.name || "", id: el.id || "", label: fullLabel, placeholder: el.placeholder || "", currentValue: el.value || "", _fid: fid, el: el });
     });
 
+    var jsonBtn = Array.from(document.querySelectorAll("button")).find(function (btn) {
+      return (btn.textContent || "").trim() === "编辑JSON代码" && isVisibleField(btn);
+    });
+    if (jsonBtn) {
+      var jsonFid = _serpFidSelector(jsonBtn);
+      fields.push({
+        tag: "json-editor",
+        type: "json",
+        label: "JSON富文本",
+        currentValue: "",
+        _fid: jsonFid,
+        _el: jsonBtn
+      });
+    }
+
     // ===== 构建索引和字段映射表 =====
     _buildFieldMap(fields);
 
@@ -1428,7 +1738,8 @@
         tag: f.tag,
         label: f.label,
         type: f.type,
-        renderMode: f.renderMode || null
+        renderMode: f.renderMode || null,
+        jsonEditor: f.tag === "json-editor"
       };
     });
   }
@@ -1575,6 +1886,79 @@
         var endIdx = idx + needle.length;
         if (endIdx < haystack.length && /[\w]/.test(haystack.charAt(endIdx))) return -1;
         return idx;
+      }
+
+      if (entry.jsonEditor) {
+        el.click();
+        await sleep(700);
+        var dialogs = Array.from(document.querySelectorAll(".ant-modal, .ant-drawer, [role='dialog']")).filter(function (d) {
+          return d.offsetWidth || d.offsetHeight || d.getClientRects().length;
+        });
+        var dialog = dialogs.find(function (d) { return (d.textContent || "").indexOf("JSON") !== -1; }) || dialogs[dialogs.length - 1];
+        if (!dialog) { console.warn("[sERP] JSON编辑弹窗未出现"); return false; }
+
+        var wroteJson = false;
+        var classicCm = dialog.querySelector(".CodeMirror");
+        if (classicCm && classicCm.CodeMirror && typeof classicCm.CodeMirror.setValue === "function") {
+          classicCm.CodeMirror.setValue(value);
+          if (typeof classicCm.CodeMirror.refresh === "function") classicCm.CodeMirror.refresh();
+          wroteJson = true;
+        }
+
+        function writeToTextTarget(target) {
+          if (!target) return false;
+          target.focus();
+          if (typeof target.select === "function") target.select();
+          try { document.execCommand("selectAll"); } catch (e0) {}
+          var inserted = false;
+          try { inserted = document.execCommand("insertText", false, value); } catch (e1) {}
+          if (!inserted) {
+            if (target.tagName === "TEXTAREA") {
+              var jts = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
+              jts.call(target, value);
+            } else if (target.tagName === "INPUT") {
+              var jis = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+              jis.call(target, value);
+            } else {
+              target.textContent = value;
+            }
+          }
+          trigger(target, "input");
+          trigger(target, "change");
+          target.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true }));
+          return true;
+        }
+
+        if (!wroteJson) {
+          var ta = dialog.querySelector("textarea");
+          var editable = dialog.querySelector("[contenteditable='true'], .cm-content, .cm-line, .monaco-editor textarea.inputarea");
+          wroteJson = writeToTextTarget(ta) || writeToTextTarget(editable);
+        }
+        if (!wroteJson && navigator.clipboard) {
+          try {
+            await navigator.clipboard.writeText(value);
+            var focusable = dialog.querySelector(".cm-content, [contenteditable='true'], textarea, .monaco-editor textarea.inputarea");
+            if (focusable) {
+              focusable.focus();
+              try { document.execCommand("selectAll"); document.execCommand("paste"); } catch (pasteErr) {}
+              wroteJson = true;
+            }
+          } catch (clipErr) {}
+        }
+        if (!wroteJson) {
+          console.warn("[sERP] JSON editor target not found");
+          return false;
+        }
+
+        var okBtn = Array.from(dialog.querySelectorAll("button")).find(function (btn) {
+          var t = (btn.textContent || "").trim();
+          return /^(确定|保存|确认|应用|完成|提交|OK|Save|Apply)$/i.test(t) || /保存|确定|确认|应用|完成|提交/i.test(t);
+        });
+        if (okBtn) {
+          okBtn.click();
+          await sleep(500);
+        }
+        return true;
       }
 
       // ===== checkbox 组填充 =====
@@ -2090,10 +2474,9 @@
     var llmFields = formFields.map(_fieldForLLM);
 
     // Phase 2: Ensure enough SKU rows for variants
-    var variants = (selectedProduct.product_data && selectedProduct.product_data.variants) || {};
-    var variantValues = variants.values || [];
+    var variantValues = getProductVariantValues(selectedProduct.product_data || {});
     if (variantValues.length > 1) {
-      var ensured = await ensureSkuRows(variantValues.length);
+      var ensured = await ensureVariantRowsForProduct(variantValues);
       if (ensured) {
         // Re-collect fields since new DOM elements were added
         formFields = collectFormFields();
@@ -2118,8 +2501,7 @@
     }
 
     var variantList = [];
-    var variants = (selectedProduct.product_data && selectedProduct.product_data.variants) || {};
-    var variantValues = variants.values || [];
+    var variantValues = getProductVariantValues(selectedProduct.product_data || {});
     if (variantValues.length > 0) {
       variantValues.forEach(function(v) {
         variantList.push({
@@ -2306,6 +2688,7 @@
   btnCategory.addEventListener("click", function () { doMatchCategory(); });
   btnExtract.addEventListener("click", function () { doExtractFields(); });
   btnFill.addEventListener("click", function () { doAutoFill(); });
+  btnImages.addEventListener("click", function () { openImagePicker(); });
   document.getElementById("serp-btn-clear-form").addEventListener("click", function () { clearAllFormFields(); });
   btnSendHtml.addEventListener("click", function () { captureAndSendHTML(); });
   piClear.addEventListener("click", function () { selectedProduct = null; updateProductUI(); showToast("已清除产品选择", "info"); });
@@ -2333,6 +2716,18 @@
   });
   document.getElementById("serp-extract-close").addEventListener("click", function () {
     extractPanel.classList.remove("visible");
+  });
+  document.getElementById("serp-image-close").addEventListener("click", function () {
+    imagePicker.classList.remove("visible");
+  });
+  imageCopy.addEventListener("click", async function () {
+    var urls = Object.keys(selectedImageUrls);
+    if (!urls.length) {
+      showToast("请先选择图片或图片集", "error");
+      return;
+    }
+    var ok = await copyTextToClipboard(urls.join("\n"));
+    showToast(ok ? "已复制 " + urls.length + " 张图片URL" : "复制失败，请手动复制", ok ? "success" : "error");
   });
   document.getElementById("serp-modal-close").addEventListener("click", function () { modalOverlay.classList.remove("active"); });
   modalOverlay.addEventListener("click", function (e) { if (e.target === modalOverlay) modalOverlay.classList.remove("active"); });
