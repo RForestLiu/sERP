@@ -936,6 +936,51 @@
             overflow-y: auto;
             gap: 16px;
         }
+        .settings-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f7f8fa;
+        }
+        .settings-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            padding: 14px 16px;
+        }
+        .settings-header h2 { margin: 0; font-size: 18px; color: #222; }
+        .settings-header p { margin: 4px 0 0; font-size: 12px; color: #777; }
+        .settings-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .settings-tabs { display: flex; gap: 6px; background: #fff; border: 1px solid #e8e8e8; border-radius: 6px; padding: 6px; }
+        .settings-tab { border: none; background: transparent; padding: 7px 12px; border-radius: 4px; cursor: pointer; color: #555; font-size: 13px; }
+        .settings-tab.active { background: #e8f3ff; color: #1677ff; font-weight: 600; }
+        .settings-tab-panel { display: none; background: #fff; border: 1px solid #e8e8e8; border-radius: 6px; padding: 14px; }
+        .settings-tab-panel.active { display: block; }
+        .settings-section-title { font-size: 13px; font-weight: 700; color: #333; margin-bottom: 10px; }
+        .settings-card { border: 1px solid #edf0f2; border-radius: 6px; padding: 10px; margin-bottom: 10px; background: #fff; }
+        .settings-grid { display: grid; grid-template-columns: repeat(4, minmax(120px, 1fr)); gap: 8px; }
+        .settings-grid label, .settings-binding-row label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: #777; }
+        .settings-grid input, .settings-grid select, .settings-binding-row select, .settings-import-text { border: 1px solid #d9d9d9; border-radius: 4px; padding: 7px 8px; font-size: 12px; background: #fff; }
+        .settings-binding-row { display: grid; grid-template-columns: 220px minmax(180px, 360px); gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid #f2f2f2; }
+        .settings-add-btn { border: 1px dashed #b7d8ff; background: #f7fbff; color: #1677ff; border-radius: 4px; padding: 8px 12px; cursor: pointer; width: 100%; }
+        .settings-remove-btn { border: 1px solid #ffccc7; background: #fff2f0; color: #cf1322; border-radius: 4px; padding: 7px 10px; cursor: pointer; }
+        .settings-secret-status { font-size: 11px; color: #888; margin-top: 4px; }
+        .settings-io-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .settings-import-text { width: 100%; min-height: 220px; resize: vertical; font-family: Consolas, monospace; }
+        .settings-diff { margin-top: 10px; min-height: 80px; max-height: 240px; overflow: auto; background: #0f172a; color: #dbeafe; padding: 10px; border-radius: 6px; font-size: 12px; white-space: pre-wrap; }
+        .settings-check { display: inline-flex; gap: 6px; align-items: center; font-size: 12px; margin: 0 0 10px; color: #555; }
+        .settings-hint { font-size: 12px; color: #8c6d1f; background: #fffbe6; border: 1px solid #ffe58f; border-radius: 6px; padding: 10px 12px; }
+        @media (max-width: 1100px) {
+            .settings-grid { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+            .settings-io-grid { grid-template-columns: 1fr; }
+        }
         /* ===== 产品-店铺矩阵表格 ===== */
         .product-store-table-wrap {
             background: white;
@@ -1451,6 +1496,10 @@
             <span class="nav-icon">📋</span>
             <span class="nav-label">产品管理</span>
         </div>
+        <div class="nav-item" data-module="settings">
+            <span class="nav-icon">⚙</span>
+            <span class="nav-label">设置</span>
+        </div>
     </div>
 
     <!-- ===== 模块容器 ===== -->
@@ -1553,6 +1602,60 @@
                 </div>
                 <div class="product-empty" id="product-empty">暂无正式产品，请先在"采集产品"模块中保存产品</div>
                 <div id="product-cards-container"></div>
+            </div>
+        </div>
+        <div class="module-panel" id="module-settings">
+            <div class="settings-panel">
+                <div class="settings-header">
+                    <div>
+                        <h2>设置</h2>
+                        <p>模型、功能绑定、平台店铺和本机环境变量</p>
+                    </div>
+                    <div class="settings-actions">
+                        <button class="btn" id="settings-reload-btn">刷新</button>
+                        <button class="btn primary" id="settings-save-btn">保存设置</button>
+                    </div>
+                </div>
+                <div class="settings-tabs">
+                    <button class="settings-tab active" data-settings-tab="models">模型配置</button>
+                    <button class="settings-tab" data-settings-tab="bindings">功能模型绑定</button>
+                    <button class="settings-tab" data-settings-tab="stores">店铺配置</button>
+                    <button class="settings-tab" data-settings-tab="io">导入 / 导出</button>
+                </div>
+                <div class="settings-tab-panel active" id="settings-tab-models">
+                    <div class="settings-section-title">可用模型池</div>
+                    <div id="settings-models-list"></div>
+                    <button class="settings-add-btn" id="settings-add-model">+ 添加模型</button>
+                </div>
+                <div class="settings-tab-panel" id="settings-tab-bindings">
+                    <div class="settings-section-title">每个功能选择使用的模型</div>
+                    <div id="settings-bindings-list"></div>
+                </div>
+                <div class="settings-tab-panel" id="settings-tab-stores">
+                    <div class="settings-section-title">平台 / 店铺</div>
+                    <div id="settings-stores-list"></div>
+                    <button class="settings-add-btn" id="settings-add-store">+ 添加店铺</button>
+                </div>
+                <div class="settings-tab-panel" id="settings-tab-io">
+                    <div class="settings-io-grid">
+                        <div>
+                            <div class="settings-section-title">导出配置</div>
+                            <label class="settings-check"><input type="checkbox" id="settings-export-secrets"> 包含密钥明文</label>
+                            <button class="btn primary" id="settings-copy-export">复制配置 JSON 到剪贴板</button>
+                            <pre class="settings-diff" id="settings-export-preview"></pre>
+                        </div>
+                        <div>
+                            <div class="settings-section-title">导入配置</div>
+                            <textarea id="settings-import-text" class="settings-import-text" placeholder="粘贴配置 JSON"></textarea>
+                            <div class="settings-actions">
+                                <button class="btn" id="settings-preview-import">预览导入</button>
+                                <button class="btn primary" id="settings-apply-import">应用导入</button>
+                            </div>
+                            <pre class="settings-diff" id="settings-import-diff"></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-hint">密钥默认只显示配置状态；留空表示保留原值。保存后部分配置需要重启 sERP 才会完全生效。</div>
             </div>
         </div>
     </div>
@@ -2634,17 +2737,19 @@
         document.querySelectorAll(".nav-item").forEach(item => {
             item.addEventListener("click", () => {
                 switchModule(item.dataset.module);
+                _onModuleActivated(item.dataset.module);
             });
         });
 
         function _onModuleActivated(moduleName) {
             if (moduleName === "product-manage") loadProducts();
+            if (moduleName === "settings") loadSettings();
         }
 
         // 页面加载时根据 URL hash 恢复模块
         (function initModuleFromHash() {
             var hash = window.location.hash.replace("#", "");
-            var validModules = ["collect-product", "image-batch", "product-manage"];
+            var validModules = ["collect-product", "image-batch", "product-manage", "settings"];
             if (hash && validModules.indexOf(hash) !== -1) {
                 switchModule(hash, false);
                 _onModuleActivated(hash);
@@ -2654,7 +2759,7 @@
         // 浏览器前进/后退时同步切换
         window.addEventListener("hashchange", function() {
             var hash = window.location.hash.replace("#", "");
-            var validModules = ["collect-product", "image-batch", "product-manage"];
+            var validModules = ["collect-product", "image-batch", "product-manage", "settings"];
             if (hash && validModules.indexOf(hash) !== -1) {
                 switchModule(hash, false);
                 _onModuleActivated(hash);
@@ -2662,6 +2767,219 @@
         });
 
         // ---------- 恢复历史采集任务 ----------
+        // ---------- 设置模块 ----------
+        let settingsState = null;
+        let settingsLoaded = false;
+
+        function settingsInput(name, value, placeholder) {
+            return `<label>${name}<input data-field="${name}" value="${_escHtml(value || "")}" placeholder="${_escHtml(placeholder || "")}"></label>`;
+        }
+
+        function settingsSelect(name, value, options) {
+            let html = `<label>${name}<select data-field="${name}">`;
+            (options || []).forEach(opt => {
+                const selected = String(opt.value) === String(value || "") ? " selected" : "";
+                html += `<option value="${_escHtml(opt.value)}"${selected}>${_escHtml(opt.label)}</option>`;
+            });
+            html += "</select></label>";
+            return html;
+        }
+
+        function modelOptions() {
+            const models = ((settingsState && settingsState.settings && settingsState.settings.models) || []).filter(m => m.enabled !== false);
+            return models.map(m => ({ value: m.id, label: `${m.name || m.id} (${m.model || ""})` }));
+        }
+
+        function renderSettings() {
+            if (!settingsState) return;
+            const env = settingsState.env || {};
+            const modelsEl = document.getElementById("settings-models-list");
+            modelsEl.innerHTML = "";
+            (settingsState.settings.models || []).forEach((m, index) => {
+                const status = env[m.api_key_env] || {};
+                const card = document.createElement("div");
+                card.className = "settings-card";
+                card.innerHTML = `
+                    <div class="settings-grid">
+                        ${settingsInput("id", m.id)}
+                        ${settingsInput("name", m.name)}
+                        ${settingsSelect("provider", m.provider, [
+                            {value:"deepseek", label:"DeepSeek"},
+                            {value:"openai_compatible", label:"OpenAI-compatible"},
+                            {value:"gemini", label:"Gemini / Image"},
+                            {value:"custom", label:"Custom"}
+                        ])}
+                        ${settingsInput("model", m.model)}
+                        ${settingsInput("base_url", m.base_url)}
+                        ${settingsInput("api_key_env", m.api_key_env)}
+                        <label>密钥新值<input data-secret-env="${_escHtml(m.api_key_env || "")}" type="password" placeholder="留空保留原值"></label>
+                        <label>启用<select data-field="enabled"><option value="true"${m.enabled !== false ? " selected" : ""}>启用</option><option value="false"${m.enabled === false ? " selected" : ""}>停用</option></select></label>
+                    </div>
+                    <div class="settings-secret-status">密钥状态：${status.configured ? "已配置 " + (status.masked || "") : "未配置"}</div>
+                    <div style="margin-top:8px;text-align:right;"><button class="settings-remove-btn" data-remove-model="${index}">删除模型</button></div>
+                `;
+                modelsEl.appendChild(card);
+            });
+
+            const bindingsEl = document.getElementById("settings-bindings-list");
+            const features = settingsState.features || {};
+            const bindings = settingsState.settings.feature_models || {};
+            const opts = modelOptions();
+            bindingsEl.innerHTML = "";
+            Object.keys(features).forEach(key => {
+                const row = document.createElement("div");
+                row.className = "settings-binding-row";
+                let select = `<select data-feature="${key}">`;
+                opts.forEach(opt => {
+                    select += `<option value="${_escHtml(opt.value)}"${bindings[key] === opt.value ? " selected" : ""}>${_escHtml(opt.label)}</option>`;
+                });
+                select += "</select>";
+                row.innerHTML = `<div>${_escHtml(features[key])}<div style="font-size:11px;color:#999;">${_escHtml(key)}</div></div><label>模型${select}</label>`;
+                bindingsEl.appendChild(row);
+            });
+
+            const storesEl = document.getElementById("settings-stores-list");
+            storesEl.innerHTML = "";
+            (settingsState.stores || []).forEach((s, index) => {
+                const clientEnv = (s.client_id || "").match(/^\$\{(.+)\}$/);
+                const apiEnv = (s.api_key || "").match(/^\$\{(.+)\}$/);
+                const tokenEnv = (s.token || "").match(/^\$\{(.+)\}$/);
+                const card = document.createElement("div");
+                card.className = "settings-card";
+                card.innerHTML = `
+                    <div class="settings-grid">
+                        ${settingsInput("platform", s.platform)}
+                        ${settingsInput("id", s.id)}
+                        ${settingsInput("name", s.name)}
+                        ${settingsInput("label", s.label)}
+                        ${settingsInput("client_id_env", clientEnv ? clientEnv[1] : "")}
+                        ${settingsInput("api_key_env", apiEnv ? apiEnv[1] : "")}
+                        ${settingsInput("token_env", tokenEnv ? tokenEnv[1] : "")}
+                        ${settingsSelect("status", s.status || "active", [{value:"active", label:"active"}, {value:"disabled", label:"disabled"}])}
+                        <label>Client ID 新值<input data-secret-env="${_escHtml(clientEnv ? clientEnv[1] : "")}" type="password" placeholder="留空保留原值"></label>
+                        <label>API Key 新值<input data-secret-env="${_escHtml(apiEnv ? apiEnv[1] : "")}" type="password" placeholder="留空保留原值"></label>
+                        <label>Token 新值<input data-secret-env="${_escHtml(tokenEnv ? tokenEnv[1] : "")}" type="password" placeholder="留空保留原值"></label>
+                    </div>
+                    <div style="margin-top:8px;text-align:right;"><button class="settings-remove-btn" data-remove-store="${index}">删除店铺</button></div>
+                `;
+                storesEl.appendChild(card);
+            });
+        }
+
+        async function loadSettings(force) {
+            if (settingsLoaded && !force) return;
+            const res = await fetch("/api/settings");
+            if (!res.ok) { showMsg("设置加载失败", true); return; }
+            settingsState = await res.json();
+            settingsLoaded = true;
+            renderSettings();
+        }
+
+        function collectSettingsPayload() {
+            const envUpdates = {};
+            const models = [];
+            document.querySelectorAll("#settings-models-list .settings-card").forEach(card => {
+                const item = {};
+                card.querySelectorAll("[data-field]").forEach(el => {
+                    item[el.dataset.field] = el.dataset.field === "enabled" ? el.value === "true" : el.value.trim();
+                });
+                card.querySelectorAll("[data-secret-env]").forEach(el => {
+                    const key = el.dataset.secretEnv;
+                    if (key && el.value) envUpdates[key] = el.value;
+                });
+                models.push(item);
+            });
+            const featureModels = {};
+            document.querySelectorAll("[data-feature]").forEach(sel => { featureModels[sel.dataset.feature] = sel.value; });
+            const stores = [];
+            document.querySelectorAll("#settings-stores-list .settings-card").forEach(card => {
+                const item = {};
+                card.querySelectorAll("[data-field]").forEach(el => { item[el.dataset.field] = el.value.trim(); });
+                card.querySelectorAll("[data-secret-env]").forEach(el => {
+                    const key = el.dataset.secretEnv;
+                    if (key && el.value) envUpdates[key] = el.value;
+                });
+                stores.push(item);
+            });
+            return { settings: { models: models, feature_models: featureModels }, stores: stores, env: envUpdates };
+        }
+
+        document.querySelectorAll(".settings-tab").forEach(btn => {
+            btn.addEventListener("click", function() {
+                document.querySelectorAll(".settings-tab").forEach(x => x.classList.remove("active"));
+                document.querySelectorAll(".settings-tab-panel").forEach(x => x.classList.remove("active"));
+                btn.classList.add("active");
+                document.getElementById("settings-tab-" + btn.dataset.settingsTab).classList.add("active");
+            });
+        });
+
+        document.getElementById("settings-add-model").addEventListener("click", function() {
+            if (!settingsState) return;
+            settingsState.settings.models.push({ id: "model_" + Date.now(), name: "新模型", provider: "openai_compatible", base_url: "", api_key_env: "", model: "", enabled: true });
+            renderSettings();
+        });
+
+        document.getElementById("settings-add-store").addEventListener("click", function() {
+            if (!settingsState) return;
+            settingsState.stores.push({ platform: "ozon", id: "store_" + Date.now(), name: "new_store", label: "New Store", client_id: "", api_key: "", status: "active" });
+            renderSettings();
+        });
+
+        document.getElementById("settings-reload-btn").addEventListener("click", () => loadSettings(true));
+        document.getElementById("settings-save-btn").addEventListener("click", async function() {
+            const res = await fetch("/api/settings", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(collectSettingsPayload()) });
+            if (!res.ok) { showMsg("设置保存失败", true); return; }
+            showMsg("设置已保存，部分配置重启后完全生效");
+            settingsLoaded = false;
+            await loadSettings(true);
+        });
+
+        document.addEventListener("click", function(e) {
+            const rmModel = e.target.closest("[data-remove-model]");
+            if (rmModel && settingsState) {
+                settingsState.settings.models.splice(Number(rmModel.dataset.removeModel), 1);
+                renderSettings();
+            }
+            const rmStore = e.target.closest("[data-remove-store]");
+            if (rmStore && settingsState) {
+                settingsState.stores.splice(Number(rmStore.dataset.removeStore), 1);
+                renderSettings();
+            }
+        });
+
+        document.getElementById("settings-copy-export").addEventListener("click", async function() {
+            const includeSecrets = document.getElementById("settings-export-secrets").checked;
+            if (includeSecrets && !confirm("导出会包含密钥明文，只适合在自己的电脑间迁移。确定继续？")) return;
+            const res = await fetch("/api/settings/export?include_secrets=" + (includeSecrets ? "1" : "0"));
+            const data = await res.json();
+            const text = JSON.stringify(data, null, 2);
+            await navigator.clipboard.writeText(text);
+            document.getElementById("settings-export-preview").textContent = text;
+            showMsg("配置 JSON 已复制到剪贴板");
+        });
+
+        async function previewSettingsImport(apply) {
+            let payload;
+            try {
+                payload = JSON.parse(document.getElementById("settings-import-text").value || "{}");
+            } catch (e) {
+                showMsg("导入 JSON 格式错误: " + e.message, true);
+                return;
+            }
+            const res = await fetch("/api/settings/import", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ payload: payload, preview: !apply }) });
+            const data = await res.json();
+            if (!res.ok) { showMsg(data.error || "导入失败", true); return; }
+            document.getElementById("settings-import-diff").textContent = JSON.stringify(data.diff || data, null, 2);
+            if (apply) {
+                showMsg("配置已导入，部分配置重启后完全生效");
+                settingsLoaded = false;
+                await loadSettings(true);
+            }
+        }
+
+        document.getElementById("settings-preview-import").addEventListener("click", () => previewSettingsImport(false));
+        document.getElementById("settings-apply-import").addEventListener("click", () => previewSettingsImport(true));
+
         async function restoreCollectTasks() {
             try {
                 const res = await fetch("/api/collect/tasks");

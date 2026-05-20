@@ -50,6 +50,7 @@ from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import cross_origin
 from werkzeug.utils import secure_filename
 import requests
+from src.serp.settings import SettingsService
 
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
@@ -63,6 +64,9 @@ IMAGE_MODEL = os.getenv("IMAGE_MODEL", "gemini-3.1-flash-image-preview")
 API_URL = f"https://api.laozhang.ai/v1beta/models/{IMAGE_MODEL}:generateContent"
 DATA_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 TASKS_FILE = os.path.join(DATA_ROOT, "tasks.json")
+ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+SETTINGS_FILE = os.path.join(DATA_ROOT, "settings.json")
+SETTINGS_SERVICE = SettingsService(ENV_FILE, SETTINGS_FILE, os.path.join(DATA_ROOT, "stores.json"))
 
 os.makedirs(DATA_ROOT, exist_ok=True)
 if not os.path.exists(TASKS_FILE):
@@ -775,6 +779,238 @@ def _save_sync_state(state):
     except:
         pass
 
+MANAGED_ENV_KEYS = [
+    "API_KEY", "OPENAI_API_KEY", "OPENAI_BASE_URL", "IMAGE_MODEL", "IMAGE_SIZE",
+    "DEEPSEEK_API_KEY", "DEEPSEEK_API_URL", "DEEPSEEK_AUTO_FILL_MODEL", "DEEPSEEK_CATEGORY_MODEL",
+    "PROXY", "PROXY_ENABLED",
+]
+
+
+FEATURE_MODEL_KEYS = {
+    "image_generation": "图片生成",
+    "product_collect_image_classify": "采集图片分类",
+    "ozon_category_match": "Ozon 品类匹配",
+    "dianxiaomi_auto_fill": "店小秘自动填充",
+    "ozon_attribute_fill": "Ozon 属性填充",
+    "translation": "翻译/本地化",
+}
+
+
+DEFAULT_SETTINGS = {
+    "version": 1,
+    "models": [
+        {
+            "id": "deepseek_v4_flash",
+            "name": "DeepSeek V4 Flash",
+            "provider": "deepseek",
+            "base_url": "https://api.deepseek.com/v1/chat/completions",
+            "api_key_env": "DEEPSEEK_API_KEY",
+            "model": "deepseek-v4-flash",
+            "enabled": True,
+        },
+        {
+            "id": "gemini_image",
+            "name": "Gemini Image",
+            "provider": "gemini",
+            "base_url": "https://api.laozhang.ai/v1",
+            "api_key_env": "API_KEY",
+            "model": "gemini-3.1-flash-image-preview",
+            "enabled": True,
+        },
+    ],
+    "feature_models": {
+        "image_generation": "gemini_image",
+        "product_collect_image_classify": "deepseek_v4_flash",
+        "ozon_category_match": "deepseek_v4_flash",
+        "dianxiaomi_auto_fill": "deepseek_v4_flash",
+        "ozon_attribute_fill": "deepseek_v4_flash",
+        "translation": "deepseek_v4_flash",
+    },
+}
+
+
+def _read_env_file():
+    env = {}
+    if not os.path.exists(ENV_FILE):
+        return env
+    try:
+        with open(ENV_FILE, "r", encoding="utf-8") as f:
+            for line in f:
+                raw = line.rstrip("\n")
+                stripped = raw.strip()
+                if not stripped or stripped.startswith("#") or "=" not in raw:
+                    continue
+                key, value = raw.split("=", 1)
+                env[key.strip()] = value.strip().strip('"').strip("'")
+    except Exception:
+        pass
+    return env
+
+
+def _write_env_values(updates):
+    existing_lines = []
+    if os.path.exists(ENV_FILE):
+        try:
+            with open(ENV_FILE, "r", encoding="utf-8") as f:
+                existing_lines = f.read().splitlines()
+        except Exception:
+            existing_lines = []
+
+    seen = set()
+    new_lines = []
+    for raw in existing_lines:
+        if "=" not in raw or raw.lstrip().startswith("#"):
+            new_lines.append(raw)
+            continue
+        key = raw.split("=", 1)[0].strip()
+        if key in updates:
+            new_lines.append(f"{key}={updates[key]}")
+            seen.add(key)
+        else:
+            new_lines.append(raw)
+
+    for key, value in updates.items():
+        if key not in seen:
+            new_lines.append(f"{key}={value}")
+    with open(ENV_FILE, "w", encoding="utf-8") as f:
+        f.write("\n".join(new_lines).rstrip() + "\n")
+    for key, value in updates.items():
+        os.environ[key] = value
+
+
+def _mask_secret(value):
+    if not value:
+        return ""
+    if len(value) <= 8:
+        return "••••"
+    return "••••" + value[-4:]
+
+
+def _extract_env_name(value):
+    if isinstance(value, str) and value.startswith("${") and value.endswith("}"):
+        return value[2:-1]
+    return ""
+
+
+def _env_status(keys):
+    file_env = _read_env_file()
+    result = {}
+    for key in sorted(set(keys)):
+        value = file_env.get(key, os.getenv(key, ""))
+        result[key] = {"configured": bool(value), "masked": _mask_secret(value)}
+    return result
+
+
+def _load_settings():
+    settings = json.loads(json.dumps(DEFAULT_SETTINGS))
+    if os.path.exists(SETTINGS_FILE):
+        try:
+            with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
+                loaded = json.load(f)
+            if isinstance(loaded, dict):
+                for key in ("version", "models", "feature_models"):
+                    if key in loaded:
+                        settings[key] = loaded[key]
+        except Exception:
+            pass
+    model_ids = {m.get("id") for m in settings.get("models", []) if isinstance(m, dict)}
+    for model in DEFAULT_SETTINGS["models"]:
+        if model["id"] not in model_ids:
+            settings.setdefault("models", []).append(dict(model))
+    feature_models = settings.setdefault("feature_models", {})
+    for key, value in DEFAULT_SETTINGS["feature_models"].items():
+        feature_models.setdefault(key, value)
+    return settings
+
+
+def _save_settings(settings):
+    os.makedirs(DATA_ROOT, exist_ok=True)
+    payload = {
+        "version": 1,
+        "models": settings.get("models", []),
+        "feature_models": settings.get("feature_models", {}),
+        "updated_at": datetime.now().isoformat(),
+    }
+    with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2, ensure_ascii=False)
+    return payload
+
+
+def _normalize_store_config(store):
+    item = dict(store or {})
+    for field in ("client_id", "api_key", "token"):
+        env_field = field + "_env"
+        if env_field in item:
+            env_name = str(item.get(env_field) or "").strip()
+            item[field] = "${" + env_name + "}" if env_name else ""
+            item.pop(env_field, None)
+    return item
+
+
+def _store_env_keys(stores):
+    keys = []
+    for store in stores or []:
+        for field in ("client_id", "api_key", "token"):
+            env_name = _extract_env_name(store.get(field))
+            if env_name:
+                keys.append(env_name)
+    return keys
+
+
+def _settings_export_payload(include_secrets=False):
+    settings = _load_settings()
+    stores = _load_store_configs()
+    env_keys = set(MANAGED_ENV_KEYS)
+    for model in settings.get("models", []):
+        if model.get("api_key_env"):
+            env_keys.add(model["api_key_env"])
+    env_keys.update(_store_env_keys(stores))
+    file_env = _read_env_file()
+    env_values = {}
+    for key in sorted(env_keys):
+        value = file_env.get(key, os.getenv(key, ""))
+        env_values[key] = value if include_secrets else (_mask_secret(value) if value else "")
+    return {
+        "version": 1,
+        "exported_at": datetime.now().isoformat(),
+        "settings": settings,
+        "stores": stores,
+        "env": env_values,
+        "secrets_included": bool(include_secrets),
+    }
+
+
+def _settings_diff(import_payload):
+    current = _settings_export_payload(include_secrets=False)
+    incoming_settings = import_payload.get("settings", {}) if isinstance(import_payload, dict) else {}
+    incoming_stores = import_payload.get("stores", []) if isinstance(import_payload, dict) else []
+    incoming_env = import_payload.get("env", {}) if isinstance(import_payload, dict) else {}
+    diff = {"models": [], "feature_models": [], "stores": [], "env": []}
+
+    current_models = {m.get("id"): m for m in current["settings"].get("models", [])}
+    for model in incoming_settings.get("models", []) if isinstance(incoming_settings, dict) else []:
+        mid = model.get("id")
+        if mid:
+            diff["models"].append({"id": mid, "action": "update" if mid in current_models else "add"})
+
+    current_features = current["settings"].get("feature_models", {})
+    for key, value in (incoming_settings.get("feature_models", {}) if isinstance(incoming_settings, dict) else {}).items():
+        if current_features.get(key) != value:
+            diff["feature_models"].append({"key": key, "from": current_features.get(key, ""), "to": value})
+
+    current_stores = {s.get("id"): s for s in current.get("stores", [])}
+    for store in incoming_stores if isinstance(incoming_stores, list) else []:
+        sid = store.get("id")
+        if sid:
+            diff["stores"].append({"id": sid, "action": "update" if sid in current_stores else "add"})
+
+    file_env = _read_env_file()
+    for key, value in incoming_env.items() if isinstance(incoming_env, dict) else []:
+        if value and not str(value).startswith("••••") and file_env.get(key, os.getenv(key, "")) != value:
+            diff["env"].append({"key": key, "action": "update" if key in file_env else "add"})
+    return diff
+
+
 def _load_stores():
     """加载店铺列表，并解析环境变量形式的凭证占位符。"""
     if os.path.exists(STORES_FILE):
@@ -796,7 +1032,7 @@ def _resolve_env_ref(value):
 
 def _resolve_store_credentials(store):
     resolved = dict(store)
-    for key in ("client_id", "api_key"):
+    for key in ("client_id", "api_key", "token"):
         resolved[key] = _resolve_env_ref(resolved.get(key, ""))
     return resolved
 
@@ -814,9 +1050,10 @@ def _load_store_configs():
 
 def _public_store(store):
     public = dict(store)
-    public["credentials_configured"] = bool(store.get("client_id") and store.get("api_key"))
+    public["credentials_configured"] = bool((store.get("client_id") and store.get("api_key")) or store.get("token"))
     public["client_id"] = ""
     public["api_key"] = ""
+    public["token"] = ""
     return public
 
 def _next_store_status(current):
@@ -1878,6 +2115,100 @@ def save_collect_product(task_id):
 
 
 # ==================== 产品管理模块 API ====================
+
+@app.route("/api/settings", methods=["GET"])
+def get_settings():
+    return jsonify(SETTINGS_SERVICE.get_view())
+
+
+@app.route("/api/settings", methods=["PUT"])
+def update_settings():
+    data = request.get_json() or {}
+    return jsonify(SETTINGS_SERVICE.update(data))
+    settings = data.get("settings") or {}
+    stores = data.get("stores")
+    env_updates = data.get("env") or {}
+
+    if settings:
+        _save_settings({
+            "models": settings.get("models", []),
+            "feature_models": settings.get("feature_models", {}),
+        })
+
+    if isinstance(stores, list):
+        normalized = [_normalize_store_config(s) for s in stores]
+        with open(STORES_FILE, "w", encoding="utf-8") as f:
+            json.dump(normalized, f, indent=2, ensure_ascii=False)
+
+    safe_env_updates = {}
+    for key, value in env_updates.items():
+        if value is None or value == "__KEEP__" or str(value).startswith("••••"):
+            continue
+        safe_env_updates[str(key).strip()] = str(value)
+    if safe_env_updates:
+        _write_env_values(safe_env_updates)
+
+    return jsonify({"success": True, "restart_required": True})
+
+
+@app.route("/api/settings/export", methods=["GET"])
+def export_settings():
+    include_secrets = request.args.get("include_secrets") == "1"
+    return jsonify(SETTINGS_SERVICE.export_payload(include_secrets=include_secrets))
+    return jsonify(_settings_export_payload(include_secrets=include_secrets))
+
+
+@app.route("/api/settings/import", methods=["POST"])
+def import_settings():
+    data = request.get_json() or {}
+    payload = data.get("payload") or data
+    if not isinstance(payload, dict):
+        return jsonify({"error": "导入内容必须是 JSON 对象"}), 400
+
+    if data.get("preview", True):
+        return jsonify(SETTINGS_SERVICE.preview_import(payload))
+    return jsonify(SETTINGS_SERVICE.apply_import(payload))
+
+    diff = _settings_diff(payload)
+    if data.get("preview", True):
+        return jsonify({"success": True, "preview": True, "diff": diff})
+
+    settings = payload.get("settings")
+    if isinstance(settings, dict):
+        current = _load_settings()
+        incoming_models = settings.get("models", [])
+        if isinstance(incoming_models, list):
+            by_id = {m.get("id"): m for m in current.get("models", []) if m.get("id")}
+            for model in incoming_models:
+                if model.get("id"):
+                    by_id[model["id"]] = model
+            current["models"] = list(by_id.values())
+        incoming_features = settings.get("feature_models", {})
+        if isinstance(incoming_features, dict):
+            current.setdefault("feature_models", {}).update(incoming_features)
+        _save_settings(current)
+
+    stores = payload.get("stores")
+    if isinstance(stores, list):
+        current_stores = _load_store_configs()
+        by_id = {s.get("id"): s for s in current_stores if s.get("id")}
+        for store in stores:
+            if store.get("id"):
+                by_id[store["id"]] = _normalize_store_config(store)
+        with open(STORES_FILE, "w", encoding="utf-8") as f:
+            json.dump(list(by_id.values()), f, indent=2, ensure_ascii=False)
+
+    env_updates = {}
+    env_payload = payload.get("env", {})
+    if isinstance(env_payload, dict):
+        for key, value in env_payload.items():
+            if value and not str(value).startswith("••••"):
+                env_updates[str(key).strip()] = str(value)
+    if env_updates:
+        _write_env_values(env_updates)
+
+    return jsonify({"success": True, "preview": False, "diff": diff, "restart_required": True})
+
 
 @app.route("/api/products", methods=["GET"])
 def get_products():
