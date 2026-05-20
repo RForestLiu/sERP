@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.9";
+  var SERP_EXTENSION_VERSION = "3.2.10";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -1462,6 +1462,43 @@
 
   async function ensureVariantRowsForProduct(variantValues) {
     if (!variantValues || variantValues.length < 2) return true;
+    var skuAttr = document.querySelector("#skuAttrInfo");
+    if (skuAttr) {
+      var skuItem = skuAttr.querySelector(".sku-item");
+      if (!skuItem) {
+        var themeItem = Array.from(skuAttr.querySelectorAll(".sku-theme-item")).find(function (item) {
+          return /商品颜色|Цвет|color/i.test(item.textContent || "");
+        }) || skuAttr.querySelector(".sku-theme-item");
+        if (themeItem) {
+          themeItem.click();
+          await sleep(800);
+          skuItem = skuAttr.querySelector(".sku-item");
+        }
+      }
+      if (skuItem) {
+        var addIcon = skuItem.querySelector(".sku-main-header .add-icon, .icon_add_circle.add-icon");
+        var rowCount = skuItem.querySelectorAll(".sku-content-item").length;
+        while (addIcon && rowCount < variantValues.length) {
+          addIcon.click();
+          await sleep(400);
+          rowCount = skuItem.querySelectorAll(".sku-content-item").length;
+        }
+        Array.from(skuItem.querySelectorAll(".sku-content-item")).forEach(function (row, i) {
+          var variant = variantValues[i];
+          if (!variant) return;
+          var name = variant.name || variant.variantName || "";
+          var textInput = row.querySelector('input[type="text"]');
+          if (textInput && name && !textInput.value) {
+            textInput.focus();
+            var ns = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+            ns.call(textInput, name);
+            textInput.dispatchEvent(new Event("input", { bubbles: true }));
+            textInput.dispatchEvent(new Event("change", { bubbles: true }));
+          }
+        });
+        if (skuItem.querySelectorAll(".sku-content-item").length >= variantValues.length) return true;
+      }
+    }
     var themeOk = await ensureVariantThemeSelected(variantValues);
     if (themeOk) await clickCreateVariantRowsButton();
     var rowsOk = await ensureSkuRows(variantValues.length);
@@ -1688,8 +1725,8 @@
       fields.push({ tag: "textarea", name: el.name || "", id: el.id || "", label: fullLabel, placeholder: el.placeholder || "", currentValue: el.value || "", _fid: fid, el: el });
     });
 
-    var jsonBtn = Array.from(document.querySelectorAll("button")).find(function (btn) {
-      return (btn.textContent || "").trim() === "编辑JSON代码" && isVisibleField(btn);
+    var jsonBtn = Array.from(document.querySelectorAll("#wirelessDescBox button, button")).find(function (btn) {
+      return (btn.textContent || "").trim() === "编辑JSON代码";
     });
     if (jsonBtn) {
       var jsonFid = _serpFidSelector(jsonBtn);
@@ -1888,6 +1925,47 @@
         return idx;
       }
 
+      async function fillSearchableCheckboxGroup(entry, rawValue) {
+        var rootEl = (entry.els && entry.els[0]) ? entry.els[0] : entry.el;
+        var root = rootEl ? (rootEl.closest(".checkbox-wrapper") || rootEl.closest(".ant-form-item")) : null;
+        if (!root) return false;
+        var searchSelect = root.querySelector(".ant-select");
+        var addBtn = Array.from(root.querySelectorAll("button, .ant-btn")).find(function (btn) {
+          return (btn.textContent || "").replace(/\s+/g, "").indexOf("添加") !== -1;
+        });
+        if (!searchSelect || !addBtn) return false;
+        var candidates = [rawValue];
+        var paren = String(rawValue || "").match(/\(([^)]+)\)/);
+        if (paren && paren[1]) candidates.push(paren[1]);
+        var bare = String(rawValue || "").replace(/[()]/g, " ").replace(/\s+/g, " ").trim();
+        if (bare && bare !== rawValue) candidates.push(bare);
+
+        for (var ci = 0; ci < candidates.length; ci++) {
+          var candidate = candidates[ci];
+          if (!candidate) continue;
+          var selected = await fillAntSelect(searchSelect, candidate, entry.label);
+          if (!selected) continue;
+          await sleep(250);
+          addBtn.click();
+          await sleep(700);
+          var refreshedItems = Array.from(root.querySelectorAll('input[type="checkbox"]')).map(function (cb) {
+            var txt = (cb.parentElement ? cb.parentElement.textContent : "").trim();
+            return { cb: cb, text: txt };
+          });
+          var vNormSearch = norm(rawValue);
+          var matchedItem = refreshedItems.find(function (item) {
+            var opt = norm(item.text);
+            return opt && (indexOfWord(opt, vNormSearch) !== -1 || indexOfWord(vNormSearch, opt) !== -1);
+          });
+          if (matchedItem) {
+            matchedItem.cb.checked = true;
+            trigger(matchedItem.cb, "change");
+          }
+          return true;
+        }
+        return false;
+      }
+
       if (entry.jsonEditor) {
         el.click();
         await sleep(700);
@@ -1895,7 +1973,10 @@
           return d.offsetWidth || d.offsetHeight || d.getClientRects().length;
         });
         var dialog = dialogs.find(function (d) { return (d.textContent || "").indexOf("JSON") !== -1; }) || dialogs[dialogs.length - 1];
-        if (!dialog) { console.warn("[sERP] JSON编辑弹窗未出现"); return false; }
+        if (!dialog) {
+          dialog = el.closest(".ant-form-item") || document.querySelector("#wirelessDescBox") || document;
+          console.log("[sERP] JSON editor dialog not found; using inline JSON field root");
+        }
 
         var wroteJson = false;
         var classicCm = dialog.querySelector(".CodeMirror");
@@ -2002,6 +2083,10 @@
             anyChecked = true;
           }
         });
+
+        if (!anyChecked) {
+          anyChecked = await fillSearchableCheckboxGroup(entry, value);
+        }
 
         if (!anyChecked) {
           console.log("[sERP] checkbox-group: no match, trying boolean fallback, value=" + value);
