@@ -1093,6 +1093,8 @@
         }
         .btn-row-img { color: #8b5cf6; border-color: #8b5cf6; }
         .btn-row-img:hover { background: #8b5cf6; color: white; }
+        .btn-row-data { color: #3498db; border-color: #3498db; }
+        .btn-row-data:hover { background: #3498db; color: white; }
         .btn-row-del { color: #e74c3c; border-color: #e74c3c; }
         .btn-row-del:hover { background: #e74c3c; color: white; }
 
@@ -2738,6 +2740,7 @@
         const dataModalTitle = document.getElementById("data-modal-title");
         const dataModalContent = document.getElementById("data-modal-content");
         const dataModalTabs = document.querySelectorAll(".data-modal-tab");
+        const dataModalTabsWrap = document.querySelector(".data-modal-tabs");
         let currentModalTaskId = null;
         let currentModalTab = "product";
 
@@ -2783,8 +2786,20 @@
 
         function showDataModal(taskId) {
             currentModalTaskId = taskId;
+            if (dataModalTabsWrap) dataModalTabsWrap.style.display = "";
             dataModalOverlay.classList.add("active");
             loadModalData(taskId, currentModalTab);
+        }
+
+        function showProductDataModal(product) {
+            currentModalTaskId = null;
+            if (dataModalTabsWrap) dataModalTabsWrap.style.display = "none";
+            dataModalTitle.textContent = "产品数据 - " + (product.skc || "");
+            const pd = product.product_data || {};
+            dataModalContent.textContent = Object.keys(pd).length
+                ? JSON.stringify(pd, null, 2)
+                : "该产品暂无 product_data。";
+            dataModalOverlay.classList.add("active");
         }
 
         // 创建采集卡片
@@ -3362,7 +3377,7 @@
                 html += `<div class="prod-info-top"><span class="prod-skc">${p.skc}</span><span class="prod-cat">${p.category || '其他'}</span><span class="prod-toggle" data-action="toggle-detail">📋 ▾</span></div>`;
                 html += `<div class="prod-title">${p.title || '未命名产品'}</div>`;
                 html += `<div class="prod-meta"><span>📎 ${p.platform || '未知平台'}</span><span>💰 ${p.price || '—'}</span><span>🕐 ${createdDate}</span><span>📦 ${(p.skus || []).length} SKU</span></div>`;
-                html += `<div class="prod-actions"><button class="btn-row-sm btn-row-img" data-action="img-mgmt" data-skc="${p.skc}">🖼️ 图片</button></div>`;
+                html += `<div class="prod-actions"><button class="btn-row-sm btn-row-data" data-action="product-data" data-skc="${p.skc}">📋 数据</button><button class="btn-row-sm btn-row-img" data-action="img-mgmt" data-skc="${p.skc}">🖼️ 图片</button></div>`;
                 html += '</div></div></td>';
                 // 店铺状态单元格
                 stores.forEach(s => {
@@ -3428,6 +3443,17 @@
 
         // 绑定产品表格的所有事件
         function bindProductTableEvents(products, stores) {
+            const productBySkc = {};
+            (products || []).forEach(p => { productBySkc[p.skc] = p; });
+
+            document.querySelectorAll('[data-action="product-data"]').forEach(btn => {
+                btn.addEventListener("click", function(e) {
+                    e.stopPropagation();
+                    const skc = this.dataset.skc;
+                    showProductDataModal(productBySkc[skc] || { skc: skc, product_data: {} });
+                });
+            });
+
             // --- 行点击：展开/收起详情 ---
             document.querySelectorAll(".product-row").forEach(row => {
                 row.addEventListener("click", function(e) {
