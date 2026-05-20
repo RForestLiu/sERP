@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.11";
+  var SERP_EXTENSION_VERSION = "3.2.12";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -1517,23 +1517,37 @@
       });
       var candNorm = candidate.toLowerCase().replace(/\s+/g, " ").trim();
       var picked = null;
-      items.some(function (item) {
+      var pickedScore = 0;
+      items.forEach(function (item) {
         var text = (item.textContent || "").replace(/\s+/g, " ").trim();
         var key = text.toLowerCase();
-        if (usedColorKeys[key]) return false;
+        if (usedColorKeys[key]) return;
         var normText = key;
-        if (normText.indexOf(candNorm) !== -1 || candNorm.indexOf(normText) !== -1) {
+        var score = 0;
+        if (normText === candNorm) score = 4;
+        else if (normText.indexOf(candNorm + "(") === 0) score = 3;
+        else if (normText.indexOf("(" + candNorm + ")") !== -1) score = 3;
+        else if (normText.indexOf(candNorm) !== -1) score = 2;
+        else if (candNorm.indexOf(normText) !== -1) score = 1;
+        if (score > pickedScore) {
           picked = item;
-          return true;
+          pickedScore = score;
         }
-        return false;
       });
       if (picked) {
         picked.click();
         usedColorKeys[(picked.textContent || "").replace(/\s+/g, " ").trim().toLowerCase()] = true;
         await sleep(250);
-        document.body.click();
-        await sleep(150);
+        var confirmBtn = Array.from((panel.parentElement || document).querySelectorAll("button, a")).find(function (btn) {
+          return /^(确定|确认|OK)$/i.test((btn.textContent || "").replace(/\s+/g, " ").trim());
+        });
+        if (confirmBtn) {
+          confirmBtn.click();
+          await sleep(350);
+        } else {
+          document.body.click();
+          await sleep(150);
+        }
         return true;
       }
       document.body.click();
@@ -1645,6 +1659,7 @@
     var loneRadios = [];
 
     document.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(function (el) {
+      if (el.closest(".sku-checkbox-panel, .sku-mutiSelect")) return;
       if (!isVisibleField(el)) return;
       var groupLabel = findLabel(el, true);  // form-item 标签（如"材料"）
       if (isSkippedField(groupLabel)) return;
@@ -1757,6 +1772,7 @@
 
     // ===== 第二遍：其他 input（排除 checkbox/radio） =====
     document.querySelectorAll('input:not([type="hidden"]):not([type="file"]):not([type="checkbox"]):not([type="radio"])').forEach(function (el) {
+      if (el.closest(".sku-checkbox-panel, .sku-mutiSelect")) return;
       if (!isVisibleField(el)) return;
       if (isDictionarySearchInput(el)) return;
       var fid = _serpFidSelector(el);
