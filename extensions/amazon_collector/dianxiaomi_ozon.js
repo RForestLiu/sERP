@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.12";
+  var SERP_EXTENSION_VERSION = "3.2.13";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -357,6 +357,16 @@
   // ==================== 平台检测 ====================
   function detectPlatform() {
     var host = window.location.hostname;
+    var path = window.location.pathname || "";
+    var dxmMatch = path.match(/\/web\/([^/]+?)Product\/(?:add|edit)/i);
+    if (dxmMatch) {
+      var dxmPlatform = dxmMatch[1].toLowerCase();
+      if (dxmPlatform.indexOf("wildberrie") !== -1 || dxmPlatform === "wb") return "wb";
+      if (dxmPlatform.indexOf("ozon") !== -1) return "ozon";
+      if (dxmPlatform.indexOf("amazon") !== -1) return "amazon";
+      if (dxmPlatform.indexOf("1688") !== -1) return "1688";
+      return dxmPlatform;
+    }
     if (host.indexOf("ozon") !== -1) return "ozon";
     if (host.indexOf("amazon") !== -1) return "amazon";
     if (host.indexOf("1688") !== -1) return "1688";

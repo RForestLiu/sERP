@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "sERP ExtensionHelper",
-  "version": "3.2.12",
-  "description": "sERP 浏览器助手：多平台采集 (Amazon/1688/WB/Ozon) + 店小秘 Ozon 智能上架",
+  "version": "3.2.13",
+  "description": "sERP 浏览器助手：多平台采集 (Amazon/1688/WB/Ozon) + 店小秘智能上架",
   "permissions": ["storage"],
   "background": {
     "service_worker": "background.js"
@@ -37,8 +37,8 @@
     },
     {
       "matches": [
-        "*://www.dianxiaomi.com/web/ozonProduct/add*",
-        "*://www.dianxiaomi.com/web/ozonProduct/edit*"
+        "*://*.dianxiaomi.com/web/*Product/add*",
+        "*://*.dianxiaomi.com/web/*Product/edit*"
       ],
       "js": ["dianxiaomi_ozon.js"],
       "run_at": "document_idle"
