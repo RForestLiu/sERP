@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.10";
+  var SERP_EXTENSION_VERSION = "3.2.11";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -1460,6 +1460,88 @@
     return false;
   }
 
+  function variantColorCandidates(name) {
+    var s = String(name || "").toLowerCase();
+    var candidates = [name];
+    var rules = [
+      [/black|черн|чёрн|黑/, ["черный", "黑色", "черный(черный)"]],
+      [/white|бел|白/, ["белый", "白色"]],
+      [/dusty.*pink|pink|rose|розов|粉|粉红/, ["пыльно-розовый", "розовый", "粉色", "粉红色"]],
+      [/red|красн|красный|红/, ["красный", "红色"]],
+      [/blue|син|голуб|蓝/, ["синий", "голубой", "蓝色"]],
+      [/green|зел|绿/, ["зеленый", "绿色"]],
+      [/yellow|желт|жёлт|黄/, ["желтый", "黄色"]],
+      [/brown|корич|棕|褐/, ["коричневый", "棕色"]],
+      [/beige|беж|米/, ["бежевый", "米色"]],
+      [/gray|grey|сер|灰/, ["серый", "灰色"]],
+      [/purple|violet|фиолет|紫/, ["фиолетовый", "紫色"]],
+      [/orange|оранж|橙/, ["оранжевый", "橙色"]],
+      [/gold|золот|金/, ["золотой", "金色"]],
+      [/silver|серебр|银/, ["серебристый", "银色"]]
+    ];
+    rules.forEach(function (rule) {
+      if (rule[0].test(s)) candidates = candidates.concat(rule[1]);
+    });
+    var seen = {};
+    return candidates.map(function (x) { return String(x || "").trim(); }).filter(function (x) {
+      var k = x.toLowerCase();
+      if (!x || seen[k]) return false;
+      seen[k] = true;
+      return true;
+    }).slice(0, 8);
+  }
+
+  async function fillSkuColorCell(row, variantName, usedColorKeys) {
+    var widget = row.querySelector(".sku-checkbox");
+    if (!widget) return false;
+    var selectMain = widget.querySelector(".select-main");
+    if (selectMain && (selectMain.textContent || "").trim()) return true;
+    var trigger = widget.querySelector(".trigger-item") || widget;
+    var candidates = variantColorCandidates(variantName);
+    for (var ci = 0; ci < candidates.length; ci++) {
+      var candidate = candidates[ci];
+      trigger.click();
+      await sleep(350);
+      var panel = widget.querySelector(".sku-checkbox-panel");
+      if (!panel) continue;
+      var search = panel.querySelector('input[name="skuMutiSelect"], input[placeholder="搜索"], input');
+      if (search) {
+        search.focus();
+        var ns = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+        ns.call(search, candidate);
+        search.dispatchEvent(new Event("input", { bubbles: true }));
+        await sleep(500);
+      }
+      var items = Array.from(panel.querySelectorAll(".sku-select-item, label")).filter(function (item) {
+        return (item.offsetWidth || item.offsetHeight || item.getClientRects().length) && (item.textContent || "").trim();
+      });
+      var candNorm = candidate.toLowerCase().replace(/\s+/g, " ").trim();
+      var picked = null;
+      items.some(function (item) {
+        var text = (item.textContent || "").replace(/\s+/g, " ").trim();
+        var key = text.toLowerCase();
+        if (usedColorKeys[key]) return false;
+        var normText = key;
+        if (normText.indexOf(candNorm) !== -1 || candNorm.indexOf(normText) !== -1) {
+          picked = item;
+          return true;
+        }
+        return false;
+      });
+      if (picked) {
+        picked.click();
+        usedColorKeys[(picked.textContent || "").replace(/\s+/g, " ").trim().toLowerCase()] = true;
+        await sleep(250);
+        document.body.click();
+        await sleep(150);
+        return true;
+      }
+      document.body.click();
+      await sleep(150);
+    }
+    return false;
+  }
+
   async function ensureVariantRowsForProduct(variantValues) {
     if (!variantValues || variantValues.length < 2) return true;
     var skuAttr = document.querySelector("#skuAttrInfo");
@@ -1483,7 +1565,16 @@
           await sleep(400);
           rowCount = skuItem.querySelectorAll(".sku-content-item").length;
         }
-        Array.from(skuItem.querySelectorAll(".sku-content-item")).forEach(function (row, i) {
+        var usedColorKeys = {};
+        var rows = Array.from(skuItem.querySelectorAll(".sku-content-item"));
+        for (var ri = 0; ri < rows.length; ri++) {
+          var row = rows[ri];
+          var variant = variantValues[ri];
+          if (!variant) continue;
+          var name = variant.name || variant.variantName || "";
+          await fillSkuColorCell(row, name, usedColorKeys);
+        }
+        rows.forEach(function (row, i) {
           var variant = variantValues[i];
           if (!variant) return;
           var name = variant.name || variant.variantName || "";
