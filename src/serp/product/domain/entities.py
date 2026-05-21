@@ -3,13 +3,14 @@ Product 域 - 实体与聚合根。
 """
 from __future__ import annotations
 
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Any
 
-from src.serp.shared import AggregateRoot, Entity, DomainError
+from src.serp.shared import AggregateRoot, Entity, DomainError, ValidationError, NotFoundError
 
-from .value_objects import ManualData, StoreStatusEntry, ImageSetEntry
+from .value_objects import ManualData, StoreStatusEntry, ImageSetEntry, PendingApproval
 from .events import (
     ProductDeleted,
     ProductManualUpdated,
@@ -19,7 +20,16 @@ from .events import (
     ImageSetsUpdated,
     ProductImageUploaded,
     ProductVideoUploaded,
+    ProductCriticalChangeProposed,
+    ProductCriticalFieldApproved,
+    ProductCriticalFieldRejected,
 )
+
+
+# 关键属性：不可直接修改，需提交审批
+CRITICAL_FIELDS: frozenset = frozenset({
+    "price", "primary_image", "image_sets", "brand", "category_id",
+})
 
 
 @dataclass
@@ -38,6 +48,7 @@ class Product(AggregateRoot):
     video_url: str = ""
     _image_sets: dict[str, list[dict]] = field(default_factory=dict, repr=False)
     _image_subsets: dict[str, dict[str, list[dict]]] = field(default_factory=dict, repr=False)
+    _pending_approvals: list[dict] = field(default_factory=list, repr=False)
     created_at: str = ""
     updated_at: str = ""
 
@@ -74,6 +85,10 @@ class Product(AggregateRoot):
     @property
     def image_subsets(self) -> dict[str, dict[str, list[dict]]]:
         return dict(self._image_subsets)
+
+    @property
+    def pending_approvals(self) -> list[dict]:
+        return list(self._pending_approvals)
 
     # ── 业务行为 ──
 
@@ -155,6 +170,64 @@ class Product(AggregateRoot):
         """设置视频 URL"""
         self.video_url = url
 
+    # ── 关键属性审批 ──
+
+    def propose_change(self, field: str, new_value: Any,
+                       requested_by: str) -> str:
+        """提交关键属性修改申请，返回 approval_id"""
+        if field not in CRITICAL_FIELDS:
+            raise ValidationError(
+                f"'{field}' 不是关键属性，请直接修改。"
+                f"关键属性: {sorted(CRITICAL_FIELDS)}")
+        old_value = getattr(self, field, None)
+        approval_id = str(uuid.uuid4())[:8]
+        record = PendingApproval(
+            approval_id=approval_id,
+            field_name=field,
+            old_value=old_value,
+            proposed_value=new_value,
+            requested_by=requested_by,
+            requested_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            status="pending",
+        )
+        self._pending_approvals.append(record.to_dict())
+        self.add_domain_event(ProductCriticalChangeProposed(
+            skc=self.skc, approval_id=approval_id, field_name=field))
+        return approval_id
+
+    def approve_change(self, approval_id: str, approved_by: str):
+        """审批通过，应用修改"""
+        idx = self._find_approval(approval_id)
+        record = PendingApproval.from_dict(self._pending_approvals[idx])
+        setattr(self, record.field_name, record.proposed_value)
+        self._pending_approvals[idx]["status"] = "approved"
+        self._pending_approvals[idx]["approved_by"] = approved_by
+        self._pending_approvals[idx]["approved_at"] = \
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.add_domain_event(ProductCriticalFieldApproved(
+            skc=self.skc, approval_id=approval_id,
+            field_name=record.field_name))
+
+    def reject_change(self, approval_id: str, approved_by: str, reason: str):
+        """驳回修改"""
+        idx = self._find_approval(approval_id)
+        self._pending_approvals[idx]["status"] = "rejected"
+        self._pending_approvals[idx]["approved_by"] = approved_by
+        self._pending_approvals[idx]["approved_at"] = \
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self._pending_approvals[idx]["reject_reason"] = reason
+        self.add_domain_event(ProductCriticalFieldRejected(
+            skc=self.skc, approval_id=approval_id,
+            field_name=self._pending_approvals[idx]["field_name"],
+            reason=reason))
+
+    def _find_approval(self, approval_id: str) -> int:
+        for i, r in enumerate(self._pending_approvals):
+            if r.get("approval_id") == approval_id:
+                return i
+        raise NotFoundError(f"审批记录不存在: {approval_id}")
+
     # ── 序列化 ──
 
     def to_dict(self) -> dict:
@@ -172,6 +245,7 @@ class Product(AggregateRoot):
             "video_url": self.video_url,
             "image_sets": dict(self._image_sets),
             "image_subsets": dict(self._image_subsets),
+            "pending_approvals": list(self._pending_approvals),
         }
 
     def to_view(self, store_ids: list[str] = None) -> dict:
@@ -194,6 +268,7 @@ class Product(AggregateRoot):
             "images": self.images,
             "video_url": self.video_url,
             "image_sets": dict(self._image_sets),
+            "pending_approvals": list(self._pending_approvals),
         }
 
     @classmethod
@@ -214,6 +289,7 @@ class Product(AggregateRoot):
             video_url=data.get("video_url", ""),
             _image_sets=data.get("image_sets", {}) if isinstance(data.get("image_sets"), dict) else {},
             _image_subsets=data.get("image_subsets", {}) if isinstance(data.get("image_subsets"), dict) else {},
+            _pending_approvals=data.get("pending_approvals", []) if isinstance(data.get("pending_approvals"), list) else [],
             created_at=data.get("created_at", ""),
             updated_at=data.get("updated_at", ""),
         )

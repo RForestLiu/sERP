@@ -151,3 +151,49 @@ class ImageSetEntry(ValueObject):
             url=data.get("url", "") or "",
             index=data.get("index", 0),
         )
+
+
+@dataclass(frozen=True)
+class PendingApproval(ValueObject):
+    """关键属性待审批记录"""
+    approval_id: str = ""
+    field_name: str = ""
+    old_value: Any = None
+    proposed_value: Any = None
+    requested_by: str = ""
+    requested_at: str = ""
+    status: str = "pending"  # pending | approved | rejected
+    approved_by: str = ""
+    approved_at: str = ""
+    reject_reason: str = ""
+
+    def to_dict(self) -> dict:
+        return {
+            "approval_id": self.approval_id,
+            "field_name": self.field_name,
+            "old_value": self.old_value,
+            "proposed_value": self.proposed_value,
+            "requested_by": self.requested_by,
+            "requested_at": self.requested_at,
+            "status": self.status,
+            "approved_by": self.approved_by,
+            "approved_at": self.approved_at,
+            "reject_reason": self.reject_reason,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "PendingApproval":
+        if not isinstance(data, dict):
+            return cls()
+        return cls(
+            approval_id=str(data.get("approval_id", "") or ""),
+            field_name=str(data.get("field_name", "") or ""),
+            old_value=data.get("old_value"),
+            proposed_value=data.get("proposed_value"),
+            requested_by=str(data.get("requested_by", "") or ""),
+            requested_at=str(data.get("requested_at", "") or ""),
+            status=str(data.get("status", "pending") or "pending"),
+            approved_by=str(data.get("approved_by", "") or ""),
+            approved_at=str(data.get("approved_at", "") or ""),
+            reject_reason=str(data.get("reject_reason", "") or ""),
+        )

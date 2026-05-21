@@ -2,7 +2,7 @@
 Product 域 - 核心层。
 """
 from .entities import Product, ProductCollection
-from .value_objects import ManualData, StoreStatusEntry, ImageRef, ImageSetEntry
+from .value_objects import ManualData, StoreStatusEntry, ImageRef, ImageSetEntry, PendingApproval
 from .events import (
     ProductCreated,
     ProductDeleted,
@@ -13,6 +13,9 @@ from .events import (
     ImageSetsUpdated,
     ProductImageUploaded,
     ProductVideoUploaded,
+    ProductCriticalChangeProposed,
+    ProductCriticalFieldApproved,
+    ProductCriticalFieldRejected,
 )
 from .repositories import ProductRepository
 
@@ -23,6 +26,7 @@ __all__ = [
     "StoreStatusEntry",
     "ImageRef",
     "ImageSetEntry",
+    "PendingApproval",
     "ProductCreated",
     "ProductDeleted",
     "ProductManualUpdated",
@@ -32,5 +36,8 @@ __all__ = [
     "ImageSetsUpdated",
     "ProductImageUploaded",
     "ProductVideoUploaded",
+    "ProductCriticalChangeProposed",
+    "ProductCriticalFieldApproved",
+    "ProductCriticalFieldRejected",
     "ProductRepository",
 ]

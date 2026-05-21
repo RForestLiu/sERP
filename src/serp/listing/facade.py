@@ -45,6 +45,13 @@ class ListingFacade(Facade, ABC):
         """同步 Ozon 在售商品"""
         ...
 
+    # ── Ozon 导入状态 ──
+
+    @abstractmethod
+    def check_import_status(self, store_id: str, task_id: str) -> dict:
+        """查询 Ozon 导入任务状态，返回按 offer_id 分组的 error/warning"""
+        ...
+
     # ── AI 填充 ──
 
     @abstractmethod

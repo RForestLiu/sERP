@@ -81,3 +81,28 @@ class ProductFacade(Facade, ABC):
     def update_store_status(self, skc: str, data: dict) -> dict:
         """更新产品在各店铺的状态"""
         ...
+
+    # ── 关键属性审批 ──
+
+    @abstractmethod
+    def propose_critical_change(self, skc: str, field: str, new_value,
+                                requested_by: str) -> dict:
+        """提交关键属性修改申请，返回 approval_id"""
+        ...
+
+    @abstractmethod
+    def approve_change(self, skc: str, approval_id: str,
+                       approved_by: str) -> dict:
+        """审批通过，应用修改"""
+        ...
+
+    @abstractmethod
+    def reject_change(self, skc: str, approval_id: str,
+                      approved_by: str, reason: str) -> dict:
+        """驳回修改"""
+        ...
+
+    @abstractmethod
+    def list_pending_approvals(self, skc: str = None) -> list[dict]:
+        """查询待审批列表"""
+        ...

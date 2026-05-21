@@ -64,3 +64,25 @@ class ProductImageUploaded(DomainEvent):
 class ProductVideoUploaded(DomainEvent):
     skc: str = ""
     filename: str = ""
+
+
+@dataclass
+class ProductCriticalChangeProposed(DomainEvent):
+    skc: str = ""
+    approval_id: str = ""
+    field_name: str = ""
+
+
+@dataclass
+class ProductCriticalFieldApproved(DomainEvent):
+    skc: str = ""
+    approval_id: str = ""
+    field_name: str = ""
+
+
+@dataclass
+class ProductCriticalFieldRejected(DomainEvent):
+    skc: str = ""
+    approval_id: str = ""
+    field_name: str = ""
+    reason: str = ""
