@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.19";
+  var SERP_EXTENSION_VERSION = "3.2.20";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -99,7 +99,8 @@
     "#serp-toolbar .serp-product-info .pi-price-detail{display:none;margin-top:5px;padding:5px 6px;border:1px solid #eef1f5;border-radius:4px;background:#fafafa;font-size:10px;color:#555;line-height:1.55;box-sizing:border-box;}",
     "#serp-toolbar .serp-product-info .pi-price-detail.visible{display:block;}",
     "#serp-toolbar .serp-product-info .pi-price-row{display:flex;justify-content:space-between;gap:8px;}",
-    "#serp-toolbar .serp-product-info .pi-price-row strong{color:#333;}",
+    "#serp-toolbar .serp-product-info .pi-price-row strong{color:#333;text-align:right;}",
+    "#serp-toolbar .serp-product-info .pi-price-row.is-key strong{color:#1677ff;}",
     "#serp-toolbar .serp-product-info .pi-price-vars{display:grid;grid-template-columns:1fr;gap:4px;margin-top:5px;}",
     "#serp-toolbar .serp-product-info .pi-price-var{display:grid;grid-template-columns:minmax(0,1fr) 62px 26px;align-items:center;gap:4px;font-size:9px;color:#777;}",
     "#serp-toolbar .serp-product-info .pi-price-var input{width:100%;box-sizing:border-box;border:1px solid #d9d9d9;border-radius:3px;padding:2px 4px;font-size:10px;min-width:0;}",
@@ -762,6 +763,33 @@
     return { formula: formula, vars: ctx.vars, sale_price_cny: saleRounded, old_price_cny: oldRounded, stock: Math.round(ctx.vars.stock || 10000), cost_price_cny: ctx.vars.cost_price_cny, sourceMoney: ctx.sourceMoney, sourceCny: ctx.sourceCny };
   }
 
+  function priceAmountPctTextV2(amount, sale) {
+    amount = safeNumberV2(amount, 0);
+    sale = safeNumberV2(sale, 0);
+    var pct = sale > 0 ? (amount / sale * 100) : 0;
+    return amount.toFixed(2) + "¥ (" + pct.toFixed(1) + "%)";
+  }
+
+  function pricingBreakdownV2(pricing) {
+    var v = (pricing && pricing.vars) || {};
+    var sale = safeNumberV2(pricing && pricing.sale_price_cny, 0);
+    var commissionRate = v.ozon_commission_rate !== undefined ? v.ozon_commission_rate : v.platform_commission_rate;
+    var fixedFee = safeNumberV2(v.ozon_fixed_fee_cny, 0) + safeNumberV2(v.platform_fixed_fee_cny, 0);
+    return {
+      sale: sale,
+      cost: safeNumberV2(v.cost_price_cny, 0),
+      logistics: safeNumberV2(v.seller_logistics_cny, 0),
+      commission: sale * safeNumberV2(commissionRate, 0),
+      acquiring: sale * safeNumberV2(v.acquiring_rate, 0),
+      promotion: sale * safeNumberV2(v.promotion_rate, 0),
+      otherPercent: sale * safeNumberV2(v.other_percent_fee_rate, 0),
+      fixed: fixedFee,
+      returnReserve: safeNumberV2(v.return_reserve_cny, 0),
+      otherFixed: safeNumberV2(v.other_fixed_cost_cny, 0),
+      expectedProfit: sale * safeNumberV2(v.profit_rate, 0)
+    };
+  }
+
   function priceVarUnitV2(key) {
     if (key === "seller_logistics_cny") return "CNY";
     if (key === "original_price_multiplier") return "倍";
@@ -786,14 +814,20 @@
   function buildPriceFormulaHtmlV2(product) {
     var pricing = computePricingV2(product);
     var v = pricing.vars || {};
+    var b = pricingBreakdownV2(pricing);
     var sourceText = pricing.sourceMoney ? (pricing.sourceMoney.currency + " " + pricing.sourceMoney.value.toFixed(2)) : "--";
     return [
       '<div class="pi-price-row"><span>公式(Formula)</span><strong>' + ((pricing.formula && pricing.formula.name) || "--") + '</strong></div>',
       '<div class="pi-price-row"><span>采集价(Source)</span><strong>' + sourceText + '</strong></div>',
-      '<div class="pi-price-row"><span>成本价(Cost CNY)</span><strong>' + (pricing.cost_price_cny ? pricing.cost_price_cny.toFixed(2) : "--") + '</strong></div>',
-      '<div class="pi-price-row"><span>物流费(Logistics)</span><strong data-price-summary="logistics">' + (v.seller_logistics_cny ? v.seller_logistics_cny.toFixed(2) : "0") + '</strong></div>',
-      '<div class="pi-price-row"><span>售价(Sale CNY)</span><strong data-price-summary="sale">' + (pricing.sale_price_cny || "--") + '</strong></div>',
-      '<div class="pi-price-row"><span>原价(Old CNY)</span><strong data-price-summary="old">' + (pricing.old_price_cny || "--") + '</strong></div>',
+      '<div class="pi-price-row"><span>成本价(Cost CNY)</span><strong data-price-summary="cost">' + priceAmountPctTextV2(b.cost, b.sale) + '</strong></div>',
+      '<div class="pi-price-row"><span>物流费(Logistics)</span><strong data-price-summary="logistics">' + priceAmountPctTextV2(b.logistics, b.sale) + '</strong></div>',
+      '<div class="pi-price-row"><span>平台佣金(Commission)</span><strong data-price-summary="commission">' + priceAmountPctTextV2(b.commission, b.sale) + '</strong></div>',
+      '<div class="pi-price-row"><span>收单费(Acquiring)</span><strong data-price-summary="acquiring">' + priceAmountPctTextV2(b.acquiring, b.sale) + '</strong></div>',
+      '<div class="pi-price-row"><span>促销/广告(Promo)</span><strong data-price-summary="promotion">' + priceAmountPctTextV2(b.promotion + b.otherPercent, b.sale) + '</strong></div>',
+      '<div class="pi-price-row"><span>固定费用(Fixed)</span><strong data-price-summary="fixed">' + priceAmountPctTextV2(b.fixed + b.returnReserve + b.otherFixed, b.sale) + '</strong></div>',
+      '<div class="pi-price-row is-key"><span>期望利润(Profit)</span><strong data-price-summary="profit">' + priceAmountPctTextV2(b.expectedProfit, b.sale) + '</strong></div>',
+      '<div class="pi-price-row is-key"><span>售价(Sale CNY)</span><strong data-price-summary="sale">' + (pricing.sale_price_cny ? pricing.sale_price_cny + "¥ (100.0%)" : "--") + '</strong></div>',
+      '<div class="pi-price-row"><span>原价(Old CNY)</span><strong data-price-summary="old">' + (pricing.old_price_cny ? pricing.old_price_cny + "¥" : "--") + '</strong></div>',
       '<div class="pi-price-row"><span>库存(Stock)</span><strong data-price-summary="stock">' + pricing.stock + '</strong></div>',
       '<div class="pi-price-vars">' +
         priceVarInputV2("profit_rate", "利润率(Profit)", v.profit_rate, "0.01") +
@@ -811,14 +845,26 @@
   function updatePriceSummaryV2(product) {
     if (!piPriceDetail) return;
     var pricing = computePricingV2(product || selectedProduct || {});
-    var v = pricing.vars || {};
+    var b = pricingBreakdownV2(pricing);
+    var costEl = piPriceDetail.querySelector('[data-price-summary="cost"]');
     var logisticsEl = piPriceDetail.querySelector('[data-price-summary="logistics"]');
+    var commissionEl = piPriceDetail.querySelector('[data-price-summary="commission"]');
+    var acquiringEl = piPriceDetail.querySelector('[data-price-summary="acquiring"]');
+    var promotionEl = piPriceDetail.querySelector('[data-price-summary="promotion"]');
+    var fixedEl = piPriceDetail.querySelector('[data-price-summary="fixed"]');
+    var profitEl = piPriceDetail.querySelector('[data-price-summary="profit"]');
     var saleEl = piPriceDetail.querySelector('[data-price-summary="sale"]');
     var oldEl = piPriceDetail.querySelector('[data-price-summary="old"]');
     var stockEl = piPriceDetail.querySelector('[data-price-summary="stock"]');
-    if (logisticsEl) logisticsEl.textContent = v.seller_logistics_cny ? v.seller_logistics_cny.toFixed(2) : "0";
-    if (saleEl) saleEl.textContent = pricing.sale_price_cny || "--";
-    if (oldEl) oldEl.textContent = pricing.old_price_cny || "--";
+    if (costEl) costEl.textContent = priceAmountPctTextV2(b.cost, b.sale);
+    if (logisticsEl) logisticsEl.textContent = priceAmountPctTextV2(b.logistics, b.sale);
+    if (commissionEl) commissionEl.textContent = priceAmountPctTextV2(b.commission, b.sale);
+    if (acquiringEl) acquiringEl.textContent = priceAmountPctTextV2(b.acquiring, b.sale);
+    if (promotionEl) promotionEl.textContent = priceAmountPctTextV2(b.promotion + b.otherPercent, b.sale);
+    if (fixedEl) fixedEl.textContent = priceAmountPctTextV2(b.fixed + b.returnReserve + b.otherFixed, b.sale);
+    if (profitEl) profitEl.textContent = priceAmountPctTextV2(b.expectedProfit, b.sale);
+    if (saleEl) saleEl.textContent = pricing.sale_price_cny ? pricing.sale_price_cny + "¥ (100.0%)" : "--";
+    if (oldEl) oldEl.textContent = pricing.old_price_cny ? pricing.old_price_cny + "¥" : "--";
     if (stockEl) stockEl.textContent = pricing.stock || "--";
   }
 
@@ -3010,16 +3056,15 @@
         }
       }
 
-      if (label.indexOf("库存") !== -1 || label.indexOf("stock") !== -1 || label.indexOf("остат") !== -1) {
+      var pricingRole = pricingRoleFromText(label);
+      if (pricingRole === "stock") {
         value = String(pricing.stock || 10000);
       }
 
-      if (label.indexOf("售价") !== -1 || label.indexOf("sale price") !== -1 || label.indexOf("цена") !== -1 || label.indexOf("price") !== -1) {
-        if (label.indexOf("原价") === -1 && label.indexOf("old") === -1 && label.indexOf("original") === -1 && label.indexOf("strike") === -1) {
-          if (pricing.sale_price_cny) value = String(pricing.sale_price_cny);
-        }
+      if (pricingRole === "sale") {
+        if (pricing.sale_price_cny) value = String(pricing.sale_price_cny);
       }
-      if (label.indexOf("原价") !== -1 || label.indexOf("old price") !== -1 || label.indexOf("original price") !== -1 || label.indexOf("strike") !== -1) {
+      if (pricingRole === "old") {
         if (pricing.old_price_cny) value = String(pricing.old_price_cny);
       }
 
@@ -3038,13 +3083,51 @@
   function pricingRoleFromText(text) {
     var label = String(text || "").toLowerCase().replace(/\s+/g, " ").trim();
     if (!label) return "";
+    if (label.indexOf("成本") !== -1 || label.indexOf("cost") !== -1 || label.indexOf("采购") !== -1 ||
+        label.indexOf("利润") !== -1 || label.indexOf("profit") !== -1 ||
+        label.indexOf("佣金") !== -1 || label.indexOf("commission") !== -1 ||
+        label.indexOf("物流") !== -1 || label.indexOf("logistics") !== -1 ||
+        label.indexOf("倍率") !== -1 || label.indexOf("multiplier") !== -1 ||
+        label.indexOf("公式") !== -1 || label.indexOf("formula") !== -1) return "";
     if (label.indexOf("库存") !== -1 || label.indexOf("可售") !== -1 || label.indexOf("stock") !== -1 || label.indexOf("остат") !== -1) return "stock";
     if (label.indexOf("原价") !== -1 || label.indexOf("划线价") !== -1 || label.indexOf("市场价") !== -1 || label.indexOf("old price") !== -1 || label.indexOf("old_price") !== -1 || label.indexOf("original price") !== -1 || label.indexOf("strike") !== -1 || label.indexOf("старая цена") !== -1) return "old";
     if (label.indexOf("售价") !== -1 || label.indexOf("销售价") !== -1 || label.indexOf("销售价格") !== -1 || label.indexOf("现价") !== -1 || label.indexOf("sale price") !== -1 || label.indexOf("price") !== -1 || label.indexOf("цена") !== -1) {
-      if (label.indexOf("成本") !== -1 || label.indexOf("cost") !== -1 || label.indexOf("采购") !== -1) return "";
       return "sale";
     }
     return "";
+  }
+
+  function pricingRoleFromElement(el) {
+    var primaryParts = [
+      getTableHeaderLabel(el),
+      findLabel(el),
+      el.getAttribute("aria-label") || "",
+      el.getAttribute("title") || "",
+      el.getAttribute("placeholder") || "",
+      el.getAttribute("name") || "",
+      el.getAttribute("id") || ""
+    ];
+    var primaryText = primaryParts.filter(Boolean).join(" ");
+    var role = pricingRoleFromText(primaryText);
+    if (role) return { role: role, label: primaryText };
+
+    var cell = el.closest("td, th");
+    if (cell) {
+      var cellText = (cell.textContent || "").replace(/\s+/g, " ").trim();
+      if (cellText.length <= 80) {
+        role = pricingRoleFromText(cellText);
+        if (role) return { role: role, label: primaryText + " " + cellText };
+      }
+    }
+    var formItem = el.closest(".ant-form-item, .el-form-item, .form-group");
+    if (formItem) {
+      var formText = (formItem.textContent || "").replace(/\s+/g, " ").trim();
+      if (formText.length <= 120) {
+        role = pricingRoleFromText(formText);
+        if (role) return { role: role, label: primaryText + " " + formText };
+      }
+    }
+    return { role: "", label: primaryText };
   }
 
   function fillNativeInputDirect(el, value) {
@@ -3075,19 +3158,9 @@
     document.querySelectorAll('input:not([type="hidden"]):not([type="file"]):not([type="checkbox"]):not([type="radio"]), textarea').forEach(function (el) {
       if (!isVisibleField(el)) return;
       if (isDictionarySearchInput(el)) return;
-      var labelParts = [
-        findLabel(el),
-        getTableHeaderLabel(el),
-        el.getAttribute("aria-label") || "",
-        el.getAttribute("title") || "",
-        el.getAttribute("placeholder") || "",
-        el.getAttribute("name") || "",
-        el.getAttribute("id") || ""
-      ];
-      var formItem = el.closest(".ant-form-item, .el-form-item, .form-group, td, th");
-      if (formItem) labelParts.push((formItem.textContent || "").replace(/\s+/g, " ").trim().slice(0, 120));
-      var labelText = labelParts.filter(Boolean).join(" ");
-      var role = pricingRoleFromText(labelText);
+      var roleInfo = pricingRoleFromElement(el);
+      var labelText = roleInfo.label;
+      var role = roleInfo.role;
       if (!role) return;
       var fid = _serpFidSelector(el);
       if (seen[fid]) return;
@@ -3120,22 +3193,29 @@
       var keys = Object.keys(pricingMap);
 
       var pricing = computePricingV2(selectedProduct);
+      var canFillPrice = safeNumberV2(pricing.sale_price_cny, 0) > 0 && safeNumberV2(pricing.old_price_cny, 0) > 0;
+      if (!canFillPrice) {
+        console.warn("[sERP] 价格计算为 0，跳过售价/原价回填。pricing=" + JSON.stringify({ sale: pricing.sale_price_cny, old: pricing.old_price_cny, stock: pricing.stock, vars: pricing.vars }));
+        showToast("价格计算为0，未更新售价/原价；请检查成本价、采集价或公式变量", "error");
+      }
       var filled = 0;
       var filledRoles = {};
       for (var i = 0; i < keys.length; i++) {
         var idx = parseInt(keys[i], 10);
         var entry = resolveFieldByIndex(idx);
+        var mappedRole = pricingRoleFromText((entry && entry.label) || "");
+        if ((mappedRole === "sale" || mappedRole === "old") && !canFillPrice) continue;
         var ok = await fillFormField(idx, pricingMap[keys[i]]);
         if (ok) {
           filled++;
-          var role = pricingRoleFromText((entry && entry.label) || "");
-          if (role) filledRoles[role] = true;
+          if (mappedRole) filledRoles[mappedRole] = true;
         }
         await sleep(80);
       }
       var directTargets = collectDirectPricingTargets();
       for (var ti = 0; ti < directTargets.length; ti++) {
         var target = directTargets[ti];
+        if ((target.role === "sale" || target.role === "old") && !canFillPrice) continue;
         var directValue = target.role === "old" ? pricing.old_price_cny : (target.role === "stock" ? pricing.stock : pricing.sale_price_cny);
         if (!directValue && directValue !== 0) continue;
         if (fillNativeInputDirect(target.el, directValue)) {
