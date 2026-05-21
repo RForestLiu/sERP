@@ -10,6 +10,11 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import RLock
 
+# ★ 加载 .env 到 os.environ，确保 ${VAR} 占位符可解析
+# 注：使用 os.getcwd() 而非 __file__，因为 WSL 下 Python 解析 Linux 路径会出错
+from dotenv import load_dotenv
+load_dotenv(os.path.join(os.getcwd(), ".env"))
+
 # ★ 日志配置必须在此处（Flask reloader 子进程不会执行 main.py，只导入 app.py）
 # ★ 强制 stdout/stderr 使用 UTF-8，否则 Windows GBK 编码会导致 emoji 日志报错丢弃
 try:

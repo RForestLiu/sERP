@@ -108,11 +108,21 @@ def create_ozon_category_facade(data_root: str, settings_facade, event_bus):
     store_repo = JsonStoreRepository(os.path.join(data_root, "stores.json"))
 
     def _get_ozon_credentials(store_id: str) -> tuple[str, str]:
-        """从 StoreRepository 获取原始（未掩码）Ozon API 凭证"""
+        """从 StoreRepository 获取原始凭证，解析 ${VAR} 占位符"""
+        import re as _re
         store = store_repo.find_by_id(store_id)
         if store is None:
             return "", ""
-        return store.client_id or "", store.api_key or ""
+        client_id = str(store.client_id or "")
+        api_key = str(store.api_key or "")
+        def _resolve_env(value: str) -> str:
+            if not value:
+                return ""
+            def _replace(match):
+                var_name = match.group(1)
+                return os.environ.get(var_name, match.group(0))
+            return _re.sub(r'\$\{([^}]+)\}', _replace, value)
+        return _resolve_env(client_id), _resolve_env(api_key)
 
     # API 和 LLM 客户端
     ozon_api = OzonApiClient(_get_ozon_credentials)
@@ -296,11 +306,21 @@ def create_listing_facade(data_root: str, settings_facade, product_facade, ozon_
     store_repo = JsonStoreRepository(os.path.join(data_root, "stores.json"))
 
     def _get_ozon_credentials(store_id: str) -> tuple[str, str]:
-        """从 StoreRepository 获取原始（未掩码）Ozon API 凭证"""
+        """从 StoreRepository 获取原始凭证，解析 ${VAR} 占位符"""
+        import re as _re
         store = store_repo.find_by_id(store_id)
         if store is None:
             return "", ""
-        return store.client_id or "", store.api_key or ""
+        client_id = str(store.client_id or "")
+        api_key = str(store.api_key or "")
+        def _resolve_env(value: str) -> str:
+            if not value:
+                return ""
+            def _replace(match):
+                var_name = match.group(1)
+                return os.environ.get(var_name, match.group(0))
+            return _re.sub(r'\$\{([^}]+)\}', _replace, value)
+        return _resolve_env(client_id), _resolve_env(api_key)
 
     # API 客户端
     ozon_api = OzonApiClient(_get_ozon_credentials)
