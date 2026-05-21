@@ -68,5 +68,112 @@ def create_logistics_facade(data_root: str):
     return facade
 
 
+def create_ozon_category_facade(data_root: str, settings_facade, event_bus):
+    """装配 OzonCategory 域：仓储 → API/LLM 客户端 → 应用服务"""
+    from src.serp.ozon_category.domain.events import (
+        CategoryTreeFetched,
+        CategoriesTranslated,
+        CategoriesRefreshed,
+        CategoryMatchCompleted,
+    )
+    from src.serp.ozon_category.infrastructure.json_repositories import (
+        JsonCategoryTreeCacheRepository,
+        JsonTranslationCacheRepository,
+        JsonAttributeTranslationCacheRepository,
+        JsonExcludedCategoriesRepository,
+    )
+    from src.serp.ozon_category.infrastructure.ozon_api_client import OzonApiClient
+    from src.serp.ozon_category.infrastructure.llm_client import DeepSeekLLMClient
+    from src.serp.ozon_category.infrastructure import handlers
+    from src.serp.ozon_category.application.commands import OzonCategoryApplicationService
+    from src.serp.settings.infrastructure.json_repositories import JsonStoreRepository
+
+    # 事件订阅
+    event_bus.subscribe(CategoryTreeFetched, handlers.log_category_tree_fetched)
+    event_bus.subscribe(CategoriesTranslated, handlers.log_categories_translated)
+    event_bus.subscribe(CategoriesRefreshed, handlers.log_categories_refreshed)
+    event_bus.subscribe(CategoryMatchCompleted, handlers.log_category_match_completed)
+
+    # 缓存目录
+    cache_dir = os.path.join(data_root, "ozon_cache")
+    os.makedirs(cache_dir, exist_ok=True)
+
+    # 仓储
+    tree_cache_repo = JsonCategoryTreeCacheRepository(cache_dir)
+    trans_cache_repo = JsonTranslationCacheRepository(cache_dir)
+    attr_trans_cache_repo = JsonAttributeTranslationCacheRepository(cache_dir)
+    excluded_repo = JsonExcludedCategoriesRepository(cache_dir)
+
+    # Ozon API 凭证获取器（使用 StoreRepository 读取原始凭证）
+    store_repo = JsonStoreRepository(os.path.join(data_root, "stores.json"))
+
+    def _get_ozon_credentials(store_id: str) -> tuple[str, str]:
+        """从 StoreRepository 获取原始（未掩码）Ozon API 凭证"""
+        store = store_repo.find_by_id(store_id)
+        if store is None:
+            return "", ""
+        return store.client_id or "", store.api_key or ""
+
+    # API 和 LLM 客户端
+    ozon_api = OzonApiClient(_get_ozon_credentials)
+    llm_config = DeepSeekLLMClient.resolve_config(settings_facade, "translation")
+    llm_client = DeepSeekLLMClient(llm_config)
+
+    # 应用服务
+    facade = OzonCategoryApplicationService(
+        tree_cache_repo=tree_cache_repo,
+        trans_cache_repo=trans_cache_repo,
+        attr_trans_cache_repo=attr_trans_cache_repo,
+        excluded_repo=excluded_repo,
+        ozon_api=ozon_api,
+        llm_client=llm_client,
+    )
+
+    logger.info("OzonCategory domain wired: repos=4, ozon_api=%s, llm=%s",
+                ozon_api.__class__.__name__, llm_client.model)
+    return facade
+
+
+def create_product_facade(data_root: str, settings_facade, event_bus):
+    """装配 Product 域：仓储 → 事件总线 → 应用服务"""
+    from src.serp.product.domain.events import (
+        ProductDeleted,
+        ProductManualUpdated,
+        SpecsCollected,
+        ProductAutoExtracted,
+        StoreStatusChanged,
+        ImageSetsUpdated,
+        ProductImageUploaded,
+        ProductVideoUploaded,
+    )
+    from src.serp.product.infrastructure.json_repositories import JsonProductRepository
+    from src.serp.product.infrastructure import handlers
+    from src.serp.product.application.commands import ProductApplicationService
+
+    # 事件订阅
+    event_bus.subscribe(ProductDeleted, handlers.log_product_deleted)
+    event_bus.subscribe(ProductManualUpdated, handlers.log_product_manual_updated)
+    event_bus.subscribe(SpecsCollected, handlers.log_specs_collected)
+    event_bus.subscribe(ProductAutoExtracted, handlers.log_product_auto_extracted)
+    event_bus.subscribe(StoreStatusChanged, handlers.log_store_status_changed)
+    event_bus.subscribe(ImageSetsUpdated, handlers.log_image_sets_updated)
+    event_bus.subscribe(ProductImageUploaded, handlers.log_product_image_uploaded)
+    event_bus.subscribe(ProductVideoUploaded, handlers.log_product_video_uploaded)
+
+    product_repo = JsonProductRepository(os.path.join(data_root, "products.json"))
+    videos_dir = os.path.join(data_root, "videos")
+
+    facade = ProductApplicationService(
+        product_repo=product_repo,
+        settings_facade=settings_facade,
+        event_bus=event_bus,
+        data_root=data_root,
+        videos_dir=videos_dir,
+    )
+
+    logger.info("Product domain wired")
+    return facade
+
+
 def create_registry() -> FacadeRegistry:
     return FacadeRegistry()
