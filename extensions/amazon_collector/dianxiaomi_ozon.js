@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.20";
+  var SERP_EXTENSION_VERSION = "3.2.21";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -692,12 +692,50 @@
   function safeEvalFormulaV2(expr, vars) {
     expr = String(expr || "");
     if (!expr || !/^[\d\s+\-*/()._,a-zA-Z]+$/.test(expr)) return NaN;
-    var names = Object.keys(vars || {});
-    var args = names.map(function (name) { return Number(vars[name]) || 0; });
+    var tokens = expr.match(/[a-zA-Z_][a-zA-Z0-9_]*|\d+(?:\.\d+)?|[()+\-*/]/g) || [];
+    var pos = 0;
+
+    function peek() { return tokens[pos]; }
+    function next() { return tokens[pos++]; }
+    function parsePrimary() {
+      var tok = next();
+      if (tok === undefined) return NaN;
+      if (tok === "+") return parsePrimary();
+      if (tok === "-") return -parsePrimary();
+      if (tok === "(") {
+        var inner = parseExpression();
+        if (peek() === ")") next();
+        return inner;
+      }
+      if (/^\d/.test(tok)) return parseFloat(tok);
+      if (/^[a-zA-Z_]/.test(tok)) return safeNumberV2((vars || {})[tok], 0);
+      return NaN;
+    }
+    function parseTerm() {
+      var value = parsePrimary();
+      while (peek() === "*" || peek() === "/") {
+        var op = next();
+        var rhs = parsePrimary();
+        value = op === "*" ? value * rhs : value / rhs;
+      }
+      return value;
+    }
+    function parseExpression() {
+      var value = parseTerm();
+      while (peek() === "+" || peek() === "-") {
+        var op = next();
+        var rhs = parseTerm();
+        value = op === "+" ? value + rhs : value - rhs;
+      }
+      return value;
+    }
+
     try {
-      return Function(names.join(","), '"use strict"; return (' + expr + ');').apply(null, args);
+      var result = parseExpression();
+      if (pos < tokens.length) return NaN;
+      return result;
     } catch (err) {
-      console.warn("[sERP] formula eval failed:", expr, err);
+      console.warn("[sERP] formula parse failed:", expr, err);
       return NaN;
     }
   }
@@ -3152,6 +3190,28 @@
     }
   }
 
+  function clickElementDirect(el) {
+    if (!el) return false;
+    try {
+      if (typeof el.click === "function") {
+        el.click();
+      } else {
+        el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+      }
+      return true;
+    } catch (e) {
+      try {
+        var evt = document.createEvent("MouseEvents");
+        evt.initMouseEvent("click", true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
+        el.dispatchEvent(evt);
+        return true;
+      } catch (e2) {
+        console.warn("[sERP] clickElementDirect failed", e2);
+        return false;
+      }
+    }
+  }
+
   function collectDirectPricingTargets() {
     var targets = [];
     var seen = {};
@@ -3169,6 +3229,95 @@
     });
     console.log("[sERP] direct pricing targets=" + JSON.stringify(targets.map(function (t) { return { role: t.role, label: t.label }; })));
     return targets;
+  }
+
+  function findSkuStockCells() {
+    var result = [];
+    Array.from(document.querySelectorAll("table")).forEach(function (table) {
+      var headers = Array.from(table.querySelectorAll("thead th"));
+      var stockIdx = -1;
+      headers.forEach(function (th, i) {
+        var text = (th.textContent || "").replace(/\s+/g, " ").trim();
+        if (stockIdx < 0 && pricingRoleFromText(text) === "stock") stockIdx = i;
+      });
+      if (stockIdx < 0) return;
+      Array.from(table.querySelectorAll("tbody tr")).forEach(function (row) {
+        var cell = row.children[stockIdx];
+        if (!cell) return;
+        var icon = cell.querySelector(".icon_edit2, .icon-edit, i[class*='edit']");
+        result.push({ row: row, cell: cell, icon: icon });
+      });
+    });
+    return result;
+  }
+
+  function visibleStockModal() {
+    return Array.from(document.querySelectorAll(".edit-stock-modal, .ant-modal")).find(function (modal) {
+      if (!(modal.offsetWidth || modal.offsetHeight || modal.getClientRects().length)) return false;
+      var text = (modal.textContent || "").replace(/\s+/g, " ");
+      return text.indexOf("修改仓库") !== -1 || (text.indexOf("库存") !== -1 && text.indexOf("仓库") !== -1);
+    });
+  }
+
+  async function waitForStockModal(timeoutMs) {
+    var deadline = Date.now() + (timeoutMs || 3000);
+    while (Date.now() < deadline) {
+      var modal = visibleStockModal();
+      if (modal) return modal;
+      await sleep(100);
+    }
+    return null;
+  }
+
+  async function fillStockModal(modal, stockValue) {
+    if (!modal) return false;
+    var stock = String(stockValue || 0);
+    var inputs = Array.from(modal.querySelectorAll("input")).filter(function (input) {
+      if (input.classList.contains("ant-select-selection-search-input")) return false;
+      return input.offsetWidth || input.offsetHeight || input.getClientRects().length;
+    });
+    var batchInput = inputs.find(function (input) {
+      return (input.placeholder || "").indexOf("库存") !== -1;
+    }) || inputs[0];
+    if (!batchInput) return false;
+    fillNativeInputDirect(batchInput, stock);
+    await sleep(120);
+
+    var buttons = Array.from(modal.querySelectorAll("button, .ant-btn")).filter(function (btn) {
+      return btn.offsetWidth || btn.offsetHeight || btn.getClientRects().length;
+    });
+    var applyBtn = buttons.find(function (btn) { return (btn.textContent || "").trim() === "应用"; });
+    if (applyBtn) {
+      clickElementDirect(applyBtn);
+      await sleep(250);
+    } else {
+      inputs.slice(1).forEach(function (input) { fillNativeInputDirect(input, stock); });
+    }
+    var okBtn = buttons.find(function (btn) {
+      var text = (btn.textContent || "").trim();
+      return text === "确定" || text === "保存" || text === "确认";
+    });
+    if (okBtn) {
+      clickElementDirect(okBtn);
+      await sleep(450);
+      return true;
+    }
+    return false;
+  }
+
+  async function fillSkuStockCellsDirect(stockValue) {
+    var cells = findSkuStockCells();
+    var filled = 0;
+    for (var i = 0; i < cells.length; i++) {
+      var target = cells[i];
+      if (!target.icon) continue;
+      clickElementDirect(target.icon);
+      var modal = await waitForStockModal(3000);
+      if (await fillStockModal(modal, stockValue)) filled++;
+      await sleep(150);
+    }
+    if (filled) console.log("[sERP] stock modal filled rows=" + filled);
+    return filled;
   }
 
   function precomputePricingValues(formFields, product) {
@@ -3216,6 +3365,7 @@
       for (var ti = 0; ti < directTargets.length; ti++) {
         var target = directTargets[ti];
         if ((target.role === "sale" || target.role === "old") && !canFillPrice) continue;
+        if (target.role === "stock") continue;
         var directValue = target.role === "old" ? pricing.old_price_cny : (target.role === "stock" ? pricing.stock : pricing.sale_price_cny);
         if (!directValue && directValue !== 0) continue;
         if (fillNativeInputDirect(target.el, directValue)) {
@@ -3223,6 +3373,11 @@
           filledRoles[target.role] = true;
         }
         await sleep(60);
+      }
+      var stockFilled = await fillSkuStockCellsDirect(pricing.stock);
+      if (stockFilled) {
+        filled += stockFilled;
+        filledRoles.stock = true;
       }
       if (!filled) {
         console.warn("[sERP] 未找到价格字段。formFields=" + JSON.stringify(formFields.map(function (f) { return { index: f.index, label: f.label, tag: f.tag, type: f.type, controlKind: f.controlKind }; })));
