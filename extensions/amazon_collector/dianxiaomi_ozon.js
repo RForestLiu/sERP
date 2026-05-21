@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.17";
+  var SERP_EXTENSION_VERSION = "3.2.18";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -96,13 +96,14 @@
     "#serp-toolbar .serp-product-info .pi-clear{font-size:10px;color:#ff4d4f;cursor:pointer;margin-top:4px;text-align:center;border:1px solid #ffccc7;border-radius:3px;padding:2px 6px;transition:all 0.2s;}",
     "#serp-toolbar .serp-product-info .pi-clear:hover{background:#fff1f0;}",
     "#serp-toolbar .serp-product-info .pi-price-toggle{font-size:10px;color:#428bca;cursor:pointer;margin-top:5px;border:1px solid #d6e4ff;border-radius:3px;padding:3px 6px;text-align:center;background:#f8fbff;}",
-    "#serp-toolbar .serp-product-info .pi-price-detail{display:none;margin-top:5px;padding:5px 6px;border:1px solid #eef1f5;border-radius:4px;background:#fafafa;font-size:10px;color:#555;line-height:1.55;}",
+    "#serp-toolbar .serp-product-info .pi-price-detail{display:none;margin-top:5px;padding:5px 6px;border:1px solid #eef1f5;border-radius:4px;background:#fafafa;font-size:10px;color:#555;line-height:1.55;box-sizing:border-box;}",
     "#serp-toolbar .serp-product-info .pi-price-detail.visible{display:block;}",
     "#serp-toolbar .serp-product-info .pi-price-row{display:flex;justify-content:space-between;gap:8px;}",
     "#serp-toolbar .serp-product-info .pi-price-row strong{color:#333;}",
-    "#serp-toolbar .serp-product-info .pi-price-vars{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:5px;}",
-    "#serp-toolbar .serp-product-info .pi-price-vars label{display:flex;flex-direction:column;gap:2px;font-size:9px;color:#777;}",
-    "#serp-toolbar .serp-product-info .pi-price-vars input{border:1px solid #d9d9d9;border-radius:3px;padding:2px 4px;font-size:10px;min-width:0;}",
+    "#serp-toolbar .serp-product-info .pi-price-vars{display:grid;grid-template-columns:1fr;gap:4px;margin-top:5px;}",
+    "#serp-toolbar .serp-product-info .pi-price-var{display:grid;grid-template-columns:minmax(0,1fr) 62px 26px;align-items:center;gap:4px;font-size:9px;color:#777;}",
+    "#serp-toolbar .serp-product-info .pi-price-var input{width:100%;box-sizing:border-box;border:1px solid #d9d9d9;border-radius:3px;padding:2px 4px;font-size:10px;min-width:0;}",
+    "#serp-toolbar .serp-product-info .pi-price-unit{font-size:9px;color:#999;text-align:left;white-space:nowrap;}",
     "#serp-toolbar .serp-product-info .pi-price-apply{width:100%;margin-top:6px;border:1px solid #1677ff;background:#1677ff;color:#fff;border-radius:4px;padding:5px 8px;font-size:11px;cursor:pointer;}",
     "#serp-toolbar .serp-product-info .pi-price-apply:hover{background:#0958d9;border-color:#0958d9;}",
     "#serp-toolbar .serp-product-info .pi-price-note{font-size:9px;color:#888;margin-top:4px;line-height:1.35;}",
@@ -761,16 +762,24 @@
     return { formula: formula, vars: ctx.vars, sale_price_cny: saleRounded, old_price_cny: oldRounded, stock: Math.round(ctx.vars.stock || 10000), cost_price_cny: ctx.vars.cost_price_cny, sourceMoney: ctx.sourceMoney, sourceCny: ctx.sourceCny };
   }
 
+  function priceVarUnitV2(key) {
+    if (key === "seller_logistics_cny") return "CNY";
+    if (key === "original_price_multiplier") return "倍";
+    if (key === "stock") return "件";
+    return "比例";
+  }
+
   function priceVarInputV2(key, label, value, step) {
-    return '<label>' + label + '<input data-price-var="' + key + '" type="number" step="' + (step || "0.01") + '" value="' + (value === undefined || value === null ? "" : String(value)) + '"></label>';
+    return '<label class="pi-price-var"><span>' + label + '</span><input data-price-var="' + key + '" type="number" step="' + (step || "0.01") + '" value="' + (value === undefined || value === null ? "" : String(value)) + '"><span class="pi-price-unit">' + priceVarUnitV2(key) + '</span></label>';
   }
 
   function syncPricingTempVarsFromPanel() {
     if (!piPriceDetail) return;
     piPriceDetail.querySelectorAll("[data-price-var]").forEach(function (input) {
       var raw = String(input.value || "").trim();
-      if (raw === "") delete pricingTempVars[input.dataset.priceVar];
-      else pricingTempVars[input.dataset.priceVar] = parseFloat(raw);
+      var parsed = parseFloat(raw);
+      if (raw === "" || isNaN(parsed)) delete pricingTempVars[input.dataset.priceVar];
+      else pricingTempVars[input.dataset.priceVar] = parsed;
     });
   }
 
@@ -782,10 +791,10 @@
       '<div class="pi-price-row"><span>公式(Formula)</span><strong>' + ((pricing.formula && pricing.formula.name) || "--") + '</strong></div>',
       '<div class="pi-price-row"><span>采集价(Source)</span><strong>' + sourceText + '</strong></div>',
       '<div class="pi-price-row"><span>成本价(Cost CNY)</span><strong>' + (pricing.cost_price_cny ? pricing.cost_price_cny.toFixed(2) : "--") + '</strong></div>',
-      '<div class="pi-price-row"><span>物流费(Logistics)</span><strong>' + (v.seller_logistics_cny ? v.seller_logistics_cny.toFixed(2) : "0") + '</strong></div>',
-      '<div class="pi-price-row"><span>售价(Sale CNY)</span><strong>' + (pricing.sale_price_cny || "--") + '</strong></div>',
-      '<div class="pi-price-row"><span>原价(Old CNY)</span><strong>' + (pricing.old_price_cny || "--") + '</strong></div>',
-      '<div class="pi-price-row"><span>库存(Stock)</span><strong>' + pricing.stock + '</strong></div>',
+      '<div class="pi-price-row"><span>物流费(Logistics)</span><strong data-price-summary="logistics">' + (v.seller_logistics_cny ? v.seller_logistics_cny.toFixed(2) : "0") + '</strong></div>',
+      '<div class="pi-price-row"><span>售价(Sale CNY)</span><strong data-price-summary="sale">' + (pricing.sale_price_cny || "--") + '</strong></div>',
+      '<div class="pi-price-row"><span>原价(Old CNY)</span><strong data-price-summary="old">' + (pricing.old_price_cny || "--") + '</strong></div>',
+      '<div class="pi-price-row"><span>库存(Stock)</span><strong data-price-summary="stock">' + pricing.stock + '</strong></div>',
       '<div class="pi-price-vars">' +
         priceVarInputV2("profit_rate", "利润率(Profit)", v.profit_rate, "0.01") +
         priceVarInputV2("ozon_commission_rate", "佣金(Commission)", v.ozon_commission_rate, "0.001") +
@@ -797,6 +806,20 @@
       '<button type="button" class="pi-price-apply" id="serp-pi-price-apply">更新价格到页面</button>',
       '<div class="pi-price-note">修改参数后点击“更新价格到页面”，只重算并回填售价、原价和库存，不重新执行自动填充。Temporary variables only affect this page fill.</div>'
     ].join("");
+  }
+
+  function updatePriceSummaryV2(product) {
+    if (!piPriceDetail) return;
+    var pricing = computePricingV2(product || selectedProduct || {});
+    var v = pricing.vars || {};
+    var logisticsEl = piPriceDetail.querySelector('[data-price-summary="logistics"]');
+    var saleEl = piPriceDetail.querySelector('[data-price-summary="sale"]');
+    var oldEl = piPriceDetail.querySelector('[data-price-summary="old"]');
+    var stockEl = piPriceDetail.querySelector('[data-price-summary="stock"]');
+    if (logisticsEl) logisticsEl.textContent = v.seller_logistics_cny ? v.seller_logistics_cny.toFixed(2) : "0";
+    if (saleEl) saleEl.textContent = pricing.sale_price_cny || "--";
+    if (oldEl) oldEl.textContent = pricing.old_price_cny || "--";
+    if (stockEl) stockEl.textContent = pricing.stock || "--";
   }
 
   // ==================== 店铺检测 ====================
@@ -3016,7 +3039,8 @@
   }
 
   function precomputePricingValues(formFields, product) {
-    var deterministic = precomputeDeterministicValues(formFields, product || selectedProduct || {}, getManualData(product || selectedProduct || {}));
+    var selected = product || selectedProduct || {};
+    var deterministic = precomputeDeterministicValues(formFields, selected, (selected && selected.manual_data) || {});
     var pricingOnly = {};
     formFields.forEach(function (field) {
       if (!isPricingFormField(field)) return;
@@ -3380,19 +3404,14 @@
       piPriceDetail.classList.toggle("visible");
       piPriceToggle.textContent = piPriceDetail.classList.contains("visible") ? "价格公式 ▴" : "价格公式 ▾";
     });
-    piPriceDetail.addEventListener("change", function (e) {
+    piPriceDetail.addEventListener("input", function (e) {
       var input = e.target.closest("[data-price-var]");
       if (!input) return;
       var raw = input.value.trim();
-      if (raw === "") delete pricingTempVars[input.dataset.priceVar];
-      else pricingTempVars[input.dataset.priceVar] = parseFloat(raw);
-      piPriceDetail.innerHTML = buildPriceFormulaHtmlV2(selectedProduct);
-    });
-    piPriceDetail.addEventListener("mousedown", function (e) {
-      var applyBtn = e.target.closest("#serp-pi-price-apply");
-      if (!applyBtn) return;
-      e.preventDefault();
-      applyPricingToCurrentPage();
+      var parsed = parseFloat(raw);
+      if (raw === "" || isNaN(parsed)) delete pricingTempVars[input.dataset.priceVar];
+      else pricingTempVars[input.dataset.priceVar] = parsed;
+      updatePriceSummaryV2(selectedProduct);
     });
     piPriceDetail.addEventListener("click", function (e) {
       var applyBtn = e.target.closest("#serp-pi-price-apply");
