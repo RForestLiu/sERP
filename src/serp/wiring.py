@@ -145,6 +145,9 @@ def create_product_facade(data_root: str, settings_facade, event_bus):
         ImageSetsUpdated,
         ProductImageUploaded,
         ProductVideoUploaded,
+        ProductCriticalChangeProposed,
+        ProductCriticalFieldApproved,
+        ProductCriticalFieldRejected,
     )
     from src.serp.product.infrastructure.json_repositories import JsonProductRepository
     from src.serp.product.infrastructure import handlers
@@ -159,6 +162,9 @@ def create_product_facade(data_root: str, settings_facade, event_bus):
     event_bus.subscribe(ImageSetsUpdated, handlers.log_image_sets_updated)
     event_bus.subscribe(ProductImageUploaded, handlers.log_product_image_uploaded)
     event_bus.subscribe(ProductVideoUploaded, handlers.log_product_video_uploaded)
+    event_bus.subscribe(ProductCriticalChangeProposed, handlers.log_critical_change_proposed)
+    event_bus.subscribe(ProductCriticalFieldApproved, handlers.log_critical_field_approved)
+    event_bus.subscribe(ProductCriticalFieldRejected, handlers.log_critical_field_rejected)
 
     product_repo = JsonProductRepository(os.path.join(data_root, "products.json"))
     videos_dir = os.path.join(data_root, "videos")

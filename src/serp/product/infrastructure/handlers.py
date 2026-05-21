@@ -13,6 +13,9 @@ from ..domain.events import (
     ImageSetsUpdated,
     ProductImageUploaded,
     ProductVideoUploaded,
+    ProductCriticalChangeProposed,
+    ProductCriticalFieldApproved,
+    ProductCriticalFieldRejected,
 )
 
 logger = logging.getLogger(__name__)
@@ -48,3 +51,18 @@ def log_product_image_uploaded(event: ProductImageUploaded):
 
 def log_product_video_uploaded(event: ProductVideoUploaded):
     logger.info("Video uploaded: %s/%s", event.skc, event.filename)
+
+
+def log_critical_change_proposed(event: ProductCriticalChangeProposed):
+    logger.info("Critical change proposed: %s, approval=%s, field=%s",
+                event.skc, event.approval_id, event.field_name)
+
+
+def log_critical_field_approved(event: ProductCriticalFieldApproved):
+    logger.info("Critical field approved: %s, approval=%s, field=%s",
+                event.skc, event.approval_id, event.field_name)
+
+
+def log_critical_field_rejected(event: ProductCriticalFieldRejected):
+    logger.info("Critical field rejected: %s, approval=%s, field=%s, reason=%s",
+                event.skc, event.approval_id, event.field_name, event.reason)

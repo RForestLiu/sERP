@@ -15,7 +15,7 @@ import requests
 
 from src.serp.shared import Result, EventBus
 
-from ..domain.entities import Product, ProductCollection
+from ..domain.entities import Product, ProductCollection, CRITICAL_FIELDS
 from ..domain.value_objects import ManualData, StoreStatusEntry
 from ..domain.events import (
     ProductDeleted,
@@ -26,6 +26,9 @@ from ..domain.events import (
     ImageSetsUpdated,
     ProductImageUploaded,
     ProductVideoUploaded,
+    ProductCriticalChangeProposed,
+    ProductCriticalFieldApproved,
+    ProductCriticalFieldRejected,
 )
 from ..domain.repositories import ProductRepository
 from ..facade import ProductFacade
@@ -854,6 +857,50 @@ class ProductApplicationService(ProductFacade):
         if resp.status_code == 200:
             return resp.content
         raise RuntimeError("Image proxy request failed")
+
+    # ==================== 关键属性审批 ====================
+
+    def propose_critical_change(self, skc: str, field: str, new_value,
+                                requested_by: str) -> dict:
+        """提交关键属性修改申请，返回 approval_id"""
+        product = self._find_product_or_raise(skc)
+        approval_id = product.propose_change(field, new_value, requested_by)
+        self._product_repo.save(product)
+        self._event_bus.publish_all(product.collect_events())
+        return {"success": True, "skc": skc, "approval_id": approval_id}
+
+    def approve_change(self, skc: str, approval_id: str,
+                       approved_by: str) -> dict:
+        """审批通过，应用修改"""
+        product = self._find_product_or_raise(skc)
+        product.approve_change(approval_id, approved_by)
+        self._product_repo.save(product)
+        self._event_bus.publish_all(product.collect_events())
+        return {"success": True, "skc": skc, "approval_id": approval_id}
+
+    def reject_change(self, skc: str, approval_id: str,
+                      approved_by: str, reason: str) -> dict:
+        """驳回修改"""
+        product = self._find_product_or_raise(skc)
+        product.reject_change(approval_id, approved_by, reason)
+        self._product_repo.save(product)
+        self._event_bus.publish_all(product.collect_events())
+        return {"success": True, "skc": skc, "approval_id": approval_id}
+
+    def list_pending_approvals(self, skc: str = None) -> list[dict]:
+        """查询待审批列表：指定 skc 则返回该产品的，否则返回全部产品的"""
+        if skc:
+            product = self._find_product_or_raise(skc)
+            return product.pending_approvals
+        collection = self._product_repo.load_all()
+        results = []
+        for product in collection.products:
+            for approval in product.pending_approvals:
+                results.append({
+                    "skc": product.skc,
+                    **approval,
+                })
+        return results
 
     # ==================== Helper ====================
 

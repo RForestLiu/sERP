@@ -4,6 +4,7 @@ Product 域 - HTTP 接口层（Flask Blueprint）。
 from flask import Blueprint, request, jsonify, send_from_directory
 from urllib.parse import urlparse
 
+from src.serp.shared import NotFoundError, ValidationError
 from ..facade import ProductFacade
 
 
@@ -101,6 +102,68 @@ def create_product_blueprint(facade: ProductFacade, data_root: str = "", setting
             return jsonify(result)
         except ValueError as e:
             return jsonify({"error": str(e)}), 400
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    # ── 关键属性审批 ──
+
+    @bp.route("/products/<skc>/propose-change", methods=["POST"])
+    def propose_critical_change(skc):
+        data = request.get_json() or {}
+        try:
+            result = facade.propose_critical_change(
+                skc=skc,
+                field=data.get("field", ""),
+                new_value=data.get("new_value"),
+                requested_by=data.get("requested_by", ""),
+            )
+            return jsonify(result)
+        except (NotFoundError, ValueError) as e:
+            return jsonify({"error": str(e)}), 404
+        except ValidationError as e:
+            return jsonify({"error": str(e)}), 400
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    @bp.route("/products/<skc>/approve/<approval_id>", methods=["POST"])
+    def approve_change(skc, approval_id):
+        data = request.get_json() or {}
+        try:
+            result = facade.approve_change(
+                skc=skc,
+                approval_id=approval_id,
+                approved_by=data.get("approved_by", ""),
+            )
+            return jsonify(result)
+        except (NotFoundError, ValueError) as e:
+            return jsonify({"error": str(e)}), 404
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    @bp.route("/products/<skc>/reject/<approval_id>", methods=["POST"])
+    def reject_change(skc, approval_id):
+        data = request.get_json() or {}
+        try:
+            result = facade.reject_change(
+                skc=skc,
+                approval_id=approval_id,
+                approved_by=data.get("approved_by", ""),
+                reason=data.get("reason", ""),
+            )
+            return jsonify(result)
+        except (NotFoundError, ValueError) as e:
+            return jsonify({"error": str(e)}), 404
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    @bp.route("/products/pending-approvals", methods=["GET"])
+    def list_pending_approvals():
+        skc = request.args.get("skc")
+        try:
+            result = facade.list_pending_approvals(skc=skc)
+            return jsonify({"pending_approvals": result})
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 404
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
