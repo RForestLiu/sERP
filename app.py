@@ -1,21 +1,14 @@
 import os
 import json
 import re
-import base64
 import shutil
-import mimetypes
-import uuid
 import subprocess
 import sys
-import io
-import struct
-import ctypes
 import logging
 import logging.config
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import RLock
-from PIL import Image
 
 # ★ 日志配置必须在此处（Flask reloader 子进程不会执行 main.py，只导入 app.py）
 # ★ 强制 stdout/stderr 使用 UTF-8，否则 Windows GBK 编码会导致 emoji 日志报错丢弃
@@ -50,7 +43,7 @@ from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import cross_origin
 from werkzeug.utils import secure_filename
 import requests
-from src.serp.wiring import create_settings_facade, create_logistics_facade, create_ozon_category_facade
+from src.serp.wiring import create_settings_facade, create_logistics_facade, create_ozon_category_facade, create_collect_facade
 
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
@@ -59,19 +52,12 @@ logger.info("sERP 启动中... | Flask %s | Debug=%s", app.name, app.debug)
 logger.info("=" * 50)
 
 # --------------- 配置 ---------------
-API_KEY = os.getenv("API_KEY", "") or os.getenv("OPENAI_API_KEY", "")
-IMAGE_MODEL = os.getenv("IMAGE_MODEL", "gemini-3.1-flash-image-preview")
-API_URL = f"https://api.laozhang.ai/v1beta/models/{IMAGE_MODEL}:generateContent"
 DATA_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
-TASKS_FILE = os.path.join(DATA_ROOT, "tasks.json")
 ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
 SETTINGS_FILE = os.path.join(DATA_ROOT, "settings.json")
 SETTINGS_FACADE, _SETTINGS_EVENT_BUS = create_settings_facade(DATA_ROOT, ENV_FILE)
 
 os.makedirs(DATA_ROOT, exist_ok=True)
-if not os.path.exists(TASKS_FILE):
-    with open(TASKS_FILE, "w", encoding="utf-8") as f:
-        json.dump([], f)
 
 # ── DDD: Settings 域蓝图（替代旧 /api/settings/* 路由）──
 from src.serp.settings.interfaces.routes import create_settings_blueprint
@@ -99,43 +85,30 @@ from src.serp.ozon_category.interfaces.routes import create_ozon_category_bluepr
 ozon_category_bp = create_ozon_category_blueprint(OZON_CATEGORY_FACADE)
 app.register_blueprint(ozon_category_bp)
 
+# ── DDD: ImageTask 域蓝图（替代旧 /api/tasks/* /api/generate /api/task-types 等路由）──
+from src.serp.wiring import create_imagetask_facade
+IMAGETASK_FACADE = create_imagetask_facade(DATA_ROOT, SETTINGS_FACADE, _SETTINGS_EVENT_BUS)
+from src.serp.imagetask.interfaces.routes import create_imagetask_blueprint
+imagetask_bp = create_imagetask_blueprint(IMAGETASK_FACADE)
+app.register_blueprint(imagetask_bp)
+
+# ── DDD: Collect 域蓝图（替代旧 /api/collect/* 路由）──
+COLLECT_FACADE = create_collect_facade(DATA_ROOT, SETTINGS_FACADE, _SETTINGS_EVENT_BUS)
+from src.serp.collect.interfaces.routes import create_collect_blueprint
+collect_bp = create_collect_blueprint(COLLECT_FACADE, data_root=DATA_ROOT)
+app.register_blueprint(collect_bp)
+
+# ── DDD: Listing 域蓝图（替代旧 /api/listings/* /api/ozon/*/listing/* /api/auto-fill/* 等路由）──
+from src.serp.wiring import create_listing_facade
+LISTING_FACADE = create_listing_facade(DATA_ROOT, SETTINGS_FACADE, PRODUCT_FACADE, OZON_CATEGORY_FACADE, _SETTINGS_EVENT_BUS)
+from src.serp.listing.interfaces.routes import create_listing_blueprint, create_listing_page_blueprint
+listing_bp = create_listing_blueprint(LISTING_FACADE)
+listing_page_bp = create_listing_page_blueprint()
+app.register_blueprint(listing_bp)
+app.register_blueprint(listing_page_bp)
+
 # 向后兼容：旧代码引用 STORES_FILE
 STORES_FILE = os.path.join(DATA_ROOT, "stores.json")
-
-# --------------- 辅助函数 ---------------
-def load_tasks():
-    with open(TASKS_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-def save_tasks(tasks):
-    with open(TASKS_FILE, "w", encoding="utf-8") as f:
-        json.dump(tasks, f, indent=2, ensure_ascii=False)
-
-def task_folder(task_id):
-    return os.path.join(DATA_ROOT, f"task_{task_id}")
-
-def ensure_task_dirs(task_id):
-    base = task_folder(task_id)
-    os.makedirs(base, exist_ok=True)
-    os.makedirs(os.path.join(base, "source_images"), exist_ok=True)
-    os.makedirs(os.path.join(base, "drafts"), exist_ok=True)
-    os.makedirs(os.path.join(base, "generated"), exist_ok=True)
-
-def get_task_data_path(task_id):
-    return os.path.join(task_folder(task_id), "task_data.json")
-
-def load_task_data(task_id):
-    path = get_task_data_path(task_id)
-    if not os.path.exists(path):
-        return {"text1": "", "cards": []}
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-def save_task_data(task_id, data):
-    ensure_task_dirs(task_id)
-    path = get_task_data_path(task_id)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
 
 # --------------- 路由 ---------------
 @app.route("/")
@@ -144,7 +117,7 @@ def index():
 
 @app.route("/task_images/<task_id>/<path:filename>")
 def serve_task_image(task_id, filename):
-    folder = task_folder(task_id)
+    folder = os.path.join(DATA_ROOT, f"task_{task_id}")
     return send_from_directory(folder, filename)
 
 
@@ -153,632 +126,6 @@ def serve_collect_image(task_id, filename):
     """服务采集任务的图片文件"""
     folder = os.path.join(DATA_ROOT, f"collect_{task_id}")
     return send_from_directory(folder, filename)
-
-
-# --------------- API ---------------
-@app.route("/api/tasks", methods=["GET"])
-def get_tasks():
-    tasks = load_tasks()
-    return jsonify(tasks)
-
-# ── 任务类型定义 ───────────────────────────────────────────────
-TASK_TYPES = [
-    {"id": "batch_translate", "name": "批量翻译图片", "icon": "🌐", "description": "AI图片翻译，中→俄等", "available": True},
-    {"id": "batch_crop_resize", "name": "批量裁剪/缩放", "icon": "✂️", "description": "按平台尺寸要求处理", "available": False},
-    {"id": "generate_main_image", "name": "生成产品首图", "icon": "🎨", "description": "白模图+产品信息→首图", "available": False},
-    {"id": "batch_replace_product", "name": "批量替换产品图", "icon": "🔄", "description": "用新产品图替换模板", "available": True},
-]
-
-@app.route("/api/task-types", methods=["GET"])
-def get_task_types():
-    return jsonify(TASK_TYPES)
-
-@app.route("/api/tasks", methods=["POST"])
-def create_task():
-    tasks = load_tasks()
-    payload = request.get_json(silent=True) or {}
-    task_type = payload.get("type", "")
-    # 任务名称：指定类型用类型名，否则自动递增
-    if task_type:
-        type_info = next((tt for tt in TASK_TYPES if tt["id"] == task_type), None)
-        base_name = type_info["name"] if type_info else task_type
-    else:
-        base_name = "任务"
-    existing_names = [t["name"] for t in tasks]
-    n = 1
-    while f"{base_name} {n}" in existing_names:
-        n += 1
-    name = f"{base_name} {n}"
-    task_id = str(uuid.uuid4())[:8]
-    tasks.append({
-        "id": task_id,
-        "name": name,
-        "type": task_type,
-        "created_at": datetime.now().isoformat()
-    })
-    save_tasks(tasks)
-    save_task_data(task_id, {"text1": "", "cards": [], "skc": payload.get("skc", "")})
-    return jsonify({"id": task_id, "name": name, "type": task_type})
-
-@app.route("/api/tasks/<task_id>", methods=["DELETE"])
-def delete_task(task_id):
-    """删除任务及其所有数据"""
-    tasks = load_tasks()
-    task_info = next((t for t in tasks if t["id"] == task_id), None)
-    if not task_info:
-        return jsonify({"error": "任务不存在"}), 404
-
-    tasks = [t for t in tasks if t["id"] != task_id]
-    save_tasks(tasks)
-
-    # 删除任务数据文件和目录
-    task_dir = task_folder(task_id)
-    task_data_file = os.path.join(task_dir, "task_data.json")
-    if os.path.exists(task_data_file):
-        os.remove(task_data_file)
-    if os.path.exists(task_dir):
-        try:
-            shutil.rmtree(task_dir)
-        except Exception:
-            pass
-
-    return jsonify({"deleted": task_id})
-
-@app.route("/api/tasks/<task_id>", methods=["GET"])
-def get_task(task_id):
-    data = load_task_data(task_id)
-    tasks = load_tasks()
-    task_info = next((t for t in tasks if t["id"] == task_id), None)
-    return jsonify({
-        "id": task_id,
-        "name": task_info["name"] if task_info else "",
-        "type": task_info["type"] if task_info else "",
-        "data": data
-    })
-
-@app.route("/api/tasks/<task_id>", methods=["PUT"])
-def update_task(task_id):
-    payload = request.get_json()
-    name = payload.get("name")
-    task_data = payload.get("data")
-    if name is not None:
-        tasks = load_tasks()
-        for t in tasks:
-            if t["id"] == task_id:
-                t["name"] = name
-                break
-        save_tasks(tasks)
-    if task_data is not None:
-        save_task_data(task_id, task_data)
-    return jsonify({"status": "ok"})
-
-@app.route("/api/tasks/<task_id>/upload_source_images", methods=["POST"])
-def upload_source_images(task_id):
-    ensure_task_dirs(task_id)
-    files = request.files.getlist("images")
-    saved = []
-    for f in files:
-        if f.filename == "":
-            continue
-        safe_name = f.filename
-        save_path = os.path.join(task_folder(task_id), "source_images", safe_name)
-        f.save(save_path)
-        saved.append({
-            "original_name": f.filename,
-            "saved_name": safe_name,
-            "relative_path": f"source_images/{safe_name}"
-        })
-    return jsonify({"saved": saved})
-
-
-@app.route("/api/tasks/<task_id>/upload_ref_image/<int:ref_index>", methods=["POST"])
-def upload_ref_image(task_id, ref_index):
-    """上传任务的公共参考图 (ref_index: 1 或 2)"""
-    if ref_index not in (1, 2):
-        return jsonify({"error": "ref_index 必须为 1 或 2"}), 400
-    ensure_task_dirs(task_id)
-    f = request.files.get("image")
-    if not f or f.filename == "":
-        return jsonify({"error": "未选择图片"}), 400
-
-    source_dir = os.path.join(task_folder(task_id), "source_images")
-    data = load_task_data(task_id)
-    field = f"ref_image_{ref_index}"
-    old_path = data.get(field, "")
-
-    # 删除旧参考图和历史固定名，避免同 URL 被浏览器缓存成第一次上传的图。
-    old_candidates = []
-    if old_path:
-        old_candidates.append(os.path.join(task_folder(task_id), old_path))
-    old_candidates.extend(
-        os.path.join(source_dir, name)
-        for name in os.listdir(source_dir)
-        if name.startswith(f"_ref_{ref_index}.") or name.startswith(f"_ref_{ref_index}_")
-    )
-    for old_file in old_candidates:
-        try:
-            old_abs = os.path.abspath(old_file)
-            source_abs = os.path.abspath(source_dir)
-            if os.path.commonpath([old_abs, source_abs]) == source_abs and os.path.isfile(old_abs):
-                os.remove(old_abs)
-        except Exception as e:
-            logger.warning("[上传参考图] 删除旧参考图失败: %s", e)
-
-    ext = os.path.splitext(f.filename)[1].lower() or ".jpg"
-    if ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"):
-        ext = ".jpg"
-    safe_name = f"_ref_{ref_index}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:6]}{ext}"
-    save_path = os.path.join(source_dir, safe_name)
-    f.save(save_path)
-
-    # 更新 task_data.json
-    data[field] = f"source_images/{safe_name}"
-    save_task_data(task_id, data)
-
-    logger.info("[上传参考图] task=%s ref=%s → %s", task_id, ref_index, safe_name)
-    return jsonify({"success": True, "ref_index": ref_index, "field": field, "path": f"source_images/{safe_name}"})
-
-
-@app.route("/api/tasks/<task_id>/import_images", methods=["POST"])
-def import_images_to_task(task_id):
-    """将产品图片复制到任务 source_images 目录 — 从图片管理弹窗拖拽导入"""
-    data = request.get_json()
-    skc = data.get("skc", "")
-    entries = data.get("entries", [])
-
-    products_data = _load_products()
-    product_list = products_data.get("产品列表", [])
-    product = None
-    for p in product_list:
-        if p["skc"] == skc:
-            product = p
-            break
-    if not product:
-        return jsonify({"error": "产品不存在"}), 404
-
-    images_dir = product.get("images_dir", "")
-    if not images_dir or not os.path.exists(images_dir):
-        return jsonify({"error": "产品图片目录不存在"}), 404
-
-    source_dir = os.path.join(task_folder(task_id), "source_images")
-    os.makedirs(source_dir, exist_ok=True)
-
-    saved = []
-    for entry in entries:
-        filename = entry.get("filename", "")
-        if not filename:
-            continue
-        src_path = os.path.join(images_dir, filename)
-        if not os.path.exists(src_path):
-            continue
-        safe_name = os.path.basename(filename)
-        dest_name = safe_name
-        dest_path = os.path.join(source_dir, dest_name)
-        name_parts = os.path.splitext(safe_name)
-        counter = 1
-        while os.path.exists(dest_path):
-            dest_name = f"{name_parts[0]}_{counter}{name_parts[1]}"
-            dest_path = os.path.join(source_dir, dest_name)
-            counter += 1
-        shutil.copy2(src_path, dest_path)
-        saved.append({
-            "original_name": safe_name,
-            "relative_path": f"source_images/{dest_name}"
-        })
-
-    return jsonify({"saved": saved})
-
-
-# ── 图片压缩函数 ───────────────────────────────────────────────
-def compress_image(image_data, max_size=1.5*1024*1024):
-    """
-    将图片压缩到 max_size 字节以下（默认 1.5MB）
-    - 自动将 PNG/WebP 转为 JPEG 以获得更好压缩率
-    - 自适应质量：从 85 开始递减，最低至 30
-    - 若质量降到最低仍超标，则降低分辨率
-    返回: (压缩后的字节数据, mime类型)
-    """
-    try:
-        img = Image.open(io.BytesIO(image_data))
-        
-        # RGBA/LA/P 转 RGB（JPEG 不支持 Alpha）
-        if img.mode in ('RGBA', 'LA', 'P'):
-            img = img.convert('RGB')
-        
-        # 自适应质量压缩
-        quality = 85
-        while quality >= 30:
-            buf = io.BytesIO()
-            img.save(buf, format='JPEG', quality=quality, optimize=True)
-            if buf.tell() <= max_size:
-                return buf.getvalue(), 'image/jpeg'
-            quality -= 5
-        
-        # 最低质量仍超标，降低分辨率
-        scale = 0.9
-        while True:
-            w, h = int(img.width * scale), int(img.height * scale)
-            if w < 100 or h < 100:
-                break
-            resized = img.resize((w, h), Image.LANCZOS)
-            buf = io.BytesIO()
-            resized.save(buf, format='JPEG', quality=30, optimize=True)
-            if buf.tell() <= max_size:
-                return buf.getvalue(), 'image/jpeg'
-            scale *= 0.9
-        
-        # 兜底：返回原数据
-        return image_data, 'image/jpeg'
-    except Exception as e:
-        # 压缩失败则返回原数据
-        return image_data, 'image/jpeg'
-
-
-@app.route("/api/generate", methods=["POST"])
-def generate_image():
-    data = request.get_json()
-    task_id = data.get("task_id")
-    card_id = data.get("card_id")
-    prompt = data.get("prompt", "")
-    source_image_path = data.get("source_image_path", "")
-    extra_image_paths = data.get("extra_image_paths") or []
-    auto_compress = data.get("auto_compress", True)
-
-    if not API_KEY:
-        return jsonify({"error": "API_KEY not configured"}), 500
-
-    ref_image_data = None
-    mime_type = "image/jpeg"
-    if source_image_path:
-        full_path = os.path.join(task_folder(task_id), source_image_path)
-        if os.path.exists(full_path):
-            mime_type = mimetypes.guess_type(full_path)[0] or "image/jpeg"
-            with open(full_path, "rb") as f:
-                encoded = base64.b64encode(f.read()).decode("utf-8")
-            ref_image_data = {"mime_type": mime_type, "data": encoded}
-
-    parts = [{"text": prompt}]
-    if ref_image_data:
-        parts.append({"inline_data": ref_image_data})
-
-    # 批量替换产品：附加参考图（图2、图3）
-    for img_path in extra_image_paths:
-        full = os.path.join(task_folder(task_id), img_path)
-        if os.path.exists(full):
-            img_mime = mimetypes.guess_type(full)[0] or "image/jpeg"
-            with open(full, "rb") as f:
-                img_enc = base64.b64encode(f.read()).decode("utf-8")
-            parts.append({"inline_data": {"mime_type": img_mime, "data": img_enc}})
-
-    payload = {
-        "contents": [{"parts": parts}],
-        "generationConfig": {
-            "responseModalities": ["IMAGE"],
-            "imageConfig": {"imageSize": "2K"}
-        }
-    }
-
-    headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json"
-    }
-
-    try:
-        resp = requests.post(API_URL, headers=headers, json=payload, timeout=180)
-        if resp.status_code != 200:
-            return jsonify({"error": f"API Error {resp.status_code}: {resp.text}"}), 500
-
-        result = resp.json()
-        image_part = None
-        for candidate in result.get("candidates", []):
-            for part in candidate.get("content", {}).get("parts", []):
-                inline_data = part.get("inlineData") or part.get("inline_data")
-                if inline_data and inline_data.get("data"):
-                    image_part = inline_data
-                    break
-            if image_part:
-                break
-
-        if not image_part:
-            return jsonify({"error": "No image data in response", "detail": result}), 500
-
-        mime = image_part.get("mimeType") or image_part.get("mime_type") or "image/png"
-        ext = "jpg" if mime == "image/jpeg" else "webp" if mime == "image/webp" else "png"
-        file_name = f"{card_id}_{datetime.now().strftime('%Y%m%d%H%M%S%f')}.{ext}"
-
-        draft_dir = os.path.join(task_folder(task_id), "drafts")
-        os.makedirs(draft_dir, exist_ok=True)
-        draft_path = os.path.join(draft_dir, file_name)
-        image_data = base64.b64decode(image_part["data"])
-
-        # 自动压缩
-        if auto_compress:
-            compressed_data, compressed_mime = compress_image(image_data)
-            if len(compressed_data) < len(image_data):
-                image_data = compressed_data
-                # 压缩后统一为 jpg
-                file_name = f"{card_id}_{datetime.now().strftime('%Y%m%d%H%M%S%f')}.jpg"
-                draft_path = os.path.join(draft_dir, file_name)
-
-        with open(draft_path, "wb") as f:
-            f.write(image_data)
-
-        url = f"/task_images/{task_id}/drafts/{file_name}"
-        base64_img = base64.b64encode(image_data).decode("utf-8")
-        return jsonify({
-            "success": True,
-            "url": url,
-            "base64": f"data:{mime};base64,{base64_img}",
-            "draft_file": f"drafts/{file_name}"
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route("/api/tasks/<task_id>/save_images", methods=["POST"])
-def save_images(task_id):
-    draft_dir = os.path.join(task_folder(task_id), "drafts")
-    gen_dir = os.path.join(task_folder(task_id), "generated")
-    os.makedirs(gen_dir, exist_ok=True)
-
-    moved = []
-    if os.path.exists(draft_dir):
-        for fname in os.listdir(draft_dir):
-            src = os.path.join(draft_dir, fname)
-            dst = os.path.join(gen_dir, fname)
-            shutil.move(src, dst)
-            moved.append(fname)
-    task_data = load_task_data(task_id)
-    for card in task_data.get("cards", []):
-        draft = card.get("generated_draft")
-        if draft:
-            fname = os.path.basename(draft)
-            if fname in moved:
-                card["generated_final"] = f"generated/{fname}"
-                card["generated_draft"] = ""
-    save_task_data(task_id, task_data)
-    return jsonify({"moved": moved, "generated_dir": f"task_images/{task_id}/generated"})
-
-@app.route("/api/tasks/<task_id>/save_to_product", methods=["POST"])
-def save_to_product(task_id):
-    """将任务的生成图片复制到指定产品的图片集/子集"""
-    data = request.get_json()
-    skc = data.get("skc")
-    setName = data.get("setName")
-    subName = data.get("subName", "")
-
-    products_data = _load_products()
-    product_list = products_data.get("产品列表", [])
-    product = next((p for p in product_list if p["skc"] == skc), None)
-    if not product:
-        return jsonify({"error": "产品不存在"}), 404
-
-    images_dir = product.get("images_dir", "")
-    if not images_dir or not os.path.exists(images_dir):
-        return jsonify({"error": "产品图片目录不存在"}), 404
-
-    gen_dir = os.path.join(task_folder(task_id), "generated")
-    gen_files = []
-    if os.path.exists(gen_dir):
-        gen_files = sorted([f for f in os.listdir(gen_dir) if os.path.isfile(os.path.join(gen_dir, f))])
-
-    # Fallback to draft files (not yet "saved to task folder")
-    if not gen_files:
-        drafts_dir = os.path.join(task_folder(task_id), "drafts")
-        if os.path.exists(drafts_dir):
-            task_data = load_task_data(task_id)
-            seen = set()
-            for card in task_data.get("cards", []):
-                draft = card.get("generated_draft", "")
-                if draft:
-                    fname = os.path.basename(draft)
-                    fpath = os.path.join(task_folder(task_id), draft)
-                    if fname not in seen and os.path.isfile(fpath):
-                        seen.add(fname)
-                        gen_files.append(fname)
-            gen_dir = drafts_dir
-
-    if not gen_files:
-        return jsonify({"saved": [], "message": "没有生成图片可保存"}), 200
-
-    path_prefix = f"{setName}/{subName}/" if subName else f"{setName}/"
-    target_dir = os.path.join(images_dir, path_prefix)
-    os.makedirs(target_dir, exist_ok=True)
-
-    saved = []
-    for fname in gen_files:
-        src = os.path.join(gen_dir, fname)
-        dest_name = fname
-        dest_path = os.path.join(target_dir, dest_name)
-        name_parts = os.path.splitext(fname)
-        counter = 1
-        while os.path.exists(dest_path):
-            dest_name = f"{name_parts[0]}_{counter}{name_parts[1]}"
-            dest_path = os.path.join(target_dir, dest_name)
-            counter += 1
-        shutil.copy2(src, dest_path)
-        rel_path = (path_prefix + dest_name).replace("\\", "/")
-        saved.append({"filename": rel_path, "index": 0})
-
-    # Update image_sets
-    image_sets = product.get("image_sets", {})
-    if setName not in image_sets:
-        image_sets[setName] = []
-    max_idx = max([e.get("index", 0) for e in image_sets[setName]], default=-1)
-    for entry in saved:
-        max_idx += 1
-        entry["index"] = max_idx
-        image_sets[setName].append(entry)
-
-    # Update image_subsets if subName
-    if subName:
-        image_subsets = product.get("image_subsets", {})
-        image_subsets.setdefault(setName, {}).setdefault(subName, [])
-        max_sub_idx = max([e.get("index", 0) for e in image_subsets[setName][subName]], default=-1)
-        for entry in saved:
-            sub_entry = {"filename": entry["filename"], "index": 0}
-            max_sub_idx += 1
-            sub_entry["index"] = max_sub_idx
-            image_subsets[setName][subName].append(sub_entry)
-        product["image_subsets"] = image_subsets
-
-    product["image_sets"] = image_sets
-    _save_products(products_data)
-
-    return jsonify({"saved": saved, "count": len(saved),
-                    "target": f"{skc}/{path_prefix}"})
-
-# ── 系统剪贴板辅助 ─────────────────────────────────────────────
-def _copy_files_to_clipboard(file_paths):
-    """将文件路径列表写入 Windows 系统剪贴板 CF_HDROP"""
-    from ctypes import wintypes
-
-    kernel32 = ctypes.windll.kernel32
-    kernel32.GlobalAlloc.argtypes = [wintypes.UINT, ctypes.c_size_t]
-    kernel32.GlobalAlloc.restype = wintypes.HGLOBAL
-    kernel32.GlobalLock.argtypes = [wintypes.HGLOBAL]
-    kernel32.GlobalLock.restype = wintypes.LPVOID
-    kernel32.GlobalUnlock.argtypes = [wintypes.HGLOBAL]
-    kernel32.GlobalUnlock.restype = wintypes.BOOL
-
-    file_list = b""
-    for p in file_paths:
-        file_list += p.encode("utf-16-le") + b"\x00\x00"
-    file_list += b"\x00\x00"
-
-    dropfiles = struct.pack("Iiiii", 20, 0, 0, 0, 1)
-    data = dropfiles + file_list
-
-    GMEM_MOVEABLE = 0x0002
-    GMEM_ZEROINIT = 0x0040
-    hglobal = kernel32.GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, len(data))
-    if not hglobal:
-        raise OSError("GlobalAlloc failed")
-    ptr = kernel32.GlobalLock(hglobal)
-    if not ptr:
-        kernel32.GlobalFree(hglobal)
-        raise OSError("GlobalLock failed")
-    ctypes.memmove(ptr, data, len(data))
-    kernel32.GlobalUnlock(hglobal)
-
-    import win32clipboard
-    win32clipboard.OpenClipboard(None)
-    win32clipboard.EmptyClipboard()
-    win32clipboard.SetClipboardData(win32clipboard.CF_HDROP, hglobal)
-    win32clipboard.CloseClipboard()
-
-
-@app.route("/api/tasks/<task_id>/copy_to_clipboard", methods=["POST"])
-def copy_task_images_to_clipboard(task_id):
-    """将任务图片写入系统剪贴板（CF_HDROP 文件列表）"""
-    data = request.get_json()
-    img_type = data.get("type", "source")
-
-    task_data = load_task_data(task_id)
-    cards = task_data.get("cards", [])
-
-    paths = []
-    for c in cards:
-        p = None
-        if img_type == "source":
-            p = c.get("source_image")
-        else:
-            p = c.get("generated_final") or c.get("generated_draft")
-        if p:
-            full = os.path.join(task_folder(task_id), p).replace("/", "\\")
-            if os.path.exists(full):
-                paths.append(full)
-
-    if not paths:
-        return jsonify({"error": "没有可复制的图片"}), 400
-
-    try:
-        _copy_files_to_clipboard(paths)
-        return jsonify({"copied": len(paths)})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route("/api/tasks/<task_id>/compress_images", methods=["POST"])
-def compress_task_images(task_id):
-    """批量压缩任务 generated 目录中所有大于 1.5MB 的图片"""
-    compressed_count = 0
-    error_count = 0
-    total_size_before = 0
-    total_size_after = 0
-
-    gen_dir = os.path.join(task_folder(task_id), "generated")
-    if not os.path.exists(gen_dir):
-        return jsonify({
-            "success": True,
-            "compressed_count": 0,
-            "error_count": 0,
-            "total_size_before": 0,
-            "total_size_after": 0,
-            "saved_bytes": 0
-        })
-
-    for fname in os.listdir(gen_dir):
-        fpath = os.path.join(gen_dir, fname)
-        if not os.path.isfile(fpath):
-            continue
-        ext = os.path.splitext(fname)[1].lower()
-        if ext not in ('.jpg', '.jpeg', '.png', '.webp', '.bmp', '.gif'):
-            continue
-        try:
-            with open(fpath, "rb") as f:
-                original_data = f.read()
-            size_before = len(original_data)
-            if size_before <= 1.5 * 1024 * 1024:
-                continue  # 已经小于 1.5MB，跳过
-            compressed_data, new_mime = compress_image(original_data)
-            size_after = len(compressed_data)
-            if size_after < size_before:
-                # 保存压缩后的图片（统一转为 jpg）
-                new_fname = os.path.splitext(fname)[0] + ".jpg"
-                new_fpath = os.path.join(gen_dir, new_fname)
-                with open(new_fpath, "wb") as f:
-                    f.write(compressed_data)
-                # 如果文件名变了，删除旧文件
-                if new_fname != fname:
-                    os.remove(fpath)
-                total_size_before += size_before
-                total_size_after += size_after
-                compressed_count += 1
-        except Exception as e:
-            error_count += 1
-            continue
-
-    return jsonify({
-        "success": True,
-        "compressed_count": compressed_count,
-        "error_count": error_count,
-        "total_size_before": total_size_before,
-        "total_size_after": total_size_after,
-        "saved_bytes": total_size_before - total_size_after
-    })
-
-@app.route("/api/tasks/<task_id>/open_folder", methods=["POST"])
-def open_folder(task_id):
-    folder = os.path.join(task_folder(task_id), "generated")
-    if not os.path.exists(folder):
-        os.makedirs(folder, exist_ok=True)
-    if os.name == 'nt':
-        os.startfile(folder)
-    else:
-        if sys.platform == 'darwin':
-            subprocess.Popen(['open', folder])
-        else:
-            subprocess.Popen(['xdg-open', folder])
-    return jsonify({"status": "opened", "folder": folder})
-
-# ==================== 采集产品模块 API ====================
-
-import threading
-import uuid as uuid_lib
-import asyncio
-
-# 采集任务状态存储
-collect_tasks = {}  # task_id -> {status, progress, message, result}
-COLLECT_TASKS_FILE = os.path.join(DATA_ROOT, "collect_tasks.json")
 
 # ==================== 正式产品管理 ====================
 PRODUCTS_FILE = os.path.join(DATA_ROOT, "products.json")

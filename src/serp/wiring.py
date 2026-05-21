@@ -175,5 +175,149 @@ def create_product_facade(data_root: str, settings_facade, event_bus):
     return facade
 
 
+def create_imagetask_facade(data_root: str, settings_facade, event_bus):
+    """装配 ImageTask 域：仓储 → 事件总线 → 应用服务"""
+    from src.serp.imagetask.domain.events import (
+        TaskCreated,
+        TaskDeleted,
+        TaskUpdated,
+        ImagesGenerated,
+        ImagesSaved,
+        ImagesCompressed,
+        SourceImagesUploaded,
+        ReferenceImageUploaded,
+        ImagesImported,
+        ImagesSavedToProduct,
+        ImagesCopiedToClipboard,
+        TaskFolderOpened,
+    )
+    from src.serp.imagetask.infrastructure.json_repositories import JsonImageTaskRepository
+    from src.serp.imagetask.infrastructure import handlers
+    from src.serp.imagetask.application.commands import ImageTaskApplicationService
+
+    # 事件订阅
+    event_bus.subscribe(TaskCreated, handlers.log_task_created)
+    event_bus.subscribe(TaskDeleted, handlers.log_task_deleted)
+    event_bus.subscribe(TaskUpdated, handlers.log_task_updated)
+    event_bus.subscribe(ImagesGenerated, handlers.log_images_generated)
+    event_bus.subscribe(ImagesSaved, handlers.log_images_saved)
+    event_bus.subscribe(ImagesCompressed, handlers.log_images_compressed)
+    event_bus.subscribe(SourceImagesUploaded, handlers.log_source_images_uploaded)
+    event_bus.subscribe(ReferenceImageUploaded, handlers.log_reference_image_uploaded)
+    event_bus.subscribe(ImagesImported, handlers.log_images_imported)
+    event_bus.subscribe(ImagesSavedToProduct, handlers.log_images_saved_to_product)
+    event_bus.subscribe(ImagesCopiedToClipboard, handlers.log_images_copied_to_clipboard)
+    event_bus.subscribe(TaskFolderOpened, handlers.log_task_folder_opened)
+
+    tasks_file = os.path.join(data_root, "tasks.json")
+    products_file = os.path.join(data_root, "products.json")
+    task_repo = JsonImageTaskRepository(tasks_file, data_root)
+
+    facade = ImageTaskApplicationService(
+        task_repo=task_repo,
+        settings_facade=settings_facade,
+        event_bus=event_bus,
+        data_root=data_root,
+        products_file=products_file,
+    )
+
+    logger.info("ImageTask domain wired: repos=1")
+    return facade
+
+
+def create_collect_facade(data_root: str, settings_facade, event_bus):
+    """装配 Collect 域：仓储 → 事件总线 → 应用服务"""
+    from src.serp.collect.domain.events import (
+        TaskStarted,
+        TaskCompleted as TaskCompletedEvent,
+        TaskFailed as TaskFailedEvent,
+        TaskDeleted as TaskDeletedEvent,
+        ProductSavedFromCollect,
+    )
+    from src.serp.collect.infrastructure.json_repositories import JsonCollectTaskRepository
+    from src.serp.collect.infrastructure import handlers
+    from src.serp.collect.application.commands import CollectApplicationService
+
+    # 事件订阅
+    event_bus.subscribe(TaskStarted, handlers.log_task_started)
+    event_bus.subscribe(TaskCompletedEvent, handlers.log_task_completed)
+    event_bus.subscribe(TaskFailedEvent, handlers.log_task_failed)
+    event_bus.subscribe(TaskDeletedEvent, handlers.log_task_deleted)
+    event_bus.subscribe(ProductSavedFromCollect, handlers.log_product_saved_from_collect)
+
+    tasks_file = os.path.join(data_root, "collect_tasks.json")
+    task_repo = JsonCollectTaskRepository(tasks_file)
+
+    facade = CollectApplicationService(
+        task_repo=task_repo,
+        settings_facade=settings_facade,
+        event_bus=event_bus,
+        data_root=data_root,
+    )
+
+    logger.info("Collect domain wired: repos=1")
+    return facade
+
+
+def create_listing_facade(data_root: str, settings_facade, product_facade, ozon_category_facade, event_bus):
+    """装配 Listing 域：仓储 → API/LLM 客户端 → 应用服务 → 蓝图"""
+    from src.serp.listing.domain.events import (
+        DraftSaved,
+        DraftDeleted,
+        ListingSimulated,
+        ProductImportedToOzon,
+        ProductsSynced,
+    )
+    from src.serp.listing.infrastructure.json_repositories import JsonListingDraftRepository
+    from src.serp.listing.infrastructure.ozon_api import OzonApiClient
+    from src.serp.listing.infrastructure.autofill_client import DeepSeekAutoFillClient
+    from src.serp.listing.infrastructure import handlers
+    from src.serp.listing.application.commands import ListingApplicationService
+    from src.serp.settings.infrastructure.json_repositories import JsonStoreRepository
+
+    # 事件订阅
+    event_bus.subscribe(DraftSaved, handlers.log_draft_saved)
+    event_bus.subscribe(DraftDeleted, handlers.log_draft_deleted)
+    event_bus.subscribe(ListingSimulated, handlers.log_listing_simulated)
+    event_bus.subscribe(ProductImportedToOzon, handlers.log_product_imported)
+    event_bus.subscribe(ProductsSynced, handlers.log_products_synced)
+
+    # 仓储
+    listings_dir = os.path.join(data_root, "listings")
+    draft_repo = JsonListingDraftRepository(listings_dir)
+
+    # Ozon API 凭证获取器（使用 StoreRepository 读取原始凭证）
+    store_repo = JsonStoreRepository(os.path.join(data_root, "stores.json"))
+
+    def _get_ozon_credentials(store_id: str) -> tuple[str, str]:
+        """从 StoreRepository 获取原始（未掩码）Ozon API 凭证"""
+        store = store_repo.find_by_id(store_id)
+        if store is None:
+            return "", ""
+        return store.client_id or "", store.api_key or ""
+
+    # API 客户端
+    ozon_api = OzonApiClient(_get_ozon_credentials)
+
+    # DeepSeek 自动填充客户端
+    autofill_client = DeepSeekAutoFillClient.resolve(settings_facade, "ozon_attribute_fill")
+
+    # 应用服务
+    facade = ListingApplicationService(
+        draft_repo=draft_repo,
+        ozon_api=ozon_api,
+        autofill_client=autofill_client,
+        settings_facade=settings_facade,
+        product_facade=product_facade,
+        ozon_category_facade=ozon_category_facade,
+        event_bus=event_bus,
+        data_root=data_root,
+    )
+
+    logger.info("Listing domain wired: ozon_api=%s, autofill=%s",
+                ozon_api.__class__.__name__, autofill_client.model)
+    return facade
+
+
 def create_registry() -> FacadeRegistry:
     return FacadeRegistry()
