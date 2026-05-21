@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.13";
+  var SERP_EXTENSION_VERSION = "3.2.14";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -84,13 +84,18 @@
     "#serp-toolbar .serp-tb-btn .tb-label{font-size:10px;line-height:1;}",
     "#serp-toolbar .serp-tb-btn.has-product{border-color:#52c41a;background:#f6ffed;color:#389e0d;}",
     "/* 产品信息区 — 横向时放在按钮行下方 */",
-    "#serp-toolbar .serp-product-info{display:none;position:absolute;top:100%;left:0;margin-top:6px;background:#fff;border-radius:8px;padding:6px 8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);width:150px;}",
+    "#serp-toolbar .serp-product-info{display:none;position:absolute;top:100%;left:0;margin-top:6px;background:#fff;border-radius:8px;padding:6px 8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);width:220px;}",
     "#serp-toolbar .serp-product-info.visible{display:block;}",
     "#serp-toolbar .serp-product-info .pi-label{font-size:9px;color:#999;margin-bottom:2px;}",
     "#serp-toolbar .serp-product-info .pi-skc{font-size:11px;font-weight:600;color:#428bca;word-break:break-all;}",
     "#serp-toolbar .serp-product-info .pi-title{font-size:10px;color:#666;word-break:break-word;max-height:40px;overflow:hidden;line-height:1.3;margin-top:2px;}",
     "#serp-toolbar .serp-product-info .pi-clear{font-size:10px;color:#ff4d4f;cursor:pointer;margin-top:4px;text-align:center;border:1px solid #ffccc7;border-radius:3px;padding:2px 6px;transition:all 0.2s;}",
     "#serp-toolbar .serp-product-info .pi-clear:hover{background:#fff1f0;}",
+    "#serp-toolbar .serp-product-info .pi-price-toggle{font-size:10px;color:#428bca;cursor:pointer;margin-top:5px;border:1px solid #d6e4ff;border-radius:3px;padding:3px 6px;text-align:center;background:#f8fbff;}",
+    "#serp-toolbar .serp-product-info .pi-price-detail{display:none;margin-top:5px;padding:5px 6px;border:1px solid #eef1f5;border-radius:4px;background:#fafafa;font-size:10px;color:#555;line-height:1.55;}",
+    "#serp-toolbar .serp-product-info .pi-price-detail.visible{display:block;}",
+    "#serp-toolbar .serp-product-info .pi-price-row{display:flex;justify-content:space-between;gap:8px;}",
+    "#serp-toolbar .serp-product-info .pi-price-row strong{color:#333;}",
     "/* ===== 产品选择弹窗 ===== */",
     "#serp-modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000000;align-items:center;justify-content:center;}",
     "#serp-modal-overlay.active{display:flex;}",
@@ -227,6 +232,8 @@
       '<div class="pi-label">已选产品</div>' +
       '<div class="pi-skc" id="serp-pi-skc"></div>' +
       '<div class="pi-title" id="serp-pi-title"></div>' +
+      '<div class="pi-price-toggle" id="serp-pi-price-toggle">价格公式 ▾</div>' +
+      '<div class="pi-price-detail" id="serp-pi-price-detail"></div>' +
       '<div class="pi-clear" id="serp-pi-clear">清除</div>' +
     '</div>';
   document.body.appendChild(toolbar);
@@ -335,6 +342,8 @@
   var productInfo = document.getElementById("serp-product-info");
   var piSkc = document.getElementById("serp-pi-skc");
   var piTitle = document.getElementById("serp-pi-title");
+  var piPriceToggle = document.getElementById("serp-pi-price-toggle");
+  var piPriceDetail = document.getElementById("serp-pi-price-detail");
   var piClear = document.getElementById("serp-pi-clear");
   var hintToggle = document.getElementById("serp-hint-toggle");
   var hintPanel = document.getElementById("serp-hint-panel");
@@ -546,13 +555,65 @@
       productInfo.classList.add("visible");
       piSkc.textContent = selectedProduct.skc || "";
       piTitle.textContent = selectedProduct.title || "未命名产品";
+      if (piPriceDetail) piPriceDetail.innerHTML = buildPriceFormulaHtml(selectedProduct);
       btnSelect.classList.add("has-product");
     } else {
       productInfo.classList.remove("visible");
       piSkc.textContent = "";
       piTitle.textContent = "";
+      if (piPriceDetail) {
+        piPriceDetail.classList.remove("visible");
+        piPriceDetail.innerHTML = "";
+      }
       btnSelect.classList.remove("has-product");
     }
+  }
+
+  function parseMoney(value) {
+    if (value === null || value === undefined) return null;
+    var raw = String(value).trim();
+    if (!raw) return null;
+    var currency = "";
+    var m = raw.match(/^(HKD|USD|EUR|RUB|CNY|GBP|JPY|[$¥€₽£])\s*/i);
+    if (m) {
+      currency = m[1].toUpperCase();
+      raw = raw.slice(m[0].length);
+    }
+    m = raw.match(/\s*(HKD|USD|EUR|RUB|CNY|GBP|JPY|[$¥€₽£])$/i);
+    if (m) {
+      currency = m[1].toUpperCase();
+      raw = raw.slice(0, -m[0].length);
+    }
+    var num = parseFloat(raw.replace(/[^\d.]/g, ""));
+    if (isNaN(num)) return null;
+    return { value: num, currency: currency || "CNY" };
+  }
+
+  function toCny(money) {
+    if (!money) return null;
+    var rates = { HKD: 0.92, USD: 7.25, EUR: 7.85, RUB: 0.078, GBP: 9.2, JPY: 0.048, CNY: 1, "¥": 1, "$": 7.25, "€": 7.85, "₽": 0.078, "£": 9.2 };
+    return money.value * (rates[money.currency] || 1);
+  }
+
+  function buildPriceFormulaHtml(product) {
+    var manual = product.manual_data || {};
+    var pd = product.product_data || {};
+    var cost = parseFloat(manual.cost_price || 0) || 0;
+    var sourceMoney = parseMoney(product.price || pd.price || "");
+    var sourceCny = toCny(sourceMoney);
+    var targetProfitRate = 0.30;
+    var baseCost = cost || sourceCny || 0;
+    var suggested = baseCost ? baseCost / (1 - targetProfitRate) : 0;
+    var profit = suggested - baseCost;
+    var sourceText = sourceMoney ? (sourceMoney.currency + " " + sourceMoney.value.toFixed(2)) : "--";
+    return [
+      '<div class="pi-price-row"><span>采集价</span><strong>' + sourceText + '</strong></div>',
+      '<div class="pi-price-row"><span>折算CNY</span><strong>' + (sourceCny ? "¥" + sourceCny.toFixed(2) : "--") + '</strong></div>',
+      '<div class="pi-price-row"><span>实测成本</span><strong>' + (cost ? "¥" + cost.toFixed(2) : "--") + '</strong></div>',
+      '<div class="pi-price-row"><span>目标利润率</span><strong>30%</strong></div>',
+      '<div class="pi-price-row"><span>建议售价</span><strong>' + (suggested ? "¥" + suggested.toFixed(2) : "--") + '</strong></div>',
+      '<div class="pi-price-row"><span>预计利润</span><strong>' + (profit ? "¥" + profit.toFixed(2) : "--") + '</strong></div>'
+    ].join("");
   }
 
   // ==================== 店铺检测 ====================
@@ -1487,7 +1548,15 @@
       [/purple|violet|фиолет|紫/, ["фиолетовый", "紫色"]],
       [/orange|оранж|橙/, ["оранжевый", "橙色"]],
       [/gold|золот|金/, ["золотой", "金色"]],
-      [/silver|серебр|银/, ["серебристый", "银色"]]
+      [/silver|серебр|银/, ["серебристый", "银色"]],
+      [/fuchsia|фукс|玫红|紫红/, ["фуксия", "амарантово-розовый", "розовый", "фиолетовый", "粉紫红色"]],
+      [/khaki|хаки|卡其/, ["хаки", "бежевый", "коричневый", "卡其色", "米色"]],
+      [/mauve|лилов|藕|淡紫/, ["лиловый", "фиолетовый", "розовый", "紫色"]],
+      [/off[-\s]?white|cream|ivory|молоч|слонов|米白|象牙/, ["молочный", "слоновая кость", "белый", "античный белый", "米白色"]],
+      [/burgundy|бордов|wine|酒红/, ["бордовый", "красный", "酒红色", "红色"]],
+      [/cherry|вишн|樱桃/, ["вишневый", "красный", "бордовый", "红色"]],
+      [/leopard|леопард|豹/, ["леопардовый", "коричневый", "бежевый", "棕色"]],
+      [/olive|олив|橄榄/, ["оливковый", "зеленый", "хаки", "绿色"]]
     ];
     rules.forEach(function (rule) {
       if (rule[0].test(s)) candidates = candidates.concat(rule[1]);
@@ -1512,7 +1581,7 @@
       var candidate = candidates[ci];
       trigger.click();
       await sleep(350);
-      var panel = widget.querySelector(".sku-checkbox-panel");
+      var panel = widget.querySelector(".sku-checkbox-panel") || document.querySelector(".sku-checkbox-panel");
       if (!panel) continue;
       var search = panel.querySelector('input[name="skuMutiSelect"], input[placeholder="搜索"], input');
       if (search) {
@@ -1602,8 +1671,9 @@
           var variant = variantValues[i];
           if (!variant) return;
           var name = variant.name || variant.variantName || "";
+          var selectedColor = (row.querySelector(".select-main") || {}).textContent || "";
           var textInput = row.querySelector('input[type="text"]');
-          if (textInput && name && !textInput.value) {
+          if (textInput && name && selectedColor.trim() && !textInput.value) {
             textInput.focus();
             var ns = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
             ns.call(textInput, name);
@@ -2544,15 +2614,17 @@
   function precomputeDeterministicValues(formFields, productData, manualData) {
     var deterministic = {};  // fieldIndex -> value
     var pd = (productData && productData.product_details) || {};
+    var effectiveManual = normalizeManualDataForFill(manualData || {});
 
     formFields.forEach(function(f) {
       var label = (f.label || "").toLowerCase();
       var value = null;
+      var dims = parseSizeSpecCm(effectiveManual.effective_size_spec);
 
       // Weight with unit conversion
       if (label.indexOf("重量") !== -1 || label.indexOf("вес") !== -1 || label.indexOf("weight") !== -1) {
-        if (manualData && manualData.weight_g && String(manualData.weight_g).trim()) {
-          value = String(manualData.weight_g).trim();
+        if (effectiveManual.effective_weight_g) {
+          value = String(effectiveManual.effective_weight_g).trim();
         } else if (pd.weight) {
           var w = parseFloat(pd.weight);
           if (!isNaN(w)) {
@@ -2566,15 +2638,18 @@
 
       // Length
       if ((label.indexOf("长") !== -1 || label.indexOf("длина") !== -1 || label.indexOf("length") !== -1) && !(label.indexOf("波长") !== -1)) {
-        if (pd.length) value = _convertDimension(pd.length, pd.dimension_unit);
+        if (dims.length) value = dims[0];
+        else if (pd.length) value = _convertDimension(pd.length, pd.dimension_unit);
       }
       // Width
       if (label.indexOf("宽") !== -1 || label.indexOf("ширина") !== -1 || label.indexOf("width") !== -1) {
-        if (pd.width) value = _convertDimension(pd.width, pd.dimension_unit);
+        if (dims.length > 1) value = dims[1];
+        else if (pd.width) value = _convertDimension(pd.width, pd.dimension_unit);
       }
       // Height
       if (label.indexOf("高") !== -1 || label.indexOf("высота") !== -1 || label.indexOf("height") !== -1) {
-        if (pd.height) value = _convertDimension(pd.height, pd.dimension_unit);
+        if (dims.length > 2) value = dims[2];
+        else if (pd.height) value = _convertDimension(pd.height, pd.dimension_unit);
       }
 
       // Country of origin — require specific context to avoid false matches
@@ -2603,12 +2678,32 @@
     return deterministic;
   }
 
+  function normalizeManualDataForFill(manualData) {
+    var m = Object.assign({}, manualData || {});
+    var measuredWeight = String(m.weight_g || "").trim();
+    var collectedWeight = String(m.collected_weight_g || "").trim();
+    var measuredSize = String(m.size_spec || "").trim();
+    var collectedSize = String(m.collected_size_spec || "").trim();
+    m.effective_weight_g = measuredWeight || collectedWeight;
+    m.effective_size_spec = measuredSize || collectedSize;
+    m.effective_weight_source = measuredWeight ? "measured" : (collectedWeight ? "collected" : "");
+    m.effective_size_source = measuredSize ? "measured" : (collectedSize ? "collected" : "");
+    if (m.cost_price === undefined || m.cost_price === null) m.cost_price = "";
+    return m;
+  }
+
   function _convertDimension(val, unit) {
     var v = parseFloat(val);
     if (isNaN(v)) return String(val);
     var u = (unit || "").toLowerCase();
     if (u.indexOf("in") !== -1) return String(Math.round(v * 2.54 * 10) / 10);
     return String(v);
+  }
+
+  function parseSizeSpecCm(value) {
+    var s = String(value || "");
+    if (!s) return [];
+    return (s.match(/\d+(?:\.\d+)?/g) || []).slice(0, 3);
   }
 
   async function verifyAndRetry(index, expectedValue) {
@@ -2695,7 +2790,7 @@
       skc: selectedProduct.skc,
       product_title: selectedProduct.title,
       product_data: selectedProduct.product_data || {},
-      manual_data: selectedProduct.manual_data || {},
+      manual_data: normalizeManualDataForFill(selectedProduct.manual_data || {}),
       form_fields: llmFields
     };
     if (Object.keys(customPrompts).length > 0) {
@@ -2754,7 +2849,7 @@
       setProgress(75);
 
       // Layer 1: Pre-fill deterministic values (before LLM mappings)
-      var deterministicMap = precomputeDeterministicValues(formFields, selectedProduct.product_data, selectedProduct.manual_data);
+      var deterministicMap = precomputeDeterministicValues(formFields, selectedProduct.product_data, normalizeManualDataForFill(selectedProduct.manual_data || {}));
       var detIdxSet = {};
       var detCount = 0;
       for (var detIdxStr in deterministicMap) {
@@ -2894,6 +2989,12 @@
   document.getElementById("serp-btn-clear-form").addEventListener("click", function () { clearAllFormFields(); });
   btnSendHtml.addEventListener("click", function () { captureAndSendHTML(); });
   piClear.addEventListener("click", function () { selectedProduct = null; updateProductUI(); showToast("已清除产品选择", "info"); });
+  if (piPriceToggle && piPriceDetail) {
+    piPriceToggle.addEventListener("click", function () {
+      piPriceDetail.classList.toggle("visible");
+      piPriceToggle.textContent = piPriceDetail.classList.contains("visible") ? "价格公式 ▴" : "价格公式 ▾";
+    });
+  }
   hintToggle.addEventListener("click", function () {
     hintOverlay.classList.add("active");
     hintToggle.classList.add("active");

@@ -2491,6 +2491,20 @@ def _validate_specs_review(data):
     return True, normalized, ""
 
 
+def _effective_manual_data_for_fill(manual_data):
+    manual = dict(manual_data or {}) if isinstance(manual_data, dict) else {}
+    measured_weight = str(manual.get("weight_g") or "").strip()
+    collected_weight = str(manual.get("collected_weight_g") or "").strip()
+    measured_size = str(manual.get("size_spec") or "").strip()
+    collected_size = str(manual.get("collected_size_spec") or "").strip()
+    manual["effective_weight_g"] = measured_weight or collected_weight
+    manual["effective_size_spec"] = measured_size or collected_size
+    manual["effective_weight_source"] = "measured" if measured_weight else ("collected" if collected_weight else "")
+    manual["effective_size_source"] = "measured" if measured_size else ("collected" if collected_size else "")
+    manual.setdefault("cost_price", "")
+    return manual
+
+
 @app.route("/api/products/<skc>/collect_specs", methods=["POST"])
 def collect_product_specs(skc):
     """Use structured LLM output and program validation to cache collected weight/size."""
@@ -2819,7 +2833,7 @@ def auto_fill_analyze():
     skc = data.get("skc", "")
     product_title = data.get("product_title", "")
     product_data = data.get("product_data", {})
-    manual_data = data.get("manual_data", {})
+    manual_data = _effective_manual_data_for_fill(data.get("manual_data", {}))
     form_fields = data.get("form_fields", [])
     custom_prompts = data.get("custom_prompts", {})
 
@@ -3066,7 +3080,8 @@ def auto_fill_analyze():
 - 尺寸: 1 in ≈ 2.54cm。一律填写厘米(cm)的纯数值
 - 若字段标签/placeholder已含单位(如"重量, г")，只填数值不含单位
 - 若产品规格已是公制，直接使用
-- 优先使用人工登记数据(manual_data)中的重量和尺寸
+- 优先使用 manual_data.effective_weight_g / effective_size_spec；它们已按“实测优先，无实测用采集”的规则整理
+- manual_data.cost_price 是产品实测成本价(CNY)，用于价格/利润判断，不能直接当作售价
 
 请严格按照以下 JSON 格式返回，不要包含其他内容：
 {"mappings": [{"index": <序号>, "value": "..."}, ...]}
@@ -4968,15 +4983,20 @@ def _prefill_deterministic(manual_data, product_data):
     hints = {}
 
     if manual_data:
-        weight = manual_data.get("weight_g", "")
+        weight = manual_data.get("effective_weight_g") or manual_data.get("weight_g", "")
         if weight:
             hints["weight_g"] = str(weight)
-        size_spec = manual_data.get("size_spec", "")
+            hints["weight_source"] = str(manual_data.get("effective_weight_source", "measured"))
+        size_spec = manual_data.get("effective_size_spec") or manual_data.get("size_spec", "")
         if size_spec:
             hints["size_spec"] = str(size_spec)
+            hints["size_source"] = str(manual_data.get("effective_size_source", "measured"))
         spec = manual_data.get("spec", "")
         if spec:
             hints["spec"] = str(spec)
+        cost_price = manual_data.get("cost_price", "")
+        if cost_price:
+            hints["cost_price_cny"] = str(cost_price)
 
     if product_data:
         attrs = product_data.get("attributes", {}) or {}
