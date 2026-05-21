@@ -148,13 +148,17 @@ class ListingApplicationService(ListingFacade):
         if not category_id:
             return {"success": False, "error": "请先匹配产品品类"}
 
-        # 格式化属性
+        # 格式化属性（过滤掉 Rich Content 11254，格式不合法）
         ozon_attrs = self._format_ozon_attributes(attrs)
+        ozon_attrs = [a for a in ozon_attrs if a.get("id") != 11254]
 
         # 图片和视频
         from ..domain.services import _extract_public_image_urls
         base_image_urls = _extract_public_image_urls(images, 10)
         base_video_urls = [v.get("url", "") for v in videos if v.get("url", "").startswith("http")]
+
+        # 从产品库提取重量和尺寸，填写 Ozon item 层字段
+        weight, depth, width, height = self._extract_item_dimensions(skc)
 
         # 构建 items
         items = self._build_ozon_items(
@@ -163,6 +167,7 @@ class ListingApplicationService(ListingFacade):
             description=description, ozon_attrs=ozon_attrs,
             base_image_urls=base_image_urls, base_video_urls=base_video_urls,
             images=images,
+            weight=weight, depth=depth, width=width, height=height,
         )
 
         if not items:
@@ -332,6 +337,90 @@ class ListingApplicationService(ListingFacade):
             "message": f"同步完成：{matched} 个匹配，{updated} 个状态更新，{new_skus} 个新SKU待注册",
         }
 
+    # ── Ozon 导入状态查询 ──
+
+    def check_import_status(self, store_id: str, task_id: str) -> dict:
+        """查询 Ozon 导入任务状态，按 offer_id 分组返回 errors/warnings"""
+        result, err = self._ozon_api.import_info(store_id, task_id)
+        if err:
+            return {"success": False, "error": f"查询 Ozon 导入状态失败: {err}"}
+
+        raw_items = (result or {}).get("result", {}).get("items", [])
+        grouped: dict[str, dict] = {}
+        for item in raw_items:
+            offer_id = item.get("offer_id", "")
+            if not offer_id:
+                continue
+            errors = item.get("errors") or []
+            translated_errors: list[dict] = []
+            translated_warnings: list[dict] = []
+            for e in errors:
+                code = e.get("code", "")
+                message = e.get("message", "")
+                level = e.get("level", "error")  # error / warning
+                cn_desc = self._translate_ozon_error(code, message)
+                entry = {
+                    "code": code,
+                    "message": message,
+                    "level": level,
+                    "description_cn": cn_desc,
+                }
+                if level == "warning":
+                    translated_warnings.append(entry)
+                else:
+                    translated_errors.append(entry)
+            grouped[offer_id] = {
+                "offer_id": offer_id,
+                "product_id": item.get("product_id", 0),
+                "status": item.get("status", ""),
+                "errors": translated_errors,
+                "warnings": translated_warnings,
+                "error_count": len(translated_errors),
+                "warning_count": len(translated_warnings),
+            }
+
+        total_errors = sum(g["error_count"] for g in grouped.values())
+        total_warnings = sum(g["warning_count"] for g in grouped.values())
+        all_imported = all(g["status"] == "imported" for g in grouped.values()) if grouped else False
+
+        return {
+            "success": True,
+            "task_id": task_id,
+            "store_id": store_id,
+            "total_items": len(grouped),
+            "total_errors": total_errors,
+            "total_warnings": total_warnings,
+            "all_imported": all_imported,
+            "items": list(grouped.values()),
+            "summary": (
+                f"共 {len(grouped)} 个商品: "
+                + (f"全部导入成功" if all_imported and total_errors == 0
+                   else f"{total_errors} 个阻断错误, {total_warnings} 个警告")
+            ),
+        }
+
+    @staticmethod
+    def _translate_ozon_error(code: str, message: str = "") -> str:
+        """把 Ozon 错误码翻译成中文修复建议"""
+        mapping = {
+            "error_attribute_values_out_of_range": "属性值不在字典可选范围内，请使用 Ozon 字典值（dictionary_value_id）替代字符串",
+            "invalid_rich_content_json": "Rich Content JSON 格式不符合 Ozon 模板规范，当前版本请移除该属性后再提交",
+            "missing_dimension": "缺少商品重量或尺寸信息（weight/depth/width/height），请在 item 层补充",
+            "error_attribute_value_not_found": "属性值在 Ozon 字典中未找到，请查询正确字典值后提交",
+            "error_attribute_required": "缺少必填属性，请补全该属性后再提交",
+            "error_offer_id_already_exists": "offer_id 已存在，将作为增量更新处理",
+            "error_validation": f"字段校验失败: {message}" if message else "字段校验失败，请检查提交数据格式",
+            "error_category_not_found": "类目 ID 无效或不存在",
+            "error_price_invalid": "价格格式无效",
+            "error_image_url_invalid": "图片 URL 无效或不可访问",
+        }
+        if code in mapping:
+            return mapping[code]
+        # 通用回退: 展示原始 code + message
+        if message:
+            return f"{code}: {message}"
+        return f"未知错误 ({code})"
+
     # ==================== AI 填充 ====================
 
     def analyze_for_autofill(self, data: dict) -> dict:
@@ -436,6 +525,70 @@ class ListingApplicationService(ListingFacade):
                 return product
         return None
 
+    def _extract_item_dimensions(self, skc: str) -> tuple[int | None, int | None, int | None, int | None]:
+        """从产品库提取重量(g)和尺寸(mm)，用于 Ozon item 层字段。
+        返回: (weight_g, depth_mm, width_mm, height_mm)
+        """
+        product = self._find_product_by_skc(skc)
+        if not product:
+            return None, None, None, None
+
+        manual = product.get("manual_data", {}) or {}
+
+        # 重量(g): 优先 manual_data.weight_g, 其次 collected_weight_g
+        weight = self._parse_weight_grams(manual.get("weight_g", ""))
+        if weight is None:
+            weight = self._parse_weight_grams(manual.get("collected_weight_g", ""))
+
+        # 尺寸(mm): 优先 collected_size_cm, 转为 mm
+        depth, width, height = self._parse_size_mm(manual)
+
+        return weight, depth, width, height
+
+    @staticmethod
+    def _parse_weight_grams(raw: str) -> int | None:
+        """解析重量字符串为克数，如 '200g', '200', '0.2 Pounds'"""
+        if not raw:
+            return None
+        text = str(raw).strip().lower()
+        # 匹配数字
+        match = re.search(r"[\d.]+", text)
+        if not match:
+            return None
+        val = float(match.group())
+        if "pound" in text or "lb" in text:
+            val = val * 453.592  # lb -> g
+        if "ounce" in text or "oz" in text:
+            val = val * 28.3495  # oz -> g
+        return int(round(val))
+
+    @staticmethod
+    def _parse_size_mm(manual: dict) -> tuple[int | None, int | None, int | None]:
+        """从 manual_data 解析尺寸，返回 (depth_mm, width_mm, height_mm)"""
+        collected = manual.get("collected_size_cm") or []
+        if isinstance(collected, list) and len(collected) >= 3:
+            try:
+                return (
+                    int(round(float(collected[0]) * 10)),
+                    int(round(float(collected[1]) * 10)),
+                    int(round(float(collected[2]) * 10)),
+                )
+            except (ValueError, TypeError):
+                pass
+        size_spec = str(manual.get("collected_size_spec", ""))
+        if size_spec:
+            nums = re.findall(r"[\d.]+", size_spec)
+            if len(nums) >= 3:
+                try:
+                    return (
+                        int(round(float(nums[0]) * 10)),
+                        int(round(float(nums[1]) * 10)),
+                        int(round(float(nums[2]) * 10)),
+                    )
+                except (ValueError, TypeError):
+                    pass
+        return None, None, None
+
     @staticmethod
     def _format_ozon_attributes(attrs: list[dict]) -> list[dict]:
         ozon_attrs: list[dict] = []
@@ -446,7 +599,10 @@ class ListingApplicationService(ListingFacade):
             if not attr_id:
                 continue
             entry: dict = {"id": int(attr_id), "values": []}
-            if attr_type == "dictionary":
+            # 字典值优先级: 显式 dictionary_value_id > 可解析为 int 的 value
+            if "dictionary_value_id" in attr and attr["dictionary_value_id"] is not None:
+                entry["values"].append({"dictionary_value_id": int(attr["dictionary_value_id"])})
+            elif attr_type == "dictionary":
                 try:
                     dict_val_id = int(value)
                     entry["values"].append({"dictionary_value_id": dict_val_id})
@@ -463,6 +619,10 @@ class ListingApplicationService(ListingFacade):
         category_id, type_id, description: str,
         ozon_attrs: list[dict], base_image_urls: list[str],
         base_video_urls: list[str], images: list,
+        weight: int | None = None,
+        depth: int | None = None,
+        width: int | None = None,
+        height: int | None = None,
     ) -> list[dict]:
         from ..domain.services import _extract_public_image_urls
 
@@ -484,6 +644,14 @@ class ListingApplicationService(ListingFacade):
                     "attributes": ozon_attrs,
                     "vat": "0",
                 }
+                if weight is not None:
+                    item["weight"] = weight
+                if depth is not None:
+                    item["depth"] = depth
+                if width is not None:
+                    item["width"] = width
+                if height is not None:
+                    item["height"] = height
                 if type_id and str(type_id) != str(category_id):
                     item["type_id"] = int(type_id)
                 if description:
@@ -509,6 +677,14 @@ class ListingApplicationService(ListingFacade):
                 "attributes": ozon_attrs,
                 "vat": "0",
             }
+            if weight is not None:
+                item["weight"] = weight
+            if depth is not None:
+                item["depth"] = depth
+            if width is not None:
+                item["width"] = width
+            if height is not None:
+                item["height"] = height
             if type_id and str(type_id) != str(category_id):
                 item["type_id"] = int(type_id)
             if description:

@@ -78,3 +78,8 @@ class OzonApiClient:
         except Exception as e:
             logger.error("[Ozon API] 异常: %s | 耗时 %.1fs", e, time.time() - t_start)
             return None, str(e)
+
+    def import_info(self, store_id: str, task_id: str) -> tuple[dict | None, str]:
+        """查询 Ozon 导入任务状态。调用 POST /v1/product/import/info"""
+        payload = {"task_id": task_id}
+        return self.call(store_id, "/v1/product/import/info", payload)

@@ -61,6 +61,18 @@ def create_listing_blueprint(facade: ListingFacade) -> Blueprint:
             return jsonify(result), 502
         return jsonify(result)
 
+    # ── Ozon 导入状态查询 ──
+
+    @bp.route("/ozon/<store_id>/listing/check-import", methods=["GET"])
+    def check_import_status(store_id):
+        task_id = request.args.get("task_id", "")
+        if not task_id:
+            return jsonify({"success": False, "error": "缺少 task_id 参数"}), 400
+        result = facade.check_import_status(store_id, task_id)
+        if result.get("success") is False:
+            return jsonify(result), 502
+        return jsonify(result)
+
     # ── AI 自动填充 ──
 
     @bp.route("/auto-fill/analyze", methods=["POST"])
