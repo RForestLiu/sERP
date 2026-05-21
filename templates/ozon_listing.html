@@ -367,6 +367,7 @@
             position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
             padding: 8px 24px; border-radius: 2px; z-index: 3000; display: none;
             font-size: 13px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            max-width: 720px; white-space: pre-line;
         }
         .message.success { background: #f6ffed; border: 1px solid #b7eb8f; color: #135200; }
         .message.error { background: #fff2f0; border: 1px solid #ffccc7; color: #a8071a; }
@@ -634,6 +635,7 @@
     <div class="btn-bar">
         <span class="auto-save-indicator" id="save-indicator" style="font-size:12px;color:#999;margin-right:8px;">💾 已保存</span>
         <button class="btn btn-orange" id="btn-save-draft">💾 保存草稿</button>
+        <button class="btn btn-orange" id="btn-simulate">模拟上架</button>
         <button class="btn btn-green" id="btn-submit">📤 发布</button>
         <button class="btn btn-danger" id="btn-cancel">✕ 取消</button>
     </div>
@@ -1239,6 +1241,7 @@
 
     const btnAutoFill = document.getElementById("btn-auto-fill");
     const btnSubmit = document.getElementById("btn-submit");
+    const btnSimulate = document.getElementById("btn-simulate");
     const btnSaveDraft = document.getElementById("btn-save-draft");
     const btnCancel = document.getElementById("btn-cancel");
     const saveIndicator = document.getElementById("save-indicator");
@@ -2867,6 +2870,91 @@
         });
     }
 
+    function collectSkuRowsForOzon() {
+        var skus = [];
+        document.querySelectorAll("#sku-table-body tr").forEach(function(tr) {
+            var skuCode = tr.dataset.sku || "";
+            var row = { name: skuCode, price: "", old_price: "", stock: "", barcode: "", images: [] };
+            tr.querySelectorAll("input").forEach(function(inp) {
+                if (inp.dataset.field === "sku_name") row.name = inp.value.trim();
+                if (inp.dataset.field === "sku_code") row.sku_code = inp.value.trim();
+                if (inp.dataset.field === "price") row.price = inp.value.trim();
+                if (inp.dataset.field === "old_price") row.old_price = inp.value.trim();
+                if (inp.dataset.field === "stock") row.stock = inp.value.trim();
+                if (inp.dataset.field === "barcode") row.barcode = inp.value.trim();
+            });
+            if (!row.name) return;
+            if (tr.dataset.skuImages) {
+                try { row.images = JSON.parse(tr.dataset.skuImages); } catch(e) {}
+            }
+            skus.push(row);
+        });
+        return skus;
+    }
+
+    function buildOzonSubmissionPayload() {
+        return {
+            skc: skc,
+            name: fieldName.value,
+            description: fieldDescription.value,
+            price: fieldPrice.value,
+            offer_id: fieldOfferId.value,
+            barcode: fieldBarcode.value,
+            category_id: selectedCategoryId,
+            type_id: selectedCategoryTypeId,
+            attributes: listingDraft.attributes,
+            images: listingDraft.images,
+            videos: listingDraft.videos || [],
+            rich_content: listingDraft.rich_content || [],
+            skus: collectSkuRowsForOzon()
+        };
+    }
+
+    function formatQualityReport(report) {
+        if (!report) return "";
+        var parts = ["评分 " + report.score + "/" + report.target_score];
+        if (report.sections && report.sections.length) {
+            parts.push(report.sections.map(function(s) {
+                return s.name + " " + s.points + "/" + s.max_points;
+            }).join("，"));
+        }
+        if (report.issues && report.issues.length) {
+            parts.push("阻断: " + report.issues.join("；"));
+        }
+        if (report.warnings && report.warnings.length) {
+            parts.push("提醒: " + report.warnings.slice(0, 5).join("；"));
+        }
+        return parts.join("\n");
+    }
+
+    if (btnSimulate) {
+        btnSimulate.addEventListener("click", async function() {
+            btnSimulate.disabled = true;
+            btnSimulate.innerHTML = '<span class="spinner"></span> 模拟中...';
+            isDirty = true;
+            await saveDraft();
+            try {
+                var res = await fetch('/api/ozon/' + storeId + '/listing/simulate', {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(buildOzonSubmissionPayload())
+                });
+                var result = await res.json();
+                var report = result.report || {};
+                listingDraft.quality_report = report;
+                listingDraft.status = report.can_submit ? "ready_to_submit" : "needs_fix";
+                markDirty();
+                await saveDraft();
+                showMsg((report.can_submit ? "✅ 可提交\n" : "❌ 需要修改\n") + formatQualityReport(report), !report.can_submit);
+            } catch (e) {
+                showMsg("❌ 模拟上架失败: " + e.message, true);
+            } finally {
+                btnSimulate.disabled = false;
+                btnSimulate.innerHTML = "模拟上架";
+            }
+        });
+    }
+
     // ===== 提交到 Ozon =====
     btnSubmit.addEventListener("click", async function() {
         if (!fieldName.value.trim()) { showMsg("❌ 产品名称不能为空", true); return; }
@@ -2882,41 +2970,7 @@
         await saveDraft();
 
         try {
-            // 收集 SKU 数据用于批量上传
-            var skus = [];
-            document.querySelectorAll("#sku-table-body tr").forEach(function(tr) {
-                var skuCode = tr.dataset.sku || "";
-                var row = { name: skuCode, price: "", old_price: "", stock: "", barcode: "", images: [] };
-                tr.querySelectorAll("input").forEach(function(inp) {
-                    if (inp.dataset.field === "sku_name") row.name = inp.value.trim();
-                    if (inp.dataset.field === "sku_code") row.sku_code = inp.value.trim();
-                    if (inp.dataset.field === "price") row.price = inp.value.trim();
-                    if (inp.dataset.field === "old_price") row.old_price = inp.value.trim();
-                    if (inp.dataset.field === "stock") row.stock = inp.value.trim();
-                    if (inp.dataset.field === "barcode") row.barcode = inp.value.trim();
-                });
-                if (!row.name) return;
-                if (tr.dataset.skuImages) {
-                    try { row.images = JSON.parse(tr.dataset.skuImages); } catch(e) {}
-                }
-                skus.push(row);
-            });
-
-            var ozonPayload = {
-                skc: skc,
-                name: fieldName.value,
-                description: fieldDescription.value,
-                price: fieldPrice.value,
-                offer_id: fieldOfferId.value,
-                barcode: fieldBarcode.value,
-                category_id: selectedCategoryId,
-                type_id: selectedCategoryTypeId,
-                attributes: listingDraft.attributes,
-                images: listingDraft.images,
-                videos: listingDraft.videos || [],
-                rich_content: listingDraft.rich_content || [],
-                skus: skus
-            };
+            var ozonPayload = buildOzonSubmissionPayload();
 
             var res = await fetch('/api/ozon/' + storeId + '/product/create', {
                 method: "POST",
@@ -2927,7 +2981,13 @@
 
             if (!result.success) {
                 var errMsg = result.error || "未知错误";
-                showMsg("❌ " + errMsg, true);
+                var reportText = result.quality_report ? "\n" + formatQualityReport(result.quality_report) : "";
+                listingDraft.status = "submit_failed";
+                listingDraft.last_error = errMsg;
+                listingDraft.quality_report = result.quality_report || listingDraft.quality_report;
+                markDirty();
+                await saveDraft();
+                showMsg("❌ " + errMsg + reportText, true);
                 btnSubmit.disabled = false;
                 btnSubmit.innerHTML = "📤 发布";
                 return;
@@ -2936,13 +2996,17 @@
             await fetch('/api/products/' + skc + '/store_status', {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ store_id: storeId, status: "已上架" })
+                body: JSON.stringify({ store_id: storeId, status: "审核中" })
             });
 
-            await fetch('/api/listings/' + skc + '/' + storeId, { method: "DELETE" });
+            listingDraft.status = "submitted";
+            listingDraft.ozon_task_id = result.task_id || "";
+            listingDraft.quality_report = result.quality_report || listingDraft.quality_report;
+            listingDraft.last_submit_result = result;
+            markDirty();
+            await saveDraft();
 
             showMsg("✅ " + (result.message || "产品已成功提交到 Ozon！"));
-            setTimeout(function() { window.close(); }, 3000);
         } catch (e) {
             showMsg("❌ 提交失败: " + e.message, true);
         } finally {

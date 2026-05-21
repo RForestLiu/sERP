@@ -5302,6 +5302,279 @@ SKC: {skc}
 
 # ==================== Ozon 产品创建 API ====================
 
+OZON_LISTING_SCORE_TARGET = 80
+
+
+def _to_float(value, default=0.0):
+    try:
+        if value is None:
+            return default
+        text = str(value).strip().replace(",", ".")
+        if not text:
+            return default
+        match = re.search(r"-?\d+(?:\.\d+)?", text)
+        return float(match.group(0)) if match else default
+    except Exception:
+        return default
+
+
+def _is_public_product_image_url(url):
+    if not isinstance(url, str):
+        return False
+    value = url.strip()
+    low = value.lower()
+    if not low.startswith(("http://", "https://")):
+        return False
+    if low.endswith(".svg") or "sprite" in low or "aicid=community" in low:
+        return False
+    if any(token in low for token in ("_ss64_", "_us40_", "_uc154", "_sr89", "_sr166", "_ul165", "_ul330", "_ul495")):
+        return False
+    if not any(ext in low for ext in (".jpg", ".jpeg", ".png", ".webp")):
+        return False
+    return True
+
+
+def _extract_public_image_urls(images, limit=10):
+    urls = []
+    seen = set()
+    for img in images or []:
+        url = img.get("url", "") if isinstance(img, dict) else str(img)
+        if not _is_public_product_image_url(url):
+            continue
+        if url in seen:
+            continue
+        seen.add(url)
+        urls.append(url)
+        if len(urls) >= limit:
+            break
+    return urls
+
+
+def _find_product_by_skc(skc):
+    if not skc:
+        return None
+    try:
+        products_data = _load_products()
+    except Exception:
+        return None
+    for product in products_data.get("产品列表", []) + products_data.get("浜у搧鍒楄〃", []):
+        if product.get("skc") == skc:
+            return product
+    return None
+
+
+def _default_skus_from_product(skc, price):
+    product = _find_product_by_skc(skc)
+    if not product:
+        return []
+    result = []
+    default_price = str(price or product.get("price") or "")
+    for sku in product.get("skus") or []:
+        result.append({
+            "name": sku,
+            "sku_code": sku,
+            "price": default_price,
+            "old_price": "",
+            "stock": "10000",
+            "barcode": "",
+            "images": [],
+        })
+    return result
+
+
+def _score_ozon_listing_payload(data):
+    issues = []
+    warnings = []
+    sections = []
+
+    def add_section(name, points, max_points, detail):
+        sections.append({"name": name, "points": points, "max_points": max_points, "detail": detail})
+
+    name = str(data.get("name", "")).strip()
+    description = str(data.get("description", "")).strip()
+    price = _to_float(data.get("price"))
+    offer_id = str(data.get("offer_id", "")).strip()
+    category_id = data.get("category_id")
+    type_id = data.get("type_id")
+    attrs = data.get("attributes") or []
+    skus = data.get("skus") or _default_skus_from_product(data.get("skc"), price)
+    rich_content = data.get("rich_content") or []
+
+    category_points = 10 if category_id else 0
+    if not category_id:
+        issues.append("缺少 Ozon 类目 description_category_id")
+    if type_id:
+        category_points += 5
+    else:
+        warnings.append("缺少 type_id，部分 Ozon 类目可能导入失败")
+    add_section("类目", category_points, 15, "类目 ID 与 type_id")
+
+    basic_points = 0
+    if 20 <= len(name) <= 200:
+        basic_points += 6
+    elif name:
+        basic_points += 3
+        warnings.append("商品标题长度不理想，建议 20-200 字符")
+    else:
+        issues.append("缺少商品标题")
+    if len(description) >= 300:
+        basic_points += 5
+    elif description:
+        basic_points += 2
+        warnings.append("商品描述偏短，建议补充用途、材质、容量、RFID 等卖点")
+    else:
+        issues.append("缺少商品描述")
+    if offer_id:
+        basic_points += 2
+    else:
+        issues.append("缺少主 offer_id")
+    if price > 0:
+        basic_points += 2
+    else:
+        issues.append("缺少有效售价")
+    add_section("基础信息", basic_points, 15, "标题、描述、offer_id、售价")
+
+    filled_attrs = [a for a in attrs if a.get("attribute_id") and str(a.get("value", "")).strip()]
+    attr_points = min(18, len(filled_attrs) * 1.2)
+    attr_text = json.dumps(attrs, ensure_ascii=False).lower()
+    if any(token in attr_text for token in ("материал", "material", "экокожа", "5309")):
+        attr_points += 2
+    else:
+        warnings.append("未识别到材料属性，wallet 类目建议必填")
+    if any(token in attr_text for token in ("цвет", "color", "10096", "10097")):
+        attr_points += 2
+    else:
+        warnings.append("未识别到颜色属性，变体商品建议补齐")
+    if any(token in attr_text for token in ("бренд", "brand", "\"85\"")):
+        attr_points += 1.5
+    if rich_content:
+        attr_points += 1.5
+    else:
+        warnings.append("缺少 Rich Content/JSON 富文本，会影响卡片质量")
+    attr_points = min(25, attr_points)
+    if attr_points < 15:
+        issues.append("Ozon 属性填写不足，建议先拉取类目必填属性并补齐")
+    add_section("属性完整度", round(attr_points, 1), 25, f"已填属性 {len(filled_attrs)} 个")
+
+    raw_images = data.get("images") or []
+    base_image_urls = _extract_public_image_urls(raw_images, 10)
+    rejected_images = max(0, len(raw_images) - len(base_image_urls))
+    media_points = min(15, len(base_image_urls) * 3)
+    if len(base_image_urls) >= 5:
+        media_points += 3
+    if rich_content:
+        media_points += 2
+    if not base_image_urls:
+        issues.append("没有可提交到 Ozon 的公网商品图片 URL")
+    elif rejected_images:
+        warnings.append(f"已过滤 {rejected_images} 张非商品图/缩略图/图标")
+    add_section("媒体素材", min(20, media_points), 20, f"可用主图 {len(base_image_urls)} 张")
+
+    sku_points = 0
+    valid_skus = []
+    sku_offer_ids = set()
+    for sku in skus:
+        sku_id = str(sku.get("sku_code") or sku.get("name") or "").strip()
+        sku_price = _to_float(sku.get("price") or data.get("price"))
+        if sku_id and sku_price > 0:
+            valid_skus.append(sku)
+        if sku_id:
+            sku_offer_ids.add(sku_id)
+    if skus and len(valid_skus) == len(skus):
+        sku_points += 8
+    elif valid_skus:
+        sku_points += 4
+        warnings.append("部分 SKU 缺少 offer_id 或价格")
+    else:
+        issues.append("缺少可提交的 SKU/变体")
+    if len(sku_offer_ids) == len(skus) and skus:
+        sku_points += 3
+    else:
+        warnings.append("SKU offer_id 为空或重复")
+    if skus and all(_to_float(s.get("stock"), -1) >= 0 for s in skus):
+        sku_points += 2
+    else:
+        warnings.append("部分 SKU 缺少库存")
+    if len(skus) >= 2:
+        sku_points += 2
+    add_section("变体与库存", min(15, sku_points), 15, f"SKU {len(skus)} 个")
+
+    ops_points = 0
+    if price > 0:
+        ops_points += 3
+    if any(_to_float(s.get("old_price")) > _to_float(s.get("price")) > 0 for s in skus):
+        ops_points += 2
+    else:
+        warnings.append("未识别到有效原价，建议原价高于售价")
+    if re.search(r"(4383|weight|вес)", attr_text):
+        ops_points += 2
+    else:
+        warnings.append("缺少重量属性，wallet 当前应优先使用实测重量")
+    if re.search(r"(height|width|depth|length|尺寸|размер|5355|5299|6573)", attr_text):
+        ops_points += 2
+    else:
+        warnings.append("缺少尺寸属性，Ozon 物流和审核可能受影响")
+    if data.get("barcode") or any(str(s.get("barcode", "")).strip() for s in skus):
+        ops_points += 1
+    else:
+        warnings.append("未填写条码；如 Ozon 允许自动生成，可后续补")
+    add_section("价格物流", min(10, ops_points), 10, "价格、原价、重量、尺寸、条码")
+
+    score = round(sum(float(s["points"]) for s in sections))
+    return {
+        "score": score,
+        "target_score": OZON_LISTING_SCORE_TARGET,
+        "can_submit": score >= OZON_LISTING_SCORE_TARGET and not issues,
+        "sections": sections,
+        "issues": issues,
+        "warnings": warnings,
+        "filtered_image_count": len(base_image_urls),
+        "rejected_image_count": rejected_images,
+    }
+
+
+def _append_listing_lifecycle_event(skc, store_id, event):
+    if not skc or not store_id:
+        return
+    path = _listing_path(skc, store_id)
+    listing = {}
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                listing = json.load(f)
+        except Exception:
+            listing = {}
+    lifecycle = listing.get("lifecycle")
+    if not isinstance(lifecycle, list):
+        lifecycle = []
+    entry = {"at": datetime.now().isoformat(timespec="seconds")}
+    entry.update(event)
+    lifecycle.append(entry)
+    listing["lifecycle"] = lifecycle[-50:]
+    listing["updated_at"] = datetime.now().isoformat()
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(listing, f, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        logger.warning("[Ozon lifecycle] failed to persist event: %s", exc)
+
+
+@app.route("/api/ozon/<store_id>/listing/simulate", methods=["POST"])
+def ozon_listing_simulate(store_id):
+    data = request.get_json() or {}
+    skc = data.get("skc", "")
+    report = _score_ozon_listing_payload(data)
+    _append_listing_lifecycle_event(skc, store_id, {
+        "event": "simulate",
+        "score": report["score"],
+        "can_submit": report["can_submit"],
+        "issues": report["issues"],
+        "warnings": report["warnings"][:5],
+    })
+    return jsonify({"success": True, "store_id": store_id, "skc": skc, "report": report})
+
+
 @app.route("/api/ozon/<store_id>/product/create", methods=["POST"])
 def ozon_product_create(store_id):
     """调用 Ozon /v3/product/import 创建产品（支持多变种批量上传）"""
@@ -5317,11 +5590,25 @@ def ozon_product_create(store_id):
     attrs = data.get("attributes", [])
     images = data.get("images", [])
     videos = data.get("videos", [])
-    skus = data.get("skus", [])
+    skus = data.get("skus", []) or _default_skus_from_product(skc, price)
+    quality_report = _score_ozon_listing_payload(data)
 
     logger.info("[产品创建] ========== 开始创建产品 ==========")
     logger.info("[产品创建] skc=%s | name=%s | price=%s | category_id=%s | type_id=%s | SKU数=%s",
                 skc, name, price, category_id, type_id, len(skus))
+
+    if not quality_report["can_submit"]:
+        _append_listing_lifecycle_event(skc, store_id, {
+            "event": "quality_gate_failed",
+            "score": quality_report["score"],
+            "issues": quality_report["issues"],
+            "warnings": quality_report["warnings"][:5],
+        })
+        return jsonify({
+            "success": False,
+            "error": f"Ozon 模拟上架评分 {quality_report['score']}，未达到 {OZON_LISTING_SCORE_TARGET} 分或存在阻断问题",
+            "quality_report": quality_report,
+        }), 400
 
     if not name or not price:
         logger.warning("[产品创建] ❌ 缺少必填字段")
@@ -5353,8 +5640,7 @@ def ozon_product_create(store_id):
         ozon_attrs.append(entry)
 
     # 公共图片（base64 或本地路径会被过滤，仅传 http URL）
-    base_image_urls = [img.get("url", "") for img in images if img.get("url", "").startswith("http")]
-    base_image_urls = base_image_urls[:10] if base_image_urls else []
+    base_image_urls = _extract_public_image_urls(images, 10)
 
     # 公共视频
     base_video_urls = [v.get("url", "") for v in videos if v.get("url", "").startswith("http")]
@@ -5378,8 +5664,8 @@ def ozon_product_create(store_id):
             item["barcode"] = sku_barcode
 
         # SKU 独立图片优先，否则用公共图片
-        sku_urls = [img.get("url", "") for img in sku_images if img.get("url", "").startswith("http")]
-        item_images = sku_urls[:10] if sku_urls else base_image_urls
+        sku_urls = _extract_public_image_urls(sku_images, 10)
+        item_images = sku_urls if sku_urls else base_image_urls
         if item_images:
             item["images"] = item_images
         if base_video_urls:
@@ -5434,16 +5720,29 @@ def ozon_product_create(store_id):
                         user_msg = "; ".join(str(d.get("message", d)) for d in details[:3])
         except:
             pass
-        return jsonify({"success": False, "error": f"Ozon 上架失败: {user_msg}"}), 502
+        _append_listing_lifecycle_event(skc, store_id, {
+            "event": "ozon_import_failed",
+            "score": quality_report["score"],
+            "error": user_msg,
+        })
+        return jsonify({"success": False, "error": f"Ozon 上架失败: {user_msg}", "quality_report": quality_report}), 502
 
     task_id = result.get("result", {}).get("task_id", "")
     logger.info("[产品创建] ✅ 提交成功！task_id=%s | items=%s", task_id, len(items))
+    _append_listing_lifecycle_event(skc, store_id, {
+        "event": "ozon_import_submitted",
+        "mode": "upsert",
+        "score": quality_report["score"],
+        "task_id": task_id,
+        "item_count": len(items),
+    })
 
     return jsonify({
         "success": True,
         "task_id": task_id,
         "skc": skc,
         "item_count": len(items),
+        "quality_report": quality_report,
         "message": f"已提交 {len(items)} 个产品变种到 Ozon（任务ID: {task_id}），请稍后在 Ozon 后台查看上架状态。"
     })
 
