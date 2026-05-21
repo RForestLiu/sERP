@@ -15,6 +15,7 @@ MANAGED_ENV_KEYS = [
     "DEEPSEEK_API_URL",
     "DEEPSEEK_AUTO_FILL_MODEL",
     "DEEPSEEK_CATEGORY_MODEL",
+    "DEEPSEEK_REVIEW_MODEL",
     "PROXY",
     "PROXY_ENABLED",
 ]
@@ -27,6 +28,8 @@ FEATURE_MODEL_KEYS = {
     "dianxiaomi_auto_fill": "店小秘自动填充",
     "ozon_attribute_fill": "Ozon 属性填充",
     "translation": "翻译/本地化",
+    "product_specs_extract": "产品重量尺提取",
+    "product_specs_review": "产品重量尺审核",
 }
 
 
@@ -59,6 +62,8 @@ DEFAULT_SETTINGS = {
         "dianxiaomi_auto_fill": "deepseek_v4_flash",
         "ozon_attribute_fill": "deepseek_v4_flash",
         "translation": "deepseek_v4_flash",
+        "product_specs_extract": "deepseek_v4_flash",
+        "product_specs_review": "deepseek_v4_flash",
     },
 }
 

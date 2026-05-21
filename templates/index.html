@@ -1300,6 +1300,37 @@
         .product-info-row.collected.overridden .row-value {
             color: #bbb;
         }
+        .product-info-row.collected.overridden .row-label {
+            color: #bbb;
+        }
+        .product-info-pair-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 4px;
+            width: 100%;
+        }
+        .product-info-pair-row .product-info-row {
+            min-width: 0;
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+        .product-info-pair-row .row-label {
+            width: 48px;
+        }
+        .collect-specs-btn {
+            padding: 4px 10px;
+            background: #0f766e;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .collect-specs-btn:disabled {
+            background: #9ca3af;
+            cursor: wait;
+        }
         .product-info-row.manual {
             background: #fff;
             border: 1px solid #e5e7eb;
@@ -3636,16 +3667,6 @@
         // HTML转义辅助
         function _escHtml(s) { var d = document.createElement("div"); d.textContent = s || ""; return d.innerHTML; }
 
-        // ===== 辅助：从文本中提取信息 =====
-        function extractFromText(text, patterns) {
-            if (!text) return "";
-            for (const ptn of patterns) {
-                const m = text.match(ptn);
-                if (m) return m[0].trim();
-            }
-            return "";
-        }
-
         // 渲染产品-店铺矩阵表格
         function renderProducts(products, stores) {
             productCardsContainer.innerHTML = "";
@@ -3669,19 +3690,12 @@
 
             products.forEach(p => {
                 const pd = p.product_data || {};
-                const attrs = pd.attributes || {};
                 const manual = p.manual_data || {};
                 const storeStatus = p.store_status || {};
 
-                const searchText = (pd.about_item || "") + " " + (pd.product_description || "") + " " + (pd.description || "");
-                let collectedWeight = attrs.weight || attrs.重量 || "";
-                if (!collectedWeight) {
-                    collectedWeight = extractFromText(searchText, [/\d+\.?\d*\s*(?:g|克|kg|千克|公斤)/i, /重量[：:]\s*\d+\.?\d*\s*(?:g|克|kg|千克|公斤)/i]);
-                }
-                let collectedSize = attrs.size || attrs.尺寸 || attrs.dimensions || "";
-                if (!collectedSize) {
-                    collectedSize = extractFromText(searchText, [/\d+\.?\d*\s*[×xX*]\s*\d+\.?\d*\s*[×xX*]\s*\d+\.?\d*\s*(?:cm|厘米|mm|毫米)?/i, /\d+\.?\d*\s*[×xX*]\s*\d+\.?\d*\s*(?:cm|厘米|mm|毫米)?/i, /尺寸[：:]\s*[\d\.\s×xX*cm厘米mm毫米]+/i]);
-                }
+                const collectedWeight = manual.collected_weight_g ? manual.collected_weight_g + 'g' : "";
+                const collectedSize = manual.collected_size_spec || "";
+                const collectedEvidence = manual.collected_specs_evidence || {};
                 const createdDate = p.created_at ? new Date(p.created_at).toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) : "";
 
                 // 产品行
@@ -3721,27 +3735,34 @@
                 // 左侧 300px：产品登记信息
                 html += '<div class="detail-left">';
                 // 只读基础信息
-                const wv = manual.weight_g ? manual.weight_g + 'g' : (collectedWeight || '');
-                const sv = manual.size_spec || collectedSize || '';
+                const measuredWeight = manual.weight_g ? manual.weight_g + 'g' : '';
+                const measuredSize = manual.size_spec || '';
                 const spv = manual.spec || '';
                 const cpv = manual.cost_price ? '¥' + manual.cost_price : '';
-                html += `<div class="product-info-row ro-info" data-ro-field="weight_g"><span class="row-label">重量</span><span class="row-value${wv ? '' : ' empty'}">${wv || '—'}</span></div>`;
-                html += `<div class="product-info-row ro-info" data-ro-field="size_spec"><span class="row-label">尺寸</span><span class="row-value${sv ? '' : ' empty'}">${sv || '—'}</span></div>`;
-                html += `<div class="product-info-row ro-info" data-ro-field="spec"><span class="row-label">规格</span><span class="row-value${spv ? '' : ' empty'}">${spv || '—'}</span></div>`;
-                html += `<div class="product-info-row ro-info" data-ro-field="cost_price"><span class="row-label">成本价</span><span class="row-value${cpv ? '' : ' empty'}">${cpv || '—'}</span></div>`;
+                html += '<div class="product-info-pair-row">';
+                html += `<div class="product-info-row ro-info" data-ro-field="weight_g"><span class="row-label">实测重量</span><span class="row-value${measuredWeight ? '' : ' empty'}">${_escHtml(measuredWeight || '—')}</span></div>`;
+                html += `<div class="product-info-row collected collected-weight-row${measuredWeight ? ' overridden' : ''}" data-collected-field="weight_g"><span class="row-label">采集重量</span><span class="row-value${collectedWeight ? '' : ' empty'}">${_escHtml(collectedWeight || '—')}</span></div>`;
+                html += '</div>';
+                html += '<div class="product-info-pair-row">';
+                html += `<div class="product-info-row ro-info" data-ro-field="size_spec"><span class="row-label">实测尺寸</span><span class="row-value${measuredSize ? '' : ' empty'}">${_escHtml(measuredSize || '—')}</span></div>`;
+                html += `<div class="product-info-row collected collected-size-row${measuredSize ? ' overridden' : ''}" data-collected-field="size_spec"><span class="row-label">采集尺寸</span><span class="row-value${collectedSize ? '' : ' empty'}">${_escHtml(collectedSize || '—')}</span></div>`;
+                html += '</div>';
+                html += `<div class="product-info-row ro-info" data-ro-field="spec"><span class="row-label">规格</span><span class="row-value${spv ? '' : ' empty'}">${_escHtml(spv || '—')}</span></div>`;
+                html += `<div class="product-info-row ro-info" data-ro-field="cost_price"><span class="row-label">成本价</span><span class="row-value${cpv ? '' : ' empty'}">${_escHtml(cpv || '—')}</span></div>`;
+                html += `<div class="product-info-row"><button class="collect-specs-btn" data-skc="${p.skc}">AI提取采集重量尺</button></div>`;
                 // 编辑按钮
                 html += `<div class="edit-toggle" data-action="toggle-edit" data-skc="${p.skc}">✏️ 编辑 ▾</div>`;
                 // 编辑区（默认隐藏）
                 html += `<div class="edit-section" id="edit-${p.skc}" style="display:none">`;
-                html += `<div class="collected-pip-trigger" data-skc="${p.skc}" data-weight="${collectedWeight}" data-size="${collectedSize}"><span class="pip-icon">📖</span><span class="pip-label">采集原始数据</span><span class="pip-hint">悬停查看</span></div>`;
+                html += `<div class="collected-pip-trigger" data-skc="${p.skc}" data-weight="${encodeURIComponent(collectedWeight)}" data-size="${encodeURIComponent(collectedSize)}" data-weight-evidence="${encodeURIComponent(collectedEvidence.weight || '')}" data-size-evidence="${encodeURIComponent(collectedEvidence.size || '')}"><span class="pip-icon">📖</span><span class="pip-label">采集原始数据</span><span class="pip-hint">悬停查看</span></div>`;
                 html += '<div class="paste-extract-area">';
                 html += '<textarea class="paste-textarea" placeholder="粘贴产品描述文本，点击下方按钮用 AI 自动识别并转换为国际单位..."></textarea>';
                 html += `<button class="paste-extract-btn" data-skc="${p.skc}">🤖 AI 识别并填充</button>`;
                 html += '</div>';
-                html += `<div class="product-info-row manual"><span class="row-label">重量(g)</span><input type="text" class="manual-input" data-field="weight_g" value="${manual.weight_g || ''}" placeholder="克"></div>`;
-                html += `<div class="product-info-row manual"><span class="row-label">尺寸规格</span><input type="text" class="manual-input" data-field="size_spec" value="${manual.size_spec || ''}" placeholder="如 20×10×3cm"></div>`;
-                html += `<div class="product-info-row manual"><span class="row-label">规格</span><input type="text" class="manual-input" data-field="spec" value="${manual.spec || ''}" placeholder="如 大号/黑色"></div>`;
-                html += `<div class="product-info-row manual"><span class="row-label">成本价</span><input type="text" class="manual-input" data-field="cost_price" value="${manual.cost_price || ''}" placeholder="元"></div>`;
+                html += `<div class="product-info-row manual"><span class="row-label">重量(g)</span><input type="text" class="manual-input" data-field="weight_g" value="${_escHtml(manual.weight_g || '')}" placeholder="克"></div>`;
+                html += `<div class="product-info-row manual"><span class="row-label">尺寸规格</span><input type="text" class="manual-input" data-field="size_spec" value="${_escHtml(manual.size_spec || '')}" placeholder="如 20×10×3cm"></div>`;
+                html += `<div class="product-info-row manual"><span class="row-label">规格</span><input type="text" class="manual-input" data-field="spec" value="${_escHtml(manual.spec || '')}" placeholder="如 大号/黑色"></div>`;
+                html += `<div class="product-info-row manual"><span class="row-label">成本价</span><input type="text" class="manual-input" data-field="cost_price" value="${_escHtml(manual.cost_price || '')}" placeholder="元"></div>`;
                 html += `<div class="product-info-row manual ro-save-row"><button class="save-manual-btn" data-skc="${p.skc}">💾 保存人工数据</button></div>`;
                 html += '</div>'; // end edit-section
                 html += '</div>'; // end detail-left
@@ -3852,13 +3873,14 @@
             let pipHideTimer = null;
 
             document.querySelectorAll(".collected-pip-trigger").forEach(trigger => {
-                const weight = trigger.dataset.weight || "";
-                const size = trigger.dataset.size || "";
-
                 trigger.addEventListener("mouseenter", function() {
+                    const weight = decodeURIComponent(trigger.dataset.weight || "");
+                    const size = decodeURIComponent(trigger.dataset.size || "");
+                    const weightEvidence = decodeURIComponent(trigger.dataset.weightEvidence || "");
+                    const sizeEvidence = decodeURIComponent(trigger.dataset.sizeEvidence || "");
                     if (pipHideTimer) { clearTimeout(pipHideTimer); pipHideTimer = null; }
                     const rect = trigger.getBoundingClientRect();
-                    pipFloat.innerHTML = `<div class="pip-float-title">📖 采集原始数据</div><div class="pip-float-row"><span class="pip-float-label">📦 重量</span><span class="pip-float-value">${weight || '—'}</span></div><div class="pip-float-row"><span class="pip-float-label">📐 尺寸</span><span class="pip-float-value">${size || '—'}</span></div>`;
+                    pipFloat.innerHTML = `<div class="pip-float-title">📖 采集原始数据</div><div class="pip-float-row"><span class="pip-float-label">📦 重量</span><span class="pip-float-value">${_escHtml(weight || '—')}</span></div><div class="pip-float-row"><span class="pip-float-label">📐 尺寸</span><span class="pip-float-value">${_escHtml(size || '—')}</span></div><div class="pip-float-row"><span class="pip-float-label">依据</span><span class="pip-float-value">${_escHtml(weightEvidence || sizeEvidence || '—')}</span></div>`;
                     pipFloat.classList.add("show");
                     const pw = pipFloat.offsetWidth || 240, ph = pipFloat.offsetHeight || 100;
                     let left = rect.left + (rect.width - pw) / 2, top = rect.bottom + 6;
@@ -3876,6 +3898,49 @@
             });
             pipFloat.addEventListener("mouseenter", () => { if (pipHideTimer) { clearTimeout(pipHideTimer); pipHideTimer = null; } });
             pipFloat.addEventListener("mouseleave", () => { pipHideTimer = setTimeout(() => pipFloat.classList.remove("show"), 300); });
+
+            // --- AI 提取采集重量尺 ---
+            document.querySelectorAll(".collect-specs-btn").forEach(btn => {
+                btn.addEventListener("click", async function(e) {
+                    e.stopPropagation();
+                    const skc = this.dataset.skc;
+                    this.disabled = true;
+                    this.textContent = "AI提取中...";
+                    try {
+                        const res = await fetch(`/api/products/${skc}/collect_specs`, { method: "POST", headers: { "Content-Type": "application/json" } });
+                        if (!res.ok) { const err = await res.json(); throw new Error(err.error || "提取失败"); }
+                        const data = await res.json();
+                        const detailRow = document.querySelector(`.detail-row[data-skc-detail="${skc}"]`);
+                        if (detailRow && data.collected) {
+                            const weight = data.collected.weight_g ? data.collected.weight_g + "g" : "";
+                            const size = data.collected.size_spec || "";
+                            const weightRow = detailRow.querySelector(".collected-weight-row");
+                            const sizeRow = detailRow.querySelector(".collected-size-row");
+                            if (weightRow) {
+                                const value = weightRow.querySelector(".row-value");
+                                if (value) { value.textContent = weight || "—"; value.className = "row-value" + (weight ? "" : " empty"); }
+                            }
+                            if (sizeRow) {
+                                const value = sizeRow.querySelector(".row-value");
+                                if (value) { value.textContent = size || "—"; value.className = "row-value" + (size ? "" : " empty"); }
+                            }
+                            const pipTrigger = detailRow.querySelector(".collected-pip-trigger");
+                            if (pipTrigger) {
+                                pipTrigger.dataset.weight = encodeURIComponent(weight);
+                                pipTrigger.dataset.size = encodeURIComponent(size);
+                                pipTrigger.dataset.weightEvidence = encodeURIComponent((data.collected.evidence || {}).weight || "");
+                                pipTrigger.dataset.sizeEvidence = encodeURIComponent((data.collected.evidence || {}).size || "");
+                            }
+                        }
+                        showMsg(`✅ ${skc} 采集重量尺已通过结构化提取和AI审核`);
+                    } catch (err) {
+                        showMsg("❌ 采集重量尺提取失败: " + err.message, true);
+                    } finally {
+                        this.disabled = false;
+                        this.textContent = "AI提取采集重量尺";
+                    }
+                });
+            });
 
             // --- AI 识别按钮 ---
             document.querySelectorAll(".paste-extract-btn").forEach(btn => {
@@ -3924,6 +3989,10 @@
                                 valEl.className = "row-value" + (display ? "" : " empty");
                             }
                         });
+                        const collectedWeightRow = detailRow.querySelector(".collected-weight-row");
+                        const collectedSizeRow = detailRow.querySelector(".collected-size-row");
+                        if (collectedWeightRow) collectedWeightRow.classList.toggle("overridden", !!data.weight_g);
+                        if (collectedSizeRow) collectedSizeRow.classList.toggle("overridden", !!data.size_spec);
                         showMsg(`✅ ${skc} 人工数据已保存`);
                     } catch (e) {
                         this.classList.remove("saving"); this.textContent = "💾 保存人工数据"; this.disabled = false;

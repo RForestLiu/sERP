@@ -15,6 +15,7 @@ import logging
 import logging.config
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import RLock
 from PIL import Image
 
 # ★ 日志配置必须在此处（Flask reloader 子进程不会执行 main.py，只导入 app.py）
@@ -755,6 +756,7 @@ COLLECT_TASKS_FILE = os.path.join(DATA_ROOT, "collect_tasks.json")
 PRODUCTS_FILE = os.path.join(DATA_ROOT, "products.json")
 STORES_FILE = os.path.join(DATA_ROOT, "stores.json")
 SYNC_STATE_FILE = os.path.join(DATA_ROOT, "sync_state.json")
+PRODUCTS_FILE_LOCK = RLock()
 
 # 店铺状态枚举
 STORE_STATUSES = ["未上架", "待发布", "审核中", "已上架", "审核拒绝", "下架回归中"]
@@ -781,7 +783,7 @@ def _save_sync_state(state):
 
 MANAGED_ENV_KEYS = [
     "API_KEY", "OPENAI_API_KEY", "OPENAI_BASE_URL", "IMAGE_MODEL", "IMAGE_SIZE",
-    "DEEPSEEK_API_KEY", "DEEPSEEK_API_URL", "DEEPSEEK_AUTO_FILL_MODEL", "DEEPSEEK_CATEGORY_MODEL",
+    "DEEPSEEK_API_KEY", "DEEPSEEK_API_URL", "DEEPSEEK_AUTO_FILL_MODEL", "DEEPSEEK_CATEGORY_MODEL", "DEEPSEEK_REVIEW_MODEL",
     "PROXY", "PROXY_ENABLED",
 ]
 
@@ -793,6 +795,8 @@ FEATURE_MODEL_KEYS = {
     "dianxiaomi_auto_fill": "店小秘自动填充",
     "ozon_attribute_fill": "Ozon 属性填充",
     "translation": "翻译/本地化",
+    "product_specs_extract": "产品重量尺提取",
+    "product_specs_review": "产品重量尺审核",
 }
 
 
@@ -825,6 +829,8 @@ DEFAULT_SETTINGS = {
         "dianxiaomi_auto_fill": "deepseek_v4_flash",
         "ozon_attribute_fill": "deepseek_v4_flash",
         "translation": "deepseek_v4_flash",
+        "product_specs_extract": "deepseek_v4_flash",
+        "product_specs_review": "deepseek_v4_flash",
     },
 }
 
@@ -1065,21 +1071,23 @@ def _next_store_status(current):
 
 def _load_products():
     """加载正式产品数据"""
-    if os.path.exists(PRODUCTS_FILE):
-        try:
-            with open(PRODUCTS_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except:
-            pass
-    return {"已注册编号": {}, "产品列表": []}
+    with PRODUCTS_FILE_LOCK:
+        if os.path.exists(PRODUCTS_FILE):
+            try:
+                with open(PRODUCTS_FILE, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except:
+                pass
+        return {"已注册编号": {}, "产品列表": []}
 
 def _save_products(products_data):
     """保存正式产品数据"""
-    try:
-        with open(PRODUCTS_FILE, "w", encoding="utf-8") as f:
-            json.dump(products_data, f, indent=2, ensure_ascii=False)
-    except:
-        pass
+    with PRODUCTS_FILE_LOCK:
+        try:
+            with open(PRODUCTS_FILE, "w", encoding="utf-8") as f:
+                json.dump(products_data, f, indent=2, ensure_ascii=False)
+        except:
+            pass
 
 # 品类代码映射表（4位大写字母，无歧义）
 CATEGORY_CODES = {
@@ -2271,21 +2279,300 @@ def get_products():
 def update_product_manual(skc):
     """保存产品的人工登记数据"""
     data = request.get_json()
-    products_data = _load_products()
-    product_list = products_data.get("产品列表", [])
-    
-    for p in product_list:
-        if p["skc"] == skc:
-            p["manual_data"] = {
-                "weight_g": data.get("weight_g", ""),
-                "size_spec": data.get("size_spec", ""),
-                "spec": data.get("spec", ""),
-                "cost_price": data.get("cost_price", ""),
-            }
-            _save_products(products_data)
-            return jsonify({"success": True, "skc": skc})
+    with PRODUCTS_FILE_LOCK:
+        products_data = _load_products()
+        product_list = products_data.get("产品列表", [])
+
+        for p in product_list:
+            if p["skc"] == skc:
+                existing_manual = p.get("manual_data", {}) if isinstance(p.get("manual_data"), dict) else {}
+                p["manual_data"] = {
+                    "weight_g": data.get("weight_g", ""),
+                    "size_spec": data.get("size_spec", ""),
+                    "spec": data.get("spec", ""),
+                    "cost_price": data.get("cost_price", ""),
+                }
+                for key in [
+                    "collected_weight_g",
+                    "collected_size_spec",
+                    "collected_size_cm",
+                    "collected_specs_source",
+                    "collected_specs_evidence",
+                    "collected_specs_review",
+                    "collected_specs_at",
+                ]:
+                    if key in existing_manual:
+                        p["manual_data"][key] = existing_manual.get(key)
+                _save_products(products_data)
+                return jsonify({"success": True, "skc": skc})
     
     return jsonify({"error": "产品不存在"}), 404
+
+
+def _compact_product_specs_source(product):
+    """Build the LLM input for collected product weight/size extraction."""
+    pd = product.get("product_data", {}) if isinstance(product.get("product_data"), dict) else {}
+    details = pd.get("product_details", {}) if isinstance(pd.get("product_details"), dict) else {}
+    attrs = pd.get("attributes", {}) if isinstance(pd.get("attributes"), dict) else {}
+    source = {
+        "skc": product.get("skc", ""),
+        "title": product.get("title") or pd.get("title", ""),
+        "platform": product.get("platform", ""),
+        "category": product.get("category") or pd.get("category", ""),
+        "brand": pd.get("brand", ""),
+        "attributes": attrs,
+        "product_details": {k: v for k, v in details.items() if k != "_raw"},
+        "about_item": pd.get("about_item", ""),
+        "product_description": pd.get("product_description", ""),
+        "description": pd.get("description", ""),
+        "variants": pd.get("variants", {}),
+    }
+    return json.dumps(source, ensure_ascii=False, indent=2)[:16000]
+
+
+def _get_llm_config_for_feature(feature_key, env_model_key, default_model):
+    """Resolve the model config from Settings first, then env defaults."""
+    config = {
+        "base_url": os.getenv("DEEPSEEK_API_URL", "https://api.deepseek.com/v1/chat/completions"),
+        "api_key": os.getenv("DEEPSEEK_API_KEY", ""),
+        "model": os.getenv(env_model_key, default_model),
+    }
+    try:
+        settings = SETTINGS_SERVICE.load_settings()
+        model_id = settings.get("feature_models", {}).get(feature_key)
+        models = {m.get("id"): m for m in settings.get("models", []) if isinstance(m, dict)}
+        selected = models.get(model_id)
+        if selected:
+            config["base_url"] = selected.get("base_url") or config["base_url"]
+            config["model"] = selected.get("model") or config["model"]
+            api_key_env = selected.get("api_key_env") or "DEEPSEEK_API_KEY"
+            config["api_key"] = os.getenv(api_key_env, config["api_key"])
+    except Exception as exc:
+        logger.warning("[collect-specs] settings model resolve failed: %s", exc)
+    return config
+
+
+def _call_structured_llm(config, system_prompt, user_prompt, validator, label, max_retries=2):
+    if not config.get("api_key"):
+        raise ValueError("DEEPSEEK_API_KEY not configured")
+
+    validation_error = ""
+    last_text = ""
+    for attempt in range(max_retries + 1):
+        prompt = user_prompt
+        if validation_error:
+            prompt += "\n\n上一次返回未通过程序校验：%s\n请只修正 JSON，不要解释。" % validation_error
+        payload = {
+            "model": config["model"],
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt},
+            ],
+            "temperature": 0.1,
+            "max_tokens": 800,
+            "response_format": {"type": "json_object"},
+        }
+        if "v4-pro" in str(config["model"]).lower():
+            payload["enable_thinking"] = False
+        resp = requests.post(
+            config["base_url"],
+            headers={"Authorization": f"Bearer {config['api_key']}", "Content-Type": "application/json"},
+            json=payload,
+            timeout=60,
+        )
+        if resp.status_code != 200:
+            raise RuntimeError(f"LLM 请求失败: HTTP {resp.status_code}: {resp.text[:300]}")
+        content = resp.json().get("choices", [{}])[0].get("message", {}).get("content", "")
+        last_text = content
+        try:
+            parsed = json.loads(content.strip())
+        except json.JSONDecodeError as exc:
+            validation_error = f"不是合法 JSON: {exc}"
+            logger.warning("[collect-specs/%s] JSON parse failed: %s", label, content[:300])
+            continue
+        ok, normalized, validation_error = validator(parsed)
+        if ok:
+            normalized["_model"] = config["model"]
+            normalized["_attempts"] = attempt + 1
+            return normalized
+        logger.warning("[collect-specs/%s] validation failed: %s", label, validation_error)
+    raise ValueError(f"{label} 结构化返回校验失败: {validation_error}; raw={last_text[:300]}")
+
+
+def _normalize_number(value):
+    if value in (None, ""):
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    text = str(value).strip().replace(",", ".")
+    match = re.search(r"-?\d+(?:\.\d+)?", text)
+    return float(match.group(0)) if match else None
+
+
+def _contains_unconverted_unit(value):
+    if not isinstance(value, str):
+        return False
+    return bool(re.search(
+        r"\b(oz|ounce|ounces|lb|lbs|pound|pounds|kg|kgs|kilogram|kilograms|mm|millimeter|millimeters|inch|inches|in|ft|feet)\b|英寸|盎司|磅|千克|公斤|毫米",
+        value,
+        re.I,
+    ))
+
+
+def _validate_specs_extraction(data):
+    if not isinstance(data, dict):
+        return False, {}, "顶层必须是 JSON object"
+    if _contains_unconverted_unit(data.get("weight_g")):
+        return False, {}, "weight_g 必须先换算为纯克数，不能包含 oz/lb 等原始单位"
+    weight = _normalize_number(data.get("weight_g"))
+    if weight is not None and not (1 <= weight <= 50000):
+        return False, {}, "weight_g 必须是 1-50000 范围内的克数"
+
+    size_cm = data.get("size_cm") or []
+    if size_cm in ("", None):
+        size_cm = []
+    if not isinstance(size_cm, list):
+        return False, {}, "size_cm 必须是数字数组"
+    normalized_size = []
+    for item in size_cm:
+        if _contains_unconverted_unit(item):
+            return False, {}, "size_cm 必须先换算为纯厘米数，不能包含 inch/in 等原始单位"
+        number = _normalize_number(item)
+        if number is None:
+            return False, {}, "size_cm 只能包含数字"
+        if not (0.1 <= number <= 500):
+            return False, {}, "size_cm 每个值必须是 0.1-500 范围内的厘米数"
+        normalized_size.append(round(number, 1))
+    if normalized_size and len(normalized_size) not in (2, 3):
+        return False, {}, "size_cm 必须是 2 或 3 个维度"
+    if weight is None and not normalized_size:
+        return False, {}, "weight_g 和 size_cm 至少要提取一个"
+
+    size_spec = data.get("size_spec", "")
+    if normalized_size:
+        size_spec = "x".join(str(v).rstrip("0").rstrip(".") for v in normalized_size) + "cm"
+    elif size_spec:
+        return False, {}, "size_spec 必须由 size_cm 数字数组生成，不能直接接收模型文本"
+
+    confidence = _normalize_number(data.get("confidence"))
+    if confidence is None:
+        confidence = 0.0
+    confidence = max(0.0, min(1.0, confidence))
+    evidence = data.get("evidence") if isinstance(data.get("evidence"), dict) else {}
+    return True, {
+        "weight_g": int(round(weight)) if weight is not None else "",
+        "size_cm": normalized_size,
+        "size_spec": size_spec,
+        "evidence": {
+            "weight": str(evidence.get("weight", ""))[:300],
+            "size": str(evidence.get("size", ""))[:300],
+        },
+        "confidence": confidence,
+    }, ""
+
+
+def _validate_specs_review(data):
+    if not isinstance(data, dict):
+        return False, {}, "顶层必须是 JSON object"
+    if not isinstance(data.get("approved"), bool):
+        return False, {}, "approved 必须是 boolean"
+    candidate = {
+        "weight_g": data.get("weight_g"),
+        "size_cm": data.get("size_cm"),
+        "size_spec": data.get("size_spec", ""),
+        "evidence": data.get("evidence", {}),
+        "confidence": data.get("confidence", 0),
+    }
+    ok, normalized, err = _validate_specs_extraction(candidate)
+    if not ok:
+        return False, {}, err
+    normalized["approved"] = data["approved"]
+    normalized["reason"] = str(data.get("reason", ""))[:500]
+    return True, normalized, ""
+
+
+@app.route("/api/products/<skc>/collect_specs", methods=["POST"])
+def collect_product_specs(skc):
+    """Use structured LLM output and program validation to cache collected weight/size."""
+    products_data = _load_products()
+    product_list = products_data.get("产品列表", [])
+    product = next((p for p in product_list if p.get("skc") == skc), None)
+    if not product:
+        return jsonify({"error": "产品不存在"}), 404
+
+    source_text = _compact_product_specs_source(product)
+    extract_config = _get_llm_config_for_feature("product_specs_extract", "DEEPSEEK_AUTO_FILL_MODEL", "deepseek-v4-flash")
+    review_config = _get_llm_config_for_feature("product_specs_review", "DEEPSEEK_REVIEW_MODEL", "deepseek-v4-flash")
+
+    system_prompt = """你是电商商品数据抽取助手。必须只返回 JSON object。
+任务：从采集到的商品资料里抽取商品本体的重量和尺寸，并统一换算成国际单位：重量 g，尺寸 cm。
+规则：
+1. item/package/display 等字段冲突时，优先选择商品本体尺寸；包装尺寸只有在没有商品本体尺寸时才使用。
+2. 盎司/磅必须换算成 g：1 oz = 28.3495 g, 1 lb = 453.592 g。
+3. inch/in/英寸必须换算成 cm：1 inch = 2.54 cm。
+4. 不确定的字段留空，不要猜。
+返回结构必须是：
+{"weight_g": 100, "size_cm": [20, 4, 13], "size_spec": "20x4x13cm", "evidence": {"weight": "原文", "size": "原文"}, "confidence": 0.9}"""
+    user_prompt = "请抽取并换算以下商品采集数据：\n" + source_text
+
+    try:
+        extracted = _call_structured_llm(extract_config, system_prompt, user_prompt, _validate_specs_extraction, "extract")
+        review_system = """你是独立的数据审核 AI。必须只返回 JSON object。
+任务：审核另一 AI 从商品采集资料中抽取并换算的重量/尺寸是否正确。
+要求：
+1. 再次检查单位是否已经换算成 g 和 cm。
+2. 如果原结果错误，返回 corrected 后的 weight_g、size_cm、size_spec。
+3. approved 表示原结果是否可直接采用；即使 approved=false，也要给出你校正后的结构化结果。
+返回结构必须是：
+{"approved": true, "weight_g": 100, "size_cm": [20, 4, 13], "size_spec": "20x4x13cm", "evidence": {"weight": "原文", "size": "原文"}, "confidence": 0.9, "reason": "简短理由"}"""
+        review_prompt = "商品采集资料：\n%s\n\n待审核抽取结果：\n%s" % (
+            source_text,
+            json.dumps(extracted, ensure_ascii=False, indent=2),
+        )
+        reviewed = _call_structured_llm(review_config, review_system, review_prompt, _validate_specs_review, "review")
+    except Exception as exc:
+        logger.exception("[collect-specs] failed for %s", skc)
+        return jsonify({"error": str(exc)}), 500
+
+    with PRODUCTS_FILE_LOCK:
+        latest_products_data = _load_products()
+        latest_product_list = latest_products_data.get("产品列表", [])
+        latest_product = next((p for p in latest_product_list if p.get("skc") == skc), None)
+        if not latest_product:
+            return jsonify({"error": "产品在提取过程中已被删除，请刷新后重试"}), 409
+
+        manual = latest_product.get("manual_data", {}) if isinstance(latest_product.get("manual_data"), dict) else {}
+        manual.update({
+            "collected_weight_g": reviewed.get("weight_g", ""),
+            "collected_size_spec": reviewed.get("size_spec", ""),
+            "collected_size_cm": reviewed.get("size_cm", []),
+            "collected_specs_source": "llm_structured_reviewed",
+            "collected_specs_evidence": reviewed.get("evidence", {}),
+            "collected_specs_review": {
+                "approved": reviewed.get("approved"),
+                "reason": reviewed.get("reason", ""),
+                "extract_model": extracted.get("_model", ""),
+                "review_model": reviewed.get("_model", ""),
+                "extract_attempts": extracted.get("_attempts", 0),
+                "review_attempts": reviewed.get("_attempts", 0),
+                "confidence": reviewed.get("confidence", 0),
+            },
+            "collected_specs_at": datetime.now().isoformat(),
+        })
+        latest_product["manual_data"] = manual
+        _save_products(latest_products_data)
+
+    return jsonify({
+        "success": True,
+        "skc": skc,
+        "collected": {
+            "weight_g": manual["collected_weight_g"],
+            "size_spec": manual["collected_size_spec"],
+            "size_cm": manual["collected_size_cm"],
+            "evidence": manual["collected_specs_evidence"],
+        },
+        "review": manual["collected_specs_review"],
+    })
 
 
 @app.route("/api/products/<skc>/store_status", methods=["PUT"])
@@ -2298,16 +2585,17 @@ def update_product_store_status(skc):
     if not store_id or new_status not in STORE_STATUSES:
         return jsonify({"error": "参数无效"}), 400
     
-    products_data = _load_products()
-    product_list = products_data.get("产品列表", [])
-    
-    for p in product_list:
-        if p["skc"] == skc:
-            if "store_status" not in p:
-                p["store_status"] = {}
-            p["store_status"][store_id] = new_status
-            _save_products(products_data)
-            return jsonify({"success": True, "skc": skc, "store_id": store_id, "status": new_status})
+    with PRODUCTS_FILE_LOCK:
+        products_data = _load_products()
+        product_list = products_data.get("产品列表", [])
+
+        for p in product_list:
+            if p["skc"] == skc:
+                if "store_status" not in p:
+                    p["store_status"] = {}
+                p["store_status"][store_id] = new_status
+                _save_products(products_data)
+                return jsonify({"success": True, "skc": skc, "store_id": store_id, "status": new_status})
     
     return jsonify({"error": "产品不存在"}), 404
 
@@ -2315,22 +2603,23 @@ def update_product_store_status(skc):
 @app.route("/api/products/<skc>", methods=["DELETE"])
 def delete_product(skc):
     """删除正式产品"""
-    products_data = _load_products()
-    product_list = products_data.get("产品列表", [])
+    with PRODUCTS_FILE_LOCK:
+        products_data = _load_products()
+        product_list = products_data.get("产品列表", [])
 
-    target = None
-    for i, p in enumerate(product_list):
-        if p["skc"] == skc:
-            target = product_list.pop(i)
-            break
+        target = None
+        for i, p in enumerate(product_list):
+            if p["skc"] == skc:
+                target = product_list.pop(i)
+                break
 
-    if not target:
-        return jsonify({"error": "产品不存在"}), 404
+        if not target:
+            return jsonify({"error": "产品不存在"}), 404
 
-    if skc in products_data.get("已注册编号", {}):
-        del products_data["已注册编号"][skc]
+        if skc in products_data.get("已注册编号", {}):
+            del products_data["已注册编号"][skc]
 
-    _save_products(products_data)
+        _save_products(products_data)
     return jsonify({"success": True, "skc": skc})
 
 
@@ -5568,57 +5857,58 @@ def get_product_image_sets(skc):
 def update_product_image_sets(skc):
     """保存整个 image_sets（重排、跨集移动、删除），并物理删除游离图片文件。"""
     data = request.get_json(silent=True) or {}
-    products_data = _load_products()
-    product_list = products_data.get("产品列表", [])
+    with PRODUCTS_FILE_LOCK:
+        products_data = _load_products()
+        product_list = products_data.get("产品列表", [])
 
-    for p in product_list:
-        if p["skc"] == skc:
-            p["image_sets"] = data.get("image_sets", {})
-            p["image_subsets"] = data.get("image_subsets", {})
+        for p in product_list:
+            if p["skc"] == skc:
+                p["image_sets"] = data.get("image_sets", {})
+                p["image_subsets"] = data.get("image_subsets", {})
 
-            # 收集所有被引用的文件（image_sets + image_subsets）
-            referenced = set()
-            referenced_basenames = set()
-            for entries in p["image_sets"].values():
-                for entry in entries:
-                    fn = entry.get("filename", "")
-                    if fn:
-                        referenced.add(fn)
-                        referenced_basenames.add(os.path.basename(fn))
-            for set_subs in p["image_subsets"].values():
-                for entries in set_subs.values():
+                # 收集所有被引用的文件（image_sets + image_subsets）
+                referenced = set()
+                referenced_basenames = set()
+                for entries in p["image_sets"].values():
                     for entry in entries:
                         fn = entry.get("filename", "")
                         if fn:
                             referenced.add(fn)
                             referenced_basenames.add(os.path.basename(fn))
+                for set_subs in p["image_subsets"].values():
+                    for entries in set_subs.values():
+                        for entry in entries:
+                            fn = entry.get("filename", "")
+                            if fn:
+                                referenced.add(fn)
+                                referenced_basenames.add(os.path.basename(fn))
 
-            # 递归删除 images_dir 中未被引用的物理文件
-            images_dir = p.get("images_dir", "")
-            deleted_count = 0
-            if images_dir and os.path.exists(images_dir):
-                valid_exts = {'.jpg', '.jpeg', '.png', '.webp', '.bmp'}
-                for root, _dirs, files in os.walk(images_dir, topdown=False):
-                    for fname in files:
-                        if os.path.splitext(fname)[1].lower() in valid_exts:
-                            rel = os.path.relpath(os.path.join(root, fname), images_dir).replace('\\', '/')
-                            if rel not in referenced and fname not in referenced_basenames:
-                                try:
-                                    os.remove(os.path.join(root, fname))
-                                    deleted_count += 1
-                                except OSError:
-                                    logger.warning(f"删除图片文件失败: {rel}")
-                    # 清理空子目录
-                    if root != images_dir:
-                        try:
-                            remaining = [f for f in os.listdir(root) if os.path.splitext(f)[1].lower() in valid_exts]
-                            if not remaining:
-                                os.rmdir(root)
-                        except OSError:
-                            pass
+                # 递归删除 images_dir 中未被引用的物理文件
+                images_dir = p.get("images_dir", "")
+                deleted_count = 0
+                if images_dir and os.path.exists(images_dir):
+                    valid_exts = {'.jpg', '.jpeg', '.png', '.webp', '.bmp'}
+                    for root, _dirs, files in os.walk(images_dir, topdown=False):
+                        for fname in files:
+                            if os.path.splitext(fname)[1].lower() in valid_exts:
+                                rel = os.path.relpath(os.path.join(root, fname), images_dir).replace('\\', '/')
+                                if rel not in referenced and fname not in referenced_basenames:
+                                    try:
+                                        os.remove(os.path.join(root, fname))
+                                        deleted_count += 1
+                                    except OSError:
+                                        logger.warning(f"删除图片文件失败: {rel}")
+                        # 清理空子目录
+                        if root != images_dir:
+                            try:
+                                remaining = [f for f in os.listdir(root) if os.path.splitext(f)[1].lower() in valid_exts]
+                                if not remaining:
+                                    os.rmdir(root)
+                            except OSError:
+                                pass
 
-            _save_products(products_data)
-            return jsonify({"success": True, "deleted_files": deleted_count})
+                _save_products(products_data)
+                return jsonify({"success": True, "deleted_files": deleted_count})
 
     return jsonify({"error": "产品不存在"}), 404
 
