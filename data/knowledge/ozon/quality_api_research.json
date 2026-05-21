@@ -1,0 +1,166 @@
+{
+  "/v1/rating/summary": {
+    "groups": [
+      {
+        "group_name": "Индекс цен",
+        "items": [
+          {
+            "change": {
+              "direction": "DIRECTION_FALL",
+              "meaning": "MEANING_BAD"
+            },
+            "current_value": 0.41,
+            "past_value": 0.42,
+            "name": "Процент товаров в 'зелёной' зоне по прайс индексу",
+            "status": "OK",
+            "rating": "rating_price_green",
+            "rating_direction": "HIGHER_IS_BETTER",
+            "value_type": "RATIO"
+          },
+          {
+            "change": {
+              "direction": "DIRECTION_NONE",
+              "meaning": "MEANING_NONE"
+            },
+            "current_value": 0.05,
+            "past_value": 0.05,
+            "name": "Процент товаров в 'жёлтой' зоне по прайс индексу",
+            "status": "OK",
+            "rating": "rating_price_yellow",
+            "rating_direction": "NEUTRAL",
+            "value_type": "RATIO"
+          },
+          {
+            "change": {
+              "direction": "DIRECTION_RISE",
+              "meaning": "MEANING_BAD"
+            },
+            "current_value": 0.54,
+            "past_value": 0.53,
+            "name": "Процент товаров в 'красной' зоне по прайс индексу",
+            "status": "OK",
+            "rating": "rating_price_red",
+            "rating_direction": "LOWER_IS_BETTER",
+            "value_type": "RATIO"
+          },
+          {
+            "change": {
+              "direction": "DIRECTION_NONE",
+              "meaning": "MEANING_NONE"
+            },
+            "current_value": 0,
+            "past_value": 0,
+            "name": "Процент товаров в 'супервыгодной' зоне по прайс индексу",
+            "status": "OK",
+            "rating": "rating_price_super",
+            "rating_direction": "HIGHER_IS_BETTER",
+            "value_type": "RATIO"
+          }
+        ]
+      },
+      {
+        "group_name": "Оценка продавца",
+        "items": [
+          {
+            "change": {
+              "direction": "DIRECTION_FALL",
+              "meaning": "MEANING_BAD"
+            },
+            "current_value": 4.8,
+            "past_value": 4.8,
+            "name": "Оценка товаров",
+            "status": "OK",
+            "rating": "rating_review_avg_score_total",
+            "rating_direction": "HIGHER_IS_BETTER",
+            "value_type": "REVIEW_SCORE"
+          }
+        ]
+      },
+      {
+        "group_name": "Доставка заказов",
+        "items": [
+          {
+            "change": {
+              "direction": "DIRECTION_UNKNOWN",
+              "meaning": "MEANING_NONE"
+            },
+            "current_value": 0,
+            "past_value": 0,
+            "name": "Процент просрочек отгрузки (global)",
+            "status": "UNKNOWN_STATUS",
+            "rating": "rating_shipment_delay_cb",
+            "rating_direction": "LOWER_IS_BETTER",
+            "value_type": "RATIO"
+          },
+          {
+            "change": {
+              "direction": "DIRECTION_NONE",
+              "meaning": "MEANING_NONE"
+            },
+            "current_value": 0.0313,
+            "past_value": 0.0313,
+            "name": "Рейтинг по прогрессивной шкале",
+            "status": "OK",
+            "rating": "rating_general_indicator_fbs_rfbs",
+            "rating_direction": "LOWER_IS_BETTER",
+            "value_type": "RATIO"
+          }
+        ]
+      },
+      {
+        "group_name": "Жалобы",
+        "items": [
+          {
+            "change": {
+              "direction": "DIRECTION_UNKNOWN",
+              "meaning": "MEANING_NONE"
+            },
+            "current_value": 0,
+            "past_value": 0,
+            "name": "Жалобы по FBO",
+            "status": "UNKNOWN_STATUS",
+            "rating": "rating_delivery_complaints_fbo",
+            "rating_direction": "LOWER_IS_BETTER",
+            "value_type": "RATIO"
+          },
+          {
+            "change": {
+              "direction": "DIRECTION_UNKNOWN",
+              "meaning": "MEANING_NONE"
+            },
+            "current_value": 0,
+            "past_value": 0,
+            "name": "Жалобы по FBS",
+            "status": "UNKNOWN_STATUS",
+            "rating": "rating_delivery_complaints_fbs",
+            "rating_direction": "LOWER_IS_BETTER",
+            "value_type": "RATIO"
+          },
+          {
+            "change": {
+              "direction": "DIRECTION_UNKNOWN",
+              "meaning": "MEANING_NONE"
+            },
+            "current_value": 0,
+            "past_value": 0,
+            "name": "Жалобы по rFBS",
+            "status": "UNKNOWN_STATUS",
+            "rating": "rating_delivery_complaints_rfbs_sd",
+            "rating_direction": "LOWER_IS_BETTER",
+            "value_type": "RATIO"
+          }
+        ]
+      }
+    ],
+    "penalty_score_exceeded": false,
+    "premium": false,
+    "localization_index": {
+      "localization_percentage": 0,
+      "calculation_date": null
+    },
+    "premium_plus": false
+  },
+  "/v1/product/info/rating": "404 page not found\n",
+  "/v1/product/rating": "404 page not found\n",
+  "/v1/seller/rating": "404 page not found\n"
+}

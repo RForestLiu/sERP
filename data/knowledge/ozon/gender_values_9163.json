@@ -1,0 +1,29 @@
+{
+  "result": [
+    {
+      "id": 22880,
+      "value": "Мужской",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 22881,
+      "value": "Женский",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 22882,
+      "value": "Девочки",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 22883,
+      "value": "Мальчики",
+      "info": "",
+      "picture": ""
+    }
+  ],
+  "has_next": false
+}
