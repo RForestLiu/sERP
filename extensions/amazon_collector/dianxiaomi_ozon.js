@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.16";
+  var SERP_EXTENSION_VERSION = "3.2.17";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -72,6 +72,7 @@
   var _categoryMatchRunning = false;
   var pricingSettingsCache = null;
   var pricingTempVars = {};
+  var pricingApplyRunning = false;
   var fillAllVariants = true;
 
   // ==================== CSS 注入 ====================
@@ -102,6 +103,8 @@
     "#serp-toolbar .serp-product-info .pi-price-vars{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:5px;}",
     "#serp-toolbar .serp-product-info .pi-price-vars label{display:flex;flex-direction:column;gap:2px;font-size:9px;color:#777;}",
     "#serp-toolbar .serp-product-info .pi-price-vars input{border:1px solid #d9d9d9;border-radius:3px;padding:2px 4px;font-size:10px;min-width:0;}",
+    "#serp-toolbar .serp-product-info .pi-price-apply{width:100%;margin-top:6px;border:1px solid #1677ff;background:#1677ff;color:#fff;border-radius:4px;padding:5px 8px;font-size:11px;cursor:pointer;}",
+    "#serp-toolbar .serp-product-info .pi-price-apply:hover{background:#0958d9;border-color:#0958d9;}",
     "#serp-toolbar .serp-product-info .pi-price-note{font-size:9px;color:#888;margin-top:4px;line-height:1.35;}",
     "/* ===== 产品选择弹窗 ===== */",
     "#serp-modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000000;align-items:center;justify-content:center;}",
@@ -750,19 +753,25 @@
     var ctx = getPricingVariablesV2(product, formula);
     var sale = safeEvalFormulaV2(formula.formula, ctx.vars);
     var saleRounded = roundPricingValueV2(sale, formula.rounding || "ceil");
-    if (safeNumberV2(pricingTempVars.manual_sale_price_cny, 0) > 0) saleRounded = safeNumberV2(pricingTempVars.manual_sale_price_cny, 0);
     ctx.vars.sale_price_cny = saleRounded;
     var oldPrice = safeEvalFormulaV2(formula.old_price_formula || "sale_price_cny * original_price_multiplier", ctx.vars);
     var oldRounded = roundPricingValueV2(oldPrice, formula.rounding || "ceil");
-    var hasManualOld = safeNumberV2(pricingTempVars.manual_old_price_cny, 0) > 0;
-    if (hasManualOld) oldRounded = safeNumberV2(pricingTempVars.manual_old_price_cny, 0);
-    if (!hasManualOld && saleRounded > 0 && oldRounded < saleRounded * 1.7) oldRounded = Math.ceil(saleRounded * 1.7);
-    if (!hasManualOld && saleRounded > 0 && oldRounded > saleRounded * 2.0 && pricingTempVars.original_price_multiplier === undefined) oldRounded = Math.ceil(saleRounded * 1.8);
+    if (saleRounded > 0 && oldRounded < saleRounded * 1.7) oldRounded = Math.ceil(saleRounded * 1.7);
+    if (saleRounded > 0 && oldRounded > saleRounded * 2.0 && pricingTempVars.original_price_multiplier === undefined) oldRounded = Math.ceil(saleRounded * 1.8);
     return { formula: formula, vars: ctx.vars, sale_price_cny: saleRounded, old_price_cny: oldRounded, stock: Math.round(ctx.vars.stock || 10000), cost_price_cny: ctx.vars.cost_price_cny, sourceMoney: ctx.sourceMoney, sourceCny: ctx.sourceCny };
   }
 
   function priceVarInputV2(key, label, value, step) {
     return '<label>' + label + '<input data-price-var="' + key + '" type="number" step="' + (step || "0.01") + '" value="' + (value === undefined || value === null ? "" : String(value)) + '"></label>';
+  }
+
+  function syncPricingTempVarsFromPanel() {
+    if (!piPriceDetail) return;
+    piPriceDetail.querySelectorAll("[data-price-var]").forEach(function (input) {
+      var raw = String(input.value || "").trim();
+      if (raw === "") delete pricingTempVars[input.dataset.priceVar];
+      else pricingTempVars[input.dataset.priceVar] = parseFloat(raw);
+    });
   }
 
   function buildPriceFormulaHtmlV2(product) {
@@ -782,12 +791,11 @@
         priceVarInputV2("ozon_commission_rate", "佣金(Commission)", v.ozon_commission_rate, "0.001") +
         priceVarInputV2("acquiring_rate", "收单费(Acquiring)", v.acquiring_rate, "0.001") +
         priceVarInputV2("seller_logistics_cny", "物流费(Logistics)", v.seller_logistics_cny, "0.01") +
-        priceVarInputV2("manual_sale_price_cny", "手动售价(Sale)", pricingTempVars.manual_sale_price_cny, "1") +
-        priceVarInputV2("manual_old_price_cny", "手动原价(Old)", pricingTempVars.manual_old_price_cny, "1") +
         priceVarInputV2("original_price_multiplier", "原价倍率(Old x)", v.original_price_multiplier, "0.01") +
         priceVarInputV2("stock", "库存(Stock)", pricing.stock, "1") +
       '</div>',
-      '<div class="pi-price-note">临时变量只影响本页本次填充；Ozon 佣金后续应优先使用品类/API值。Temporary variables only affect this page fill.</div>'
+      '<button type="button" class="pi-price-apply" id="serp-pi-price-apply">更新价格到页面</button>',
+      '<div class="pi-price-note">修改参数后点击“更新价格到页面”，只重算并回填售价、原价和库存，不重新执行自动填充。Temporary variables only affect this page fill.</div>'
     ].join("");
   }
 
@@ -2996,6 +3004,52 @@
     return deterministic;
   }
 
+  function isPricingFormField(field) {
+    var label = ((field && field.label) || "").toLowerCase();
+    if (!label) return false;
+    if (label.indexOf("库存") !== -1 || label.indexOf("stock") !== -1 || label.indexOf("остат") !== -1) return true;
+    if (label.indexOf("原价") !== -1 || label.indexOf("old price") !== -1 || label.indexOf("original price") !== -1 || label.indexOf("strike") !== -1) return true;
+    if (label.indexOf("售价") !== -1 || label.indexOf("sale price") !== -1) return true;
+    if ((label.indexOf("цена") !== -1 || label.indexOf("price") !== -1) &&
+        label.indexOf("成本") === -1 && label.indexOf("cost") === -1 && label.indexOf("采购") === -1) return true;
+    return false;
+  }
+
+  function precomputePricingValues(formFields, product) {
+    var deterministic = precomputeDeterministicValues(formFields, product || selectedProduct || {}, getManualData(product || selectedProduct || {}));
+    var pricingOnly = {};
+    formFields.forEach(function (field) {
+      if (!isPricingFormField(field)) return;
+      if (deterministic[field.index] !== undefined) pricingOnly[field.index] = deterministic[field.index];
+    });
+    return pricingOnly;
+  }
+
+  async function applyPricingToCurrentPage() {
+    if (!selectedProduct) { showToast("请先选择产品", "error"); return; }
+    if (pricingApplyRunning) return;
+    pricingApplyRunning = true;
+    try {
+      syncPricingTempVarsFromPanel();
+      var formFields = collectFormFields();
+      var pricingMap = precomputePricingValues(formFields, selectedProduct);
+      var keys = Object.keys(pricingMap);
+      if (!keys.length) { showToast("未找到售价/原价/库存字段", "error"); return; }
+
+      var filled = 0;
+      for (var i = 0; i < keys.length; i++) {
+        var idx = parseInt(keys[i], 10);
+        var ok = await fillFormField(idx, pricingMap[keys[i]]);
+        if (ok) filled++;
+        await sleep(80);
+      }
+      if (piPriceDetail) piPriceDetail.innerHTML = buildPriceFormulaHtmlV2(selectedProduct);
+      showToast("已更新价格字段 " + filled + "/" + keys.length, filled ? "success" : "error");
+    } finally {
+      pricingApplyRunning = false;
+    }
+  }
+
   function normalizeManualDataForFill(manualData) {
     var m = Object.assign({}, manualData || {});
     var measuredWeight = String(m.weight_g || "").trim();
@@ -3333,6 +3387,18 @@
       if (raw === "") delete pricingTempVars[input.dataset.priceVar];
       else pricingTempVars[input.dataset.priceVar] = parseFloat(raw);
       piPriceDetail.innerHTML = buildPriceFormulaHtmlV2(selectedProduct);
+    });
+    piPriceDetail.addEventListener("mousedown", function (e) {
+      var applyBtn = e.target.closest("#serp-pi-price-apply");
+      if (!applyBtn) return;
+      e.preventDefault();
+      applyPricingToCurrentPage();
+    });
+    piPriceDetail.addEventListener("click", function (e) {
+      var applyBtn = e.target.closest("#serp-pi-price-apply");
+      if (!applyBtn) return;
+      e.preventDefault();
+      applyPricingToCurrentPage();
     });
   }
   hintToggle.addEventListener("click", function () {
