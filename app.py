@@ -51,7 +51,7 @@ from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import cross_origin
 from werkzeug.utils import secure_filename
 import requests
-from src.serp.wiring import create_settings_facade, STORES_FILE as _WIRED_STORES_FILE
+from src.serp.wiring import create_settings_facade, create_logistics_facade, STORES_FILE as _WIRED_STORES_FILE
 
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
@@ -78,6 +78,12 @@ if not os.path.exists(TASKS_FILE):
 from src.serp.settings.interfaces.routes import create_settings_blueprint
 settings_bp = create_settings_blueprint(SETTINGS_FACADE)
 app.register_blueprint(settings_bp)
+
+# ── DDD: Logistics 域蓝图（替代旧 /api/logistics/* 路由）──
+LOGISTICS_FACADE = create_logistics_facade(DATA_ROOT)
+from src.serp.logistics.interfaces.routes import create_logistics_blueprint
+logistics_bp = create_logistics_blueprint(LOGISTICS_FACADE)
+app.register_blueprint(logistics_bp)
 
 # 向后兼容：旧代码引用 STORES_FILE
 STORES_FILE = _WIRED_STORES_FILE
@@ -6231,136 +6237,7 @@ def image_batch_page(skc):
 
 # ==================== 物流模板 API ====================
 
-LOGISTICS_TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), "data", "logistics_templates")
-
-
-@app.route("/api/logistics/templates", methods=["GET"])
-def logistics_templates():
-    """列出所有物流模板"""
-    templates = []
-    if os.path.isdir(LOGISTICS_TEMPLATES_DIR):
-        for fname in os.listdir(LOGISTICS_TEMPLATES_DIR):
-            if fname.endswith(".json"):
-                path = os.path.join(LOGISTICS_TEMPLATES_DIR, fname)
-                try:
-                    with open(path, "r", encoding="utf-8") as f:
-                        data = json.load(f)
-                    templates.append({
-                        "id": data["id"],
-                        "name": data["name"],
-                        "description": data.get("description", ""),
-                        "default_for_ozon": data.get("default_for_ozon", False),
-                        "channel_count": len(data.get("channels", []))
-                    })
-                except Exception as e:
-                    logger.error(f"加载物流模板失败: {fname} - {e}")
-    return jsonify({"templates": templates})
-
-
-@app.route("/api/logistics/calculate", methods=["POST"])
-def logistics_calculate():
-    """计算运费 — 匹配最佳物流渠道"""
-    data = request.get_json(silent=True) or {}
-    template_id = data.get("template_id", "xingyuan_intl")
-    weight_g = float(data.get("weight_g", 0))
-    length_cm = float(data.get("length_cm", 0))
-    width_cm = float(data.get("width_cm", 0))
-    height_cm = float(data.get("height_cm", 0))
-    value_rub = float(data.get("value_rub", 0))
-
-    if weight_g <= 0:
-        return jsonify({"error": "重量必须大于 0"}), 400
-
-    # 加载模板
-    template_path = os.path.join(LOGISTICS_TEMPLATES_DIR, f"{template_id}.json")
-    if not os.path.exists(template_path):
-        if os.path.isdir(LOGISTICS_TEMPLATES_DIR):
-            for fname in os.listdir(LOGISTICS_TEMPLATES_DIR):
-                if fname.endswith(".json"):
-                    with open(os.path.join(LOGISTICS_TEMPLATES_DIR, fname), "r", encoding="utf-8") as f:
-                        d = json.load(f)
-                    if d.get("id") == template_id:
-                        template_path = os.path.join(LOGISTICS_TEMPLATES_DIR, fname)
-                        break
-        if not os.path.exists(template_path):
-            return jsonify({"error": f"物流模板不存在: {template_id}"}), 404
-
-    with open(template_path, "r", encoding="utf-8") as f:
-        template = json.load(f)
-
-    channels = template.get("channels", [])
-    matched = []
-
-    for ch in channels:
-        # 重量筛选
-        if weight_g < ch.get("min_weight_g", 0) or weight_g > ch.get("max_weight_g", float("inf")):
-            continue
-        # 货值筛选 (0 表示不限制)
-        min_v = ch.get("min_value_rub", 0)
-        max_v = ch.get("max_value_rub", float("inf"))
-        if value_rub > 0:
-            if min_v > 0 and value_rub < min_v:
-                continue
-            if max_v < float("inf") and value_rub > max_v:
-                continue
-        # 尺寸筛选
-        if length_cm > 0 and width_cm > 0 and height_cm > 0:
-            max_side = max(length_cm, width_cm, height_cm)
-            sum_sides = length_cm + width_cm + height_cm
-            if max_side > ch.get("max_side_cm", float("inf")):
-                continue
-            if sum_sides > ch.get("max_sum_sides_cm", float("inf")):
-                continue
-
-        # 计算运费
-        billing_type = ch.get("billing_type", "actual_weight")
-        if billing_type == "volumetric" and length_cm > 0 and width_cm > 0 and height_cm > 0:
-            vol_weight = length_cm * width_cm * height_cm / 12000
-            billing_weight = max(weight_g, vol_weight)
-            formula = f"max({weight_g:.0f}g, {length_cm:.0f}×{width_cm:.0f}×{height_cm:.0f}/12000={vol_weight:.0f}g) = {billing_weight:.0f}g"
-        else:
-            billing_weight = weight_g
-            formula = f"{weight_g:.0f}g"
-
-        cost = ch["base_fee"] + ch["per_gram_fee"] * billing_weight
-
-        matched.append({
-            "channel_id": ch["id"],
-            "channel_name": ch["name"],
-            "category_cn": ch["category_cn"],
-            "mode": ch["mode"],
-            "mode_cn": ch["mode_cn"],
-            "delivery": ch["delivery"],
-            "delivery_cn": ch["delivery_cn"],
-            "cost": round(cost, 2),
-            "formula": f"¥{ch['base_fee']:.2f} + ¥{ch['per_gram_fee']:.4f}/g × {formula}",
-            "transit_days": ch.get("transit_days", ""),
-            "billing_type": billing_type
-        })
-
-    if not matched:
-        return jsonify({
-            "matched": False,
-            "message": "没有匹配的物流渠道，请检查重量、货值或尺寸参数",
-            "channels": []
-        })
-
-    # 排序：优先 Economy > Standard，优先 PUDO > Courier，价格从低到高
-    mode_order = {"Standard": 0, "Economy": 1}
-    delivery_order = {"PUDO": 0, "Courier": 1}
-    matched.sort(key=lambda m: (
-        mode_order.get(m.get("mode", ""), 99),
-        delivery_order.get(m.get("delivery", ""), 99),
-        m["cost"]
-    ))
-
-    best = matched[0]
-    return jsonify({
-        "matched": True,
-        "best": best,
-        "channels": matched,
-        "template_name": template["name"]
-    })
+# Logistics 域路由由 DDD 蓝图接管（见上方 register_blueprint）
 
 
 # ==================== Ozon 上架页面路由 ====================

@@ -55,5 +55,18 @@ def create_settings_facade(data_root: str, env_file: str):
     return facade, event_bus
 
 
+def create_logistics_facade(data_root: str):
+    """装配 Logistics 域"""
+    from src.serp.logistics.infrastructure.json_repositories import JsonLogisticsTemplateRepository
+    from src.serp.logistics.application.commands import LogisticsApplicationService
+
+    templates_dir = os.path.join(data_root, "logistics_templates")
+    repo = JsonLogisticsTemplateRepository(templates_dir)
+    facade = LogisticsApplicationService(repo)
+
+    logger.info("Logistics domain wired: repo=%s", repo.__class__.__name__)
+    return facade
+
+
 def create_registry() -> FacadeRegistry:
     return FacadeRegistry()
