@@ -1,0 +1,305 @@
+{
+  "result": [
+    {
+      "id": 61704,
+      "value": "ABS пластик",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61707,
+      "value": "Breathable",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61709,
+      "value": "Cooldry",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61710,
+      "value": "Coolmax",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61713,
+      "value": "Croslite",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61716,
+      "value": "EVA",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61721,
+      "value": "Hipora",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61727,
+      "value": "Polar Fleece",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61735,
+      "value": "Softshell",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61737,
+      "value": "Taffeta",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61744,
+      "value": "Waterproof",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61745,
+      "value": "Абразив",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61746,
+      "value": "Агат",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61748,
+      "value": "Акрил",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61749,
+      "value": "Акрилик",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61751,
+      "value": "Альпака",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61753,
+      "value": "Алюминий",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61754,
+      "value": "Ангора",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61756,
+      "value": "Атлас",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61757,
+      "value": "Аутласт",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61758,
+      "value": "Ацетат",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61760,
+      "value": "Бакелит",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61762,
+      "value": "Бамбук",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61763,
+      "value": "Бамбуковое волокно",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61764,
+      "value": "Бархат",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61766,
+      "value": "Береза",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61767,
+      "value": "Бижутерный сплав",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61770,
+      "value": "Бирюза",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61771,
+      "value": "Бифлекс",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61772,
+      "value": "Брезент",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61773,
+      "value": "Бронза",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61775,
+      "value": "Бук",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61776,
+      "value": "Бумага",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61777,
+      "value": "Бязь",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61778,
+      "value": "Варисцит",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61780,
+      "value": "Вельвет",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61781,
+      "value": "Велюр натуральный",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61782,
+      "value": "Верблюжья шерсть",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61783,
+      "value": "Винил",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61786,
+      "value": "Вискоза",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61791,
+      "value": "Войлок",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61792,
+      "value": "Волокно",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61794,
+      "value": "Ворсин",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61795,
+      "value": "Воск",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61796,
+      "value": "Вспененная резина EPDM",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61797,
+      "value": "Вспененный полимер",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61799,
+      "value": "Высокоуглеродистая сталь",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61801,
+      "value": "Габардин",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61803,
+      "value": "Гель",
+      "info": "",
+      "picture": ""
+    },
+    {
+      "id": 61804,
+      "value": "Гематит",
+      "info": "",
+      "picture": ""
+    }
+  ],
+  "has_next": true
+}
