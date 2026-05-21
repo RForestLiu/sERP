@@ -65,6 +65,80 @@ DEFAULT_SETTINGS = {
         "product_specs_extract": "deepseek_v4_flash",
         "product_specs_review": "deepseek_v4_flash",
     },
+    "pricing_formulas": [
+        {
+            "id": "ozon_rfbs_default",
+            "platform": "ozon",
+            "name": "Ozon rFBS default",
+            "enabled": True,
+            "currency": "CNY",
+            "rounding": "ceil",
+            "formula": "(cost_price_cny + seller_logistics_cny + ozon_fixed_fee_cny + return_reserve_cny + other_fixed_cost_cny) / (1 - profit_rate - ozon_commission_rate - acquiring_rate - promotion_rate - other_percent_fee_rate)",
+            "old_price_formula": "sale_price_cny * original_price_multiplier",
+            "defaults": {
+                "profit_rate": 0.3,
+                "ozon_commission_rate": 0.18,
+                "acquiring_rate": 0.015,
+                "promotion_rate": 0,
+                "other_percent_fee_rate": 0,
+                "seller_logistics_cny": 8.32,
+                "ozon_fixed_fee_cny": 0,
+                "return_reserve_cny": 0,
+                "other_fixed_cost_cny": 0,
+                "original_price_multiplier": 1.8,
+                "stock": 10000,
+                "logistics_channel": "XY Economy Extra Small",
+                "chargeable_weight_mode": "actual_or_volume_12000"
+            },
+            "notes": "Commission is category dependent. Replace ozon_commission_rate with Ozon API /v5/product/info/prices commissions.sales_percent_fbs when available."
+        },
+        {
+            "id": "wb_default",
+            "platform": "wb",
+            "name": "Wildberries default",
+            "enabled": True,
+            "currency": "CNY",
+            "rounding": "ceil",
+            "formula": "(cost_price_cny + seller_logistics_cny + platform_fixed_fee_cny + return_reserve_cny + other_fixed_cost_cny) / (1 - profit_rate - platform_commission_rate - acquiring_rate - promotion_rate - other_percent_fee_rate)",
+            "old_price_formula": "sale_price_cny * original_price_multiplier",
+            "defaults": {
+                "profit_rate": 0.3,
+                "platform_commission_rate": 0.2,
+                "acquiring_rate": 0,
+                "promotion_rate": 0,
+                "other_percent_fee_rate": 0,
+                "seller_logistics_cny": 0,
+                "platform_fixed_fee_cny": 0,
+                "return_reserve_cny": 0,
+                "other_fixed_cost_cny": 0,
+                "original_price_multiplier": 1.8,
+                "stock": 10000
+            }
+        },
+        {
+            "id": "amazon_default",
+            "platform": "amazon",
+            "name": "Amazon default",
+            "enabled": True,
+            "currency": "CNY",
+            "rounding": "ceil",
+            "formula": "(cost_price_cny + seller_logistics_cny + platform_fixed_fee_cny + return_reserve_cny + other_fixed_cost_cny) / (1 - profit_rate - platform_commission_rate - acquiring_rate - promotion_rate - other_percent_fee_rate)",
+            "old_price_formula": "sale_price_cny * original_price_multiplier",
+            "defaults": {
+                "profit_rate": 0.3,
+                "platform_commission_rate": 0.15,
+                "acquiring_rate": 0,
+                "promotion_rate": 0,
+                "other_percent_fee_rate": 0,
+                "seller_logistics_cny": 0,
+                "platform_fixed_fee_cny": 0,
+                "return_reserve_cny": 0,
+                "other_fixed_cost_cny": 0,
+                "original_price_multiplier": 1.8,
+                "stock": 10000
+            }
+        }
+    ],
 }
 
 
@@ -96,10 +170,12 @@ class SettingsService:
         env_updates = data.get("env") or {}
 
         if settings:
+            current = self.load_settings()
             self.save_settings(
                 {
                     "models": settings.get("models", []),
                     "feature_models": settings.get("feature_models", {}),
+                    "pricing_formulas": settings.get("pricing_formulas", current.get("pricing_formulas", [])),
                 }
             )
 
@@ -156,6 +232,13 @@ class SettingsService:
             incoming_features = settings.get("feature_models", {})
             if isinstance(incoming_features, dict):
                 current.setdefault("feature_models", {}).update(incoming_features)
+            incoming_pricing = settings.get("pricing_formulas", [])
+            if isinstance(incoming_pricing, list):
+                by_id = {p.get("id"): p for p in current.get("pricing_formulas", []) if isinstance(p, dict) and p.get("id")}
+                for formula in incoming_pricing:
+                    if isinstance(formula, dict) and formula.get("id"):
+                        by_id[formula["id"]] = formula
+                current["pricing_formulas"] = list(by_id.values())
             self.save_settings(current)
 
         stores = payload.get("stores")
@@ -182,7 +265,7 @@ class SettingsService:
         incoming_settings = import_payload.get("settings", {}) if isinstance(import_payload, dict) else {}
         incoming_stores = import_payload.get("stores", []) if isinstance(import_payload, dict) else []
         incoming_env = import_payload.get("env", {}) if isinstance(import_payload, dict) else {}
-        diff = {"models": [], "feature_models": [], "stores": [], "env": []}
+        diff = {"models": [], "feature_models": [], "pricing_formulas": [], "stores": [], "env": []}
 
         current_models = {m.get("id"): m for m in current["settings"].get("models", [])}
         for model in incoming_settings.get("models", []) if isinstance(incoming_settings, dict) else []:
@@ -195,6 +278,13 @@ class SettingsService:
         for key, value in incoming_features.items():
             if current_features.get(key) != value:
                 diff["feature_models"].append({"key": key, "from": current_features.get(key, ""), "to": value})
+
+        current_pricing = {p.get("id"): p for p in current["settings"].get("pricing_formulas", []) if isinstance(p, dict)}
+        incoming_pricing = incoming_settings.get("pricing_formulas", []) if isinstance(incoming_settings, dict) else []
+        for formula in incoming_pricing if isinstance(incoming_pricing, list) else []:
+            pid = formula.get("id") if isinstance(formula, dict) else ""
+            if pid:
+                diff["pricing_formulas"].append({"id": pid, "action": "update" if pid in current_pricing else "add"})
 
         current_stores = {s.get("id"): s for s in current.get("stores", [])}
         for store in incoming_stores if isinstance(incoming_stores, list) else []:
@@ -257,7 +347,7 @@ class SettingsService:
             try:
                 loaded = json.loads(self.settings_file.read_text(encoding="utf-8"))
                 if isinstance(loaded, dict):
-                    for key in ("version", "models", "feature_models"):
+                    for key in ("version", "models", "feature_models", "pricing_formulas"):
                         if key in loaded:
                             settings[key] = loaded[key]
             except Exception:
@@ -269,6 +359,10 @@ class SettingsService:
         feature_models = settings.setdefault("feature_models", {})
         for key, value in DEFAULT_SETTINGS["feature_models"].items():
             feature_models.setdefault(key, value)
+        pricing_ids = {p.get("id") for p in settings.get("pricing_formulas", []) if isinstance(p, dict)}
+        for formula in DEFAULT_SETTINGS["pricing_formulas"]:
+            if formula["id"] not in pricing_ids:
+                settings.setdefault("pricing_formulas", []).append(copy.deepcopy(formula))
         return settings
 
     def save_settings(self, settings):
@@ -277,6 +371,7 @@ class SettingsService:
             "version": 1,
             "models": settings.get("models", []),
             "feature_models": settings.get("feature_models", {}),
+            "pricing_formulas": settings.get("pricing_formulas", []),
             "updated_at": datetime.now().isoformat(),
         }
         self.settings_file.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")

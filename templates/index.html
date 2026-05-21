@@ -969,6 +969,12 @@
         .settings-grid label, .settings-binding-row label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: #777; }
         .settings-grid input, .settings-grid select, .settings-binding-row select, .settings-import-text { border: 1px solid #d9d9d9; border-radius: 4px; padding: 7px 8px; font-size: 12px; background: #fff; }
         .settings-binding-row { display: grid; grid-template-columns: 220px minmax(180px, 360px); gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid #f2f2f2; }
+        .settings-formula-grid { display: grid; grid-template-columns: 120px 120px 1fr 100px 100px; gap: 8px; align-items: end; }
+        .settings-formula-grid label, .settings-vars-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: #777; }
+        .settings-formula-grid input, .settings-formula-grid select, .settings-vars-grid input, .settings-formula-text { border: 1px solid #d9d9d9; border-radius: 4px; padding: 7px 8px; font-size: 12px; background: #fff; }
+        .settings-formula-text { width: 100%; min-height: 54px; resize: vertical; font-family: Consolas, monospace; box-sizing: border-box; }
+        .settings-vars-grid { display: grid; grid-template-columns: repeat(6, minmax(100px, 1fr)); gap: 8px; margin-top: 8px; }
+        .settings-formula-note { margin-top: 6px; font-size: 11px; color: #777; line-height: 1.5; }
         .settings-add-btn { border: 1px dashed #b7d8ff; background: #f7fbff; color: #1677ff; border-radius: 4px; padding: 8px 12px; cursor: pointer; width: 100%; }
         .settings-remove-btn { border: 1px solid #ffccc7; background: #fff2f0; color: #cf1322; border-radius: 4px; padding: 7px 10px; cursor: pointer; }
         .settings-secret-status { font-size: 11px; color: #888; margin-top: 4px; }
@@ -1651,6 +1657,7 @@
                     <button class="settings-tab active" data-settings-tab="models">模型配置</button>
                     <button class="settings-tab" data-settings-tab="bindings">功能模型绑定</button>
                     <button class="settings-tab" data-settings-tab="stores">店铺配置</button>
+                    <button class="settings-tab" data-settings-tab="pricing">定价公式</button>
                     <button class="settings-tab" data-settings-tab="io">导入 / 导出</button>
                 </div>
                 <div class="settings-tab-panel active" id="settings-tab-models">
@@ -1666,6 +1673,11 @@
                     <div class="settings-section-title">平台 / 店铺</div>
                     <div id="settings-stores-list"></div>
                     <button class="settings-add-btn" id="settings-add-store">+ 添加店铺</button>
+                </div>
+                <div class="settings-tab-panel" id="settings-tab-pricing">
+                    <div class="settings-section-title">平台定价公式</div>
+                    <div id="settings-pricing-list"></div>
+                    <button class="settings-add-btn" id="settings-add-pricing">+ 添加定价公式</button>
                 </div>
                 <div class="settings-tab-panel" id="settings-tab-io">
                     <div class="settings-io-grid">
@@ -2816,6 +2828,14 @@
             return html;
         }
 
+        function settingsNumberVar(name, value, step) {
+            return `<label>${name}<input data-var="${name}" type="number" step="${step || "0.01"}" value="${_escHtml(value === undefined || value === null ? "" : value)}"></label>`;
+        }
+
+        function settingsTextVar(name, value) {
+            return `<label>${name}<input data-var="${name}" value="${_escHtml(value || "")}"></label>`;
+        }
+
         function modelOptions() {
             const models = ((settingsState && settingsState.settings && settingsState.settings.models) || []).filter(m => m.enabled !== false);
             return models.map(m => ({ value: m.id, label: `${m.name || m.id} (${m.model || ""})` }));
@@ -2895,6 +2915,53 @@
                 `;
                 storesEl.appendChild(card);
             });
+
+            const pricingEl = document.getElementById("settings-pricing-list");
+            if (pricingEl) {
+                pricingEl.innerHTML = "";
+                (settingsState.settings.pricing_formulas || []).forEach((p, index) => {
+                    const defaults = p.defaults || {};
+                    const card = document.createElement("div");
+                    card.className = "settings-card";
+                    card.innerHTML = `
+                        <div class="settings-formula-grid">
+                            ${settingsInput("id", p.id)}
+                            ${settingsInput("platform", p.platform)}
+                            ${settingsInput("name", p.name)}
+                            ${settingsSelect("enabled", p.enabled === false ? "false" : "true", [{value:"true", label:"启用"}, {value:"false", label:"停用"}])}
+                            ${settingsSelect("rounding", p.rounding || "ceil", [{value:"ceil", label:"ceil"}, {value:"round", label:"round"}, {value:"none", label:"none"}])}
+                        </div>
+                        <div style="margin-top:8px;">
+                            <label style="display:block;font-size:11px;color:#777;margin-bottom:4px;">售价公式</label>
+                            <textarea class="settings-formula-text" data-formula="formula">${_escHtml(p.formula || "")}</textarea>
+                        </div>
+                        <div style="margin-top:8px;">
+                            <label style="display:block;font-size:11px;color:#777;margin-bottom:4px;">原价公式</label>
+                            <textarea class="settings-formula-text" data-formula="old_price_formula">${_escHtml(p.old_price_formula || "")}</textarea>
+                        </div>
+                        <div class="settings-vars-grid">
+                            ${settingsNumberVar("profit_rate", defaults.profit_rate, "0.01")}
+                            ${settingsNumberVar("ozon_commission_rate", defaults.ozon_commission_rate, "0.001")}
+                            ${settingsNumberVar("platform_commission_rate", defaults.platform_commission_rate, "0.001")}
+                            ${settingsNumberVar("acquiring_rate", defaults.acquiring_rate, "0.001")}
+                            ${settingsNumberVar("promotion_rate", defaults.promotion_rate, "0.001")}
+                            ${settingsNumberVar("other_percent_fee_rate", defaults.other_percent_fee_rate, "0.001")}
+                            ${settingsNumberVar("seller_logistics_cny", defaults.seller_logistics_cny, "0.01")}
+                            ${settingsNumberVar("ozon_fixed_fee_cny", defaults.ozon_fixed_fee_cny, "0.01")}
+                            ${settingsNumberVar("platform_fixed_fee_cny", defaults.platform_fixed_fee_cny, "0.01")}
+                            ${settingsNumberVar("return_reserve_cny", defaults.return_reserve_cny, "0.01")}
+                            ${settingsNumberVar("other_fixed_cost_cny", defaults.other_fixed_cost_cny, "0.01")}
+                            ${settingsNumberVar("original_price_multiplier", defaults.original_price_multiplier, "0.01")}
+                            ${settingsNumberVar("stock", defaults.stock, "1")}
+                            ${settingsTextVar("logistics_channel", defaults.logistics_channel)}
+                            ${settingsTextVar("chargeable_weight_mode", defaults.chargeable_weight_mode)}
+                        </div>
+                        <div class="settings-formula-note">Ozon 佣金按品类变化；新品创建前用默认值，已有商品可用 Ozon prices API 返回的 commissions/acquiring 覆盖。</div>
+                        <div style="margin-top:8px;text-align:right;"><button class="settings-remove-btn" data-remove-pricing="${index}">删除公式</button></div>
+                    `;
+                    pricingEl.appendChild(card);
+                });
+            }
         }
 
         async function loadSettings(force) {
@@ -2932,7 +2999,21 @@
                 });
                 stores.push(item);
             });
-            return { settings: { models: models, feature_models: featureModels }, stores: stores, env: envUpdates };
+            const pricingFormulas = [];
+            document.querySelectorAll("#settings-pricing-list .settings-card").forEach(card => {
+                const item = { defaults: {} };
+                card.querySelectorAll("[data-field]").forEach(el => {
+                    item[el.dataset.field] = el.dataset.field === "enabled" ? el.value === "true" : el.value.trim();
+                });
+                card.querySelectorAll("[data-formula]").forEach(el => { item[el.dataset.formula] = el.value.trim(); });
+                card.querySelectorAll("[data-var]").forEach(el => {
+                    const raw = el.value.trim();
+                    item.defaults[el.dataset.var] = raw === "" ? "" : (isNaN(Number(raw)) ? raw : Number(raw));
+                });
+                item.currency = "CNY";
+                pricingFormulas.push(item);
+            });
+            return { settings: { models: models, feature_models: featureModels, pricing_formulas: pricingFormulas }, stores: stores, env: envUpdates };
         }
 
         document.querySelectorAll(".settings-tab").forEach(btn => {
@@ -2956,6 +3037,23 @@
             renderSettings();
         });
 
+        document.getElementById("settings-add-pricing").addEventListener("click", function() {
+            if (!settingsState) return;
+            settingsState.settings.pricing_formulas = settingsState.settings.pricing_formulas || [];
+            settingsState.settings.pricing_formulas.push({
+                id: "pricing_" + Date.now(),
+                platform: "ozon",
+                name: "New pricing formula",
+                enabled: true,
+                currency: "CNY",
+                rounding: "ceil",
+                formula: "(cost_price_cny + seller_logistics_cny + other_fixed_cost_cny) / (1 - profit_rate - ozon_commission_rate - acquiring_rate - promotion_rate - other_percent_fee_rate)",
+                old_price_formula: "sale_price_cny * original_price_multiplier",
+                defaults: { profit_rate: 0.3, ozon_commission_rate: 0.18, acquiring_rate: 0.015, seller_logistics_cny: 0, original_price_multiplier: 1.8, stock: 10000 }
+            });
+            renderSettings();
+        });
+
         document.getElementById("settings-reload-btn").addEventListener("click", () => loadSettings(true));
         document.getElementById("settings-save-btn").addEventListener("click", async function() {
             const res = await fetch("/api/settings", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(collectSettingsPayload()) });
@@ -2974,6 +3072,11 @@
             const rmStore = e.target.closest("[data-remove-store]");
             if (rmStore && settingsState) {
                 settingsState.stores.splice(Number(rmStore.dataset.removeStore), 1);
+                renderSettings();
+            }
+            const rmPricing = e.target.closest("[data-remove-pricing]");
+            if (rmPricing && settingsState) {
+                settingsState.settings.pricing_formulas.splice(Number(rmPricing.dataset.removePricing), 1);
                 renderSettings();
             }
         });

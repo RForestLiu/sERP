@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.14";
+  var SERP_EXTENSION_VERSION = "3.2.15";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -70,6 +70,8 @@
   var allProducts = [];
   var _fieldMap = {};  // index → {fid, el, selectors, options, tag, label, type}
   var _categoryMatchRunning = false;
+  var pricingSettingsCache = null;
+  var pricingTempVars = {};
 
   // ==================== CSS 注入 ====================
   var style = document.createElement("style");
@@ -96,6 +98,10 @@
     "#serp-toolbar .serp-product-info .pi-price-detail.visible{display:block;}",
     "#serp-toolbar .serp-product-info .pi-price-row{display:flex;justify-content:space-between;gap:8px;}",
     "#serp-toolbar .serp-product-info .pi-price-row strong{color:#333;}",
+    "#serp-toolbar .serp-product-info .pi-price-vars{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:5px;}",
+    "#serp-toolbar .serp-product-info .pi-price-vars label{display:flex;flex-direction:column;gap:2px;font-size:9px;color:#777;}",
+    "#serp-toolbar .serp-product-info .pi-price-vars input{border:1px solid #d9d9d9;border-radius:3px;padding:2px 4px;font-size:10px;min-width:0;}",
+    "#serp-toolbar .serp-product-info .pi-price-note{font-size:9px;color:#888;margin-top:4px;line-height:1.35;}",
     "/* ===== 产品选择弹窗 ===== */",
     "#serp-modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000000;align-items:center;justify-content:center;}",
     "#serp-modal-overlay.active{display:flex;}",
@@ -555,7 +561,7 @@
       productInfo.classList.add("visible");
       piSkc.textContent = selectedProduct.skc || "";
       piTitle.textContent = selectedProduct.title || "未命名产品";
-      if (piPriceDetail) piPriceDetail.innerHTML = buildPriceFormulaHtml(selectedProduct);
+      if (piPriceDetail) piPriceDetail.innerHTML = buildPriceFormulaHtmlV2(selectedProduct);
       btnSelect.classList.add("has-product");
     } else {
       productInfo.classList.remove("visible");
@@ -613,6 +619,167 @@
       '<div class="pi-price-row"><span>目标利润率</span><strong>30%</strong></div>',
       '<div class="pi-price-row"><span>建议售价</span><strong>' + (suggested ? "¥" + suggested.toFixed(2) : "--") + '</strong></div>',
       '<div class="pi-price-row"><span>预计利润</span><strong>' + (profit ? "¥" + profit.toFixed(2) : "--") + '</strong></div>'
+    ].join("");
+  }
+
+  function defaultPricingFormulaV2(platform) {
+    platform = platform || "ozon";
+    return {
+      id: platform + "_fallback",
+      platform: platform,
+      name: platform + " fallback",
+      enabled: true,
+      rounding: "ceil",
+      formula: platform === "ozon"
+        ? "(cost_price_cny + seller_logistics_cny + ozon_fixed_fee_cny + return_reserve_cny + other_fixed_cost_cny) / (1 - profit_rate - ozon_commission_rate - acquiring_rate - promotion_rate - other_percent_fee_rate)"
+        : "(cost_price_cny + seller_logistics_cny + platform_fixed_fee_cny + return_reserve_cny + other_fixed_cost_cny) / (1 - profit_rate - platform_commission_rate - acquiring_rate - promotion_rate - other_percent_fee_rate)",
+      old_price_formula: "sale_price_cny * original_price_multiplier",
+      defaults: {
+        profit_rate: 0.3,
+        ozon_commission_rate: platform === "ozon" ? 0.18 : 0,
+        platform_commission_rate: platform === "ozon" ? 0.18 : 0.15,
+        acquiring_rate: platform === "ozon" ? 0.015 : 0,
+        promotion_rate: 0,
+        other_percent_fee_rate: 0,
+        seller_logistics_cny: platform === "ozon" ? 8.32 : 0,
+        ozon_fixed_fee_cny: 0,
+        platform_fixed_fee_cny: 0,
+        return_reserve_cny: 0,
+        other_fixed_cost_cny: 0,
+        original_price_multiplier: 1.8,
+        stock: 10000
+      }
+    };
+  }
+
+  async function loadPricingSettings(force) {
+    if (pricingSettingsCache && !force) return pricingSettingsCache;
+    try {
+      var res = await bgFetch(FLASK_BASE + "/api/settings");
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      var data = await res.json();
+      pricingSettingsCache = ((data.settings || {}).pricing_formulas || []);
+    } catch (err) {
+      console.warn("[sERP] pricing settings load failed:", err);
+      pricingSettingsCache = [];
+    }
+    return pricingSettingsCache;
+  }
+
+  function getPricingFormulaV2(platform) {
+    platform = (platform || detectPlatform() || "ozon").toLowerCase();
+    var list = pricingSettingsCache || [];
+    for (var i = 0; i < list.length; i++) {
+      var item = list[i] || {};
+      if (item.enabled !== false && String(item.platform || "").toLowerCase() === platform) return item;
+    }
+    return defaultPricingFormulaV2(platform);
+  }
+
+  function safeNumberV2(value, fallback) {
+    var n = parseFloat(value);
+    return isNaN(n) ? (fallback || 0) : n;
+  }
+
+  function safeEvalFormulaV2(expr, vars) {
+    expr = String(expr || "");
+    if (!expr || !/^[\d\s+\-*/()._,a-zA-Z]+$/.test(expr)) return NaN;
+    var names = Object.keys(vars || {});
+    var args = names.map(function (name) { return Number(vars[name]) || 0; });
+    try {
+      return Function(names.join(","), '"use strict"; return (' + expr + ');').apply(null, args);
+    } catch (err) {
+      console.warn("[sERP] formula eval failed:", expr, err);
+      return NaN;
+    }
+  }
+
+  function roundPricingValueV2(value, mode) {
+    if (!isFinite(value) || value <= 0) return 0;
+    if (mode === "round") return Math.round(value);
+    if (mode === "none") return Math.round(value * 100) / 100;
+    return Math.ceil(value);
+  }
+
+  function estimateOzonLogisticsCnyV2(weightG, sizeSpec) {
+    weightG = safeNumberV2(weightG, 0);
+    if (weightG <= 0) return 0;
+    var dims = parseSizeSpecCm(sizeSpec);
+    var volumeKg = 0;
+    if (dims.length === 3) volumeKg = (safeNumberV2(dims[0], 0) * safeNumberV2(dims[1], 0) * safeNumberV2(dims[2], 0)) / 12000;
+    var weightKg = weightG / 1000;
+    if (weightG <= 500) return Math.ceil((3.12 + 26 * weightKg) * 100) / 100;
+    if (weightG <= 2000) return Math.ceil((16.64 + 26 * weightKg) * 100) / 100;
+    return Math.ceil((37.44 + 17.68 * Math.max(weightKg, volumeKg)) * 100) / 100;
+  }
+
+  function getPricingVariablesV2(product, formula) {
+    var manual = normalizeManualDataForFill((product && product.manual_data) || {});
+    var defaults = Object.assign({}, (formula && formula.defaults) || {});
+    var vars = Object.assign({}, defaults, pricingTempVars || {});
+    var pd = (product && product.product_data) || {};
+    var sourceMoney = parseMoney((product && product.price) || pd.price || "");
+    var sourceCny = toCny(sourceMoney) || 0;
+    vars.cost_price_cny = safeNumberV2(manual.cost_price, 0) || sourceCny || 0;
+    vars.source_price_cny = sourceCny;
+    vars.weight_g = safeNumberV2(manual.effective_weight_g, 0);
+    var dims = parseSizeSpecCm(manual.effective_size_spec);
+    vars.length_cm = dims.length > 0 ? safeNumberV2(dims[0], 0) : 0;
+    vars.width_cm = dims.length > 1 ? safeNumberV2(dims[1], 0) : 0;
+    vars.height_cm = dims.length > 2 ? safeNumberV2(dims[2], 0) : 0;
+    if (String((formula && formula.platform) || detectPlatform() || "").toLowerCase() === "ozon" && pricingTempVars.seller_logistics_cny === undefined) {
+      var logistics = estimateOzonLogisticsCnyV2(vars.weight_g, manual.effective_size_spec);
+      if (logistics > 0) vars.seller_logistics_cny = logistics;
+    }
+    if (vars.ozon_commission_rate === undefined && vars.platform_commission_rate !== undefined) vars.ozon_commission_rate = vars.platform_commission_rate;
+    if (vars.platform_commission_rate === undefined && vars.ozon_commission_rate !== undefined) vars.platform_commission_rate = vars.ozon_commission_rate;
+    ["profit_rate", "ozon_commission_rate", "platform_commission_rate", "acquiring_rate", "promotion_rate", "other_percent_fee_rate", "seller_logistics_cny", "ozon_fixed_fee_cny", "platform_fixed_fee_cny", "return_reserve_cny", "other_fixed_cost_cny", "original_price_multiplier", "stock"].forEach(function (k) {
+      vars[k] = safeNumberV2(vars[k], k === "stock" ? 10000 : 0);
+    });
+    if (!vars.original_price_multiplier) vars.original_price_multiplier = 1.8;
+    if (!vars.stock) vars.stock = 10000;
+    return { vars: vars, sourceMoney: sourceMoney, sourceCny: sourceCny };
+  }
+
+  function computePricingV2(product) {
+    var platform = detectPlatform() || "ozon";
+    var formula = getPricingFormulaV2(platform);
+    var ctx = getPricingVariablesV2(product, formula);
+    var sale = safeEvalFormulaV2(formula.formula, ctx.vars);
+    var saleRounded = roundPricingValueV2(sale, formula.rounding || "ceil");
+    ctx.vars.sale_price_cny = saleRounded;
+    var oldPrice = safeEvalFormulaV2(formula.old_price_formula || "sale_price_cny * original_price_multiplier", ctx.vars);
+    var oldRounded = roundPricingValueV2(oldPrice, formula.rounding || "ceil");
+    if (saleRounded > 0 && oldRounded < saleRounded * 1.7) oldRounded = Math.ceil(saleRounded * 1.7);
+    if (saleRounded > 0 && oldRounded > saleRounded * 2.0 && pricingTempVars.original_price_multiplier === undefined) oldRounded = Math.ceil(saleRounded * 1.8);
+    return { formula: formula, vars: ctx.vars, sale_price_cny: saleRounded, old_price_cny: oldRounded, stock: Math.round(ctx.vars.stock || 10000), cost_price_cny: ctx.vars.cost_price_cny, sourceMoney: ctx.sourceMoney, sourceCny: ctx.sourceCny };
+  }
+
+  function priceVarInputV2(key, label, value, step) {
+    return '<label>' + label + '<input data-price-var="' + key + '" type="number" step="' + (step || "0.01") + '" value="' + (value === undefined || value === null ? "" : String(value)) + '"></label>';
+  }
+
+  function buildPriceFormulaHtmlV2(product) {
+    var pricing = computePricingV2(product);
+    var v = pricing.vars || {};
+    var sourceText = pricing.sourceMoney ? (pricing.sourceMoney.currency + " " + pricing.sourceMoney.value.toFixed(2)) : "--";
+    return [
+      '<div class="pi-price-row"><span>Formula</span><strong>' + ((pricing.formula && pricing.formula.name) || "--") + '</strong></div>',
+      '<div class="pi-price-row"><span>Source</span><strong>' + sourceText + '</strong></div>',
+      '<div class="pi-price-row"><span>Cost CNY</span><strong>' + (pricing.cost_price_cny ? pricing.cost_price_cny.toFixed(2) : "--") + '</strong></div>',
+      '<div class="pi-price-row"><span>Logistics</span><strong>' + (v.seller_logistics_cny ? v.seller_logistics_cny.toFixed(2) : "0") + '</strong></div>',
+      '<div class="pi-price-row"><span>Sale CNY</span><strong>' + (pricing.sale_price_cny || "--") + '</strong></div>',
+      '<div class="pi-price-row"><span>Old CNY</span><strong>' + (pricing.old_price_cny || "--") + '</strong></div>',
+      '<div class="pi-price-row"><span>Stock</span><strong>' + pricing.stock + '</strong></div>',
+      '<div class="pi-price-vars">' +
+        priceVarInputV2("profit_rate", "profit", v.profit_rate, "0.01") +
+        priceVarInputV2("ozon_commission_rate", "commission", v.ozon_commission_rate, "0.001") +
+        priceVarInputV2("acquiring_rate", "acquiring", v.acquiring_rate, "0.001") +
+        priceVarInputV2("seller_logistics_cny", "logistics", v.seller_logistics_cny, "0.01") +
+        priceVarInputV2("original_price_multiplier", "old x", v.original_price_multiplier, "0.01") +
+        priceVarInputV2("stock", "stock", pricing.stock, "1") +
+      '</div>',
+      '<div class="pi-price-note">Temporary variables only affect this page fill. Ozon commission should use category/API value when known.</div>'
     ].join("");
   }
 
@@ -794,13 +961,29 @@
     listEl.querySelectorAll(".serp-product-item").forEach(function (item) {
       item.addEventListener("click", function () {
         var p = allProducts.find(function (x) { return x.skc === item.dataset.skc; });
-        if (p) { selectedProduct = p; updateProductUI(); modalOverlay.classList.remove("active"); showToast("已选择产品: " + (p.skc || ""), "success"); }
+        if (p) {
+          selectedProduct = p;
+          pricingTempVars = {};
+          loadPricingSettings(false).then(function () { updateProductUI(); });
+          updateProductUI();
+          modalOverlay.classList.remove("active");
+          showToast("已选择产品: " + (p.skc || ""), "success");
+        }
       });
     });
   }
 
   // ==================== 平台检测 ====================
   function detectPlatform() {
+    var path = window.location.pathname || "";
+    var dxmMatch = path.match(/\/web\/([^/]+?)Product\/(?:add|edit)/i);
+    if (dxmMatch) {
+      var dxmPlatform = dxmMatch[1].toLowerCase();
+      if (dxmPlatform.indexOf("wildberrie") !== -1 || dxmPlatform === "wb") return "wb";
+      if (dxmPlatform.indexOf("ozon") !== -1) return "ozon";
+      if (dxmPlatform.indexOf("amazon") !== -1) return "amazon";
+      return dxmPlatform;
+    }
     // 从 store_id 前缀检测平台：ozon_anling → ozon, wb_xxx → wb
     var storeId = detectStoreId();
     if (!storeId) return null;
@@ -2611,10 +2794,12 @@
     showToast("已清空 " + cleared + " 个字段", "info");
   }
 
-  function precomputeDeterministicValues(formFields, productData, manualData) {
+  function precomputeDeterministicValues(formFields, product, manualData) {
     var deterministic = {};  // fieldIndex -> value
+    var productData = (product && product.product_data) || product || {};
     var pd = (productData && productData.product_details) || {};
     var effectiveManual = normalizeManualDataForFill(manualData || {});
+    var pricing = computePricingV2(product || selectedProduct || {});
 
     formFields.forEach(function(f) {
       var label = (f.label || "").toLowerCase();
@@ -2668,6 +2853,19 @@
         } else {
           value = "1";
         }
+      }
+
+      if (label.indexOf("库存") !== -1 || label.indexOf("stock") !== -1 || label.indexOf("остат") !== -1) {
+        value = String(pricing.stock || 10000);
+      }
+
+      if (label.indexOf("售价") !== -1 || label.indexOf("sale price") !== -1 || label.indexOf("цена") !== -1 || label.indexOf("price") !== -1) {
+        if (label.indexOf("原价") === -1 && label.indexOf("old") === -1 && label.indexOf("original") === -1 && label.indexOf("strike") === -1) {
+          if (pricing.sale_price_cny) value = String(pricing.sale_price_cny);
+        }
+      }
+      if (label.indexOf("原价") !== -1 || label.indexOf("old price") !== -1 || label.indexOf("original price") !== -1 || label.indexOf("strike") !== -1) {
+        if (pricing.old_price_cny) value = String(pricing.old_price_cny);
       }
 
       if (value !== null) {
@@ -2783,6 +2981,10 @@
       }
     }
 
+    await loadPricingSettings(false);
+    var pricingForFill = computePricingV2(selectedProduct);
+    var normalizedManualForFill = normalizeManualDataForFill(selectedProduct.manual_data || {});
+
     showToast("正在AI分析 " + llmFields.length + " 个字段（最长等待150秒）...", "info");
     setProgress(25);
 
@@ -2790,7 +2992,14 @@
       skc: selectedProduct.skc,
       product_title: selectedProduct.title,
       product_data: selectedProduct.product_data || {},
-      manual_data: normalizeManualDataForFill(selectedProduct.manual_data || {}),
+      manual_data: normalizedManualForFill,
+      pricing_context: {
+        formula_id: (pricingForFill.formula || {}).id || "",
+        sale_price_cny: pricingForFill.sale_price_cny,
+        old_price_cny: pricingForFill.old_price_cny,
+        stock: pricingForFill.stock,
+        variables: pricingForFill.vars
+      },
       form_fields: llmFields
     };
     if (Object.keys(customPrompts).length > 0) {
@@ -2849,7 +3058,7 @@
       setProgress(75);
 
       // Layer 1: Pre-fill deterministic values (before LLM mappings)
-      var deterministicMap = precomputeDeterministicValues(formFields, selectedProduct.product_data, normalizeManualDataForFill(selectedProduct.manual_data || {}));
+      var deterministicMap = precomputeDeterministicValues(formFields, selectedProduct, normalizedManualForFill);
       var detIdxSet = {};
       var detCount = 0;
       for (var detIdxStr in deterministicMap) {
@@ -2988,11 +3197,19 @@
   btnImages.addEventListener("click", function () { openImagePicker(); });
   document.getElementById("serp-btn-clear-form").addEventListener("click", function () { clearAllFormFields(); });
   btnSendHtml.addEventListener("click", function () { captureAndSendHTML(); });
-  piClear.addEventListener("click", function () { selectedProduct = null; updateProductUI(); showToast("已清除产品选择", "info"); });
+  piClear.addEventListener("click", function () { selectedProduct = null; pricingTempVars = {}; updateProductUI(); showToast("已清除产品选择", "info"); });
   if (piPriceToggle && piPriceDetail) {
     piPriceToggle.addEventListener("click", function () {
       piPriceDetail.classList.toggle("visible");
       piPriceToggle.textContent = piPriceDetail.classList.contains("visible") ? "价格公式 ▴" : "价格公式 ▾";
+    });
+    piPriceDetail.addEventListener("change", function (e) {
+      var input = e.target.closest("[data-price-var]");
+      if (!input) return;
+      var raw = input.value.trim();
+      if (raw === "") delete pricingTempVars[input.dataset.priceVar];
+      else pricingTempVars[input.dataset.priceVar] = parseFloat(raw);
+      piPriceDetail.innerHTML = buildPriceFormulaHtmlV2(selectedProduct);
     });
   }
   hintToggle.addEventListener("click", function () {
