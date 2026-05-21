@@ -51,7 +51,7 @@ from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import cross_origin
 from werkzeug.utils import secure_filename
 import requests
-from src.serp.settings import SettingsService
+from src.serp.wiring import create_settings_facade, STORES_FILE as _WIRED_STORES_FILE
 
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
@@ -67,12 +67,20 @@ DATA_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 TASKS_FILE = os.path.join(DATA_ROOT, "tasks.json")
 ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
 SETTINGS_FILE = os.path.join(DATA_ROOT, "settings.json")
-SETTINGS_SERVICE = SettingsService(ENV_FILE, SETTINGS_FILE, os.path.join(DATA_ROOT, "stores.json"))
+SETTINGS_FACADE, _SETTINGS_EVENT_BUS = create_settings_facade(DATA_ROOT, ENV_FILE)
 
 os.makedirs(DATA_ROOT, exist_ok=True)
 if not os.path.exists(TASKS_FILE):
     with open(TASKS_FILE, "w", encoding="utf-8") as f:
         json.dump([], f)
+
+# ── DDD: Settings 域蓝图（替代旧 /api/settings/* 路由）──
+from src.serp.settings.interfaces.routes import create_settings_blueprint
+settings_bp = create_settings_blueprint(SETTINGS_FACADE)
+app.register_blueprint(settings_bp)
+
+# 向后兼容：旧代码引用 STORES_FILE
+STORES_FILE = _WIRED_STORES_FILE
 
 # --------------- 辅助函数 ---------------
 def load_tasks():
@@ -2123,100 +2131,7 @@ def save_collect_product(task_id):
 
 
 # ==================== 产品管理模块 API ====================
-
-@app.route("/api/settings", methods=["GET"])
-def get_settings():
-    return jsonify(SETTINGS_SERVICE.get_view())
-
-
-@app.route("/api/settings", methods=["PUT"])
-def update_settings():
-    data = request.get_json() or {}
-    return jsonify(SETTINGS_SERVICE.update(data))
-    settings = data.get("settings") or {}
-    stores = data.get("stores")
-    env_updates = data.get("env") or {}
-
-    if settings:
-        _save_settings({
-            "models": settings.get("models", []),
-            "feature_models": settings.get("feature_models", {}),
-        })
-
-    if isinstance(stores, list):
-        normalized = [_normalize_store_config(s) for s in stores]
-        with open(STORES_FILE, "w", encoding="utf-8") as f:
-            json.dump(normalized, f, indent=2, ensure_ascii=False)
-
-    safe_env_updates = {}
-    for key, value in env_updates.items():
-        if value is None or value == "__KEEP__" or str(value).startswith("••••"):
-            continue
-        safe_env_updates[str(key).strip()] = str(value)
-    if safe_env_updates:
-        _write_env_values(safe_env_updates)
-
-    return jsonify({"success": True, "restart_required": True})
-
-
-@app.route("/api/settings/export", methods=["GET"])
-def export_settings():
-    include_secrets = request.args.get("include_secrets") == "1"
-    return jsonify(SETTINGS_SERVICE.export_payload(include_secrets=include_secrets))
-    return jsonify(_settings_export_payload(include_secrets=include_secrets))
-
-
-@app.route("/api/settings/import", methods=["POST"])
-def import_settings():
-    data = request.get_json() or {}
-    payload = data.get("payload") or data
-    if not isinstance(payload, dict):
-        return jsonify({"error": "导入内容必须是 JSON 对象"}), 400
-
-    if data.get("preview", True):
-        return jsonify(SETTINGS_SERVICE.preview_import(payload))
-    return jsonify(SETTINGS_SERVICE.apply_import(payload))
-
-    diff = _settings_diff(payload)
-    if data.get("preview", True):
-        return jsonify({"success": True, "preview": True, "diff": diff})
-
-    settings = payload.get("settings")
-    if isinstance(settings, dict):
-        current = _load_settings()
-        incoming_models = settings.get("models", [])
-        if isinstance(incoming_models, list):
-            by_id = {m.get("id"): m for m in current.get("models", []) if m.get("id")}
-            for model in incoming_models:
-                if model.get("id"):
-                    by_id[model["id"]] = model
-            current["models"] = list(by_id.values())
-        incoming_features = settings.get("feature_models", {})
-        if isinstance(incoming_features, dict):
-            current.setdefault("feature_models", {}).update(incoming_features)
-        _save_settings(current)
-
-    stores = payload.get("stores")
-    if isinstance(stores, list):
-        current_stores = _load_store_configs()
-        by_id = {s.get("id"): s for s in current_stores if s.get("id")}
-        for store in stores:
-            if store.get("id"):
-                by_id[store["id"]] = _normalize_store_config(store)
-        with open(STORES_FILE, "w", encoding="utf-8") as f:
-            json.dump(list(by_id.values()), f, indent=2, ensure_ascii=False)
-
-    env_updates = {}
-    env_payload = payload.get("env", {})
-    if isinstance(env_payload, dict):
-        for key, value in env_payload.items():
-            if value and not str(value).startswith("••••"):
-                env_updates[str(key).strip()] = str(value)
-    if env_updates:
-        _write_env_values(env_updates)
-
-    return jsonify({"success": True, "preview": False, "diff": diff, "restart_required": True})
-
+# /api/settings/* 路由由 DDD Settings 域蓝图接管（见上方 register_blueprint）
 
 @app.route("/api/products", methods=["GET"])
 def get_products():
