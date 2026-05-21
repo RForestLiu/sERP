@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.15";
+  var SERP_EXTENSION_VERSION = "3.2.16";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -72,6 +72,7 @@
   var _categoryMatchRunning = false;
   var pricingSettingsCache = null;
   var pricingTempVars = {};
+  var fillAllVariants = true;
 
   // ==================== CSS 注入 ====================
   var style = document.createElement("style");
@@ -110,9 +111,11 @@
     "#serp-modal-header h3{font-size:18px;color:#333;margin:0;}",
     "#serp-modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:#999;padding:4px 8px;border-radius:4px;transition:all 0.2s;}",
     "#serp-modal-close:hover{background:#f3f4f6;color:#333;}",
-    "#serp-modal-search{padding:12px 24px;border-bottom:1px solid #f0f0f0;}",
+    "#serp-modal-search{padding:12px 24px;border-bottom:1px solid #f0f0f0;display:flex;gap:10px;align-items:center;}",
     "#serp-modal-search input{width:100%;padding:10px 14px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;outline:none;transition:border-color 0.2s;box-sizing:border-box;}",
     "#serp-modal-search input:focus{border-color:#667eea;box-shadow:0 0 0 3px rgba(102,126,234,0.1);}",
+    "#serp-modal-search .variant-toggle{display:flex;align-items:center;gap:5px;white-space:nowrap;font-size:12px;color:#555;}",
+    "#serp-modal-search .variant-toggle input{width:auto;padding:0;}",
     "#serp-modal-list{flex:1;overflow-y:auto;padding:12px 24px;}",
     ".serp-product-item{display:flex;align-items:center;padding:12px 16px;border-radius:8px;cursor:pointer;transition:all 0.2s;margin-bottom:6px;border:1px solid #f0f0f0;}",
     ".serp-product-item:hover{background:#f8f9ff;border-color:#667eea;transform:translateX(2px);}",
@@ -333,7 +336,7 @@
   modalOverlay.innerHTML =
     '<div id="serp-modal">' +
       '<div id="serp-modal-header"><h3>📋 选择产品</h3><button id="serp-modal-close">✕</button></div>' +
-      '<div id="serp-modal-search"><input type="text" id="serp-search-input" placeholder="搜索产品名称或 SKC 编码..." /></div>' +
+      '<div id="serp-modal-search"><input type="text" id="serp-search-input" placeholder="搜索产品名称或 SKC 编码..." /><label class="variant-toggle"><input type="checkbox" id="serp-fill-all-variants" checked>全部变体</label></div>' +
       '<div id="serp-modal-list"><div id="serp-modal-empty">正在加载产品列表...</div></div>' +
     '</div>';
   document.body.appendChild(modalOverlay);
@@ -747,11 +750,14 @@
     var ctx = getPricingVariablesV2(product, formula);
     var sale = safeEvalFormulaV2(formula.formula, ctx.vars);
     var saleRounded = roundPricingValueV2(sale, formula.rounding || "ceil");
+    if (safeNumberV2(pricingTempVars.manual_sale_price_cny, 0) > 0) saleRounded = safeNumberV2(pricingTempVars.manual_sale_price_cny, 0);
     ctx.vars.sale_price_cny = saleRounded;
     var oldPrice = safeEvalFormulaV2(formula.old_price_formula || "sale_price_cny * original_price_multiplier", ctx.vars);
     var oldRounded = roundPricingValueV2(oldPrice, formula.rounding || "ceil");
-    if (saleRounded > 0 && oldRounded < saleRounded * 1.7) oldRounded = Math.ceil(saleRounded * 1.7);
-    if (saleRounded > 0 && oldRounded > saleRounded * 2.0 && pricingTempVars.original_price_multiplier === undefined) oldRounded = Math.ceil(saleRounded * 1.8);
+    var hasManualOld = safeNumberV2(pricingTempVars.manual_old_price_cny, 0) > 0;
+    if (hasManualOld) oldRounded = safeNumberV2(pricingTempVars.manual_old_price_cny, 0);
+    if (!hasManualOld && saleRounded > 0 && oldRounded < saleRounded * 1.7) oldRounded = Math.ceil(saleRounded * 1.7);
+    if (!hasManualOld && saleRounded > 0 && oldRounded > saleRounded * 2.0 && pricingTempVars.original_price_multiplier === undefined) oldRounded = Math.ceil(saleRounded * 1.8);
     return { formula: formula, vars: ctx.vars, sale_price_cny: saleRounded, old_price_cny: oldRounded, stock: Math.round(ctx.vars.stock || 10000), cost_price_cny: ctx.vars.cost_price_cny, sourceMoney: ctx.sourceMoney, sourceCny: ctx.sourceCny };
   }
 
@@ -764,22 +770,24 @@
     var v = pricing.vars || {};
     var sourceText = pricing.sourceMoney ? (pricing.sourceMoney.currency + " " + pricing.sourceMoney.value.toFixed(2)) : "--";
     return [
-      '<div class="pi-price-row"><span>Formula</span><strong>' + ((pricing.formula && pricing.formula.name) || "--") + '</strong></div>',
-      '<div class="pi-price-row"><span>Source</span><strong>' + sourceText + '</strong></div>',
-      '<div class="pi-price-row"><span>Cost CNY</span><strong>' + (pricing.cost_price_cny ? pricing.cost_price_cny.toFixed(2) : "--") + '</strong></div>',
-      '<div class="pi-price-row"><span>Logistics</span><strong>' + (v.seller_logistics_cny ? v.seller_logistics_cny.toFixed(2) : "0") + '</strong></div>',
-      '<div class="pi-price-row"><span>Sale CNY</span><strong>' + (pricing.sale_price_cny || "--") + '</strong></div>',
-      '<div class="pi-price-row"><span>Old CNY</span><strong>' + (pricing.old_price_cny || "--") + '</strong></div>',
-      '<div class="pi-price-row"><span>Stock</span><strong>' + pricing.stock + '</strong></div>',
+      '<div class="pi-price-row"><span>公式(Formula)</span><strong>' + ((pricing.formula && pricing.formula.name) || "--") + '</strong></div>',
+      '<div class="pi-price-row"><span>采集价(Source)</span><strong>' + sourceText + '</strong></div>',
+      '<div class="pi-price-row"><span>成本价(Cost CNY)</span><strong>' + (pricing.cost_price_cny ? pricing.cost_price_cny.toFixed(2) : "--") + '</strong></div>',
+      '<div class="pi-price-row"><span>物流费(Logistics)</span><strong>' + (v.seller_logistics_cny ? v.seller_logistics_cny.toFixed(2) : "0") + '</strong></div>',
+      '<div class="pi-price-row"><span>售价(Sale CNY)</span><strong>' + (pricing.sale_price_cny || "--") + '</strong></div>',
+      '<div class="pi-price-row"><span>原价(Old CNY)</span><strong>' + (pricing.old_price_cny || "--") + '</strong></div>',
+      '<div class="pi-price-row"><span>库存(Stock)</span><strong>' + pricing.stock + '</strong></div>',
       '<div class="pi-price-vars">' +
-        priceVarInputV2("profit_rate", "profit", v.profit_rate, "0.01") +
-        priceVarInputV2("ozon_commission_rate", "commission", v.ozon_commission_rate, "0.001") +
-        priceVarInputV2("acquiring_rate", "acquiring", v.acquiring_rate, "0.001") +
-        priceVarInputV2("seller_logistics_cny", "logistics", v.seller_logistics_cny, "0.01") +
-        priceVarInputV2("original_price_multiplier", "old x", v.original_price_multiplier, "0.01") +
-        priceVarInputV2("stock", "stock", pricing.stock, "1") +
+        priceVarInputV2("profit_rate", "利润率(Profit)", v.profit_rate, "0.01") +
+        priceVarInputV2("ozon_commission_rate", "佣金(Commission)", v.ozon_commission_rate, "0.001") +
+        priceVarInputV2("acquiring_rate", "收单费(Acquiring)", v.acquiring_rate, "0.001") +
+        priceVarInputV2("seller_logistics_cny", "物流费(Logistics)", v.seller_logistics_cny, "0.01") +
+        priceVarInputV2("manual_sale_price_cny", "手动售价(Sale)", pricingTempVars.manual_sale_price_cny, "1") +
+        priceVarInputV2("manual_old_price_cny", "手动原价(Old)", pricingTempVars.manual_old_price_cny, "1") +
+        priceVarInputV2("original_price_multiplier", "原价倍率(Old x)", v.original_price_multiplier, "0.01") +
+        priceVarInputV2("stock", "库存(Stock)", pricing.stock, "1") +
       '</div>',
-      '<div class="pi-price-note">Temporary variables only affect this page fill. Ozon commission should use category/API value when known.</div>'
+      '<div class="pi-price-note">临时变量只影响本页本次填充；Ozon 佣金后续应优先使用品类/API值。Temporary variables only affect this page fill.</div>'
     ].join("");
   }
 
@@ -949,11 +957,12 @@
     if (products.length === 0) { listEl.innerHTML = '<div id="serp-modal-empty">没有找到匹配的产品</div>'; return; }
     listEl.innerHTML = products.map(function (p) {
       var cls = "serp-product-item" + (selectedProduct && selectedProduct.skc === p.skc ? " selected" : "");
+      var variantCount = getProductVariantValues(p.product_data || {}).length;
       return '<div class="' + cls + '" data-skc="' + (p.skc || "") + '">' +
         '<span class="skc-badge">' + (p.skc || "—") + '</span>' +
         '<div class="product-info">' +
           '<div class="product-title">' + (p.title || "未命名产品") + '</div>' +
-          '<div class="product-meta">' + (p.category || "其他") + " · " + (p.platform || "未知平台") + (p.price ? " · " + p.price : "") + '</div>' +
+          '<div class="product-meta">' + (p.category || "其他") + " · " + (p.platform || "未知平台") + (p.price ? " · " + p.price : "") + (variantCount ? " · 变体 " + variantCount : "") + '</div>' +
         '</div>' +
         '<span class="product-status">' + (p.store_status ? Object.values(p.store_status).filter(function (s) { return s === "已上架"; }).length + " 店已上架" : "") + '</span>' +
       '</div>';
@@ -1772,6 +1781,8 @@
         var ns = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
         ns.call(search, candidate);
         search.dispatchEvent(new Event("input", { bubbles: true }));
+        search.dispatchEvent(new Event("change", { bubbles: true }));
+        search.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, key: candidate.slice(-1) || "a" }));
         await sleep(500);
       }
       var items = Array.from(panel.querySelectorAll(".sku-select-item, label")).filter(function (item) {
@@ -1810,6 +1821,8 @@
           document.body.click();
           await sleep(150);
         }
+        row.dispatchEvent(new Event("input", { bubbles: true }));
+        row.dispatchEvent(new Event("change", { bubbles: true }));
         return true;
       }
       document.body.click();
@@ -1850,9 +1863,10 @@
           var name = variant.name || variant.variantName || "";
           await fillSkuColorCell(row, name, usedColorKeys);
         }
-        rows.forEach(function (row, i) {
-          var variant = variantValues[i];
-          if (!variant) return;
+        for (var nameIndex = 0; nameIndex < rows.length; nameIndex++) {
+          var row = rows[nameIndex];
+          var variant = variantValues[nameIndex];
+          if (!variant) continue;
           var name = variant.name || variant.variantName || "";
           var selectedColor = (row.querySelector(".select-main") || {}).textContent || "";
           var textInput = row.querySelector('input[type="text"]');
@@ -1862,8 +1876,13 @@
             ns.call(textInput, name);
             textInput.dispatchEvent(new Event("input", { bubbles: true }));
             textInput.dispatchEvent(new Event("change", { bubbles: true }));
+            textInput.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, key: "Enter" }));
+            textInput.blur();
+            await sleep(120);
+            row.dispatchEvent(new Event("input", { bubbles: true }));
+            row.dispatchEvent(new Event("change", { bubbles: true }));
           }
-        });
+        }
         if (skuItem.querySelectorAll(".sku-content-item").length >= variantValues.length) return true;
       }
     }
@@ -1907,6 +1926,54 @@
       });
     }
     return result;
+  }
+
+  function getSelectedProductVariantValues(productData) {
+    var variants = getProductVariantValues(productData || {});
+    if (fillAllVariants !== false) return variants;
+    return variants.length ? [variants[0]] : [];
+  }
+
+  function dxmControlKindFromField(f) {
+    if (!f) return "unknown";
+    if (f.tag === "json-editor" || f.jsonEditor) return "json-editor";
+    if (f.tag === "checkbox-group") return "checkbox-group";
+    if (f.tag === "radio-group") return "radio-group";
+    if (f.renderMode === "AntSelect") {
+      if (f.selectMode === "multiple") return f.showSearch ? "ant-select-multiple-search" : "ant-select-multiple";
+      return f.showSearch ? "ant-select-search" : "ant-select-single";
+    }
+    if (f.tag === "select") return "native-select";
+    if (f.tag === "textarea") return "textarea";
+    if (f.tag === "input") {
+      if (f.type === "checkbox") return "single-checkbox";
+      if (f.type === "radio") return "single-radio";
+      if (f.type === "number") return "input-number";
+      return "input-text";
+    }
+    if (f.tag === "contenteditable") return "contenteditable";
+    return f.tag || "unknown";
+  }
+
+  function dxmControlKindLabel(kind) {
+    var labels = {
+      "input-text": "文本输入",
+      "input-number": "数字输入",
+      "textarea": "多行文本",
+      "native-select": "原生下拉",
+      "ant-select-single": "Ant 单选下拉",
+      "ant-select-search": "Ant 搜索下拉",
+      "ant-select-multiple": "Ant 多选下拉",
+      "ant-select-multiple-search": "Ant 搜索多选",
+      "checkbox-group": "复选组",
+      "radio-group": "单选组",
+      "single-checkbox": "独立复选",
+      "single-radio": "独立单选",
+      "json-editor": "JSON 编辑器",
+      "contenteditable": "富文本输入",
+      "unknown": "未知控件"
+    };
+    return labels[kind] || kind || "未知控件";
   }
 
   function collectFormFields() {
@@ -2110,6 +2177,10 @@
       });
     }
 
+    fields.forEach(function (f) {
+      f.controlKind = dxmControlKindFromField(f);
+    });
+
     // ===== 构建索引和字段映射表 =====
     _buildFieldMap(fields);
 
@@ -2121,13 +2192,18 @@
       else if (f.type === "radio") stats["lone-radio"]++;
       else stats[f.tag] = (stats[f.tag] || 0) + 1;
     });
+    var controlStats = {};
+    fields.forEach(function (f) {
+      controlStats[f.controlKind || "unknown"] = (controlStats[f.controlKind || "unknown"] || 0) + 1;
+    });
     console.log("[sERP] collectFormFields: total=" + fields.length +
       " input=" + (stats.input || 0) + " select=" + (stats.select || 0) +
       " textarea=" + (stats.textarea || 0) +
       " checkbox-group=" + (stats["checkbox-group"] || 0) +
       " radio-group=" + (stats["radio-group"] || 0) +
       " lone-cb=" + (stats["lone-checkbox"] || 0) +
-      " lone-rd=" + (stats["lone-radio"] || 0));
+      " lone-rd=" + (stats["lone-radio"] || 0) +
+      " controlKinds=" + JSON.stringify(controlStats));
 
     return fields;
   }
@@ -2192,12 +2268,47 @@
     });
   }
 
+  function setInputValueForSearch(input, value) {
+    if (!input) return;
+    input.focus();
+    try { input.select(); document.execCommand("selectAll"); } catch (e) {}
+    var ns = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+    ns.call(input, "");
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    ns.call(input, value);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    input.dispatchEvent(new CompositionEvent("compositionend", { bubbles: true, data: value }));
+    input.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: value.slice(-1) || "a" }));
+    input.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, key: value.slice(-1) || "a" }));
+  }
+
+  function selectCandidatesForValue(value, label) {
+    var raw = String(value || "").trim();
+    var candidates = [raw];
+    var bare = raw.replace(/[()（）]/g, " ").replace(/\s+/g, " ").trim();
+    if (bare && bare !== raw) candidates.push(bare);
+    var lower = raw.toLowerCase();
+    var labelLower = String(label || "").toLowerCase();
+    if (/материал|material|材料/.test(labelLower) && /экокожа|eco.?leather|эко.?кожа|pu|искусствен/.test(lower)) {
+      candidates.push("Экокожа", "Эко кожа", "Искусственная кожа");
+    }
+    var seen = {};
+    return candidates.filter(function (x) {
+      var k = String(x || "").toLowerCase().trim();
+      if (!k || seen[k]) return false;
+      seen[k] = true;
+      return true;
+    });
+  }
+
   async function fillAntSelect(container, value, label) {
     var selector = container.querySelector(".ant-select-selector");
     if (!selector) { console.warn("[sERP] 未找到 AntSelect selector"); return false; }
 
     var searchInput = container.querySelector(".ant-select-selection-search-input");
-    var maxRetries = 2;
+    var candidates = selectCandidatesForValue(value, label);
+    var maxRetries = Math.max(3, candidates.length + 1);
     for (var attempt = 0; attempt <= maxRetries; attempt++) {
         // 关闭任何残留的下拉（避免前一个字段的下拉被误认为当前字段的）
         var staleDropdown = document.querySelector(".ant-select-dropdown:not(.ant-select-dropdown-hidden)");
@@ -2209,50 +2320,53 @@
             selector.click();
             await sleep(150);
         }
-        if (searchInput && container.classList.contains("ant-select-show-search")) {
+        var candidate = candidates[Math.min(attempt, candidates.length - 1)] || value;
+        if (searchInput && (container.classList.contains("ant-select-show-search") || searchInput.offsetParent || searchInput === document.activeElement)) {
             if (document.activeElement !== searchInput) {
                 searchInput.focus();
             }
-            var ns = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
-            ns.call(searchInput, value);
-            searchInput.dispatchEvent(new Event("input", { bubbles: true }));
+            setInputValueForSearch(searchInput, candidate);
         }
-        var dropdown = await waitForDropdown(800);
+        await sleep(450 + attempt * 250);
+        var dropdown = await waitForDropdown(1800);
         if (dropdown) {
             // 匹配选项：精确文本 → 标准化 → 子串
             var items = dropdown.querySelectorAll(".ant-select-item-option:not(.ant-select-item-option-disabled)");
-            var vNorm = (value || "").toLowerCase().replace(/\s+/g, " ").trim();
+            var vNorm = (candidate || value || "").toLowerCase().replace(/\s+/g, " ").trim();
+            var rawNorm = (value || "").toLowerCase().replace(/\s+/g, " ").trim();
             var matched = null;
 
             items.forEach(function (item) {
               if (matched) return;
-              if (item.textContent.trim() === value) matched = item;
+              var text = item.textContent.trim();
+              if (text === candidate || text === value) matched = item;
             });
             if (!matched) {
               items.forEach(function (item) {
                 if (matched) return;
                 var n = item.textContent.toLowerCase().replace(/\s+/g, " ").trim();
-                if (n === vNorm) matched = item;
+                if (n === vNorm || n === rawNorm) matched = item;
               });
             }
             if (!matched) {
               items.forEach(function (item) {
                 if (matched) return;
                 var n = item.textContent.toLowerCase().replace(/\s+/g, " ").trim();
-                if (n.indexOf(vNorm) !== -1 || vNorm.indexOf(n) !== -1) matched = item;
+                if (n.indexOf(vNorm) !== -1 || vNorm.indexOf(n) !== -1 || n.indexOf(rawNorm) !== -1 || rawNorm.indexOf(n) !== -1) matched = item;
               });
             }
 
             if (matched) {
               matched.click();
+              await sleep(250);
+              container.dispatchEvent(new Event("change", { bubbles: true }));
               return true;
             }
 
             // 匹配失败：输出可用选项便于排查
             var available = [];
             items.forEach(function (item) { available.push(item.textContent.trim()); });
-            console.warn("[sERP] AntSelect 选项未匹配: label=" + (label || "?") + " value=" + value + " vNorm=" + vNorm + " available=" + JSON.stringify(available));
-            break;
+            console.warn("[sERP] AntSelect 选项未匹配: label=" + (label || "?") + " value=" + value + " candidate=" + candidate + " available=" + JSON.stringify(available));
         }
         if (attempt < maxRetries) {
             console.warn("[sERP] AntSelect 下拉未出现，重试 " + (attempt + 1) + "/" + maxRetries + ": value=" + value);
@@ -2702,8 +2816,10 @@
     if (!formFields.length) { showToast("未找到可填充的表单字段", "error"); return; }
 
     // 分类统计
-    var txtFields = [], selFields = [], cbFields = [], rdFields = [];
+    var txtFields = [], selFields = [], cbFields = [], rdFields = [], kindStats = {};
     formFields.forEach(function (f) {
+      var kind = f.controlKind || dxmControlKindFromField(f);
+      kindStats[kind] = (kindStats[kind] || 0) + 1;
       if (f.tag === "checkbox-group") cbFields.push(f);
       else if (f.tag === "radio-group") rdFields.push(f);
       else if (f.tag === "select") selFields.push(f);
@@ -2717,7 +2833,11 @@
     if (selFields.length) parts.push('<span class="ex-count" style="color:#52c41a">' + selFields.length + '</span> 下拉选择');
     if (cbFields.length) parts.push('<span class="ex-count" style="color:#fa8c16">' + cbFields.length + '</span> 多选组');
     if (rdFields.length) parts.push('<span class="ex-count" style="color:#722ed1">' + rdFields.length + '</span> 单选组');
-    summary.innerHTML = '共 <b>' + formFields.length + '</b> 个字段：' + parts.join(' &nbsp;|&nbsp; ');
+    var kindParts = Object.keys(kindStats).sort().map(function (kind) {
+      return dxmControlKindLabel(kind) + " " + kindStats[kind];
+    });
+    summary.innerHTML = '共 <b>' + formFields.length + '</b> 个字段：' + parts.join(' &nbsp;|&nbsp; ') +
+      '<br><span style="color:#667085;font-size:12px;">控件类型：' + kindParts.join(' / ') + '</span>';
 
     // 详情列表
     var sections = document.getElementById("serp-extract-sections");
@@ -2955,7 +3075,10 @@
 
     // 构建发送给 LLM 的字段列表（去掉内部字段）
     function _fieldForLLM(f) {
-      var clean = { index: f.index, label: f.label, tag: f.tag, type: f.type };
+      var clean = { index: f.index, label: f.label, tag: f.tag, type: f.type, controlKind: f.controlKind || dxmControlKindFromField(f) };
+      if (f.renderMode) clean.renderMode = f.renderMode;
+      if (f.selectMode) clean.selectMode = f.selectMode;
+      if (f.showSearch !== undefined) clean.showSearch = !!f.showSearch;
       if (f.placeholder) clean.placeholder = f.placeholder;
       if (f.name) clean.name = f.name;
       if (f.options) {
@@ -2969,7 +3092,7 @@
     var llmFields = formFields.map(_fieldForLLM);
 
     // Phase 2: Ensure enough SKU rows for variants
-    var variantValues = getProductVariantValues(selectedProduct.product_data || {});
+    var variantValues = getSelectedProductVariantValues(selectedProduct.product_data || {});
     if (variantValues.length > 1) {
       var ensured = await ensureVariantRowsForProduct(variantValues);
       if (ensured) {
@@ -3007,7 +3130,7 @@
     }
 
     var variantList = [];
-    var variantValues = getProductVariantValues(selectedProduct.product_data || {});
+    var variantValues = getSelectedProductVariantValues(selectedProduct.product_data || {});
     if (variantValues.length > 0) {
       variantValues.forEach(function(v) {
         variantList.push({
@@ -3254,6 +3377,10 @@
   document.getElementById("serp-search-input").addEventListener("input", function (e) {
     var kw = e.target.value.toLowerCase().trim();
     renderProductList(kw ? allProducts.filter(function (p) { return (p.skc || "").toLowerCase().indexOf(kw) !== -1 || (p.title || "").toLowerCase().indexOf(kw) !== -1 || (p.category || "").toLowerCase().indexOf(kw) !== -1; }) : allProducts);
+  });
+  document.getElementById("serp-fill-all-variants").addEventListener("change", function (e) {
+    fillAllVariants = e.target.checked;
+    showToast(fillAllVariants ? "自动填充将使用全部正式变体" : "自动填充只使用第一个正式变体", "info");
   });
   document.addEventListener("keydown", function (e) {
     if (!e.ctrlKey || !e.shiftKey) return;
