@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.18";
+  var SERP_EXTENSION_VERSION = "3.2.19";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -2339,8 +2339,10 @@
 
     var searchInput = container.querySelector(".ant-select-selection-search-input");
     var candidates = selectCandidatesForValue(value, label);
-    var maxRetries = Math.max(3, candidates.length + 1);
-    for (var attempt = 0; attempt <= maxRetries; attempt++) {
+    var searchable = !!(searchInput && (container.classList.contains("ant-select-show-search") || searchInput.offsetParent || searchInput === document.activeElement));
+    var maxAttempts = searchable ? Math.max(2, candidates.length + 1) : 2;
+    var startedAt = Date.now();
+    for (var attempt = 0; attempt < maxAttempts; attempt++) {
         // 关闭任何残留的下拉（避免前一个字段的下拉被误认为当前字段的）
         var staleDropdown = document.querySelector(".ant-select-dropdown:not(.ant-select-dropdown-hidden)");
         if (staleDropdown && !container.contains(staleDropdown)) {
@@ -2352,14 +2354,14 @@
             await sleep(150);
         }
         var candidate = candidates[Math.min(attempt, candidates.length - 1)] || value;
-        if (searchInput && (container.classList.contains("ant-select-show-search") || searchInput.offsetParent || searchInput === document.activeElement)) {
+        if (searchable) {
             if (document.activeElement !== searchInput) {
                 searchInput.focus();
             }
             setInputValueForSearch(searchInput, candidate);
         }
-        await sleep(450 + attempt * 250);
-        var dropdown = await waitForDropdown(1800);
+        await sleep(searchable ? (350 + attempt * 200) : 120);
+        var dropdown = await waitForDropdown(searchable ? 1200 : 500);
         if (dropdown) {
             // 匹配选项：精确文本 → 标准化 → 子串
             var items = dropdown.querySelectorAll(".ant-select-item-option:not(.ant-select-item-option-disabled)");
@@ -2391,6 +2393,7 @@
               matched.click();
               await sleep(250);
               container.dispatchEvent(new Event("change", { bubbles: true }));
+              console.log("[sERP] AntSelect filled label=" + (label || "?") + " value=" + value + " attempts=" + (attempt + 1) + " ms=" + (Date.now() - startedAt));
               return true;
             }
 
@@ -2399,14 +2402,15 @@
             items.forEach(function (item) { available.push(item.textContent.trim()); });
             console.warn("[sERP] AntSelect 选项未匹配: label=" + (label || "?") + " value=" + value + " candidate=" + candidate + " available=" + JSON.stringify(available));
         }
-        if (attempt < maxRetries) {
-            console.warn("[sERP] AntSelect 下拉未出现，重试 " + (attempt + 1) + "/" + maxRetries + ": value=" + value);
+        if (attempt < maxAttempts - 1) {
+            console.warn("[sERP] AntSelect 下拉未出现/未匹配，重试 " + (attempt + 1) + "/" + maxAttempts + ": value=" + value);
             if (container.classList.contains("ant-select-open")) {
                 document.body.click();
-                await sleep(300);
+                await sleep(searchable ? 250 : 120);
             }
         }
     }
+    console.warn("[sERP] AntSelect fill failed label=" + (label || "?") + " value=" + value + " attempts=" + maxAttempts + " ms=" + (Date.now() - startedAt));
     return false;
   }
 
@@ -3028,14 +3032,70 @@
   }
 
   function isPricingFormField(field) {
-    var label = ((field && field.label) || "").toLowerCase();
-    if (!label) return false;
-    if (label.indexOf("库存") !== -1 || label.indexOf("stock") !== -1 || label.indexOf("остат") !== -1) return true;
-    if (label.indexOf("原价") !== -1 || label.indexOf("old price") !== -1 || label.indexOf("original price") !== -1 || label.indexOf("strike") !== -1) return true;
-    if (label.indexOf("售价") !== -1 || label.indexOf("sale price") !== -1) return true;
-    if ((label.indexOf("цена") !== -1 || label.indexOf("price") !== -1) &&
-        label.indexOf("成本") === -1 && label.indexOf("cost") === -1 && label.indexOf("采购") === -1) return true;
-    return false;
+    return !!pricingRoleFromText((field && field.label) || "");
+  }
+
+  function pricingRoleFromText(text) {
+    var label = String(text || "").toLowerCase().replace(/\s+/g, " ").trim();
+    if (!label) return "";
+    if (label.indexOf("库存") !== -1 || label.indexOf("可售") !== -1 || label.indexOf("stock") !== -1 || label.indexOf("остат") !== -1) return "stock";
+    if (label.indexOf("原价") !== -1 || label.indexOf("划线价") !== -1 || label.indexOf("市场价") !== -1 || label.indexOf("old price") !== -1 || label.indexOf("old_price") !== -1 || label.indexOf("original price") !== -1 || label.indexOf("strike") !== -1 || label.indexOf("старая цена") !== -1) return "old";
+    if (label.indexOf("售价") !== -1 || label.indexOf("销售价") !== -1 || label.indexOf("销售价格") !== -1 || label.indexOf("现价") !== -1 || label.indexOf("sale price") !== -1 || label.indexOf("price") !== -1 || label.indexOf("цена") !== -1) {
+      if (label.indexOf("成本") !== -1 || label.indexOf("cost") !== -1 || label.indexOf("采购") !== -1) return "";
+      return "sale";
+    }
+    return "";
+  }
+
+  function fillNativeInputDirect(el, value) {
+    if (!el || !isVisibleField(el)) return false;
+    value = String(value);
+    try {
+      el.focus();
+      if (typeof el.select === "function") el.select();
+      try { document.execCommand("selectAll"); } catch (e0) {}
+      var setter = el.tagName === "TEXTAREA"
+        ? Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set
+        : Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+      setter.call(el, value);
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+      el.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, key: "Enter" }));
+      el.blur();
+      return true;
+    } catch (e) {
+      console.warn("[sERP] 价格字段直接填充失败", e);
+      return false;
+    }
+  }
+
+  function collectDirectPricingTargets() {
+    var targets = [];
+    var seen = {};
+    document.querySelectorAll('input:not([type="hidden"]):not([type="file"]):not([type="checkbox"]):not([type="radio"]), textarea').forEach(function (el) {
+      if (!isVisibleField(el)) return;
+      if (isDictionarySearchInput(el)) return;
+      var labelParts = [
+        findLabel(el),
+        getTableHeaderLabel(el),
+        el.getAttribute("aria-label") || "",
+        el.getAttribute("title") || "",
+        el.getAttribute("placeholder") || "",
+        el.getAttribute("name") || "",
+        el.getAttribute("id") || ""
+      ];
+      var formItem = el.closest(".ant-form-item, .el-form-item, .form-group, td, th");
+      if (formItem) labelParts.push((formItem.textContent || "").replace(/\s+/g, " ").trim().slice(0, 120));
+      var labelText = labelParts.filter(Boolean).join(" ");
+      var role = pricingRoleFromText(labelText);
+      if (!role) return;
+      var fid = _serpFidSelector(el);
+      if (seen[fid]) return;
+      seen[fid] = true;
+      targets.push({ role: role, el: el, label: labelText, fid: fid });
+    });
+    console.log("[sERP] direct pricing targets=" + JSON.stringify(targets.map(function (t) { return { role: t.role, label: t.label }; })));
+    return targets;
   }
 
   function precomputePricingValues(formFields, product) {
@@ -3058,17 +3118,39 @@
       var formFields = collectFormFields();
       var pricingMap = precomputePricingValues(formFields, selectedProduct);
       var keys = Object.keys(pricingMap);
-      if (!keys.length) { showToast("未找到售价/原价/库存字段", "error"); return; }
 
+      var pricing = computePricingV2(selectedProduct);
       var filled = 0;
+      var filledRoles = {};
       for (var i = 0; i < keys.length; i++) {
         var idx = parseInt(keys[i], 10);
+        var entry = resolveFieldByIndex(idx);
         var ok = await fillFormField(idx, pricingMap[keys[i]]);
-        if (ok) filled++;
+        if (ok) {
+          filled++;
+          var role = pricingRoleFromText((entry && entry.label) || "");
+          if (role) filledRoles[role] = true;
+        }
         await sleep(80);
       }
+      var directTargets = collectDirectPricingTargets();
+      for (var ti = 0; ti < directTargets.length; ti++) {
+        var target = directTargets[ti];
+        var directValue = target.role === "old" ? pricing.old_price_cny : (target.role === "stock" ? pricing.stock : pricing.sale_price_cny);
+        if (!directValue && directValue !== 0) continue;
+        if (fillNativeInputDirect(target.el, directValue)) {
+          filled++;
+          filledRoles[target.role] = true;
+        }
+        await sleep(60);
+      }
+      if (!filled) {
+        console.warn("[sERP] 未找到价格字段。formFields=" + JSON.stringify(formFields.map(function (f) { return { index: f.index, label: f.label, tag: f.tag, type: f.type, controlKind: f.controlKind }; })));
+        showToast("未找到售价/原价/库存字段，已在控制台输出字段列表", "error");
+        return;
+      }
       if (piPriceDetail) piPriceDetail.innerHTML = buildPriceFormulaHtmlV2(selectedProduct);
-      showToast("已更新价格字段 " + filled + "/" + keys.length, filled ? "success" : "error");
+      showToast("已更新价格字段 " + filled + " 个", "success");
     } finally {
       pricingApplyRunning = false;
     }
@@ -3142,14 +3224,23 @@
 
   async function doAutoFill() {
     if (!selectedProduct) { showToast("请先点击\"选品\"选择一个产品", "error"); return; }
+    var autoFillStartedAt = Date.now();
+    var autoFillLastMark = autoFillStartedAt;
+    function markAutoFill(stage) {
+      var now = Date.now();
+      console.log("[sERP] auto-fill timing " + stage + ": +" + (now - autoFillLastMark) + "ms total=" + (now - autoFillStartedAt) + "ms");
+      autoFillLastMark = now;
+    }
     setBtnLoading(btnFill, true); setProgress(10);
 
     showToast("正在收集表单字段...", "info");
     var formFields = collectFormFields();
     if (!formFields.length) { setBtnLoading(btnFill, false); setProgress(0); showToast("未找到可填充的表单字段", "error"); return; }
+    markAutoFill("collect-fields");
     setProgress(20);
 
     var customPrompts = await collectCustomPrompts();
+    markAutoFill("custom-prompts");
 
     // 构建发送给 LLM 的字段列表（去掉内部字段）
     function _fieldForLLM(f) {
@@ -3173,10 +3264,12 @@
     var variantValues = getSelectedProductVariantValues(selectedProduct.product_data || {});
     if (variantValues.length > 1) {
       var ensured = await ensureVariantRowsForProduct(variantValues);
+      markAutoFill("ensure-variant-rows");
       if (ensured) {
         // Re-collect fields since new DOM elements were added
         formFields = collectFormFields();
         llmFields = formFields.map(_fieldForLLM);
+        markAutoFill("recollect-after-variants");
       } else {
         console.warn("[sERP] 变种行创建不完全，继续填充现有行");
       }
@@ -3185,6 +3278,7 @@
     await loadPricingSettings(false);
     var pricingForFill = computePricingV2(selectedProduct);
     var normalizedManualForFill = normalizeManualDataForFill(selectedProduct.manual_data || {});
+    markAutoFill("pricing-context");
 
     showToast("正在AI分析 " + llmFields.length + " 个字段（最长等待150秒）...", "info");
     setProgress(25);
@@ -3249,6 +3343,7 @@
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body)
       }, 150000);
+      markAutoFill("llm-request");
       setProgress(65);
       if (!r.ok) {
         var e = await r.json();
@@ -3256,6 +3351,7 @@
       }
       var result = await r.json();
       var mappings = result.mappings || [];
+      markAutoFill("llm-parse");
       setProgress(75);
 
       // Layer 1: Pre-fill deterministic values (before LLM mappings)
@@ -3271,6 +3367,7 @@
         }
       }
       console.log("[sERP] 确定性填充: " + detCount + " 个字段, 映射: " + JSON.stringify(deterministicMap));
+      markAutoFill("deterministic-fill");
 
       if (!mappings.length) {
         setBtnLoading(btnFill, false); setProgress(0);
@@ -3348,6 +3445,7 @@
         });
         setProgress(75 + (mi / mappings.length) * 20);
       }
+      markAutoFill("llm-field-fill");
 
       // 标记未匹配的字段
       var matchedIndices = {};
@@ -3368,6 +3466,7 @@
       fillResults.sort(function (a, b) { return a.order - b.order; });
 
       setProgress(100);
+      markAutoFill("render-results");
       showToast("填充完成！成功 " + filledCount + "/" + fillResults.length + " 个字段", filledCount > 0 ? "success" : "error");
       renderFillResults(fillResults, formFields.length);
       setBtnLoading(btnFill, false);
