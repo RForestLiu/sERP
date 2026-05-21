@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 上架工作台 — sERP</title>
+    <style>
+        :root {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-panel: #1e2433;
+            --bg-card: #252d3f;
+            --bg-input: #1a2030;
+            --text-primary: #e0e0e0;
+            --text-secondary: #8892b0;
+            --text-muted: #5a6480;
+            --accent: #64ffda;
+            --accent-dim: #45b8a0;
+            --danger: #ff6b6b;
+            --warning: #ffd93d;
+            --critical: #ff4757;
+            --important: #ffa502;
+            --normal: #7bed9f;
+            --border: #2a3548;
+            --border-active: #3a4560;
+            --shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+            font-size: 13px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ===== Top Bar ===== */
+        .topbar {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+            padding: 0 20px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .topbar .title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 0.5px;
+        }
+        .topbar .nav-links {
+            display: flex; gap: 4px;
+        }
+        .topbar .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: all 0.15s;
+        }
+        .topbar .nav-links a:hover {
+            background: rgba(100,255,218,0.08);
+            color: var(--accent);
+        }
+        .topbar .store-selector {
+            display: flex; align-items: center; gap: 8px;
+        }
+        .topbar .store-selector label { color: var(--text-secondary); font-size: 12px; }
+        .topbar .store-selector select {
+            background: var(--bg-input);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            min-width: 180px;
+        }
+
+        /* ===== Main Layout (3 panels) ===== */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            gap: 2px;
+        }
+        .panel {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .panel-left {
+            width: 30%;
+            min-width: 280px;
+            max-width: 380px;
+            border-right: 1px solid var(--border);
+        }
+        .panel-center {
+            flex: 1;
+            min-width: 400px;
+        }
+        .panel-right {
+            width: 30%;
+            min-width: 300px;
+            max-width: 380px;
+            border-left: 1px solid var(--border);
+        }
+
+        /* ===== Panel Header ===== */
+        .panel-header {
+            padding: 10px 14px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .panel-header .icon { font-size: 16px; }
+
+        /* ===== Panel Body (scrollable) ===== */
+        .panel-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        /* ===== Left Panel: Product Search ===== */
+        .search-box {
+            position: relative;
+            margin-bottom: 10px;
+        }
+        .search-box input {
+            width: 100%;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .search-box input:focus {
+            border-color: var(--accent);
+        }
+        .product-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            gap: 10px;
+        }
+        .product-card:hover {
+            border-color: var(--accent-dim);
+            background: rgba(100,255,218,0.05);
+        }
+        .product-card.selected {
+            border-color: var(--accent);
+            background: rgba(100,255,218,0.1);
+        }
+        .product-card .thumb {
+            width: 48px; height: 48px;
+            border-radius: 4px;
+            object-fit: cover;
+            background: var(--bg-input);
+            flex-shrink: 0;
+        }
+        .product-card .info {
+            flex: 1;
+            min-width: 0;
+        }
+        .product-card .skc {
+            font-weight: 600;
+            font-size: 12px;
+            color: var(--accent);
+        }
+        .product-card .title-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin: 3px 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .product-card .category-tag {
+            font-size: 10px;
+            background: rgba(100,255,218,0.15);
+            color: var(--accent);
+            padding: 1px 6px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+        .no-results {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 30px;
+            font-size: 13px;
+        }
+
+        /* ===== Center Panel: Attribute Editor ===== */
+        .section-header {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            padding: 8px 0;
+            margin-top: 10px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .section-header:first-child { margin-top: 0; }
+        .category-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: var(--bg-card);
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        .category-bar .cat-path {
+            flex: 1;
+            font-size: 12px;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .category-bar .cat-id {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .btn {
+            padding: 5px 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: inherit;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            white-space: nowrap;
+        }
+        .btn:hover { border-color: var(--accent-dim); color: var(--accent); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-accent {
+            background: var(--accent-dim);
+            color: #000;
+            border-color: var(--accent-dim);
+            font-weight: 600;
+        }
+        .btn-accent:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        .btn-sm {
+            padding: 2px 8px;
+            font-size: 11px;
+        }
+        .btn-danger { color: var(--danger); border-color: var(--danger); }
+        .btn-danger:hover { background: var(--danger); color: #fff; }
+        .btn-warn { color: var(--warning); border-color: var(--warning); }
+
+        .attr-group {
+            margin-bottom: 6px;
+        }
+        .attr-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            margin-bottom: 4px;
+            transition: border-color 0.15s;
+        }
+        .attr-row.critical {
+            border-left: 3px solid var(--critical);
+        }
+        .attr-row.important {
+            border-left: 3px solid var(--important);
+        }
+        .attr-row.normal {
+            border-left: 3px solid var(--normal);
+        }
+        .attr-label {
+            flex: 1;
+            min-width: 0;
+            font-size: 12px;
+        }
+        .attr-label .name {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        .attr-label .id-tag {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-left: 4px;
+        }
+        .attr-label .source {
+            font-size: 10px;
+            color: var(--text-muted);
+            display: block;
+            margin-top: 1px;
+        }
+        .attr-input {
+            width: 45%;
+            min-width: 120px;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 5px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            outline: none;
+            font-family: inherit;
+        }
+        .attr-input:focus { border-color: var(--accent-dim); }
+        .attr-input.locked {
+            background: var(--bg-panel);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+        .lock-icon {
+            color: var(--critical);
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .status-badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .status-badge.filled { background: rgba(100,255,218,0.2); color: var(--accent); }
+        .status-badge.empty { background: rgba(255,107,107,0.15); color: var(--danger); }
+        .status-badge.ai { background: rgba(122,179,255,0.2); color: #7ab3ff; }
+
+        /* ===== Right Panel: Score & Submit ===== */
+        .score-overview {
+            text-align: center;
+            padding: 16px;
+            background: var(--bg-card);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .score-number {
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .score-target {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        .score-pass { color: var(--accent); }
+        .score-fail { color: var(--danger); }
+        .score-section {
+            margin-bottom: 8px;
+        }
+        .score-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 3px;
+        }
+        .score-label .name { color: var(--text-secondary); }
+        .score-label .pts { color: var(--accent-dim); }
+        .progress-bar {
+            height: 6px;
+            background: var(--bg-input);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-dim);
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+        .progress-fill.warning { background: var(--warning); }
+        .progress-fill.danger { background: var(--danger); }
+
+        .issue-list {
+            list-style: none;
+            font-size: 12px;
+        }
+        .issue-list li {
+            padding: 5px 8px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+        }
+        .issue-list li.error {
+            background: rgba(255,71,87,0.1);
+            color: var(--danger);
+        }
+        .issue-list li.warn {
+            background: rgba(255,217,61,0.08);
+            color: var(--warning);
+        }
+        .import-status {
+            padding: 10px;
+            background: var(--bg-card);
+            border-radius: 6px;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .import-status .task-id {
+            color: var(--text-muted);
+            font-size: 11px;
+        }
+        .import-status .result-ok { color: var(--accent); }
+        .import-status .result-err { color: var(--danger); }
+
+        /* ===== Loading / Spinner ===== */
+        .spinner {
+            display: inline-block;
+            width: 16px; height: 16px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-overlay {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            color: var(--text-muted);
+            gap: 8px;
+        }
+
+        /* ===== Toast ===== */
+        .toast-container {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .toast {
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            animation: slideIn 0.2s;
+            max-width: 360px;
+            box-shadow: var(--shadow);
+        }
+        .toast.info { background: #1a3a5c; color: var(--accent); border: 1px solid var(--accent-dim); }
+        .toast.error { background: #3a1a1a; color: var(--danger); border: 1px solid var(--danger); }
+        .toast.success { background: #1a3a1a; color: var(--accent); border: 1px solid var(--accent-dim); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* ===== Modal ===== */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            width: 480px;
+            max-width: 90vw;
+            box-shadow: var(--shadow);
+        }
+        .modal-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-body {
+            padding: 16px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        .modal-footer {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        .modal textarea {
+            width: 100%;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 80px;
+            outline: none;
+        }
+        .modal textarea:focus { border-color: var(--accent-dim); }
+        .modal .field-info {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== Top Bar ===== -->
+<div class="topbar">
+    <div class="title">AI 上架工作台</div>
+    <div class="nav-links">
+        <a href="/">采集 & 生图</a>
+        <a href="/product-maintenance">产品维护</a>
+        <a href="/knowledge-base">知识库</a>
+        <a href="/ozon-listing">Ozon上架(旧)</a>
+    </div>
+    <div class="store-selector">
+        <label>目标店铺:</label>
+        <select id="store-select">
+            <option value="">-- 加载中 --</option>
+        </select>
+    </div>
+</div>
+
+<!-- ===== Main Layout ===== -->
+<div class="main-layout">
+    <!-- ===== Left Panel: Product Selector ===== -->
+    <div class="panel panel-left">
+        <div class="panel-header">
+            <span class="icon">&#128230;</span> 选择产品
+        </div>
+        <div class="panel-body">
+            <div class="search-box">
+                <input type="text" id="product-search" placeholder="搜索产品（SKC / 标题 / 品类）..." autocomplete="off">
+            </div>
+            <div id="product-list">
+                <div class="no-results">输入关键词搜索产品</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Center Panel: Attribute Editor ===== -->
+    <div class="panel panel-center">
+        <div class="panel-header">
+            <span class="icon">&#128221;</span> 属性编辑
+            <span style="margin-left:auto;font-size:11px;color:var(--text-muted)" id="attr-count"></span>
+        </div>
+        <div class="panel-body" id="attr-editor">
+            <div class="no-results" style="padding:60px 20px;">
+                请先在左侧选择产品，然后匹配Ozon品类
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Right Panel: Score & Submit ===== -->
+    <div class="panel panel-right">
+        <div class="panel-header">
+            <span class="icon">&#127942;</span> 评分 & 提交
+        </div>
+        <div class="panel-body" id="score-panel">
+            <div class="no-results" style="padding:40px 20px;">
+                填写属性后模拟评分
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Propose Change Modal ===== -->
+<div class="modal-overlay" id="propose-modal" style="display:none;">
+    <div class="modal">
+        <div class="modal-header">
+            提出变更申请
+            <button class="btn btn-sm" onclick="document.getElementById('propose-modal').style.display='none'">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="field-info" id="propose-field-info"></div>
+            <label style="font-size:12px;color:var(--text-secondary)">建议值：</label>
+            <textarea id="propose-value" placeholder="输入建议的新值..."></textarea>
+            <label style="font-size:12px;color:var(--text-secondary);margin-top:8px;display:block;">变更理由：</label>
+            <textarea id="propose-reason" placeholder="简要说明变更原因..."></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" onclick="document.getElementById('propose-modal').style.display='none'">取消</button>
+            <button class="btn btn-accent" id="propose-submit-btn">提交申请</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Toast Container ===== -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ============ State ============
+const state = {
+    storeId: '',
+    selectedSku: null,      // selected product SKC
+    productData: null,      // full product object
+    categoryId: null,
+    typeId: null,
+    categoryPath: '',
+    attributes: [],         // raw Ozon attributes from API
+    filledAttrs: {},        // attr_id -> {value, source}
+    listingData: null,      // full listing payload
+    simulation: null,       // last simulate result
+    proposeField: null,     // {attr_id, name, current_value}
+};
+
+// ============ Helpers ============
+function toast(msg, type='info') {
+    const c = document.getElementById('toast-container');
+    const el = document.createElement('div');
+    el.className = 'toast ' + type;
+    el.textContent = msg;
+    c.appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 200); }, 3500);
+}
+
+async function api(url, method='GET', body=null) {
+    const opts = { method, headers: {'Content-Type': 'application/json'} };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(url, opts);
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+    }
+    return res.json();
+}
+
+// ============ Init ============
+async function init() {
+    // Load stores
+    try {
+        const stores = await api('/api/stores');
+        const sel = document.getElementById('store-select');
+        sel.innerHTML = '<option value="">-- 选择店铺 --</option>';
+        stores.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.id;
+            opt.textContent = `${s.name || s.id} (${s.platform || 'Ozon'})`;
+            sel.appendChild(opt);
+        });
+        // Default to first Ozon store
+        const ozonStore = stores.find(s => (s.platform||'').toLowerCase().includes('ozon') || s.id.includes('ozon'));
+        if (ozonStore) {
+            sel.value = ozonStore.id;
+            state.storeId = ozonStore.id;
+        }
+    } catch(e) {
+        toast('加载店铺列表失败: ' + e.message, 'error');
+    }
+
+    // Bind events
+    document.getElementById('store-select').addEventListener('change', onStoreChange);
+    document.getElementById('product-search').addEventListener('input', debounce(onProductSearch, 300));
+    document.getElementById('propose-submit-btn').addEventListener('click', onSubmitPropose);
+}
+
+function debounce(fn, ms) {
+    let timer;
+    return function(...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), ms);
+    };
+}
+
+function onStoreChange(e) {
+    state.storeId = e.target.value;
+    state.categoryId = null;
+    state.typeId = null;
+    state.attributes = [];
+    state.filledAttrs = {};
+    renderCenter();
+    renderRight();
+}
+
+// ============ Product Search ============
+async function onProductSearch() {
+    const q = document.getElementById('product-search').value.trim();
+    const container = document.getElementById('product-list');
+    if (!q) {
+        container.innerHTML = '<div class="no-results">输入关键词搜索产品</div>';
+        return;
+    }
+    container.innerHTML = '<div class="loading-overlay"><span class="spinner"></span>搜索中...</div>';
+    try {
+        const data = await api(`/api/products?query=${encodeURIComponent(q)}`);
+        const products = data.products || [];
+        if (!products.length) {
+            container.innerHTML = '<div class="no-results">未找到匹配产品</div>';
+            return;
+        }
+        container.innerHTML = products.map(p => `
+            <div class="product-card${state.selectedSku === p.skc ? ' selected' : ''}" data-skc="${p.skc}" onclick="selectProduct('${p.skc}')">
+                ${p.thumbnail ? `<img class="thumb" src="${p.thumbnail}" alt="">` : '<div class="thumb"></div>'}
+                <div class="info">
+                    <div class="skc">${p.skc}</div>
+                    <div class="title-text">${escHtml(p.title || '无标题')}</div>
+                    <span class="category-tag">${escHtml(p.category || '未分类')}</span>
+                </div>
+            </div>
+        `).join('');
+    } catch(e) {
+        container.innerHTML = `<div class="no-results">搜索失败: ${escHtml(e.message)}</div>`;
+    }
+}
+
+function escHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s || '';
+    return d.innerHTML;
+}
+
+async function selectProduct(skc) {
+    state.selectedSku = skc;
+    state.categoryId = null;
+    state.typeId = null;
+    state.attributes = [];
+    state.filledAttrs = {};
+    state.simulation = null;
+
+    // Highlight card
+    document.querySelectorAll('.product-card').forEach(c => c.classList.remove('selected'));
+    const card = document.querySelector(`.product-card[data-skc="${skc}"]`);
+    if (card) card.classList.add('selected');
+
+    // Load product data
+    try {
+        const data = await api('/api/products');
+        state.productData = (data.products || []).find(p => p.skc === skc) || null;
+    } catch(e) {
+        toast('加载产品数据失败: ' + e.message, 'error');
+    }
+
+    // Auto match category
+    if (state.productData && state.storeId) {
+        await matchCategory();
+    }
+    renderCenter();
+    renderRight();
+}
+
+// ============ Category Matching ============
+async function matchCategory() {
+    if (!state.productData || !state.storeId) return;
+    const p = state.productData;
+    renderCenterLoading('正在匹配Ozon品类...');
+    try {
+        const result = await api(`/api/ozon/${state.storeId}/match-category`, 'POST', {
+            product_title: p.title || '',
+            product_category: p.category || '',
+            product_description: (p.product_data || {}).product_description || ''
+        });
+        if (result.best_match) {
+            state.categoryId = result.best_match.id;
+            state.typeId = result.best_match.type_id || result.best_match.id;
+            state.categoryPath = result.best_match.path || result.best_match.name;
+            toast(`品类匹配成功: ${result.best_match.name}`);
+            await loadAttributes();
+        } else {
+            state.categoryPath = result.warning || '品类匹配失败';
+            renderCenter();
+        }
+    } catch(e) {
+        state.categoryPath = '匹配失败: ' + e.message;
+        renderCenter();
+    }
+}
+
+async function loadAttributes() {
+    if (!state.categoryId || !state.storeId) return;
+    renderCenterLoading('正在加载品类属性...');
+    try {
+        const payload = { description_category_id: state.categoryId };
+        if (state.typeId && String(state.typeId) !== String(state.categoryId)) {
+            payload.type_id = state.typeId;
+        }
+        const result = await api(`/api/ozon/${state.storeId}/category-attributes`, 'POST', payload);
+        state.attributes = result.attributes || result.result || [];
+        if (result.suggestions) {
+            // Store suggestions for display
+            state._suggestions = result.suggestions;
+        }
+        renderCenter();
+        toast(`已加载 ${state.attributes.length} 个品类属性`);
+    } catch(e) {
+        // Try to display suggestions
+        if (state._suggestions) {
+            renderCenterWithSuggestions();
+        } else {
+            state.attributes = [];
+            renderCenter();
+        }
+        toast('加载属性失败: ' + e.message, 'error');
+    }
+}
+
+// ============ AI Fill ============
+async function onAiFill() {
+    if (!state.attributes.length || !state.productData) {
+        toast('请先选择产品和品类', 'error');
+        return;
+    }
+    renderCenterLoading('AI正在智能填写属性...');
+    try {
+        const p = state.productData;
+        const result = await api('/api/auto-fill/ozon-fields', 'POST', {
+            skc: p.skc,
+            product_title: p.title || '',
+            product_data: p.product_data || {},
+            manual_data: p.manual_data || {},
+            ozon_attributes: state.attributes
+        });
+
+        if (result.error) {
+            toast('AI填写失败: ' + result.error, 'error');
+            renderCenter();
+            return;
+        }
+
+        // Parse results
+        const filled = result.filled_attributes || result.results || [];
+        filled.forEach(item => {
+            const attrId = String(item.attribute_id);
+            state.filledAttrs[attrId] = {
+                value: item.value,
+                source: item.source || 'LLM',
+                confidence: item.confidence || 0
+            };
+        });
+        // Also check for deterministic fills
+        if (result.deterministic) {
+            Object.entries(result.deterministic).forEach(([k, v]) => {
+                state.filledAttrs[String(k)] = { value: v, source: 'deterministic', confidence: 1 };
+            });
+        }
+        if (result.presets) {
+            Object.entries(result.presets).forEach(([k, v]) => {
+                state.filledAttrs[String(k)] = { value: v, source: 'preset', confidence: 0.9 };
+            });
+        }
+        // Basic fields
+        if (result.basic_fields) {
+            state._basicFields = result.basic_fields;
+        }
+        renderCenter();
+        toast('AI填写完成');
+    } catch(e) {
+        toast('AI填写失败: ' + e.message, 'error');
+        renderCenter();
+    }
+}
+
+// ============ Manual Edit ============
+function onAttrInput(attrId, value) {
+    const key = String(attrId);
+    if (!state.filledAttrs[key]) {
+        state.filledAttrs[key] = { value: '', source: 'manual', confidence: 1 };
+    }
+    state.filledAttrs[key].value = value;
+    state.filledAttrs[key].source = 'manual';
+}
+
+function openProposeModal(attrId) {
+    const attr = state.attributes.find(a => String(a.attribute_id) === String(attrId));
+    if (!attr) return;
+    const key = String(attrId);
+    const currentVal = state.filledAttrs[key] ? state.filledAttrs[key].value : '';
+    state.proposeField = {
+        skc: state.selectedSku,
+        field_name: `ozon_attr_${attrId}`,
+        current_value: currentVal,
+        attr_name: attr.complex_name || attr.name || `Attr#${attrId}`,
+        attr_id: attrId,
+    };
+    document.getElementById('propose-field-info').textContent =
+        `字段: ${state.proposeField.attr_name} (ID: ${attrId}) | 当前值: ${currentVal || '(空)'}`;
+    document.getElementById('propose-value').value = '';
+    document.getElementById('propose-reason').value = '';
+    document.getElementById('propose-modal').style.display = 'flex';
+}
+
+async function onSubmitPropose() {
+    const field = state.proposeField;
+    if (!field) return;
+    const proposedValue = document.getElementById('propose-value').value.trim();
+    const reason = document.getElementById('propose-reason').value.trim();
+    if (!reason) { toast('请填写变更理由', 'error'); return; }
+    if (!proposedValue) { toast('请填写建议值', 'error'); return; }
+
+    try {
+        await api(`/api/products/${field.skc}/propose-change`, 'POST', {
+            field: field.field_name,
+            new_value: proposedValue,
+            requested_by: reason
+        });
+        document.getElementById('propose-modal').style.display = 'none';
+        toast('变更申请已提交，等待审批', 'success');
+    } catch(e) {
+        toast('提交失败: ' + e.message, 'error');
+    }
+}
+
+// ============ Render Center Panel ============
+function renderCenterLoading(msg) {
+    document.getElementById('attr-editor').innerHTML =
+        `<div class="loading-overlay"><span class="spinner"></span>${msg}</div>`;
+}
+
+function renderCenter() {
+    const editor = document.getElementById('attr-editor');
+    if (!state.selectedSku) {
+        editor.innerHTML = '<div class="no-results" style="padding:60px 20px;">请先在左侧选择产品，然后匹配Ozon品类</div>';
+        return;
+    }
+
+    let html = '';
+
+    // Category bar
+    html += `<div class="category-bar">
+        <span style="font-size:12px;color:var(--accent-dim)">&#128204;</span>
+        <span class="cat-path">${escHtml(state.categoryPath || '未匹配品类')}</span>
+        <span class="cat-id">ID: ${state.categoryId || '—'}</span>
+        <button class="btn btn-sm" onclick="matchCategory()" ${!state.productData?'disabled':''}>重新匹配</button>
+    </div>`;
+
+    // AI Fill button
+    html += `<div style="margin-bottom:10px;display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-accent" onclick="onAiFill()" ${!state.attributes.length?'disabled':''}>
+            &#9889; AI 智能填写
+        </button>
+        <span style="font-size:11px;color:var(--text-muted)">
+            ${state.attributes.length ? `已加载 ${state.attributes.length} 个属性` : '尚未加载品类属性'}
+        </span>
+        <span style="font-size:11px;color:var(--text-muted)">
+            ${Object.keys(state.filledAttrs).length ? `已填写 ${Object.keys(state.filledAttrs).length} 个` : ''}
+        </span>
+    </div>`;
+
+    // Group attributes by classification
+    if (state.attributes.length) {
+        const critical = state.attributes.filter(a =>
+            a.is_required || a.complex_is_required || (a.complex_type || '').includes('Required'));
+        const important = state.attributes.filter(a =>
+            !a.is_required && !a.complex_is_required &&
+            (a.complex_important || a.important || (a.name||'').toLowerCase().includes('name')));
+        const normal = state.attributes.filter(a =>
+            !critical.includes(a) && !important.includes(a));
+
+        const groups = [
+            { cls: 'critical', label: '&#128274; 关键字段（需审批）', items: critical },
+            { cls: 'important', label: '&#128993; 重要字段', items: important },
+            { cls: 'normal', label: '&#128994; 常规字段', items: normal },
+        ];
+
+        groups.forEach(g => {
+            if (!g.items.length) return;
+            html += `<div class="section-header">${g.label} <span style="font-weight:400;font-size:11px;">(${g.items.length})</span></div>`;
+            g.items.forEach(attr => {
+                const attrId = String(attr.attribute_id);
+                const key = attrId;
+                const filled = state.filledAttrs[key];
+                const value = filled ? filled.value : '';
+                const source = filled ? (filled.source || '') : '';
+                const isCritical = g.cls === 'critical';
+                const sourceLabel = source === 'deterministic' ? '规则填充' :
+                                   source === 'preset' ? '预设匹配' :
+                                   source === 'LLM' ? 'AI填写' :
+                                   source === 'manual' ? '手动编辑' : '';
+
+                html += `<div class="attr-row ${g.cls}">
+                    ${isCritical ? '<span class="lock-icon" title="关键字段，修改需审批">&#128274;</span>' : ''}
+                    <div class="attr-label">
+                        <span class="name">${escHtml(attr.complex_name || attr.name || `Attr#${attrId}`)}</span>
+                        <span class="id-tag">#${attrId}</span>
+                        ${sourceLabel ? `<span class="source">来源: ${sourceLabel}</span>` : ''}
+                    </div>
+                    <input class="attr-input${isCritical ? ' locked' : ''}"
+                           value="${escHtml(String(value))}"
+                           ${isCritical ? 'readonly' : ''}
+                           onchange="onAttrInput('${attrId}', this.value)"
+                           placeholder="${isCritical ? '关键字段（需审批）' : '输入值...'}">
+                    ${isCritical ? `<button class="btn btn-sm btn-warn" onclick="openProposeModal('${attrId}')">申请变更</button>` : ''}
+                    ${filled ? `<span class="status-badge ai">${sourceLabel || '已填'}</span>` : '<span class="status-badge empty">未填</span>'}
+                </div>`;
+            });
+        });
+    }
+
+    // Basic fields (name, description, price, offer_id)
+    if (state._basicFields) {
+        const bf = state._basicFields;
+        html += `<div class="section-header">&#128196; 基础信息</div>`;
+        html += `<div class="attr-row normal">
+            <div class="attr-label"><span class="name">商品标题 (name)</span></div>
+            <input class="attr-input" value="${escHtml(bf.name||'')}" onchange="state._basicFields=state._basicFields||{};state._basicFields.name=this.value">
+        </div>`;
+        html += `<div class="attr-row normal">
+            <div class="attr-label"><span class="name">商品描述 (description)</span></div>
+            <input class="attr-input" value="${escHtml(bf.description||'')}" onchange="state._basicFields=state._basicFields||{};state._basicFields.description=this.value">
+        </div>`;
+        html += `<div class="attr-row normal">
+            <div class="attr-label"><span class="name">售价 (price)</span></div>
+            <input class="attr-input" value="${escHtml(bf.price||'')}" onchange="state._basicFields=state._basicFields||{};state._basicFields.price=this.value">
+        </div>`;
+        html += `<div class="attr-row normal">
+            <div class="attr-label"><span class="name">Offer ID</span></div>
+            <input class="attr-input" value="${escHtml(bf.offer_id||'')}" onchange="state._basicFields=state._basicFields||{};state._basicFields.offer_id=this.value">
+        </div>`;
+    }
+
+    editor.innerHTML = html;
+    document.getElementById('attr-count').textContent =
+        `${Object.keys(state.filledAttrs).length}/${state.attributes.length} 已填`;
+}
+
+function renderCenterWithSuggestions() {
+    const editor = document.getElementById('attr-editor');
+    const suggestions = state._suggestions || [];
+    let html = `<div class="category-bar">
+        <span style="color:var(--warning)">&#9888;</span>
+        <span>品类 ${state.categoryId} 不可用，请选择备选品类：</span>
+    </div>`;
+    suggestions.forEach(s => {
+        html += `<div class="product-card" style="cursor:pointer" onclick="state.categoryId='${s.id}';state.typeId='${s.id}';loadAttributes()">
+            <div class="info">
+                <div class="skc">ID: ${s.id}</div>
+                <div class="title-text">${escHtml(s.name)}</div>
+            </div>
+        </div>`;
+    });
+    editor.innerHTML = html;
+}
+
+// ============ Right Panel: Score & Submit ============
+function buildListingPayload() {
+    const p = state.productData;
+    if (!p) return null;
+
+    const attrs = Object.entries(state.filledAttrs).map(([id, data]) => ({
+        attribute_id: parseInt(id),
+        value: String(data.value || ''),
+        type: 'String'
+    }));
+
+    const bf = state._basicFields || {};
+    return {
+        skc: p.skc,
+        name: bf.name || p.title || '',
+        description: bf.description || (p.product_data||{}).product_description || '',
+        price: bf.price || '',
+        offer_id: bf.offer_id || `${p.skc}-SKU`,
+        barcode: '',
+        category_id: state.categoryId || 0,
+        type_id: state.typeId || state.categoryId || 0,
+        attributes: attrs,
+        images: (state.listingData && state.listingData.images) || [],
+        skus: [{ sku_code: bf.offer_id || `${p.skc}-SKU`, price: bf.price || '' }],
+    };
+}
+
+async function onSimulate() {
+    if (!state.storeId) { toast('请先选择店铺', 'error'); return; }
+    const payload = buildListingPayload();
+    if (!payload) { toast('缺少产品数据', 'error'); return; }
+
+    // Save listing draft first
+    try {
+        await api(`/api/listings/${payload.skc}/${state.storeId}`, 'PUT', payload);
+        state.listingData = payload;
+    } catch(e) {
+        toast('保存草稿失败: ' + e.message, 'error');
+    }
+
+    // Run simulation
+    try {
+        const result = await api(`/api/ozon/${state.storeId}/listing/simulate`, 'POST', {
+            ...payload, skc: payload.skc
+        });
+        state.simulation = result.report || result;
+        renderRight();
+        toast(`评分: ${state.simulation.score} 分 ${state.simulation.can_submit ? '&#9989; 达标' : '&#9888; 未达标'}`);
+    } catch(e) {
+        toast('模拟评分失败: ' + e.message, 'error');
+    }
+}
+
+async function onSubmitListing() {
+    if (!state.storeId) { toast('请先选择店铺', 'error'); return; }
+    const payload = buildListingPayload();
+    if (!payload) { toast('缺少产品数据', 'error'); return; }
+
+    if (state.simulation && !state.simulation.can_submit) {
+        if (!confirm(`当前评分 ${state.simulation.score} 分，未达标。仍要提交吗？`)) return;
+    }
+
+    // Save draft first
+    try {
+        await api(`/api/listings/${payload.skc}/${state.storeId}`, 'PUT', payload);
+        state.listingData = payload;
+    } catch(e) {
+        toast('保存草稿失败: ' + e.message, 'error');
+        return;
+    }
+
+    // Submit
+    try {
+        const result = await api(`/api/ozon/${state.storeId}/product/create`, 'POST', payload);
+        if (result.success) {
+            state._importTaskId = result.task_id || result.code;
+            renderRight();
+            toast('产品已提交到Ozon！', 'success');
+            if (state._importTaskId) {
+                setTimeout(checkImportStatus, 2000);
+            }
+        } else {
+            state._importError = result.error || '提交失败';
+            renderRight();
+            toast('提交失败: ' + (result.error || '未知错误'), 'error');
+        }
+    } catch(e) {
+        state._importError = e.message;
+        renderRight();
+        toast('提交失败: ' + e.message, 'error');
+    }
+}
+
+async function checkImportStatus() {
+    if (!state._importTaskId || !state.storeId) return;
+    try {
+        const result = await api(`/api/ozon/${state.storeId}/listing/check-import?task_id=${state._importTaskId}`);
+        state._importResult = result;
+        renderRight();
+    } catch(e) {
+        state._importResult = { error: e.message };
+        renderRight();
+    }
+}
+
+function renderRight() {
+    const panel = document.getElementById('score-panel');
+
+    if (!state.selectedSku) {
+        panel.innerHTML = '<div class="no-results" style="padding:40px 20px;">选择产品后模拟评分</div>';
+        return;
+    }
+
+    let html = '';
+
+    // Simulate button
+    html += `<div style="margin-bottom:12px;">
+        <button class="btn btn-accent" style="width:100%;padding:8px" onclick="onSimulate()" ${!state.storeId?'disabled':''}>
+            &#128269; 模拟评分
+        </button>
+    </div>`;
+
+    // Score display
+    if (state.simulation) {
+        const sim = state.simulation;
+        const passClass = sim.can_submit ? 'score-pass' : 'score-fail';
+        html += `<div class="score-overview">
+            <div class="score-number ${passClass}">${sim.score}</div>
+            <div class="score-target">目标 ${sim.target_score || 80} 分 ${sim.can_submit ? '&#9989; 达标' : '&#9888; 未达标'}</div>
+        </div>`;
+
+        // Score breakdown
+        if (sim.sections) {
+            sim.sections.forEach(s => {
+                const pct = s.max_points > 0 ? (s.points / s.max_points * 100) : 0;
+                let barClass = 'progress-fill';
+                if (pct < 40) barClass += ' danger';
+                else if (pct < 70) barClass += ' warning';
+                html += `<div class="score-section">
+                    <div class="score-label">
+                        <span class="name">${escHtml(s.name)}</span>
+                        <span class="pts">${s.points}/${s.max_points}</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="${barClass}" style="width:${pct}%"></div>
+                    </div>
+                </div>`;
+            });
+        }
+
+        // Issues
+        if (sim.issues && sim.issues.length) {
+            html += `<div class="section-header" style="color:var(--danger)">&#9888; 问题</div>`;
+            html += `<ul class="issue-list">`;
+            sim.issues.forEach(i => {
+                html += `<li class="error">&#10060; ${escHtml(i)}</li>`;
+            });
+            html += `</ul>`;
+        }
+
+        // Warnings
+        if (sim.warnings && sim.warnings.length) {
+            const maxWarn = sim.warnings.slice(0, 8);
+            html += `<div class="section-header" style="color:var(--warning)">&#9888; 警告</div>`;
+            html += `<ul class="issue-list">`;
+            maxWarn.forEach(w => {
+                html += `<li class="warn">&#9888; ${escHtml(w)}</li>`;
+            });
+            html += `</ul>`;
+        }
+    }
+
+    // Submit button
+    html += `<div style="margin-top:12px;">
+        <button class="btn btn-accent" style="width:100%;padding:8px" onclick="onSubmitListing()" ${!state.storeId?'disabled':''}>
+            &#128640; 提交到Ozon
+        </button>
+    </div>`;
+
+    // Import status
+    if (state._importTaskId) {
+        html += `<div style="margin-top:12px;">
+            <div class="section-header">&#128230; 导入状态</div>
+            <div class="import-status">
+                <div class="task-id">Task: ${escHtml(state._importTaskId)}</div>
+                ${state._importResult
+                    ? (state._importResult.error
+                        ? `<div class="result-err">&#10060; ${escHtml(state._importResult.error)}</div>`
+                        : `<div class="result-ok">&#9989; ${escHtml(JSON.stringify(state._importResult))}</div>`)
+                    : `<div class="loading-overlay"><span class="spinner"></span>检查中...</div>`}
+                <button class="btn btn-sm" style="margin-top:8px" onclick="checkImportStatus()">刷新状态</button>
+            </div>
+        </div>`;
+    }
+
+    if (state._importError) {
+        html += `<div class="import-status" style="margin-top:8px;">
+            <div class="result-err">&#10060; 提交错误: ${escHtml(state._importError)}</div>
+        </div>`;
+    }
+
+    panel.innerHTML = html;
+}
+
+// ============ Keyboard shortcuts ============
+document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        if (state.selectedSku && state.storeId) {
+            const payload = buildListingPayload();
+            if (payload) {
+                api(`/api/listings/${payload.skc}/${state.storeId}`, 'PUT', payload)
+                    .then(() => toast('草稿已保存', 'success'))
+                    .catch(err => toast('保存失败: ' + err.message, 'error'));
+            }
+        }
+    }
+});
+
+// ============ Start ============
+init();
+</script>
+</body>
+</html>

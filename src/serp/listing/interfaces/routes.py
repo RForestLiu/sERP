@@ -101,11 +101,23 @@ def create_listing_blueprint(facade: ListingFacade) -> Blueprint:
 
 
 def create_listing_page_blueprint() -> Blueprint:
-    """创建 listing 页面蓝图（/ozon-listing）"""
+    """创建 listing 页面蓝图（/ozon-listing /listing-workbench /product-maintenance /knowledge-base）"""
     bp = Blueprint("listing_page", __name__)
 
     @bp.route("/ozon-listing")
     def ozon_listing_page():
         return render_template("ozon_listing.html")
+
+    @bp.route("/listing-workbench")
+    def listing_workbench_page():
+        return render_template("listing_workbench.html")
+
+    @bp.route("/product-maintenance")
+    def product_maintenance_page():
+        return render_template("product_maintenance.html")
+
+    @bp.route("/knowledge-base")
+    def knowledge_base_page():
+        return render_template("knowledge_base.html")
 
     return bp
