@@ -4092,7 +4092,7 @@
                     try {
                         const res = await fetch(`/api/products/${skc}/manual`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
                         if (!res.ok) throw new Error("保存失败");
-                        this.classList.remove("saving"); this.classList.add("saved"); this.textContent = "✅ 已保存";
+                        this.classList.remove("saving"); this.classList.add("saved"); this.textContent = "✅ 已保存"; this.disabled = false;
                         // 更新只读显示
                         detailRow.querySelectorAll(".ro-info").forEach(row => {
                             const field = row.dataset.roField;
