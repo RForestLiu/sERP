@@ -7,8 +7,9 @@
     },
     {
       "attribute_id": 5344,
-      "value": "кнопка",
-      "type": "String"
+      "value": "Молния",
+      "type": "String",
+      "dictionary_value_id": 60850
     },
     {
       "attribute_id": 4389,
@@ -22,13 +23,15 @@
     },
     {
       "attribute_id": 9390,
-      "value": "женский",
-      "type": "String"
+      "value": "Взрослая",
+      "type": "String",
+      "dictionary_value_id": 43241
     },
     {
       "attribute_id": 85,
-      "value": "Travelambo",
-      "type": "String"
+      "value": "Bostanten",
+      "type": "String",
+      "dictionary_value_id": 971068372
     },
     {
       "attribute_id": 6573,
@@ -61,19 +64,15 @@
       "type": "String"
     },
     {
-      "attribute_id": 11254,
-      "value": "{\"version\": 0.3, \"content\": [{\"type\": \"text\", \"value\": \"Большое двухстворчатое портмоне с RFID-защитой. Идеально для хранения карт, наличных и документов.\"}, {\"type\": \"text\", \"value\": \"Изготовлено из натуральной кожи ручной работы. 16 отделений для карт, 2 отделения на молнии.\"}, {\"type\": \"text\", \"value\": \"Подходит для повседневного использования, путешествий и деловых встреч.\"}, {\"type\": \"text\", \"value\": \"Тонкий дизайн с регулируемыми кнопками. Доступно в коричневом и бежевом цветах.\"}]}",
-      "type": "String"
-    },
-    {
       "attribute_id": 5311,
       "value": "металл",
       "type": "String"
     },
     {
       "attribute_id": 10096,
-      "value": "бежевый, коричневый",
-      "type": "String"
+      "value": "черный",
+      "type": "String",
+      "dictionary_value_id": 61574
     },
     {
       "attribute_id": 9163,
@@ -438,5 +437,105 @@
   "skc": "WALLET-0002",
   "status": "draft",
   "store_id": "ozon_anling",
-  "updated_at": "2026-04-28T21:44:31.757219"
+  "lifecycle": [
+    {
+      "at": "2026-05-22T04:36:55",
+      "event": "simulate",
+      "score": 54,
+      "can_submit": false,
+      "issues": [
+        "缺少商品标题",
+        "缺少商品描述",
+        "缺少主 offer_id",
+        "缺少有效售价",
+        "缺少可提交的 SKU/变体"
+      ],
+      "warnings": [
+        "缺少 type_id，部分 Ozon 类目可能导入失败",
+        "缺少 Rich Content/JSON 富文本，会影响卡片质量",
+        "已过滤 40 张非商品图/缩略图/图标",
+        "SKU offer_id 为空或重复",
+        "部分 SKU 缺少库存"
+      ]
+    },
+    {
+      "at": "2026-05-22T04:37:05",
+      "event": "simulate",
+      "score": 54,
+      "can_submit": false,
+      "issues": [
+        "缺少商品标题",
+        "缺少商品描述",
+        "缺少主 offer_id",
+        "缺少有效售价",
+        "缺少可提交的 SKU/变体"
+      ],
+      "warnings": [
+        "缺少 type_id，部分 Ozon 类目可能导入失败",
+        "缺少 Rich Content/JSON 富文本，会影响卡片质量",
+        "已过滤 40 张非商品图/缩略图/图标",
+        "SKU offer_id 为空或重复",
+        "部分 SKU 缺少库存"
+      ]
+    },
+    {
+      "at": "2026-05-22T04:37:48",
+      "event": "simulate",
+      "score": 90,
+      "can_submit": true,
+      "issues": [],
+      "warnings": [
+        "缺少 Rich Content/JSON 富文本，会影响卡片质量",
+        "已过滤 40 张非商品图/缩略图/图标",
+        "部分 SKU 缺少库存",
+        "未识别到有效原价，建议原价高于售价",
+        "未填写条码；如 Ozon 允许自动生成，可后续补"
+      ]
+    },
+    {
+      "at": "2026-05-22T04:38:25",
+      "event": "ozon_import_failed",
+      "score": 90,
+      "error": "Client-Id header value should be positive integer"
+    },
+    {
+      "at": "2026-05-22T04:45:28",
+      "event": "ozon_import_failed",
+      "score": 90,
+      "error": "Client-Id header value should be positive integer"
+    },
+    {
+      "at": "2026-05-22T04:47:43",
+      "event": "ozon_import_failed",
+      "score": 90,
+      "error": "Client-Id header value should be positive integer"
+    },
+    {
+      "at": "2026-05-22T04:50:18",
+      "event": "ozon_import_failed",
+      "score": 90,
+      "error": "Client-Id header value should be positive integer"
+    },
+    {
+      "at": "2026-05-22T04:52:47",
+      "event": "ozon_import_failed",
+      "score": 90,
+      "error": "Client-Id header value should be positive integer"
+    },
+    {
+      "at": "2026-05-22T04:55:48",
+      "event": "ozon_import_failed",
+      "score": 90,
+      "error": "Client-Id header value should be positive integer"
+    },
+    {
+      "at": "2026-05-22T04:58:11",
+      "event": "ozon_import_submitted",
+      "mode": "upsert",
+      "score": 90,
+      "task_id": 4526821775,
+      "item_count": 3
+    }
+  ],
+  "updated_at": "2026-05-22T04:58:11.157087"
 }

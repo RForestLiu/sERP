@@ -1537,6 +1537,18 @@
             <span class="nav-icon">⚙</span>
             <span class="nav-label">设置</span>
         </div>
+        <a href="/listing-workbench" class="nav-item" style="text-decoration:none;">
+            <span class="nav-icon">&#128640;</span>
+            <span class="nav-label">上架工作台</span>
+        </a>
+        <a href="/product-maintenance" class="nav-item" style="text-decoration:none;">
+            <span class="nav-icon">&#128221;</span>
+            <span class="nav-label">产品维护</span>
+        </a>
+        <a href="/knowledge-base" class="nav-item" style="text-decoration:none;">
+            <span class="nav-icon">&#128218;</span>
+            <span class="nav-label">知识库</span>
+        </a>
     </div>
 
     <!-- ===== 模块容器 ===== -->
@@ -4080,7 +4092,7 @@
                     try {
                         const res = await fetch(`/api/products/${skc}/manual`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
                         if (!res.ok) throw new Error("保存失败");
-                        this.classList.remove("saving"); this.classList.add("saved"); this.textContent = "✅ 已保存";
+                        this.classList.remove("saving"); this.classList.add("saved"); this.textContent = "✅ 已保存"; this.disabled = false;
                         // 更新只读显示
                         detailRow.querySelectorAll(".ro-info").forEach(row => {
                             const field = row.dataset.roField;
