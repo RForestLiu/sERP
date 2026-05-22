@@ -67,9 +67,15 @@ def upload_public_images() -> list[str]:
         raise RuntimeError(f"Expected Black image set in {image_dir}, found {len(paths)}")
 
     urls: list[str] = []
+    expires_hours = os.environ.get("OZON_IMAGE_EXPIRES_HOURS", "720")
     for path in paths[:6]:
         with path.open("rb") as fh:
-            res = requests.post("https://0x0.st", files={"file": (path.name, fh)}, timeout=90)
+            res = requests.post(
+                "https://0x0.st",
+                data={"expires": expires_hours},
+                files={"file": (path.name, fh)},
+                timeout=90,
+            )
         if res.status_code != 200:
             raise RuntimeError(f"image upload failed for {path.name}: HTTP {res.status_code} {res.text[:300]}")
         url = res.text.strip()
