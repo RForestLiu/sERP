@@ -2,1285 +2,906 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 上架工作台 — sERP</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>AI上架工作台 - sERP</title>
     <style>
         :root {
-            --bg-primary: #1a1a2e;
-            --bg-secondary: #16213e;
-            --bg-panel: #1e2433;
-            --bg-card: #252d3f;
-            --bg-input: #1a2030;
-            --text-primary: #e0e0e0;
-            --text-secondary: #8892b0;
-            --text-muted: #5a6480;
-            --accent: #64ffda;
-            --accent-dim: #45b8a0;
-            --danger: #ff6b6b;
-            --warning: #ffd93d;
-            --critical: #ff4757;
-            --important: #ffa502;
-            --normal: #7bed9f;
-            --border: #2a3548;
-            --border-active: #3a4560;
-            --shadow: 0 2px 8px rgba(0,0,0,0.3);
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --panel-header: #162032;
+            --border: #334155;
+            --text: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --success: #22c55e;
+            --success-bg: #052e16;
+            --warning: #f59e0b;
+            --warning-bg: #451a03;
+            --danger: #ef4444;
+            --danger-bg: #450a0a;
+            --input-bg: #0f172a;
+            --input-border: #334155;
+            --card-bg: #1e293b;
+            --hover-bg: #233249;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
-            font-size: 13px;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            font-size: 13px; color: var(--text); background: var(--bg);
+            height: 100vh; overflow: hidden; display: flex; flex-direction: column;
         }
 
         /* ===== Top Bar ===== */
-        .topbar {
-            background: var(--bg-primary);
-            border-bottom: 1px solid var(--border);
-            padding: 0 20px;
-            height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-shrink: 0;
+        .top-bar {
+            height: 44px; background: var(--panel); border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; padding: 0 16px; gap: 12px; flex-shrink: 0;
         }
-        .topbar .title {
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--accent);
-            letter-spacing: 0.5px;
-        }
-        .topbar .nav-links {
-            display: flex; gap: 4px;
-        }
-        .topbar .nav-links a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            transition: all 0.15s;
-        }
-        .topbar .nav-links a:hover {
-            background: rgba(100,255,218,0.08);
-            color: var(--accent);
-        }
-        .topbar .store-selector {
-            display: flex; align-items: center; gap: 8px;
-        }
-        .topbar .store-selector label { color: var(--text-secondary); font-size: 12px; }
-        .topbar .store-selector select {
-            background: var(--bg-input);
-            color: var(--text-primary);
-            border: 1px solid var(--border);
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            min-width: 180px;
-        }
+        .top-bar a { color: var(--text-secondary); text-decoration: none; font-size: 12px; }
+        .top-bar a:hover { color: var(--accent); }
+        .top-bar .sep { color: var(--text-muted); }
+        .top-bar .title { font-size: 14px; font-weight: 600; color: var(--text); }
+        .top-bar .meta { font-size: 12px; color: var(--text-muted); margin-left: auto; }
 
-        /* ===== Main Layout (3 panels) ===== */
-        .main-layout {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-            gap: 2px;
-        }
-        .panel {
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        .panel-left {
-            width: 30%;
-            min-width: 280px;
-            max-width: 380px;
-            border-right: 1px solid var(--border);
-        }
-        .panel-center {
-            flex: 1;
-            min-width: 400px;
-        }
-        .panel-right {
-            width: 30%;
-            min-width: 300px;
-            max-width: 380px;
-            border-left: 1px solid var(--border);
-        }
+        /* ===== Main Layout ===== */
+        .main-layout { display: flex; flex: 1; overflow: hidden; }
 
-        /* ===== Panel Header ===== */
+        /* ===== Panel ===== */
+        .panel { display: flex; flex-direction: column; overflow: hidden; }
+        .panel + .panel { border-left: 1px solid var(--border); }
         .panel-header {
-            padding: 10px 14px;
-            background: var(--bg-panel);
-            border-bottom: 1px solid var(--border);
-            font-weight: 600;
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-shrink: 0;
+            padding: 10px 14px; background: var(--panel-header);
+            border-bottom: 1px solid var(--border); flex-shrink: 0;
+            display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600;
         }
-        .panel-header .icon { font-size: 16px; }
+        .panel-body { flex: 1; overflow-y: auto; padding: 12px; }
 
-        /* ===== Panel Body (scrollable) ===== */
-        .panel-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px;
+        /* ===== Left Panel (Product Selector) ===== */
+        #panel-left { width: 30%; min-width: 260px; max-width: 360px; }
+        .search-wrap { margin-bottom: 10px; }
+        .search-wrap input {
+            width: 100%; padding: 7px 10px; font-size: 12px; font-family: inherit;
+            background: var(--input-bg); color: var(--text); border: 1px solid var(--input-border);
+            border-radius: 5px; outline: none; transition: border-color 0.15s;
         }
-
-        /* ===== Left Panel: Product Search ===== */
-        .search-box {
-            position: relative;
-            margin-bottom: 10px;
+        .search-wrap input:focus { border-color: var(--accent); }
+        .search-wrap input::placeholder { color: var(--text-muted); }
+        .store-selector { margin-bottom: 10px; }
+        .store-selector label { font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 3px; }
+        .store-selector select {
+            width: 100%; padding: 6px 8px; font-size: 12px; font-family: inherit; cursor: pointer;
+            background: var(--input-bg); color: var(--text); border: 1px solid var(--input-border);
+            border-radius: 5px; outline: none;
         }
-        .search-box input {
-            width: 100%;
-            background: var(--bg-input);
-            color: var(--text-primary);
-            border: 1px solid var(--border);
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 13px;
-            outline: none;
-            transition: border-color 0.15s;
-        }
-        .search-box input:focus {
-            border-color: var(--accent);
-        }
+        .product-list { display: flex; flex-direction: column; gap: 5px; }
         .product-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 10px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            transition: all 0.15s;
-            display: flex;
-            gap: 10px;
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 5px;
+            padding: 8px 10px; cursor: pointer; transition: all 0.15s;
+            display: flex; gap: 8px; align-items: center;
         }
-        .product-card:hover {
-            border-color: var(--accent-dim);
-            background: rgba(100,255,218,0.05);
+        .product-card:hover { border-color: var(--accent); background: var(--hover-bg); }
+        .product-card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+        .product-card .p-thumb {
+            width: 44px; height: 44px; border-radius: 4px; object-fit: cover;
+            flex-shrink: 0; background: var(--bg); border: 1px solid var(--border);
         }
-        .product-card.selected {
-            border-color: var(--accent);
-            background: rgba(100,255,218,0.1);
+        .product-card .p-thumb-placeholder {
+            width: 44px; height: 44px; border-radius: 4px; flex-shrink: 0;
+            background: var(--bg); border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center; font-size: 18px;
         }
-        .product-card .thumb {
-            width: 48px; height: 48px;
-            border-radius: 4px;
-            object-fit: cover;
-            background: var(--bg-input);
-            flex-shrink: 0;
+        .product-card .p-info { flex: 1; min-width: 0; }
+        .product-card .p-skc {
+            font-size: 10px; color: var(--accent); font-weight: 600;
+            background: rgba(59,130,246,0.12); padding: 1px 5px; border-radius: 3px;
+            display: inline-block; margin-bottom: 2px;
         }
-        .product-card .info {
-            flex: 1;
-            min-width: 0;
+        .product-card .p-title {
+            font-size: 11px; color: var(--text); line-height: 1.4;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
-        .product-card .skc {
-            font-weight: 600;
-            font-size: 12px;
-            color: var(--accent);
-        }
-        .product-card .title-text {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin: 3px 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .product-card .category-tag {
-            font-size: 10px;
-            background: rgba(100,255,218,0.15);
-            color: var(--accent);
-            padding: 1px 6px;
-            border-radius: 3px;
-            display: inline-block;
-        }
-        .no-results {
-            text-align: center;
-            color: var(--text-muted);
-            padding: 30px;
-            font-size: 13px;
-        }
+        .product-empty { text-align: center; padding: 28px 12px; color: var(--text-muted); font-size: 12px; }
 
-        /* ===== Center Panel: Attribute Editor ===== */
-        .section-header {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            padding: 8px 0;
-            margin-top: 10px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        /* ===== Center Panel (Attribute Editor) ===== */
+        #panel-center { flex: 1; min-width: 340px; }
+        .cat-bar {
+            display: flex; align-items: center; gap: 6px; padding: 8px 10px;
+            background: var(--input-bg); border-radius: 5px; margin-bottom: 10px; font-size: 11px;
         }
-        .section-header:first-child { margin-top: 0; }
-        .category-bar {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px;
-            background: var(--bg-card);
-            border-radius: 6px;
-            margin-bottom: 8px;
-        }
-        .category-bar .cat-path {
-            flex: 1;
-            font-size: 12px;
-            color: var(--text-secondary);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .category-bar .cat-id {
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-        .btn {
-            padding: 5px 12px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.15s;
-            font-family: inherit;
-            background: var(--bg-card);
-            color: var(--text-primary);
-            white-space: nowrap;
-        }
-        .btn:hover { border-color: var(--accent-dim); color: var(--accent); }
-        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .btn-accent {
-            background: var(--accent-dim);
-            color: #000;
-            border-color: var(--accent-dim);
-            font-weight: 600;
-        }
-        .btn-accent:hover {
-            background: var(--accent);
-            border-color: var(--accent);
-        }
-        .btn-sm {
-            padding: 2px 8px;
-            font-size: 11px;
-        }
-        .btn-danger { color: var(--danger); border-color: var(--danger); }
-        .btn-danger:hover { background: var(--danger); color: #fff; }
-        .btn-warn { color: var(--warning); border-color: var(--warning); }
+        .cat-bar .cat-path { flex: 1; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .cat-bar .cat-id { color: var(--text-muted); flex-shrink: 0; }
+        .editor-toolbar { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
+        .editor-toolbar .hint { font-size: 11px; color: var(--text-muted); }
 
-        .attr-group {
-            margin-bottom: 6px;
+        .attr-section { margin-bottom: 12px; }
+        .attr-section-title {
+            font-size: 11px; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.5px;
+            padding: 4px 0; border-bottom: 1px solid var(--border); margin-bottom: 6px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .attr-section-title .count {
+            font-size: 10px; color: var(--text-muted); background: rgba(148,163,184,0.1);
+            padding: 0 6px; border-radius: 6px; font-weight: 400;
         }
         .attr-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 8px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            margin-bottom: 4px;
+            display: flex; align-items: flex-start; gap: 8px; padding: 4px 0;
+        }
+        .attr-row .a-label {
+            width: 170px; flex-shrink: 0; font-size: 11px; line-height: 1.4;
+            padding-top: 5px; text-align: right;
+        }
+        .attr-row .a-label .ru { color: var(--text); display: block; word-break: break-word; }
+        .attr-row .a-label .cn { color: var(--text-muted); font-size: 10px; display: block; }
+        .attr-row .a-label .id-tag { font-size: 9px; color: var(--text-muted); opacity: 0.5; }
+        .attr-row .a-input-wrap { flex: 1; min-width: 0; }
+        .attr-row input, .attr-row select, .attr-row textarea {
+            width: 100%; padding: 5px 8px; font-size: 11px; font-family: inherit;
+            background: var(--input-bg); color: var(--text);
+            border: 1px solid var(--input-border); border-radius: 4px; outline: none;
             transition: border-color 0.15s;
         }
-        .attr-row.critical {
-            border-left: 3px solid var(--critical);
-        }
-        .attr-row.important {
-            border-left: 3px solid var(--important);
-        }
-        .attr-row.normal {
-            border-left: 3px solid var(--normal);
-        }
-        .attr-label {
-            flex: 1;
-            min-width: 0;
-            font-size: 12px;
-        }
-        .attr-label .name {
-            color: var(--text-primary);
-            font-weight: 500;
-        }
-        .attr-label .id-tag {
-            font-size: 10px;
-            color: var(--text-muted);
-            margin-left: 4px;
-        }
-        .attr-label .source {
-            font-size: 10px;
-            color: var(--text-muted);
-            display: block;
-            margin-top: 1px;
-        }
-        .attr-input {
-            width: 45%;
-            min-width: 120px;
-            background: var(--bg-input);
-            color: var(--text-primary);
-            border: 1px solid var(--border);
-            padding: 5px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            outline: none;
-            font-family: inherit;
-        }
-        .attr-input:focus { border-color: var(--accent-dim); }
-        .attr-input.locked {
-            background: var(--bg-panel);
-            color: var(--text-muted);
-            cursor: not-allowed;
-        }
-        .lock-icon {
-            color: var(--critical);
-            font-size: 14px;
-            flex-shrink: 0;
-        }
-        .status-badge {
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        .status-badge.filled { background: rgba(100,255,218,0.2); color: var(--accent); }
-        .status-badge.empty { background: rgba(255,107,107,0.15); color: var(--danger); }
-        .status-badge.ai { background: rgba(122,179,255,0.2); color: #7ab3ff; }
+        .attr-row input:focus, .attr-row select:focus, .attr-row textarea:focus { border-color: var(--accent); }
+        .attr-row textarea { min-height: 50px; resize: vertical; }
+        .attr-row .required-dot { color: var(--danger); font-weight: 700; }
+        .attr-empty { text-align: center; padding: 40px 16px; color: var(--text-muted); font-size: 13px; }
 
-        /* ===== Right Panel: Score & Submit ===== */
-        .score-overview {
-            text-align: center;
-            padding: 16px;
-            background: var(--bg-card);
-            border-radius: 8px;
-            margin-bottom: 10px;
+        /* ===== Right Panel (Score & Submit) ===== */
+        #panel-right { width: 30%; min-width: 260px; max-width: 360px; }
+        .score-big {
+            display: flex; align-items: center; gap: 14px; padding: 14px;
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 10px;
         }
-        .score-number {
-            font-size: 42px;
-            font-weight: 700;
-            color: var(--accent);
+        .score-circle {
+            width: 72px; height: 72px; border-radius: 50%; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px; font-weight: 700;
         }
-        .score-target {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-        .score-pass { color: var(--accent); }
-        .score-fail { color: var(--danger); }
-        .score-section {
-            margin-bottom: 8px;
-        }
-        .score-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            margin-bottom: 3px;
-        }
-        .score-label .name { color: var(--text-secondary); }
-        .score-label .pts { color: var(--accent-dim); }
-        .progress-bar {
-            height: 6px;
-            background: var(--bg-input);
-            border-radius: 3px;
-            overflow: hidden;
-        }
-        .progress-fill {
-            height: 100%;
-            background: var(--accent-dim);
-            border-radius: 3px;
-            transition: width 0.3s;
-        }
-        .progress-fill.warning { background: var(--warning); }
-        .progress-fill.danger { background: var(--danger); }
+        .score-circle.empty { background: var(--bg); color: var(--text-muted); border: 3px solid var(--border); }
+        .score-circle.pass { background: var(--success-bg); color: var(--success); border: 3px solid var(--success); }
+        .score-circle.fail { background: var(--danger-bg); color: var(--danger); border: 3px solid var(--danger); }
+        .score-info { flex: 1; }
+        .score-info .score-status { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+        .score-info .score-hint { font-size: 11px; color: var(--text-muted); }
 
-        .issue-list {
-            list-style: none;
-            font-size: 12px;
+        .breakdown { background: var(--card-bg); border: 1px solid var(--border); border-radius: 5px; overflow: hidden; margin-bottom: 10px; }
+        .breakdown-item {
+            padding: 6px 10px; border-bottom: 1px solid var(--border); display: flex;
+            justify-content: space-between; align-items: center; font-size: 11px;
         }
-        .issue-list li {
-            padding: 5px 8px;
-            margin-bottom: 4px;
-            border-radius: 4px;
-            display: flex;
-            align-items: flex-start;
-            gap: 6px;
-        }
-        .issue-list li.error {
-            background: rgba(255,71,87,0.1);
-            color: var(--danger);
-        }
-        .issue-list li.warn {
-            background: rgba(255,217,61,0.08);
-            color: var(--warning);
-        }
-        .import-status {
-            padding: 10px;
-            background: var(--bg-card);
-            border-radius: 6px;
-            font-size: 12px;
-            line-height: 1.6;
-        }
-        .import-status .task-id {
-            color: var(--text-muted);
-            font-size: 11px;
-        }
-        .import-status .result-ok { color: var(--accent); }
-        .import-status .result-err { color: var(--danger); }
+        .breakdown-item:last-child { border-bottom: none; }
+        .breakdown-item .bi-name { color: var(--text); }
+        .breakdown-item .bi-detail { color: var(--text-muted); font-size: 10px; margin-left: 4px; }
+        .breakdown-item .bi-pts { color: var(--accent); font-weight: 600; white-space: nowrap; }
 
-        /* ===== Loading / Spinner ===== */
-        .spinner {
-            display: inline-block;
-            width: 16px; height: 16px;
-            border: 2px solid var(--border);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
+        .issue-tag {
+            display: inline-block; padding: 3px 8px; border-radius: 3px; font-size: 11px; margin: 2px 2px 2px 0;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .loading-overlay {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 30px;
-            color: var(--text-muted);
-            gap: 8px;
+        .issue-tag.error { background: var(--danger-bg); color: var(--danger); }
+        .issue-tag.warn { background: var(--warning-bg); color: var(--warning); }
+
+        .import-box {
+            margin-top: 10px; padding: 10px; background: var(--card-bg);
+            border: 1px solid var(--border); border-radius: 5px; font-size: 11px;
         }
+        .import-box h4 { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; }
+        .import-box .imp-status { color: var(--text); }
+        .import-box .imp-detail { color: var(--text-muted); margin-top: 2px; }
+        .lifecycle-list { max-height: 150px; overflow-y: auto; margin-top: 6px; }
+        .lifecycle-item {
+            font-size: 10px; padding: 2px 6px; display: flex; gap: 6px;
+            color: var(--text-muted); background: var(--bg); border-radius: 2px; margin-bottom: 2px;
+        }
+        .lifecycle-item .lc-time { white-space: nowrap; opacity: 0.6; }
+        .lifecycle-item .lc-event { flex: 1; }
+
+        /* ===== Buttons ===== */
+        .btn {
+            padding: 5px 12px; font-size: 12px; border: 1px solid var(--border); border-radius: 5px;
+            cursor: pointer; font-family: inherit; background: var(--card-bg); color: var(--text);
+            transition: all 0.15s; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;
+        }
+        .btn:hover { border-color: var(--accent); color: var(--accent); }
+        .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; }
+        .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+        .btn-success:hover { background: #16a34a; border-color: #16a34a; color: #fff; }
+        .btn-purple { background: #8b5cf6; color: #fff; border-color: #8b5cf6; }
+        .btn-purple:hover { background: #7c3aed; border-color: #7c3aed; color: #fff; }
 
         /* ===== Toast ===== */
-        .toast-container {
-            position: fixed;
-            top: 16px;
-            right: 16px;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
         .toast {
-            padding: 10px 16px;
-            border-radius: 6px;
-            font-size: 13px;
-            animation: slideIn 0.2s;
-            max-width: 360px;
-            box-shadow: var(--shadow);
+            position: fixed; top: 54px; right: 16px; z-index: 3000;
+            padding: 8px 16px; border-radius: 5px; font-size: 12px; max-width: 420px;
+            display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         }
-        .toast.info { background: #1a3a5c; color: var(--accent); border: 1px solid var(--accent-dim); }
-        .toast.error { background: #3a1a1a; color: var(--danger); border: 1px solid var(--danger); }
-        .toast.success { background: #1a3a1a; color: var(--accent); border: 1px solid var(--accent-dim); }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .toast.info { background: rgba(59,130,246,0.12); color: var(--accent); border: 1px solid var(--accent); }
+        .toast.success { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+        .toast.error { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
 
-        /* ===== Modal ===== */
-        .modal-overlay {
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,0.6);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
+        .spinner {
+            display: inline-block; width: 13px; height: 13px; border: 2px solid currentColor;
+            border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite;
         }
-        .modal {
-            background: var(--bg-panel);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            width: 480px;
-            max-width: 90vw;
-            box-shadow: var(--shadow);
-        }
-        .modal-header {
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border);
-            font-weight: 600;
-            font-size: 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .modal-body {
-            padding: 16px;
-            max-height: 60vh;
-            overflow-y: auto;
-        }
-        .modal-footer {
-            padding: 12px 16px;
-            border-top: 1px solid var(--border);
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-        }
-        .modal textarea {
-            width: 100%;
-            background: var(--bg-input);
-            color: var(--text-primary);
-            border: 1px solid var(--border);
-            padding: 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-family: inherit;
-            resize: vertical;
-            min-height: 80px;
-            outline: none;
-        }
-        .modal textarea:focus { border-color: var(--accent-dim); }
-        .modal .field-info {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
     </style>
 </head>
 <body>
 
 <!-- ===== Top Bar ===== -->
-<div class="topbar">
-    <div class="title">AI 上架工作台</div>
-    <div class="nav-links">
-        <a href="/">采集 & 生图</a>
-        <a href="/product-maintenance">产品维护</a>
-        <a href="/knowledge-base">知识库</a>
-        <a href="/ozon-listing">Ozon上架(旧)</a>
-    </div>
-    <div class="store-selector">
-        <label>目标店铺:</label>
-        <select id="store-select">
-            <option value="">-- 加载中 --</option>
-        </select>
-    </div>
+<div class="top-bar">
+    <a href="/">&larr; 返回首页</a>
+    <span class="sep">|</span>
+    <span class="title">AI上架工作台</span>
+    <span class="meta" id="top-meta"></span>
 </div>
 
 <!-- ===== Main Layout ===== -->
 <div class="main-layout">
+
     <!-- ===== Left Panel: Product Selector ===== -->
-    <div class="panel panel-left">
-        <div class="panel-header">
-            <span class="icon">&#128230;</span> 选择产品
-        </div>
+    <div class="panel" id="panel-left">
+        <div class="panel-header">&#128230; 产品选择</div>
         <div class="panel-body">
-            <div class="search-box">
-                <input type="text" id="product-search" placeholder="搜索产品（SKC / 标题 / 品类）..." autocomplete="off">
+            <div class="search-wrap">
+                <input type="text" id="search-input" placeholder="搜索产品标题或SKC..." autocomplete="off">
             </div>
-            <div id="product-list">
-                <div class="no-results">输入关键词搜索产品</div>
+            <div class="store-selector">
+                <label>目标店铺</label>
+                <select id="store-select"><option value="">-- 加载中 --</option></select>
+            </div>
+            <div class="product-list" id="product-list">
+                <div class="product-empty">在上方输入关键词搜索产品</div>
             </div>
         </div>
     </div>
 
     <!-- ===== Center Panel: Attribute Editor ===== -->
-    <div class="panel panel-center">
+    <div class="panel" id="panel-center">
         <div class="panel-header">
-            <span class="icon">&#128221;</span> 属性编辑
+            &#128221; 属性编辑
             <span style="margin-left:auto;font-size:11px;color:var(--text-muted)" id="attr-count"></span>
         </div>
-        <div class="panel-body" id="attr-editor">
-            <div class="no-results" style="padding:60px 20px;">
-                请先在左侧选择产品，然后匹配Ozon品类
+        <div class="panel-body" id="attr-body">
+            <div class="cat-bar" id="cat-bar">
+                <span style="color:var(--text-muted);">品类: 尚未匹配</span>
+            </div>
+            <div class="editor-toolbar">
+                <button class="btn btn-purple" id="btn-ai-fill">&#129302; AI填充</button>
+                <button class="btn btn-primary" id="btn-save-draft">&#128190; 保存草稿</button>
+                <button class="btn" id="btn-load-draft">&#128193; 加载草稿</button>
+                <span class="hint" id="draft-hint"></span>
+            </div>
+            <div id="attr-editor">
+                <div class="attr-empty">请先在左侧选择产品和店铺，然后点击「AI填充」</div>
             </div>
         </div>
     </div>
 
     <!-- ===== Right Panel: Score & Submit ===== -->
-    <div class="panel panel-right">
+    <div class="panel" id="panel-right">
         <div class="panel-header">
-            <span class="icon">&#127942;</span> 评分 & 提交
+            &#127942; 评分与上架
+            <span style="margin-left:auto;display:flex;gap:4px;">
+                <button class="btn btn-sm" id="btn-simulate">&#128269; 模拟评分</button>
+                <button class="btn btn-success btn-sm" id="btn-submit" disabled>&#128640; 提交上架</button>
+            </span>
         </div>
-        <div class="panel-body" id="score-panel">
-            <div class="no-results" style="padding:40px 20px;">
-                填写属性后模拟评分
+        <div class="panel-body" id="score-body">
+            <div class="score-big" id="score-big">
+                <div class="score-circle empty" id="score-circle">--</div>
+                <div class="score-info">
+                    <div class="score-status" id="score-status">尚未评分</div>
+                    <div class="score-hint" id="score-hint">编辑属性后点击"模拟评分"</div>
+                </div>
             </div>
+            <div class="breakdown" id="breakdown" style="display:none;"></div>
+            <div id="issues-area"></div>
+            <div class="import-box" id="import-box" style="display:none;">
+                <h4>&#128225; 导入状态</h4>
+                <div class="imp-status" id="imp-status">--</div>
+                <div class="imp-detail" id="imp-detail"></div>
+            </div>
+            <details style="margin-top:8px;">
+                <summary style="font-size:11px;color:var(--text-muted);cursor:pointer;">生命周期日志</summary>
+                <div class="lifecycle-list" id="lifecycle-list">
+                    <div style="font-size:10px;color:var(--text-muted);padding:6px;">暂无记录</div>
+                </div>
+            </details>
         </div>
     </div>
+
 </div>
 
-<!-- ===== Propose Change Modal ===== -->
-<div class="modal-overlay" id="propose-modal" style="display:none;">
-    <div class="modal">
-        <div class="modal-header">
-            提出变更申请
-            <button class="btn btn-sm" onclick="document.getElementById('propose-modal').style.display='none'">&times;</button>
-        </div>
-        <div class="modal-body">
-            <div class="field-info" id="propose-field-info"></div>
-            <label style="font-size:12px;color:var(--text-secondary)">建议值：</label>
-            <textarea id="propose-value" placeholder="输入建议的新值..."></textarea>
-            <label style="font-size:12px;color:var(--text-secondary);margin-top:8px;display:block;">变更理由：</label>
-            <textarea id="propose-reason" placeholder="简要说明变更原因..."></textarea>
-        </div>
-        <div class="modal-footer">
-            <button class="btn" onclick="document.getElementById('propose-modal').style.display='none'">取消</button>
-            <button class="btn btn-accent" id="propose-submit-btn">提交申请</button>
-        </div>
-    </div>
-</div>
-
-<!-- ===== Toast Container ===== -->
-<div class="toast-container" id="toast-container"></div>
+<div class="toast" id="toast"></div>
 
 <script>
 // ============ State ============
-const state = {
+var S = {
     storeId: '',
-    selectedSku: null,      // selected product SKC
-    productData: null,      // full product object
-    categoryId: null,
-    typeId: null,
-    categoryPath: '',
-    attributes: [],         // raw Ozon attributes from API
-    filledAttrs: {},        // attr_id -> {value, source}
-    listingData: null,      // full listing payload
-    simulation: null,       // last simulate result
-    proposeField: null,     // {attr_id, name, current_value}
+    skc: '',
+    product: null,
+    attributes: [],           // filled attributes [{attribute_id, value, type, label_ru, label_cn, ...}]
+    draft: null,
+    simulation: null,
+    taskId: null,
+    pollTimer: null,
 };
 
 // ============ Helpers ============
-function toast(msg, type='info') {
-    const c = document.getElementById('toast-container');
-    const el = document.createElement('div');
-    el.className = 'toast ' + type;
-    el.textContent = msg;
-    c.appendChild(el);
-    setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 200); }, 3500);
+function $(id) { return document.getElementById(id); }
+
+function esc(s) {
+    if (s == null) return '';
+    var d = document.createElement('div');
+    d.textContent = String(s);
+    return d.innerHTML;
 }
 
-async function api(url, method='GET', body=null) {
-    const opts = { method, headers: {'Content-Type': 'application/json'} };
+var _toastTimer;
+function toast(msg, type) {
+    var el = $('toast');
+    el.textContent = msg;
+    el.className = 'toast ' + (type || 'info');
+    el.style.display = 'block';
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(function() { el.style.display = 'none'; }, type === 'error' ? 8000 : 3500);
+}
+
+async function api(url, method, body) {
+    var opts = { method: method || 'GET', headers: { 'Content-Type': 'application/json' } };
     if (body) opts.body = JSON.stringify(body);
-    const res = await fetch(url, opts);
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || `HTTP ${res.status}`);
-    }
-    return res.json();
+    var res = await fetch(url, opts);
+    var data = await res.json().catch(function() { return {}; });
+    if (!res.ok) throw new Error(data.error || 'HTTP ' + res.status);
+    return data;
+}
+
+function updateMeta() {
+    var parts = [];
+    if (S.skc) parts.push('SKC: ' + S.skc);
+    if (S.storeId) parts.push('店铺: ' + S.storeId);
+    $('top-meta').textContent = parts.join(' | ') || '请选择产品和店铺';
 }
 
 // ============ Init ============
 async function init() {
     // Load stores
     try {
-        const stores = await api('/api/stores');
-        const sel = document.getElementById('store-select');
+        var stores = await api('/api/stores');
+        var sel = $('store-select');
         sel.innerHTML = '<option value="">-- 选择店铺 --</option>';
-        stores.forEach(s => {
-            const opt = document.createElement('option');
+        stores.forEach(function(s) {
+            var opt = document.createElement('option');
             opt.value = s.id;
-            opt.textContent = `${s.name || s.id} (${s.platform || 'Ozon'})`;
+            opt.textContent = (s.label || s.id) + (s.credentials_configured ? ' [已配置]' : '');
             sel.appendChild(opt);
         });
-        // Default to first Ozon store
-        const ozonStore = stores.find(s => (s.platform||'').toLowerCase().includes('ozon') || s.id.includes('ozon'));
-        if (ozonStore) {
-            sel.value = ozonStore.id;
-            state.storeId = ozonStore.id;
-        }
-    } catch(e) {
-        toast('加载店铺列表失败: ' + e.message, 'error');
-    }
+        // auto-select first Ozon store
+        var ozon = stores.find(function(s) { return (s.platform || '').toLowerCase() === 'ozon'; });
+        if (ozon) { sel.value = ozon.id; S.storeId = ozon.id; }
+    } catch (e) { toast('加载店铺列表失败: ' + e.message, 'error'); }
+    updateMeta();
 
     // Bind events
-    document.getElementById('store-select').addEventListener('change', onStoreChange);
-    document.getElementById('product-search').addEventListener('input', debounce(onProductSearch, 300));
-    document.getElementById('propose-submit-btn').addEventListener('click', onSubmitPropose);
-}
+    $('store-select').addEventListener('change', function() {
+        S.storeId = this.value;
+        updateMeta();
+        // Clear category/attributes on store change
+        S.attributes = [];
+        renderCenter();
+        renderRight();
+    });
 
-function debounce(fn, ms) {
-    let timer;
-    return function(...args) {
-        clearTimeout(timer);
-        timer = setTimeout(() => fn.apply(this, args), ms);
-    };
-}
+    var searchTimer;
+    $('search-input').addEventListener('input', function() {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(doSearch, 350);
+    });
 
-function onStoreChange(e) {
-    state.storeId = e.target.value;
-    state.categoryId = null;
-    state.typeId = null;
-    state.attributes = [];
-    state.filledAttrs = {};
-    renderCenter();
-    renderRight();
+    $('btn-ai-fill').addEventListener('click', doAiFill);
+    $('btn-save-draft').addEventListener('click', doSaveDraft);
+    $('btn-load-draft').addEventListener('click', doLoadDraft);
+    $('btn-simulate').addEventListener('click', doSimulate);
+    $('btn-submit').addEventListener('click', doSubmit);
 }
 
 // ============ Product Search ============
-async function onProductSearch() {
-    const q = document.getElementById('product-search').value.trim();
-    const container = document.getElementById('product-list');
-    if (!q) {
-        container.innerHTML = '<div class="no-results">输入关键词搜索产品</div>';
-        return;
-    }
-    container.innerHTML = '<div class="loading-overlay"><span class="spinner"></span>搜索中...</div>';
+async function doSearch() {
+    var q = $('search-input').value.trim();
+    var list = $('product-list');
+    if (!q) { list.innerHTML = '<div class="product-empty">在上方输入关键词搜索产品</div>'; return; }
+
+    list.innerHTML = '<div class="product-empty"><span class="spinner"></span> 搜索中...</div>';
     try {
-        const data = await api(`/api/products?query=${encodeURIComponent(q)}`);
-        const products = data.products || [];
-        if (!products.length) {
-            container.innerHTML = '<div class="no-results">未找到匹配产品</div>';
-            return;
-        }
-        container.innerHTML = products.map(p => `
-            <div class="product-card${state.selectedSku === p.skc ? ' selected' : ''}" data-skc="${p.skc}" onclick="selectProduct('${p.skc}')">
-                ${p.thumbnail ? `<img class="thumb" src="${p.thumbnail}" alt="">` : '<div class="thumb"></div>'}
-                <div class="info">
-                    <div class="skc">${p.skc}</div>
-                    <div class="title-text">${escHtml(p.title || '无标题')}</div>
-                    <span class="category-tag">${escHtml(p.category || '未分类')}</span>
-                </div>
-            </div>
-        `).join('');
-    } catch(e) {
-        container.innerHTML = `<div class="no-results">搜索失败: ${escHtml(e.message)}</div>`;
-    }
+        var data = await api('/api/products?query=' + encodeURIComponent(q));
+        var products = data.products || [];
+        if (!products.length) { list.innerHTML = '<div class="product-empty">未找到匹配产品</div>'; return; }
+        list.innerHTML = products.map(function(p) {
+            var cls = 'product-card' + (p.skc === S.skc ? ' active' : '');
+            var thumbHtml = '';
+            if (p.thumbnail) {
+                thumbHtml = '<img class="p-thumb" src="' + esc(p.thumbnail) + '" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
+                            '<div class="p-thumb-placeholder" style="display:none">&#128230;</div>';
+            } else {
+                thumbHtml = '<div class="p-thumb-placeholder">&#128230;</div>';
+            }
+            return '<div class="' + cls + '" data-skc="' + esc(p.skc) + '" onclick="selectProduct(\'' + esc(p.skc) + '\')">' +
+                thumbHtml +
+                '<div class="p-info">' +
+                    '<span class="p-skc">' + esc(p.skc) + '</span>' +
+                    '<div class="p-title">' + esc(p.title || '无标题') + '</div>' +
+                '</div></div>';
+        }).join('');
+    } catch (e) { list.innerHTML = '<div class="product-empty">搜索失败: ' + esc(e.message) + '</div>'; }
 }
 
-function escHtml(s) {
-    const d = document.createElement('div');
-    d.textContent = s || '';
-    return d.innerHTML;
-}
-
+// ============ Select Product ============
 async function selectProduct(skc) {
-    state.selectedSku = skc;
-    state.categoryId = null;
-    state.typeId = null;
-    state.attributes = [];
-    state.filledAttrs = {};
-    state.simulation = null;
+    S.skc = skc;
+    S.product = null;
+    S.attributes = [];
+    S.draft = null;
+    S.simulation = null;
+    S.taskId = null;
+    clearInterval(S.pollTimer);
 
-    // Highlight card
-    document.querySelectorAll('.product-card').forEach(c => c.classList.remove('selected'));
-    const card = document.querySelector(`.product-card[data-skc="${skc}"]`);
-    if (card) card.classList.add('selected');
+    // Highlight
+    document.querySelectorAll('.product-card').forEach(function(c) {
+        c.classList.toggle('active', c.dataset.skc === skc);
+    });
 
-    // Load product data
+    updateMeta();
+    renderCenter();
+    renderRight();
+
+    // Load full product data
     try {
-        const data = await api('/api/products');
-        state.productData = (data.products || []).find(p => p.skc === skc) || null;
-    } catch(e) {
-        toast('加载产品数据失败: ' + e.message, 'error');
-    }
-
-    // Auto match category
-    if (state.productData && state.storeId) {
-        await matchCategory();
-    }
+        S.product = await api('/api/products/' + encodeURIComponent(skc));
+    } catch (e) { toast('加载产品数据失败: ' + e.message, 'error'); }
+    updateMeta();
     renderCenter();
     renderRight();
 }
 
-// ============ Category Matching ============
-async function matchCategory() {
-    if (!state.productData || !state.storeId) return;
-    const p = state.productData;
-    renderCenterLoading('正在匹配Ozon品类...');
-    try {
-        const result = await api(`/api/ozon/${state.storeId}/match-category`, 'POST', {
-            product_title: p.title || '',
-            product_category: p.category || '',
-            product_description: (p.product_data || {}).product_description || ''
-        });
-        if (result.best_match) {
-            state.categoryId = result.best_match.id;
-            state.typeId = result.best_match.type_id || result.best_match.id;
-            state.categoryPath = result.best_match.path || result.best_match.name;
-            toast(`品类匹配成功: ${result.best_match.name}`);
-            await loadAttributes();
-        } else {
-            state.categoryPath = result.warning || '品类匹配失败';
-            renderCenter();
-        }
-    } catch(e) {
-        state.categoryPath = '匹配失败: ' + e.message;
-        renderCenter();
-    }
-}
-
-async function loadAttributes() {
-    if (!state.categoryId || !state.storeId) return;
-    renderCenterLoading('正在加载品类属性...');
-    try {
-        const payload = { description_category_id: state.categoryId };
-        if (state.typeId && String(state.typeId) !== String(state.categoryId)) {
-            payload.type_id = state.typeId;
-        }
-        const result = await api(`/api/ozon/${state.storeId}/category-attributes`, 'POST', payload);
-        state.attributes = result.attributes || result.result || [];
-        if (result.suggestions) {
-            // Store suggestions for display
-            state._suggestions = result.suggestions;
-        }
-        renderCenter();
-        toast(`已加载 ${state.attributes.length} 个品类属性`);
-    } catch(e) {
-        // Try to display suggestions
-        if (state._suggestions) {
-            renderCenterWithSuggestions();
-        } else {
-            state.attributes = [];
-            renderCenter();
-        }
-        toast('加载属性失败: ' + e.message, 'error');
-    }
-}
-
 // ============ AI Fill ============
-async function onAiFill() {
-    if (!state.attributes.length || !state.productData) {
-        toast('请先选择产品和品类', 'error');
-        return;
-    }
-    renderCenterLoading('AI正在智能填写属性...');
+async function doAiFill() {
+    if (!S.skc || !S.storeId) { toast('请先选择产品和店铺', 'info'); return; }
+    if (!S.product) { toast('产品数据尚未加载完成', 'info'); return; }
+
+    var btn = $('btn-ai-fill');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> AI分析中...';
+
+    // Step 1: Match Ozon category
     try {
-        const p = state.productData;
-        const result = await api('/api/auto-fill/ozon-fields', 'POST', {
-            skc: p.skc,
-            product_title: p.title || '',
-            product_data: p.product_data || {},
-            manual_data: p.manual_data || {},
-            ozon_attributes: state.attributes
+        var match = await api('/api/ozon/' + S.storeId + '/match-category', 'POST', {
+            product_title: S.product.title || '',
+            product_category: S.product.category || '',
+            product_description: ((S.product.product_data || {}).about_item || '') + ' ' + ((S.product.product_data || {}).product_description || '')
+        });
+        if (match.success && match.best_match && match.best_match.id) {
+            S._catId = match.best_match.id;
+            S._catTypeId = match.best_match.type_id || null;
+            S._catPath = match.best_match.path || match.best_match.name;
+            S._catName = match.best_match.name;
+        } else {
+            S._catId = null;
+            S._catPath = match.warning || '品类匹配失败';
+            toast('品类匹配失败: ' + (match.warning || '请手动选择品类'), 'error');
+        }
+    } catch (e) { S._catId = null; S._catPath = '品类匹配异常: ' + e.message; }
+
+    // Step 2: Load Ozon category attributes if category was matched
+    var ozonAttrs = [];
+    if (S._catId) {
+        try {
+            var attrsRes = await api('/api/ozon/' + S.storeId + '/category-attributes', 'POST', {
+                description_category_id: S._catId
+            });
+            ozonAttrs = attrsRes.result || attrsRes.attributes || [];
+        } catch (e) { /* will fail if category not available, suggestions may be in response */ }
+    }
+
+    // Step 3: Call AI autofill
+    try {
+        var fillRes = await api('/api/auto-fill/ozon-fields', 'POST', {
+            skc: S.skc,
+            product_title: S.product.title || '',
+            product_data: S.product.product_data || {},
+            manual_data: S.product.manual_data || {},
+            ozon_attributes: ozonAttrs
         });
 
-        if (result.error) {
-            toast('AI填写失败: ' + result.error, 'error');
+        if (fillRes.error) { toast('AI填充失败: ' + fillRes.error, 'error'); }
+        else {
+            // Parse filled results
+            var raw = fillRes.filled_attributes || fillRes.results || fillRes.attributes || [];
+            S.attributes = raw.map(function(a) {
+                return {
+                    attribute_id: a.attribute_id,
+                    value: a.value || '',
+                    type: a.type || 'String',
+                    label_ru: a.label_ru || a._label_ru || (ozonAttrs.find(function(o) { return String(o.attribute_id) === String(a.attribute_id); }) || {}).complex_name || '',
+                    label_cn: a.label_cn || a._label_cn || '',
+                    is_required: a.is_required || false,
+                    dictionary_value_id: a.dictionary_value_id || null,
+                };
+            });
+            // Also keep basic fields if returned
+            S._basicFields = fillRes.basic_fields || null;
+            toast('AI属性填充完成（' + S.attributes.length + ' 个属性）', 'success');
+        }
+    } catch (e) { toast('AI填充失败: ' + e.message, 'error'); }
+
+    btn.disabled = false;
+    btn.innerHTML = '&#129302; AI填充';
+    renderCenter();
+}
+
+// ============ Draft Management ============
+async function doLoadDraft() {
+    if (!S.skc || !S.storeId) { toast('请先选择产品和店铺', 'info'); return; }
+    try {
+        var data = await api('/api/listings/' + encodeURIComponent(S.skc) + '/' + encodeURIComponent(S.storeId));
+        if (data.exists && data.listing) {
+            S.draft = data.listing;
+            S.attributes = data.listing.attributes || [];
+            if (data.listing.category_id) {
+                S._catId = data.listing.category_id;
+                S._catTypeId = data.listing.category_type_id || null;
+                S._catPath = data.listing.category_path || '';
+                S._catName = data.listing.category_name || '';
+            }
+            if (data.listing.lifecycle) renderLifecycle(data.listing.lifecycle);
             renderCenter();
-            return;
+            toast('草稿已加载', 'success');
+        } else {
+            toast('该产品/店铺组合暂无草稿记录', 'info');
         }
-
-        // Parse results
-        const filled = result.filled_attributes || result.results || [];
-        filled.forEach(item => {
-            const attrId = String(item.attribute_id);
-            state.filledAttrs[attrId] = {
-                value: item.value,
-                source: item.source || 'LLM',
-                confidence: item.confidence || 0
-            };
-        });
-        // Also check for deterministic fills
-        if (result.deterministic) {
-            Object.entries(result.deterministic).forEach(([k, v]) => {
-                state.filledAttrs[String(k)] = { value: v, source: 'deterministic', confidence: 1 };
-            });
-        }
-        if (result.presets) {
-            Object.entries(result.presets).forEach(([k, v]) => {
-                state.filledAttrs[String(k)] = { value: v, source: 'preset', confidence: 0.9 };
-            });
-        }
-        // Basic fields
-        if (result.basic_fields) {
-            state._basicFields = result.basic_fields;
-        }
-        renderCenter();
-        toast('AI填写完成');
-    } catch(e) {
-        toast('AI填写失败: ' + e.message, 'error');
-        renderCenter();
-    }
+    } catch (e) { toast('加载草稿失败: ' + e.message, 'error'); }
 }
 
-// ============ Manual Edit ============
-function onAttrInput(attrId, value) {
-    const key = String(attrId);
-    if (!state.filledAttrs[key]) {
-        state.filledAttrs[key] = { value: '', source: 'manual', confidence: 1 };
-    }
-    state.filledAttrs[key].value = value;
-    state.filledAttrs[key].source = 'manual';
-}
+async function doSaveDraft() {
+    if (!S.skc || !S.storeId) { toast('请先选择产品和店铺', 'info'); return; }
+    collectValues();
 
-function openProposeModal(attrId) {
-    const attr = state.attributes.find(a => String(a.attribute_id) === String(attrId));
-    if (!attr) return;
-    const key = String(attrId);
-    const currentVal = state.filledAttrs[key] ? state.filledAttrs[key].value : '';
-    state.proposeField = {
-        skc: state.selectedSku,
-        field_name: `ozon_attr_${attrId}`,
-        current_value: currentVal,
-        attr_name: attr.complex_name || attr.name || `Attr#${attrId}`,
-        attr_id: attrId,
+    var data = {
+        skc: S.skc,
+        store_id: S.storeId,
+        attributes: S.attributes,
     };
-    document.getElementById('propose-field-info').textContent =
-        `字段: ${state.proposeField.attr_name} (ID: ${attrId}) | 当前值: ${currentVal || '(空)'}`;
-    document.getElementById('propose-value').value = '';
-    document.getElementById('propose-reason').value = '';
-    document.getElementById('propose-modal').style.display = 'flex';
+    if (S._catId) {
+        data.category_id = S._catId;
+        data.category_type_id = S._catTypeId;
+        data.category_path = S._catPath;
+        data.category_name = S._catName;
+    }
+    if (S._basicFields) {
+        data.name = S._basicFields.name || '';
+        data.description = S._basicFields.description || '';
+        data.price = S._basicFields.price || '';
+        data.offer_id = S._basicFields.offer_id || '';
+    }
+
+    var btn = $('btn-save-draft');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> 保存中...';
+    try {
+        await api('/api/listings/' + encodeURIComponent(S.skc) + '/' + encodeURIComponent(S.storeId), 'PUT', data);
+        $('draft-hint').textContent = '已保存 ' + new Date().toLocaleTimeString();
+        toast('草稿已保存', 'success');
+    } catch (e) { toast('保存失败: ' + e.message, 'error'); }
+    btn.disabled = false;
+    btn.innerHTML = '&#128190; 保存草稿';
 }
 
-async function onSubmitPropose() {
-    const field = state.proposeField;
-    if (!field) return;
-    const proposedValue = document.getElementById('propose-value').value.trim();
-    const reason = document.getElementById('propose-reason').value.trim();
-    if (!reason) { toast('请填写变更理由', 'error'); return; }
-    if (!proposedValue) { toast('请填写建议值', 'error'); return; }
+// ============ Simulate ============
+async function doSimulate() {
+    if (!S.skc || !S.storeId) { toast('请先选择产品和店铺', 'info'); return; }
+    collectValues();
+    var payload = buildPayload();
 
+    var btn = $('btn-simulate');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> 模拟中...';
     try {
-        await api(`/api/products/${field.skc}/propose-change`, 'POST', {
-            field: field.field_name,
-            new_value: proposedValue,
-            requested_by: reason
-        });
-        document.getElementById('propose-modal').style.display = 'none';
-        toast('变更申请已提交，等待审批', 'success');
-    } catch(e) {
-        toast('提交失败: ' + e.message, 'error');
+        var data = await api('/api/ozon/' + S.storeId + '/listing/simulate', 'POST', payload);
+        S.simulation = data.report || null;
+        renderRight();
+        if (S.simulation) {
+            if (S.simulation.can_submit) $('btn-submit').disabled = false;
+            else $('btn-submit').disabled = true;
+            toast('评分: ' + S.simulation.score + ' 分');
+        }
+    } catch (e) {
+        toast('模拟评分失败: ' + e.message, 'error');
+        S.simulation = null;
+        renderRight();
     }
+    btn.disabled = false;
+    btn.innerHTML = '&#128269; 模拟评分';
+}
+
+// ============ Submit to Ozon ============
+async function doSubmit() {
+    if (!S.skc || !S.storeId) { toast('请先选择产品和店铺', 'info'); return; }
+    if (S.simulation && !S.simulation.can_submit) {
+        if (!confirm('当前评分 ' + S.simulation.score + ' 分，未达标（需80分）。仍要提交吗？')) return;
+    }
+
+    collectValues();
+    var payload = buildPayload();
+
+    var btn = $('btn-submit');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> 提交中...';
+    try {
+        var data = await api('/api/ozon/' + S.storeId + '/product/create', 'POST', payload);
+        if (data.success) {
+            S.taskId = data.task_id || null;
+            toast('已提交到Ozon（任务ID: ' + S.taskId + '）', 'success');
+            if (S.taskId) startPolling();
+        } else {
+            var errMsg = data.error || '提交失败';
+            // Show quality report if available
+            if (data.quality_report) {
+                S.simulation = data.quality_report;
+                renderRight();
+            }
+            throw new Error(errMsg);
+        }
+    } catch (e) { toast('提交失败: ' + e.message, 'error'); }
+    btn.disabled = false;
+    btn.innerHTML = '&#128640; 提交上架';
+}
+
+// ============ Import Status Polling ============
+function startPolling() {
+    $('import-box').style.display = 'block';
+    $('imp-status').textContent = '查询中...';
+    $('imp-detail').textContent = '';
+    clearInterval(S.pollTimer);
+
+    var cnt = 0;
+    S.pollTimer = setInterval(async function() {
+        cnt++;
+        if (cnt > 30) { clearInterval(S.pollTimer); $('imp-detail').textContent = '轮询超时，请在Ozon后台查看'; return; }
+        try {
+            var data = await api('/api/ozon/' + S.storeId + '/listing/check-import?task_id=' + encodeURIComponent(S.taskId));
+            if (data.success) {
+                var st = data.status || data.result || {};
+                $('imp-status').textContent = '状态: ' + (st.state || st.status || '处理中');
+                if (st.errors && st.errors.length) {
+                    $('imp-detail').textContent = '错误: ' + st.errors.map(function(e) { return e.message || JSON.stringify(e); }).join('; ');
+                    clearInterval(S.pollTimer);
+                } else if (st.warnings && st.warnings.length) {
+                    $('imp-detail').textContent = '警告: ' + st.warnings.map(function(w) { return w.message || JSON.stringify(w); }).join('; ');
+                } else if (st.state === 'completed' || st.state === 'processed') {
+                    $('imp-detail').textContent = '导入处理完成';
+                    clearInterval(S.pollTimer);
+                } else {
+                    $('imp-detail').textContent = '轮询中... (' + cnt + '/30)';
+                }
+            }
+        } catch (e) { $('imp-detail').textContent = '查询异常: ' + e.message; }
+    }, 3000);
+}
+
+// ============ Build Payload ============
+function buildPayload() {
+    var p = S.product || {};
+    var bf = S._basicFields || {};
+    var attrs = S.attributes.map(function(a) {
+        return { attribute_id: a.attribute_id, value: String(a.value || ''), type: a.type || 'String' };
+    });
+    return {
+        skc: S.skc,
+        name: bf.name || p.title || '',
+        description: bf.description || ((p.product_data || {}).about_item || '') + ' ' + ((p.product_data || {}).product_description || ''),
+        price: bf.price || '',
+        offer_id: bf.offer_id || S.skc,
+        barcode: bf.barcode || '',
+        category_id: S._catId || 0,
+        type_id: S._catTypeId || S._catId || 0,
+        attributes: attrs,
+        images: (S.draft && S.draft.images) || [],
+        skus: [],
+    };
+}
+
+// ============ Collect values from editor ============
+function collectValues() {
+    var editor = $('attr-editor');
+    var inputs = editor.querySelectorAll('input[data-attr-idx], select[data-attr-idx], textarea[data-attr-idx]');
+    inputs.forEach(function(el) {
+        var idx = parseInt(el.dataset.attrIdx);
+        if (isNaN(idx) || idx < 0 || idx >= S.attributes.length) return;
+        S.attributes[idx].value = el.value;
+    });
 }
 
 // ============ Render Center Panel ============
-function renderCenterLoading(msg) {
-    document.getElementById('attr-editor').innerHTML =
-        `<div class="loading-overlay"><span class="spinner"></span>${msg}</div>`;
-}
-
 function renderCenter() {
-    const editor = document.getElementById('attr-editor');
-    if (!state.selectedSku) {
-        editor.innerHTML = '<div class="no-results" style="padding:60px 20px;">请先在左侧选择产品，然后匹配Ozon品类</div>';
-        return;
-    }
-
-    let html = '';
+    var body = $('attr-editor');
+    var count = $('attr-count');
 
     // Category bar
-    html += `<div class="category-bar">
-        <span style="font-size:12px;color:var(--accent-dim)">&#128204;</span>
-        <span class="cat-path">${escHtml(state.categoryPath || '未匹配品类')}</span>
-        <span class="cat-id">ID: ${state.categoryId || '—'}</span>
-        <button class="btn btn-sm" onclick="matchCategory()" ${!state.productData?'disabled':''}>重新匹配</button>
-    </div>`;
-
-    // AI Fill button
-    html += `<div style="margin-bottom:10px;display:flex;gap:8px;align-items:center;">
-        <button class="btn btn-accent" onclick="onAiFill()" ${!state.attributes.length?'disabled':''}>
-            &#9889; AI 智能填写
-        </button>
-        <span style="font-size:11px;color:var(--text-muted)">
-            ${state.attributes.length ? `已加载 ${state.attributes.length} 个属性` : '尚未加载品类属性'}
-        </span>
-        <span style="font-size:11px;color:var(--text-muted)">
-            ${Object.keys(state.filledAttrs).length ? `已填写 ${Object.keys(state.filledAttrs).length} 个` : ''}
-        </span>
-    </div>`;
-
-    // Group attributes by classification
-    if (state.attributes.length) {
-        const critical = state.attributes.filter(a =>
-            a.is_required || a.complex_is_required || (a.complex_type || '').includes('Required'));
-        const important = state.attributes.filter(a =>
-            !a.is_required && !a.complex_is_required &&
-            (a.complex_important || a.important || (a.name||'').toLowerCase().includes('name')));
-        const normal = state.attributes.filter(a =>
-            !critical.includes(a) && !important.includes(a));
-
-        const groups = [
-            { cls: 'critical', label: '&#128274; 关键字段（需审批）', items: critical },
-            { cls: 'important', label: '&#128993; 重要字段', items: important },
-            { cls: 'normal', label: '&#128994; 常规字段', items: normal },
-        ];
-
-        groups.forEach(g => {
-            if (!g.items.length) return;
-            html += `<div class="section-header">${g.label} <span style="font-weight:400;font-size:11px;">(${g.items.length})</span></div>`;
-            g.items.forEach(attr => {
-                const attrId = String(attr.attribute_id);
-                const key = attrId;
-                const filled = state.filledAttrs[key];
-                const value = filled ? filled.value : '';
-                const source = filled ? (filled.source || '') : '';
-                const isCritical = g.cls === 'critical';
-                const sourceLabel = source === 'deterministic' ? '规则填充' :
-                                   source === 'preset' ? '预设匹配' :
-                                   source === 'LLM' ? 'AI填写' :
-                                   source === 'manual' ? '手动编辑' : '';
-
-                html += `<div class="attr-row ${g.cls}">
-                    ${isCritical ? '<span class="lock-icon" title="关键字段，修改需审批">&#128274;</span>' : ''}
-                    <div class="attr-label">
-                        <span class="name">${escHtml(attr.complex_name || attr.name || `Attr#${attrId}`)}</span>
-                        <span class="id-tag">#${attrId}</span>
-                        ${sourceLabel ? `<span class="source">来源: ${sourceLabel}</span>` : ''}
-                    </div>
-                    <input class="attr-input${isCritical ? ' locked' : ''}"
-                           value="${escHtml(String(value))}"
-                           ${isCritical ? 'readonly' : ''}
-                           onchange="onAttrInput('${attrId}', this.value)"
-                           placeholder="${isCritical ? '关键字段（需审批）' : '输入值...'}">
-                    ${isCritical ? `<button class="btn btn-sm btn-warn" onclick="openProposeModal('${attrId}')">申请变更</button>` : ''}
-                    ${filled ? `<span class="status-badge ai">${sourceLabel || '已填'}</span>` : '<span class="status-badge empty">未填</span>'}
-                </div>`;
-            });
-        });
+    var catBar = $('cat-bar');
+    if (S._catId) {
+        catBar.innerHTML = '<span style="color:var(--success)">&#10003;</span>' +
+            '<span class="cat-path">' + esc(S._catPath || S._catName || '品类#' + S._catId) + '</span>' +
+            '<span class="cat-id">ID: ' + S._catId + '</span>';
+    } else {
+        catBar.innerHTML = '<span style="color:var(--text-muted);">品类: 尚未匹配</span>';
     }
 
-    // Basic fields (name, description, price, offer_id)
-    if (state._basicFields) {
-        const bf = state._basicFields;
-        html += `<div class="section-header">&#128196; 基础信息</div>`;
-        html += `<div class="attr-row normal">
-            <div class="attr-label"><span class="name">商品标题 (name)</span></div>
-            <input class="attr-input" value="${escHtml(bf.name||'')}" onchange="state._basicFields=state._basicFields||{};state._basicFields.name=this.value">
-        </div>`;
-        html += `<div class="attr-row normal">
-            <div class="attr-label"><span class="name">商品描述 (description)</span></div>
-            <input class="attr-input" value="${escHtml(bf.description||'')}" onchange="state._basicFields=state._basicFields||{};state._basicFields.description=this.value">
-        </div>`;
-        html += `<div class="attr-row normal">
-            <div class="attr-label"><span class="name">售价 (price)</span></div>
-            <input class="attr-input" value="${escHtml(bf.price||'')}" onchange="state._basicFields=state._basicFields||{};state._basicFields.price=this.value">
-        </div>`;
-        html += `<div class="attr-row normal">
-            <div class="attr-label"><span class="name">Offer ID</span></div>
-            <input class="attr-input" value="${escHtml(bf.offer_id||'')}" onchange="state._basicFields=state._basicFields||{};state._basicFields.offer_id=this.value">
-        </div>`;
+    if (!S.attributes.length) {
+        body.innerHTML = '<div class="attr-empty">请先在左侧选择产品和店铺，然后点击「AI填充」自动获取属性</div>';
+        count.textContent = '';
+        return;
     }
 
-    editor.innerHTML = html;
-    document.getElementById('attr-count').textContent =
-        `${Object.keys(state.filledAttrs).length}/${state.attributes.length} 已填`;
-}
-
-function renderCenterWithSuggestions() {
-    const editor = document.getElementById('attr-editor');
-    const suggestions = state._suggestions || [];
-    let html = `<div class="category-bar">
-        <span style="color:var(--warning)">&#9888;</span>
-        <span>品类 ${state.categoryId} 不可用，请选择备选品类：</span>
-    </div>`;
-    suggestions.forEach(s => {
-        html += `<div class="product-card" style="cursor:pointer" onclick="state.categoryId='${s.id}';state.typeId='${s.id}';loadAttributes()">
-            <div class="info">
-                <div class="skc">ID: ${s.id}</div>
-                <div class="title-text">${escHtml(s.name)}</div>
-            </div>
-        </div>`;
+    // Group by type
+    var groups = {};
+    S.attributes.forEach(function(a) {
+        var t = a.type || '其他';
+        if (!groups[t]) groups[t] = [];
+        groups[t].push(a);
     });
-    editor.innerHTML = html;
-}
 
-// ============ Right Panel: Score & Submit ============
-function buildListingPayload() {
-    const p = state.productData;
-    if (!p) return null;
+    var typeOrder = ['String', 'Integer', 'Decimal', 'Boolean', 'Dict'];
+    var typeNames = { 'String': '文本属性', 'Integer': '整数属性', 'Decimal': '数值属性', 'Boolean': '开关属性', 'Dict': '字典属性' };
 
-    const attrs = Object.entries(state.filledAttrs).map(([id, data]) => ({
-        attribute_id: parseInt(id),
-        value: String(data.value || ''),
-        type: 'String'
-    }));
-
-    const bf = state._basicFields || {};
-    return {
-        skc: p.skc,
-        name: bf.name || p.title || '',
-        description: bf.description || (p.product_data||{}).product_description || '',
-        price: bf.price || '',
-        offer_id: bf.offer_id || `${p.skc}-SKU`,
-        barcode: '',
-        category_id: state.categoryId || 0,
-        type_id: state.typeId || state.categoryId || 0,
-        attributes: attrs,
-        images: (state.listingData && state.listingData.images) || [],
-        skus: [{ sku_code: bf.offer_id || `${p.skc}-SKU`, price: bf.price || '' }],
-    };
-}
-
-async function onSimulate() {
-    if (!state.storeId) { toast('请先选择店铺', 'error'); return; }
-    const payload = buildListingPayload();
-    if (!payload) { toast('缺少产品数据', 'error'); return; }
-
-    // Save listing draft first
-    try {
-        await api(`/api/listings/${payload.skc}/${state.storeId}`, 'PUT', payload);
-        state.listingData = payload;
-    } catch(e) {
-        toast('保存草稿失败: ' + e.message, 'error');
-    }
-
-    // Run simulation
-    try {
-        const result = await api(`/api/ozon/${state.storeId}/listing/simulate`, 'POST', {
-            ...payload, skc: payload.skc
+    var html = '';
+    typeOrder.forEach(function(t) {
+        if (!groups[t] || !groups[t].length) return;
+        var attrs = groups[t];
+        html += '<div class="attr-section">';
+        html += '<div class="attr-section-title">' + esc(typeNames[t] || t) + ' <span class="count">' + attrs.length + '</span></div>';
+        attrs.forEach(function(a, localIdx) {
+            var globalIdx = S.attributes.indexOf(a);
+            html += buildAttrRow(a, globalIdx);
         });
-        state.simulation = result.report || result;
-        renderRight();
-        toast(`评分: ${state.simulation.score} 分 ${state.simulation.can_submit ? '&#9989; 达标' : '&#9888; 未达标'}`);
-    } catch(e) {
-        toast('模拟评分失败: ' + e.message, 'error');
-    }
+        html += '</div>';
+    });
+
+    // Remaining types
+    Object.keys(groups).forEach(function(t) {
+        if (typeOrder.indexOf(t) >= 0) return;
+        var attrs = groups[t];
+        html += '<div class="attr-section">';
+        html += '<div class="attr-section-title">' + esc(t) + ' <span class="count">' + attrs.length + '</span></div>';
+        attrs.forEach(function(a) { html += buildAttrRow(a, S.attributes.indexOf(a)); });
+        html += '</div>';
+    });
+
+    body.innerHTML = html;
+    count.textContent = S.attributes.length + ' 个属性';
+
+    // Mark dirty on edit
+    body.querySelectorAll('input, select, textarea').forEach(function(el) {
+        el.addEventListener('change', function() { $('draft-hint').textContent = '有未保存的更改'; });
+        el.addEventListener('input', function() { $('draft-hint').textContent = '有未保存的更改'; });
+    });
 }
 
-async function onSubmitListing() {
-    if (!state.storeId) { toast('请先选择店铺', 'error'); return; }
-    const payload = buildListingPayload();
-    if (!payload) { toast('缺少产品数据', 'error'); return; }
+function buildAttrRow(attr, idx) {
+    var val = esc(String(attr.value || ''));
+    var idTag = 'ID: ' + (attr.attribute_id || '');
+    var isReq = attr.is_required;
+    var s = '<div class="attr-row">';
+    s += '<div class="a-label">';
+    if (isReq) s += '<span class="required-dot">* </span>';
+    s += '<span class="ru">' + esc(attr.label_ru || ('属性#' + attr.attribute_id)) + '</span>';
+    if (attr.label_cn) s += '<span class="cn">' + esc(attr.label_cn) + '</span>';
+    s += '<span class="id-tag">' + esc(idTag) + '</span>';
+    s += '</div>';
+    s += '<div class="a-input-wrap">';
 
-    if (state.simulation && !state.simulation.can_submit) {
-        if (!confirm(`当前评分 ${state.simulation.score} 分，未达标。仍要提交吗？`)) return;
+    if (attr.dictionary_values && attr.dictionary_values.length) {
+        s += '<select data-attr-idx="' + idx + '">';
+        s += '<option value="">-- 请选择 --</option>';
+        attr.dictionary_values.forEach(function(dv) {
+            var dvId = dv.id || dv.dictionary_value_id || '';
+            var dvName = dv.name || dv.value || dvId;
+            var sel = String(attr.value) === String(dvId) ? ' selected' : '';
+            s += '<option value="' + esc(String(dvId)) + '"' + sel + '>' + esc(dvName) + '</option>';
+        });
+        s += '</select>';
+    } else if (attr.type === 'String' && val.length > 80) {
+        s += '<textarea data-attr-idx="' + idx + '">' + val + '</textarea>';
+    } else if (attr.type === 'Boolean') {
+        s += '<select data-attr-idx="' + idx + '">';
+        s += '<option value="">-- 选择 --</option>';
+        s += '<option value="true"' + (val === 'true' || val === 'True' ? ' selected' : '') + '>是</option>';
+        s += '<option value="false"' + (val === 'false' || val === 'False' ? ' selected' : '') + '>否</option>';
+        s += '</select>';
+    } else {
+        s += '<input type="text" data-attr-idx="' + idx + '" value="' + val + '">';
     }
 
-    // Save draft first
-    try {
-        await api(`/api/listings/${payload.skc}/${state.storeId}`, 'PUT', payload);
-        state.listingData = payload;
-    } catch(e) {
-        toast('保存草稿失败: ' + e.message, 'error');
-        return;
-    }
-
-    // Submit
-    try {
-        const result = await api(`/api/ozon/${state.storeId}/product/create`, 'POST', payload);
-        if (result.success) {
-            state._importTaskId = result.task_id || result.code;
-            renderRight();
-            toast('产品已提交到Ozon！', 'success');
-            if (state._importTaskId) {
-                setTimeout(checkImportStatus, 2000);
-            }
-        } else {
-            state._importError = result.error || '提交失败';
-            renderRight();
-            toast('提交失败: ' + (result.error || '未知错误'), 'error');
-        }
-    } catch(e) {
-        state._importError = e.message;
-        renderRight();
-        toast('提交失败: ' + e.message, 'error');
-    }
+    s += '</div></div>';
+    return s;
 }
 
-async function checkImportStatus() {
-    if (!state._importTaskId || !state.storeId) return;
-    try {
-        const result = await api(`/api/ozon/${state.storeId}/listing/check-import?task_id=${state._importTaskId}`);
-        state._importResult = result;
-        renderRight();
-    } catch(e) {
-        state._importResult = { error: e.message };
-        renderRight();
-    }
-}
-
+// ============ Render Right Panel ============
 function renderRight() {
-    const panel = document.getElementById('score-panel');
+    var sim = S.simulation;
 
-    if (!state.selectedSku) {
-        panel.innerHTML = '<div class="no-results" style="padding:40px 20px;">选择产品后模拟评分</div>';
-        return;
+    // Score circle
+    var circle = $('score-circle');
+    var status = $('score-status');
+    var hint = $('score-hint');
+
+    if (sim) {
+        circle.className = 'score-circle ' + (sim.can_submit ? 'pass' : 'fail');
+        circle.textContent = sim.score;
+        status.textContent = sim.can_submit ? '达标 (可提交)' : '未达标 (需修复)';
+        hint.textContent = '满分100分 / 通过线80分';
+    } else {
+        circle.className = 'score-circle empty';
+        circle.textContent = '--';
+        status.textContent = '尚未评分';
+        hint.textContent = '编辑属性后点击"模拟评分"';
     }
 
-    let html = '';
+    // Breakdown
+    var bd = $('breakdown');
+    if (sim && sim.sections && sim.sections.length) {
+        bd.style.display = 'block';
+        bd.innerHTML = sim.sections.map(function(s) {
+            return '<div class="breakdown-item">' +
+                '<span><span class="bi-name">' + esc(s.name) + '</span><span class="bi-detail">' + esc(s.detail || '') + '</span></span>' +
+                '<span class="bi-pts">' + s.points + ' / ' + s.max_points + '</span></div>';
+        }).join('');
+    } else {
+        bd.style.display = 'none';
+        bd.innerHTML = '';
+    }
 
-    // Simulate button
-    html += `<div style="margin-bottom:12px;">
-        <button class="btn btn-accent" style="width:100%;padding:8px" onclick="onSimulate()" ${!state.storeId?'disabled':''}>
-            &#128269; 模拟评分
-        </button>
-    </div>`;
+    // Issues & warnings
+    var ia = $('issues-area');
+    var tags = '';
+    if (sim) {
+        (sim.issues || []).forEach(function(i) { tags += '<span class="issue-tag error">&#10060; ' + esc(i) + '</span>'; });
+        (sim.warnings || []).slice(0, 8).forEach(function(w) { tags += '<span class="issue-tag warn">&#9888; ' + esc(w) + '</span>'; });
+    }
+    ia.innerHTML = tags;
 
-    // Score display
-    if (state.simulation) {
-        const sim = state.simulation;
-        const passClass = sim.can_submit ? 'score-pass' : 'score-fail';
-        html += `<div class="score-overview">
-            <div class="score-number ${passClass}">${sim.score}</div>
-            <div class="score-target">目标 ${sim.target_score || 80} 分 ${sim.can_submit ? '&#9989; 达标' : '&#9888; 未达标'}</div>
-        </div>`;
-
-        // Score breakdown
-        if (sim.sections) {
-            sim.sections.forEach(s => {
-                const pct = s.max_points > 0 ? (s.points / s.max_points * 100) : 0;
-                let barClass = 'progress-fill';
-                if (pct < 40) barClass += ' danger';
-                else if (pct < 70) barClass += ' warning';
-                html += `<div class="score-section">
-                    <div class="score-label">
-                        <span class="name">${escHtml(s.name)}</span>
-                        <span class="pts">${s.points}/${s.max_points}</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="${barClass}" style="width:${pct}%"></div>
-                    </div>
-                </div>`;
-            });
-        }
-
-        // Issues
-        if (sim.issues && sim.issues.length) {
-            html += `<div class="section-header" style="color:var(--danger)">&#9888; 问题</div>`;
-            html += `<ul class="issue-list">`;
-            sim.issues.forEach(i => {
-                html += `<li class="error">&#10060; ${escHtml(i)}</li>`;
-            });
-            html += `</ul>`;
-        }
-
-        // Warnings
-        if (sim.warnings && sim.warnings.length) {
-            const maxWarn = sim.warnings.slice(0, 8);
-            html += `<div class="section-header" style="color:var(--warning)">&#9888; 警告</div>`;
-            html += `<ul class="issue-list">`;
-            maxWarn.forEach(w => {
-                html += `<li class="warn">&#9888; ${escHtml(w)}</li>`;
-            });
-            html += `</ul>`;
-        }
+    // Import box
+    if (!S.taskId) {
+        $('import-box').style.display = 'none';
     }
 
     // Submit button
-    html += `<div style="margin-top:12px;">
-        <button class="btn btn-accent" style="width:100%;padding:8px" onclick="onSubmitListing()" ${!state.storeId?'disabled':''}>
-            &#128640; 提交到Ozon
-        </button>
-    </div>`;
-
-    // Import status
-    if (state._importTaskId) {
-        html += `<div style="margin-top:12px;">
-            <div class="section-header">&#128230; 导入状态</div>
-            <div class="import-status">
-                <div class="task-id">Task: ${escHtml(state._importTaskId)}</div>
-                ${state._importResult
-                    ? (state._importResult.error
-                        ? `<div class="result-err">&#10060; ${escHtml(state._importResult.error)}</div>`
-                        : `<div class="result-ok">&#9989; ${escHtml(JSON.stringify(state._importResult))}</div>`)
-                    : `<div class="loading-overlay"><span class="spinner"></span>检查中...</div>`}
-                <button class="btn btn-sm" style="margin-top:8px" onclick="checkImportStatus()">刷新状态</button>
-            </div>
-        </div>`;
-    }
-
-    if (state._importError) {
-        html += `<div class="import-status" style="margin-top:8px;">
-            <div class="result-err">&#10060; 提交错误: ${escHtml(state._importError)}</div>
-        </div>`;
-    }
-
-    panel.innerHTML = html;
+    $('btn-submit').disabled = !(sim && sim.can_submit);
 }
 
-// ============ Keyboard shortcuts ============
-document.addEventListener('keydown', e => {
-    if (e.ctrlKey && e.key === 's') {
-        e.preventDefault();
-        if (state.selectedSku && state.storeId) {
-            const payload = buildListingPayload();
-            if (payload) {
-                api(`/api/listings/${payload.skc}/${state.storeId}`, 'PUT', payload)
-                    .then(() => toast('草稿已保存', 'success'))
-                    .catch(err => toast('保存失败: ' + err.message, 'error'));
-            }
-        }
+function renderLifecycle(lifecycle) {
+    var list = $('lifecycle-list');
+    if (!lifecycle || !lifecycle.length) {
+        list.innerHTML = '<div style="font-size:10px;color:var(--text-muted);padding:6px;">暂无记录</div>';
+        return;
     }
+    list.innerHTML = lifecycle.slice(-20).reverse().map(function(ev) {
+        var t = esc((ev.at || ev.timestamp || '').substring(0, 19));
+        var e = esc(ev.event || '');
+        var sc = ev.score !== undefined ? ' [' + ev.score + '分]' : '';
+        return '<div class="lifecycle-item"><span class="lc-time">' + t + '</span><span class="lc-event">' + e + sc + '</span></div>';
+    }).join('');
+}
+
+// ============ Keyboard shortcut: Ctrl+S ============
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 's') { e.preventDefault(); doSaveDraft(); }
 });
 
 // ============ Start ============
