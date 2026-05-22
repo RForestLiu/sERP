@@ -12,7 +12,7 @@ from src.serp.shared import EventBus
 
 from ..domain.entities import CollectTask
 from ..domain.value_objects import TaskId, platform_prefix
-from ..domain.services import CategorizationService, UrlService
+from ..domain.services import CategorizationService, UrlService, CATEGORY_CODES
 from ..domain.repositories import CollectTaskRepository
 from ..domain.events import (
     TaskStarted,
@@ -146,7 +146,7 @@ class CollectApplicationService(CollectFacade):
 
         # 生成 SKC
         category_cn = CategorizationService.guess_category(title)
-        category_code = CategorizationService.CATEGORY_CODES.get(category_cn, "OTHR")
+        category_code = CATEGORY_CODES.get(category_cn, "OTHR")
 
         products_data = self._load_products_file()
         registered = products_data.get("已注册编号", {})
