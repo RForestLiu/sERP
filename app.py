@@ -112,6 +112,18 @@ listing_page_bp = create_listing_page_blueprint()
 app.register_blueprint(listing_bp)
 app.register_blueprint(listing_page_bp)
 
+# ── 知识库 ──
+@app.route("/api/knowledge/ozon/wallet_attributes")
+def get_wallet_attributes():
+    """返回 Ozon 钱包品类属性知识库"""
+    import json as _json
+    path = os.path.join(DATA_ROOT, "knowledge", "ozon", "wallet_attributes.json")
+    if not os.path.exists(path):
+        return jsonify({"error": "文件不存在"}), 404
+    with open(path, "r", encoding="utf-8") as f:
+        data = _json.load(f)
+    return jsonify(data)
+
 # 向后兼容：旧代码引用 STORES_FILE
 STORES_FILE = os.path.join(DATA_ROOT, "stores.json")
 
