@@ -53,6 +53,7 @@ def upload_public_images() -> list[str]:
     if configured:
         urls = [u.strip() for u in configured.replace("\n", ",").split(",") if u.strip()]
         if urls:
+            print(f"using configured public image URLs: {len(urls)}", flush=True)
             return urls
 
     if "--upload-0x0" not in sys.argv:
@@ -63,6 +64,8 @@ def upload_public_images() -> list[str]:
 
     image_dir = DATA / "collect_amz_f5d272d6" / "images" / "Black"
     paths = sorted(image_dir.glob("*.png"))
+    print(f"image_dir={image_dir}", flush=True)
+    print(f"found {len(paths)} Black image files", flush=True)
     if len(paths) < 5:
         raise RuntimeError(f"Expected Black image set in {image_dir}, found {len(paths)}")
 
@@ -82,7 +85,7 @@ def upload_public_images() -> list[str]:
         if not url.startswith("https://"):
             raise RuntimeError(f"image upload returned unexpected URL for {path.name}: {url}")
         urls.append(url)
-        print(f"uploaded image {len(urls)}: {url}")
+        print(f"uploaded image {len(urls)}: {url}", flush=True)
     return urls
 
 
@@ -163,6 +166,7 @@ def save_artifact(name: str, data: dict) -> Path:
 
 
 def main() -> None:
+    print(f"starting {Path(__file__).name} argv={sys.argv[1:]}", flush=True)
     load_env()
     image_urls = upload_public_images()
     payload = build_payload(image_urls)
@@ -172,7 +176,7 @@ def main() -> None:
     result = ozon_post("/v3/product/import", payload)
     task_id = result.get("result", {}).get("task_id")
     report["events"].append({"event": "import_submitted", "result": result})
-    print(f"submitted task_id={task_id}")
+    print(f"submitted task_id={task_id}", flush=True)
 
     if task_id:
         for attempt in range(1, 21):
@@ -180,24 +184,28 @@ def main() -> None:
             info = ozon_post("/v1/product/import/info", {"task_id": task_id})
             report["events"].append({"event": "import_info", "attempt": attempt, "result": info})
             items = info.get("result", {}).get("items", [])
-            print(f"poll {attempt}: items={len(items)}")
+            print(f"poll {attempt}: items={len(items)}", flush=True)
             if items:
                 statuses = {item.get("offer_id"): item.get("status") for item in items}
-                print(f"statuses={statuses}")
+                print(f"statuses={statuses}", flush=True)
                 if all(item.get("status") in {"imported", "failed"} for item in items):
                     break
 
     try:
         rating = ozon_post("/v1/product/rating-by-sku", {"skus": [SKU]})
         report["events"].append({"event": "content_rating", "result": rating})
-        print(json.dumps(rating, ensure_ascii=False, indent=2))
+        print(json.dumps(rating, ensure_ascii=False, indent=2), flush=True)
     except Exception as exc:
         report["events"].append({"event": "content_rating_failed", "error": str(exc)})
-        print(f"content rating unavailable yet: {exc}")
+        print(f"content rating unavailable yet: {exc}", flush=True)
 
     path = save_artifact("wallet0006_black_live_report.json", report)
-    print(f"saved report: {path}")
+    print(f"saved report: {path}", flush=True)
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as exc:
+        print(f"ERROR: {exc}", file=sys.stderr, flush=True)
+        raise
