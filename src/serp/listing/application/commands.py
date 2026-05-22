@@ -423,6 +423,16 @@ class ListingApplicationService(ListingFacade):
 
     # ==================== AI 填充 ====================
 
+    def get_content_rating(self, store_id: str, skus: list[str]) -> dict:
+        clean_skus = [str(s).strip() for s in skus if str(s).strip()]
+        if not clean_skus:
+            return {"success": False, "error": "missing skus"}
+
+        result, err = self._ozon_api.content_rating_by_sku(store_id, clean_skus)
+        if err:
+            return {"success": False, "error": f"Ozon content rating failed: {err}"}
+        return {"success": True, "store_id": store_id, "skus": clean_skus, "result": result}
+
     def analyze_for_autofill(self, data: dict) -> dict:
         skc = data.get("skc", "")
         product_title = data.get("product_title", "")
@@ -646,8 +656,10 @@ class ListingApplicationService(ListingFacade):
                 }
                 if weight is not None:
                     item["weight"] = weight
+                    item["weight_unit"] = "g"
                 if depth is not None:
                     item["depth"] = depth
+                    item["dimension_unit"] = "mm"
                 if width is not None:
                     item["width"] = width
                 if height is not None:
@@ -679,8 +691,10 @@ class ListingApplicationService(ListingFacade):
             }
             if weight is not None:
                 item["weight"] = weight
+                item["weight_unit"] = "g"
             if depth is not None:
                 item["depth"] = depth
+                item["dimension_unit"] = "mm"
             if width is not None:
                 item["width"] = width
             if height is not None:

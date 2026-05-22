@@ -75,6 +75,17 @@ def create_listing_blueprint(facade: ListingFacade) -> Blueprint:
 
     # ── AI 自动填充 ──
 
+    @bp.route("/ozon/<store_id>/listing/content-rating", methods=["POST"])
+    def content_rating(store_id):
+        data = request.get_json() or {}
+        skus = data.get("skus") or []
+        if isinstance(skus, str):
+            skus = [s.strip() for s in skus.split(",") if s.strip()]
+        result = facade.get_content_rating(store_id, skus)
+        if result.get("success") is False:
+            return jsonify(result), 502
+        return jsonify(result)
+
     @bp.route("/auto-fill/analyze", methods=["POST"])
     def auto_fill_analyze():
         data = request.get_json()

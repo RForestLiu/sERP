@@ -291,7 +291,7 @@
             &#127942; 评分与上架
             <span style="margin-left:auto;display:flex;gap:4px;">
                 <button class="btn btn-sm" id="btn-simulate">&#128269; 模拟评分</button>
-                <button class="btn btn-success btn-sm" id="btn-submit" disabled>&#128640; 提交上架</button>
+                <button class="btn btn-success btn-sm" id="btn-submit" disabled>&#128640; 提交/更新</button>
             </span>
         </div>
         <div class="panel-body" id="score-body">
@@ -329,6 +329,7 @@ var S = {
     skc: '',
     product: null,
     attributes: [],           // filled attributes [{attribute_id, value, type, label_ru, label_cn, ...}]
+    productImages: [],
     draft: null,
     simulation: null,
     taskId: null,
@@ -448,6 +449,7 @@ async function selectProduct(skc) {
     S.skc = skc;
     S.product = null;
     S.attributes = [];
+    S.productImages = [];
     S.draft = null;
     S.simulation = null;
     S.taskId = null;
@@ -465,6 +467,8 @@ async function selectProduct(skc) {
     // Load full product data
     try {
         S.product = await api('/api/products/' + encodeURIComponent(skc));
+        var imageData = await api('/api/products/' + encodeURIComponent(skc) + '/images');
+        S.productImages = imageData.images || [];
     } catch (e) { toast('加载产品数据失败: ' + e.message, 'error'); }
     updateMeta();
     renderCenter();
@@ -617,7 +621,7 @@ async function doSimulate() {
         S.simulation = data.report || null;
         renderRight();
         if (S.simulation) {
-            if (S.simulation.can_submit) $('btn-submit').disabled = false;
+            if (S.simulation.score >= 75 && !S.simulation.issues.length) $('btn-submit').disabled = false;
             else $('btn-submit').disabled = true;
             toast('评分: ' + S.simulation.score + ' 分');
         }
@@ -634,7 +638,7 @@ async function doSimulate() {
 async function doSubmit() {
     if (!S.skc || !S.storeId) { toast('请先选择产品和店铺', 'info'); return; }
     if (S.simulation && !S.simulation.can_submit) {
-        if (!confirm('当前评分 ' + S.simulation.score + ' 分，未达标（需80分）。仍要提交吗？')) return;
+        if (!confirm('当前评分 ' + S.simulation.score + ' 分，未到75分或仍有阻断问题。仍要提交/更新吗？')) return;
     }
 
     collectValues();
@@ -660,7 +664,7 @@ async function doSubmit() {
         }
     } catch (e) { toast('提交失败: ' + e.message, 'error'); }
     btn.disabled = false;
-    btn.innerHTML = '&#128640; 提交上架';
+    btn.innerHTML = '&#128640; 提交/更新';
 }
 
 // ============ Import Status Polling ============
@@ -700,21 +704,49 @@ function buildPayload() {
     var p = S.product || {};
     var bf = S._basicFields || {};
     var attrs = S.attributes.map(function(a) {
-        return { attribute_id: a.attribute_id, value: String(a.value || ''), type: a.type || 'String' };
+        var row = { attribute_id: a.attribute_id, value: String(a.value || ''), type: a.type || 'String' };
+        if (a.dictionary_value_id) row.dictionary_value_id = a.dictionary_value_id;
+        return row;
     });
+    var images = (S.draft && S.draft.images && S.draft.images.length) ? S.draft.images : (S.productImages || []);
+    var skus = buildSkuRows(images, bf.price || p.price || '');
     return {
         skc: S.skc,
         name: bf.name || p.title || '',
         description: bf.description || ((p.product_data || {}).about_item || '') + ' ' + ((p.product_data || {}).product_description || ''),
-        price: bf.price || '',
+        price: bf.price || p.price || '',
         offer_id: bf.offer_id || S.skc,
         barcode: bf.barcode || '',
         category_id: S._catId || 0,
         type_id: S._catTypeId || S._catId || 0,
         attributes: attrs,
-        images: (S.draft && S.draft.images) || [],
-        skus: [],
+        images: images,
+        skus: skus,
     };
+}
+
+function buildSkuRows(images, defaultPrice) {
+    var p = S.product || {};
+    var sourceSkus = p.skus || [];
+    if (!sourceSkus.length && S.skc) sourceSkus = [S.skc];
+    return sourceSkus.map(function(skuCode) {
+        var code = String(skuCode);
+        var token = code.split('-').pop().toLowerCase();
+        var skuImages = (images || []).filter(function(img) {
+            var text = ((img._setName || '') + ' ' + (img.local_path || '') + ' ' + (img.url || '')).toLowerCase();
+            return token && text.indexOf(token) >= 0;
+        });
+        if (!skuImages.length && sourceSkus.length === 1) skuImages = images || [];
+        return {
+            name: code,
+            sku_code: code,
+            price: String(defaultPrice || ''),
+            old_price: '',
+            stock: '10000',
+            barcode: '',
+            images: skuImages,
+        };
+    });
 }
 
 // ============ Collect values from editor ============
@@ -882,7 +914,7 @@ function renderRight() {
     }
 
     // Submit button
-    $('btn-submit').disabled = !(sim && sim.can_submit);
+    $('btn-submit').disabled = !(sim && sim.score >= 75 && !sim.issues.length);
 }
 
 function renderLifecycle(lifecycle) {
