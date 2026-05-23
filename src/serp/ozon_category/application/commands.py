@@ -502,24 +502,22 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
                 "name": attr.get("name", ""),
                 "description": attr.get("description", ""),
                 "type": attr.get("type", ""),
+                "dictionary_id": attr.get("dictionary_id", 0),
                 "is_required": attr.get("is_required", False),
                 "is_collection": attr.get("is_collection", False),
                 "max_value_count": attr.get("max_value_count", 1),
                 "dictionary_values": [],
             }
 
-            if eattr["type"] == "dictionary":
+            if eattr["type"] == "dictionary" or eattr["dictionary_id"]:
                 values_payload = {
                     "attribute_id": eattr["id"],
                     "description_category_id": category_id,
+                    "limit": 100,
                 }
                 if type_id:
                     values_payload["type_id"] = type_id
-                vals_result, vals_err = self._ozon_api.call(
-                    store_id, "/v1/description-category/attribute/values", values_payload
-                )
-                if not vals_err and vals_result:
-                    eattr["dictionary_values"] = vals_result.get("result", [])
+                eattr["dictionary_values"] = self._load_attribute_values(store_id, values_payload)
 
             enriched.append(eattr)
 
@@ -548,6 +546,27 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
             "is_leaf": is_leaf,
             "warning": "" if is_leaf else f"当前品类（ID: {category_id}）没有可配置的产品属性，请尝试选择一个更具体的子品类。",
         }
+
+    def _load_attribute_values(self, store_id: str, values_payload: dict) -> list[dict]:
+        values: list[dict] = []
+        payload = dict(values_payload)
+        last_value_id = 0
+        for _ in range(10):
+            if last_value_id:
+                payload["last_value_id"] = last_value_id
+            vals_result, vals_err = self._ozon_api.call(
+                store_id, "/v1/description-category/attribute/values", payload
+            )
+            if vals_err or not vals_result:
+                break
+            batch = vals_result.get("result", []) or []
+            values.extend(batch)
+            if not vals_result.get("has_next") or not batch:
+                break
+            last_value_id = batch[-1].get("id") or 0
+            if not last_value_id:
+                break
+        return values
 
     # ==================== 内部方法 ====================
 

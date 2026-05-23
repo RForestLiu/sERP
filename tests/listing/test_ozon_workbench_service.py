@@ -58,6 +58,9 @@ class FakeAutoFillMappings:
             "mappings": [{
                 "attribute_id": 4180,
                 "value": "AI title from mappings",
+                "confidence": 0.82,
+                "needs_review": True,
+                "reason": "title inferred from source",
                 "source": "llm_autofill",
             }],
             "filled_attributes": 1,
@@ -182,6 +185,10 @@ def test_generate_workbench_draft_accepts_mapping_result_with_numeric_count():
         attr["attribute_id"] == 4180 and attr["value"] == "AI title from mappings"
         for attr in result["draft"]["attributes"]
     )
+    ai_title = next(attr for attr in result["draft"]["attributes"] if attr["attribute_id"] == 4180)
+    assert ai_title["confidence"] == 0.82
+    assert ai_title["needs_review"] is True
+    assert ai_title["reason"] == "title inferred from source"
 
 
 def test_auto_category_fails_when_llm_returns_no_match():
@@ -202,3 +209,24 @@ def test_official_rating_resolves_numeric_sku_before_rating_call():
     assert result["success"] is True
     assert result["skus"] == [4408894048]
     assert result["result"]["products"][0]["rating"] == 77.5
+
+
+def test_format_ozon_attributes_accepts_values_array():
+    attrs = [{
+        "attribute_id": 5309,
+        "type": "dictionary",
+        "values": [
+            {"dictionary_value_id": 61965, "value": "Нейлон"},
+            {"value": "ручной материал"},
+        ],
+    }]
+
+    result = ListingApplicationService._format_ozon_attributes(attrs)
+
+    assert result == [{
+        "id": 5309,
+        "values": [
+            {"dictionary_value_id": 61965},
+            {"value": "ручной материал"},
+        ],
+    }]

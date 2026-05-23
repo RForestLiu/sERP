@@ -723,6 +723,12 @@ class ListingApplicationService(ListingFacade):
             dictionary_value_id = item.get("dictionary_value_id")
             if dictionary_value_id:
                 normalized_item["dictionary_value_id"] = dictionary_value_id
+            if isinstance(item.get("values"), list):
+                normalized_item["values"] = item["values"]
+            if item.get("needs_review") is not None:
+                normalized_item["needs_review"] = bool(item["needs_review"])
+            if item.get("reason"):
+                normalized_item["reason"] = str(item["reason"])
             if item.get("evidence"):
                 normalized_item["evidence"] = item["evidence"]
             if item.get("confidence") is not None:
@@ -951,6 +957,17 @@ class ListingApplicationService(ListingFacade):
             if not attr_id:
                 continue
             entry: dict = {"id": int(attr_id), "values": []}
+            if isinstance(attr.get("values"), list):
+                for item in attr["values"]:
+                    if not isinstance(item, dict):
+                        continue
+                    if item.get("dictionary_value_id") is not None:
+                        entry["values"].append({"dictionary_value_id": int(item["dictionary_value_id"])})
+                    elif str(item.get("value", "")).strip():
+                        entry["values"].append({"value": str(item["value"])})
+                if entry["values"]:
+                    ozon_attrs.append(entry)
+                continue
             # 字典值优先级: 显式 dictionary_value_id > 可解析为 int 的 value
             if "dictionary_value_id" in attr and attr["dictionary_value_id"] is not None:
                 entry["values"].append({"dictionary_value_id": int(attr["dictionary_value_id"])})

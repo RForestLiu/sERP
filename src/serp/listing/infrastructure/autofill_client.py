@@ -426,10 +426,21 @@ SKC: {skc}
             validated: list[dict] = []
             for m in mappings:
                 if isinstance(m, dict) and "attribute_id" in m:
-                    validated.append({
+                    item = {
                         "attribute_id": m.get("attribute_id"),
                         "value": str(m.get("value", "")),
-                    })
+                    }
+                    if m.get("dictionary_value_id"):
+                        item["dictionary_value_id"] = m.get("dictionary_value_id")
+                    if isinstance(m.get("values"), list):
+                        item["values"] = m.get("values")
+                    if m.get("confidence") is not None:
+                        item["confidence"] = m.get("confidence")
+                    if m.get("needs_review") is not None:
+                        item["needs_review"] = m.get("needs_review")
+                    if m.get("reason"):
+                        item["reason"] = str(m.get("reason"))
+                    validated.append(item)
             logger.info("[自动填充/%s] 填充 %s 个属性", label, len(validated))
             return validated
         except _json.JSONDecodeError:
