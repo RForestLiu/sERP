@@ -198,6 +198,15 @@
             padding-top: 2px;
         }
         .checks.four { grid-template-columns: repeat(4, 1fr); }
+        .checks.scrollable {
+            width: min(100%, 720px);
+            max-height: 168px;
+            overflow: auto;
+            padding: 8px;
+            border: 1px solid #d6d6d6;
+            background: #fff;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        }
         .checks label {
             display: inline-flex;
             align-items: center;
@@ -996,27 +1005,31 @@ function dictionaryValueLabel(value) {
     return original;
 }
 
+function renderDictionaryCheckboxes(attr, scrollable) {
+    var values = attr.dictionary_values || [];
+    var id = esc(attr.id || "");
+    return '<div class="checks' + (scrollable ? ' scrollable' : '') + '">' + values.map(function (value) {
+        var text = dictionaryValueText(value);
+        var label = dictionaryValueLabel(value);
+        return '<label data-attr-option="' + id + '" data-label="' + esc(label) + '" data-original-label="' + esc(text) + '">' +
+            '<input type="checkbox" data-attr-id="' + id + '" data-dictionary-value-id="' + esc(value.id || "") + '" value="' + esc(value.id || text) + '"> ' +
+            esc(label) +
+            '</label>';
+    }).join("") + '</div>';
+}
+
 function renderAttributeInput(attr) {
     var values = attr.dictionary_values || [];
     var id = esc(attr.id || "");
     if (values.length > 0 && attr.is_collection && values.length <= 24) {
-        return '<div class="checks">' + values.map(function (value) {
-            var text = dictionaryValueText(value);
-            var label = dictionaryValueLabel(value);
-            return '<label><input type="checkbox" data-attr-id="' + id + '" data-dictionary-value-id="' + esc(value.id || "") + '" value="' + esc(value.id || text) + '"> ' + esc(label) + '</label>';
-        }).join("") + '</div>';
+        return renderDictionaryCheckboxes(attr, false);
     }
     if (values.length > 0 && attr.is_collection) {
         return '<input class="input attr-search" data-attr-search="' + id + '" placeholder="搜索可选值">' +
-            '<select class="select multi-select" multiple size="6" data-attr-id="' + id + '" data-attr-type="dictionary">' +
-            values.map(function (value) {
-                var text = dictionaryValueText(value);
-                var label = dictionaryValueLabel(value);
-                return '<option value="' + esc(value.id || text) + '" data-label="' + esc(label) + '" data-original-label="' + esc(text) + '">' + esc(label) + '</option>';
-            }).join("") +
-            '</select><input class="input attr-manual" data-attr-manual="' + id + '" placeholder="手动补充，多个值用分号分隔">' +
+            renderDictionaryCheckboxes(attr, true) +
+            '<input class="input attr-manual" data-attr-manual="' + id + '" placeholder="手动补充，多个值用分号分隔">' +
             '<div class="selected-values" data-attr-selected="' + id + '"></div>' +
-            '<div class="hint">可搜索后多选；找不到合适值时可手动补充。</div>';
+            '<div class="hint">勾选即可多选；找不到合适值时可手动补充。</div>';
     }
     if (values.length > 0) {
         var search = values.length > 200 ? '<input class="input attr-search" data-attr-search="' + id + '" placeholder="搜索可选值">' : "";
@@ -1081,11 +1094,18 @@ function optionValueByLabel(select, value) {
 function updateSelectedChips(attrId) {
     var host = document.querySelector('[data-attr-selected="' + String(attrId).replace(/"/g, '\\"') + '"]');
     var select = document.querySelector('select[data-attr-id="' + String(attrId).replace(/"/g, '\\"') + '"]');
-    if (!host || !select) return;
-    var chips = Array.prototype.filter.call(select.options, function (opt) {
+    if (!host) return;
+    var chips = [];
+    if (select) {
+        chips = Array.prototype.filter.call(select.options, function (opt) {
         return opt.selected;
-    }).map(function (opt) {
-        return '<span class="selected-chip">' + esc(opt.getAttribute("data-label") || opt.textContent || opt.value) + '</span>';
+        }).map(function (opt) {
+            return '<span class="selected-chip">' + esc(opt.getAttribute("data-label") || opt.textContent || opt.value) + '</span>';
+        });
+    }
+    document.querySelectorAll('input[type="checkbox"][data-attr-id="' + String(attrId).replace(/"/g, '\\"') + '"]:checked').forEach(function (box) {
+        var label = box.closest("label");
+        chips.push('<span class="selected-chip">' + esc((label && label.getAttribute("data-label")) || (label && label.textContent.trim()) || box.value) + '</span>');
     });
     var manual = document.querySelector('[data-attr-manual="' + String(attrId).replace(/"/g, '\\"') + '"]');
     if (manual && manual.value.trim()) {
@@ -1108,13 +1128,19 @@ function setAttributeControlValue(attr) {
     controls.forEach(function (control) {
         if (control.type === "checkbox") {
             var values = Array.isArray(attr.values) ? attr.values : [value];
+            var labelEl = control.closest("label");
+            var labelText = (labelEl && labelEl.getAttribute("data-label")) || "";
+            var originalText = (labelEl && labelEl.getAttribute("data-original-label")) || "";
             control.checked = values.some(function (item) {
                 var itemValue = item && typeof item === "object" ? (item.dictionary_value_id || item.value || item.id) : item;
                 return String(itemValue) === String(control.value) ||
-                    String(itemValue) === String(control.getAttribute("data-dictionary-value-id") || "");
+                    String(itemValue) === String(control.getAttribute("data-dictionary-value-id") || "") ||
+                    String(itemValue).trim().toLowerCase() === String(labelText).trim().toLowerCase() ||
+                    String(itemValue).trim().toLowerCase() === String(originalText).trim().toLowerCase();
             });
             if (control.checked) matched = true;
             filled = true;
+            updateSelectedChips(attrId);
             return;
         }
         if (control.tagName === "SELECT") {
@@ -1191,10 +1217,15 @@ document.addEventListener("input", function (event) {
     if (searchId) {
         var term = event.target.value.trim().toLowerCase();
         var select = document.querySelector('select[data-attr-id="' + String(searchId).replace(/"/g, '\\"') + '"]');
-        if (!select) return;
-        Array.prototype.forEach.call(select.options, function (opt) {
-            var label = (opt.getAttribute("data-label") || opt.textContent || "").toLowerCase();
-            opt.hidden = Boolean(term && label.indexOf(term) < 0);
+        if (select) {
+            Array.prototype.forEach.call(select.options, function (opt) {
+                var label = ((opt.getAttribute("data-label") || "") + " " + (opt.getAttribute("data-original-label") || "") + " " + opt.textContent).toLowerCase();
+                opt.hidden = Boolean(term && label.indexOf(term) < 0);
+            });
+        }
+        document.querySelectorAll('[data-attr-option="' + String(searchId).replace(/"/g, '\\"') + '"]').forEach(function (labelEl) {
+            var label = ((labelEl.getAttribute("data-label") || "") + " " + (labelEl.getAttribute("data-original-label") || "") + " " + labelEl.textContent).toLowerCase();
+            labelEl.style.display = term && label.indexOf(term) < 0 ? "none" : "";
         });
         return;
     }
