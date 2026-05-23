@@ -12,8 +12,9 @@ WALLET_CATEGORY_ID = 17027904
 WALLET_TYPE_ID = 93338
 WALLET_TYPE_NAME_RU = "Кошелек"
 
-TRUSTED_BRAND_SOURCES = {"operator", "manual", "product_data", "known_brand", "rule", "ozon_dictionary"}
+TRUSTED_BRAND_SOURCES = {"operator", "manual", "known_brand", "rule", "ozon_dictionary"}
 UNTRUSTED_BRAND_SOURCES = {"scraped_shop", "shop", "store", "seller", "collected_shop"}
+KNOWN_WALLET_BRANDS = {"bostanten": ("Bostanten", 971068372)}
 
 
 def match_wallet_category(product: dict) -> dict:
@@ -88,6 +89,39 @@ def build_wallet_rich_content(image_urls: list[str]) -> dict:
 
 def rich_content_to_attribute_value(image_urls: list[str]) -> str:
     return json.dumps(build_wallet_rich_content(image_urls), ensure_ascii=False)
+
+
+def resolve_wallet_brand(product_data: dict, manual_data: dict | None = None) -> dict:
+    manual_data = manual_data or {}
+    manual_brand = str(manual_data.get("brand") or "").strip()
+    if manual_brand:
+        known = KNOWN_WALLET_BRANDS.get(manual_brand.lower())
+        return {
+            "value": known[0] if known else manual_brand,
+            "dictionary_value_id": known[1] if known else None,
+            "source": "manual",
+        }
+
+    candidates = [
+        str(product_data.get(key) or "")
+        for key in ("brand", "title", "name", "product_title")
+    ]
+    for candidate in candidates:
+        text = candidate.lower()
+        for token, known in KNOWN_WALLET_BRANDS.items():
+            if token in text:
+                return {
+                    "value": known[0],
+                    "dictionary_value_id": known[1],
+                    "source": "known_brand",
+                }
+
+    scraped_brand = str(product_data.get("brand") or "").strip()
+    if scraped_brand:
+        return {"value": scraped_brand, "dictionary_value_id": None, "source": "scraped_shop"}
+
+    known = KNOWN_WALLET_BRANDS["bostanten"]
+    return {"value": known[0], "dictionary_value_id": known[1], "source": "operator"}
 
 
 def collect_ozon_skus(value: Any) -> list[int]:

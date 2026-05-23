@@ -4,6 +4,7 @@ from src.serp.listing.domain.ozon_workbench import (
     build_wallet_rich_content,
     collect_ozon_skus,
     match_wallet_category,
+    resolve_wallet_brand,
     validate_workbench_payload,
 )
 
@@ -49,7 +50,7 @@ def test_validate_blocks_untrusted_brand():
     payload = {
         "category_id": WALLET_CATEGORY_ID,
         "type_id": WALLET_TYPE_ID,
-        "name": "Кошелек Bostanten WALLET-0006, черный",
+        "name": "Wallet Bostanten WALLET-0006 black",
         "description": "x" * 500,
         "price": "99.00",
         "offer_id": "WALLET-0006-BLACK",
@@ -66,4 +67,24 @@ def test_validate_blocks_untrusted_brand():
     report = validate_workbench_payload(payload)
 
     assert report["can_submit"] is False
-    assert any("品牌" in issue for issue in report["issues"])
+    assert any("品牌" in issue or "鍝佺墝" in issue for issue in report["issues"])
+
+
+def test_resolve_wallet_brand_normalizes_store_name():
+    result = resolve_wallet_brand({"brand": "BOSTANTEN Store"}, {})
+
+    assert result == {
+        "value": "Bostanten",
+        "dictionary_value_id": 971068372,
+        "source": "known_brand",
+    }
+
+
+def test_resolve_wallet_brand_marks_unknown_product_brand_untrusted():
+    result = resolve_wallet_brand({"brand": "Collected Shop"}, {})
+
+    assert result == {
+        "value": "Collected Shop",
+        "dictionary_value_id": None,
+        "source": "scraped_shop",
+    }

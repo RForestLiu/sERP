@@ -614,6 +614,34 @@
         }
         .rich-node-row .rich-node-del:hover { color: #ff4d4f; background: #fff2f0; }
 
+        .workbench-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .workbench-card {
+            border: 1px solid #e8e8e8;
+            border-radius: 2px;
+            padding: 10px 12px;
+            background: #fafafa;
+        }
+        .workbench-card .label { font-size: 11px; color: #999; margin-bottom: 3px; }
+        .workbench-card .value { font-size: 16px; font-weight: 600; color: #333; }
+        .workbench-card .detail { font-size: 11px; color: #666; margin-top: 3px; line-height: 1.5; }
+        .workbench-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+        .workbench-log {
+            max-height: 120px;
+            overflow: auto;
+            padding: 8px 10px;
+            background: #f6f8fa;
+            border: 1px solid #e8e8e8;
+            border-radius: 2px;
+            font-size: 12px;
+            color: #555;
+            white-space: pre-wrap;
+        }
+
         @media (max-width: 900px) {
             .anchor-nav { display: none; }
             .attributes-grid { grid-template-columns: 1fr; }
@@ -647,6 +675,7 @@
     <nav class="anchor-nav">
         <div class="anchor-nav-inner">
             <a class="anchor-link" href="#sourceInfo">来源信息</a>
+            <a class="anchor-link" href="#workbenchInfo">上架工作台</a>
             <a class="anchor-link active" href="#basicInfo">基本信息</a>
             <a class="anchor-link" href="#productInfo">产品信息</a>
             <a class="anchor-link" href="#skuAttrInfo">品类属性</a>
@@ -666,6 +695,46 @@
                 <div class="product-summary-sku" id="product-summary-sku"></div>
                 <div class="product-summary-title" id="product-summary-title"></div>
                 <div class="product-summary-title-en" id="product-summary-title-en"></div>
+            </div>
+        </div>
+
+        <!-- ===== Section: Ozon 上架工作台 ===== -->
+        <div class="form-card" id="workbenchInfo">
+            <div class="form-card-header">
+                <h4 class="form-card-title">Ozon 上架工作台</h4>
+                <span class="form-card-title--desc">程序规则 + 结构化 LLM + Ozon API 验证</span>
+            </div>
+            <div class="form-card-content">
+                <div class="workbench-actions">
+                    <button class="btn btn-primary" id="btn-workbench-generate">自动生成草稿</button>
+                    <button class="btn" id="btn-workbench-validate">程序验证</button>
+                    <button class="btn" id="btn-workbench-images">准备图片 URL</button>
+                    <button class="btn" id="btn-workbench-rating">官方评分</button>
+                    <button class="btn btn-green" id="btn-workbench-upsert">提交/更新</button>
+                </div>
+                <div class="workbench-grid">
+                    <div class="workbench-card">
+                        <div class="label">品类匹配</div>
+                        <div class="value" id="workbench-category">未生成</div>
+                        <div class="detail" id="workbench-category-detail">等待自动生成草稿</div>
+                    </div>
+                    <div class="workbench-card">
+                        <div class="label">程序验证</div>
+                        <div class="value" id="workbench-validation">未验证</div>
+                        <div class="detail" id="workbench-validation-detail">阻断项会显示在这里</div>
+                    </div>
+                    <div class="workbench-card">
+                        <div class="label">图片 URL</div>
+                        <div class="value" id="workbench-images">未准备</div>
+                        <div class="detail" id="workbench-images-detail">本地静态 URL 会转为当前站点绝对 URL</div>
+                    </div>
+                    <div class="workbench-card">
+                        <div class="label">Ozon 官方评分</div>
+                        <div class="value" id="workbench-rating">--</div>
+                        <div class="detail" id="workbench-rating-detail">提交后按数字 SKU 查询</div>
+                    </div>
+                </div>
+                <div class="workbench-log" id="workbench-log">暂无工作台日志</div>
             </div>
         </div>
 
@@ -1146,6 +1215,12 @@
 
     // SKU 图片独立区域
     const skuImagesList = document.getElementById("sku-images-list");
+    const btnWorkbenchGenerate = document.getElementById("btn-workbench-generate");
+    const btnWorkbenchValidate = document.getElementById("btn-workbench-validate");
+    const btnWorkbenchImages = document.getElementById("btn-workbench-images");
+    const btnWorkbenchRating = document.getElementById("btn-workbench-rating");
+    const btnWorkbenchUpsert = document.getElementById("btn-workbench-upsert");
+    const workbenchLogEl = document.getElementById("workbench-log");
 
     // ===== 价格计算器 =====
     const priceCalcIcon = document.getElementById("price-calc-icon");
@@ -2144,7 +2219,7 @@
             if (listingDraft.attributes && listingDraft.attributes.length > 0) {
                 listingDraft.attributes.forEach(function(attr) {
                     var input = document.querySelector('[data-attr-id="' + attr.attribute_id + '"]');
-                    if (input) { input.value = attr.value || ""; }
+                    if (input) { input.value = attr.dictionary_value_id || attr.value || ""; }
                 });
             }
         } catch (e) {
@@ -2519,7 +2594,12 @@
             var attrId = parseInt(el.dataset.attrId);
             var value = el.value.trim();
             if (value) {
-                listingDraft.attributes.push({ attribute_id: attrId, value: value, type: el.dataset.attrType || "text" });
+                var item = { attribute_id: attrId, value: value, type: el.dataset.attrType || "text" };
+                if (el.dataset.attrType === "dictionary") {
+                    var parsedId = parseInt(value);
+                    if (!isNaN(parsedId)) item.dictionary_value_id = parsedId;
+                }
+                listingDraft.attributes.push(item);
             }
         });
 
@@ -2910,6 +2990,205 @@
         };
     }
 
+    function workbenchLog(msg) {
+        var stamp = new Date().toLocaleTimeString();
+        var prev = workbenchLogEl.textContent === "暂无工作台日志" ? "" : workbenchLogEl.textContent + "\n";
+        workbenchLogEl.textContent = prev + "[" + stamp + "] " + msg;
+        workbenchLogEl.scrollTop = workbenchLogEl.scrollHeight;
+    }
+
+    function setWorkbenchBusy(btn, busyText) {
+        if (!btn) return function() {};
+        var old = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> ' + busyText;
+        return function() {
+            btn.disabled = false;
+            btn.innerHTML = old;
+        };
+    }
+
+    function renderWorkbenchValidation(report) {
+        var el = document.getElementById("workbench-validation");
+        var detail = document.getElementById("workbench-validation-detail");
+        if (!report) {
+            el.textContent = "未验证";
+            detail.textContent = "阻断项会显示在这里";
+            return;
+        }
+        el.textContent = (report.can_submit ? "通过 " : "未通过 ") + (report.score || "--") + "/" + (report.target_score || 75);
+        var parts = [];
+        if (report.issues && report.issues.length) parts.push("阻断: " + report.issues.slice(0, 3).join("；"));
+        if (report.warnings && report.warnings.length) parts.push("提醒: " + report.warnings.slice(0, 3).join("；"));
+        detail.textContent = parts.join(" ") || "没有阻断项";
+    }
+
+    async function applyWorkbenchDraft(draft, validation) {
+        listingDraft = Object.assign(listingDraft || {}, draft || {});
+        listingDraft.basic_fields = {
+            name: draft.name || "",
+            description: draft.description || "",
+            price: draft.price || "",
+            offer_id: draft.offer_id || "",
+            barcode: draft.barcode || ""
+        };
+        fieldName.value = draft.name || "";
+        fieldDescription.value = draft.description || "";
+        fieldPrice.value = draft.price || "";
+        fieldOfferId.value = draft.offer_id || "";
+        fieldBarcode.value = draft.barcode || "";
+
+        selectedCategoryId = draft.category_id || 0;
+        selectedCategoryTypeId = draft.type_id || 0;
+        showCategoryMatched(selectedCategoryId, (draft.category_match && draft.category_match.path) || "Кошелек", (draft.category_match && draft.category_match.name) || "Кошелек");
+        document.getElementById("workbench-category").textContent = selectedCategoryId + " / " + selectedCategoryTypeId;
+        document.getElementById("workbench-category-detail").textContent =
+            ((draft.category_match && draft.category_match.source) || "rule") + " · " +
+            (((draft.category_match && draft.category_match.confidence) || 0) * 100).toFixed(0) + "%";
+
+        if (selectedCategoryId) await loadCategoryAttributes(selectedCategoryId, selectedCategoryTypeId);
+        if (draft.attributes && draft.attributes.length) {
+            draft.attributes.forEach(function(attr) {
+                var input = document.querySelector('[data-attr-id="' + attr.attribute_id + '"]');
+                if (input) input.value = attr.dictionary_value_id || attr.value || "";
+            });
+        }
+        renderWorkbenchValidation(validation);
+        renderSkuTable();
+        renderImageGrid();
+        markDirty();
+        await saveDraft();
+    }
+
+    async function autoGenerateWorkbenchDraft() {
+        var done = setWorkbenchBusy(btnWorkbenchGenerate, "生成中...");
+        try {
+            var body = buildOzonSubmissionPayload();
+            body.images = listingDraft.images || [];
+            var res = await fetch('/api/ozon/' + storeId + '/listing/generate-draft', {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            });
+            var data = await res.json();
+            if (!data.success) throw new Error(data.error || "生成失败");
+            await applyWorkbenchDraft(data.draft, data.validation);
+            listingDraft.workbench_validation = data.validation;
+            workbenchLog("已生成 Ozon 草稿，品类 " + data.draft.category_id + " / " + data.draft.type_id);
+            showMsg("✅ 工作台草稿已生成");
+        } catch (e) {
+            showMsg("❌ 自动生成失败: " + e.message, true);
+            workbenchLog("自动生成失败: " + e.message);
+        } finally {
+            done();
+        }
+    }
+
+    async function validateWorkbenchDraft() {
+        var done = setWorkbenchBusy(btnWorkbenchValidate, "验证中...");
+        try {
+            var payload = buildOzonSubmissionPayload();
+            var res = await fetch('/api/ozon/' + storeId + '/listing/validate', {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            var data = await res.json();
+            if (!data.success) throw new Error(data.error || "验证失败");
+            listingDraft.workbench_validation = data.report;
+            renderWorkbenchValidation(data.report);
+            markDirty();
+            await saveDraft();
+            workbenchLog("程序验证: " + (data.report.can_submit ? "通过" : "未通过") + "，本地分 " + data.report.score);
+            showMsg((data.report.can_submit ? "✅ 验证通过" : "⚠️ 验证未通过") + "\n" + formatQualityReport(data.report), !data.report.can_submit);
+        } catch (e) {
+            showMsg("❌ 验证失败: " + e.message, true);
+            workbenchLog("验证失败: " + e.message);
+        } finally {
+            done();
+        }
+    }
+
+    async function prepareWorkbenchImages() {
+        var done = setWorkbenchBusy(btnWorkbenchImages, "准备中...");
+        try {
+            var res = await fetch('/api/ozon/' + storeId + '/listing/prepare-images', {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ images: listingDraft.images || [], base_url: window.location.origin })
+            });
+            var data = await res.json();
+            if (!data.success) throw new Error(data.error || "准备失败");
+            listingDraft.images = data.images || [];
+            document.getElementById("workbench-images").textContent = (data.prepared_count || 0) + " 张";
+            document.getElementById("workbench-images-detail").textContent =
+                (data.warnings && data.warnings.length) ? data.warnings.slice(0, 2).join("；") : "图片 URL 已准备";
+            renderImageGrid();
+            markDirty();
+            await saveDraft();
+            workbenchLog("图片 URL 已准备 " + (data.prepared_count || 0) + " 张");
+        } catch (e) {
+            showMsg("❌ 图片准备失败: " + e.message, true);
+            workbenchLog("图片准备失败: " + e.message);
+        } finally {
+            done();
+        }
+    }
+
+    async function loadOfficialRating() {
+        var done = setWorkbenchBusy(btnWorkbenchRating, "查询中...");
+        try {
+            var payload = buildOzonSubmissionPayload();
+            var res = await fetch('/api/ozon/' + storeId + '/listing/official-rating', {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ offer_id: payload.offer_id, skus: payload.skus })
+            });
+            var data = await res.json();
+            if (!data.success) throw new Error(data.error || "查询失败");
+            var products = (data.result && data.result.products) || [];
+            var rating = products.length ? products[0].rating : "--";
+            document.getElementById("workbench-rating").textContent = rating;
+            document.getElementById("workbench-rating-detail").textContent = "SKU: " + (data.skus || []).join(", ");
+            listingDraft.official_rating = data.result;
+            markDirty();
+            await saveDraft();
+            workbenchLog("官方评分: " + rating);
+        } catch (e) {
+            showMsg("❌ 官方评分查询失败: " + e.message, true);
+            workbenchLog("官方评分查询失败: " + e.message);
+        } finally {
+            done();
+        }
+    }
+
+    async function upsertWorkbenchDraft() {
+        if (!confirm("确定要通过工作台提交/更新到 Ozon 吗？")) return;
+        var done = setWorkbenchBusy(btnWorkbenchUpsert, "提交中...");
+        try {
+            var payload = buildOzonSubmissionPayload();
+            var res = await fetch('/api/ozon/' + storeId + '/listing/upsert', {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            var data = await res.json();
+            if (!data.success) throw new Error(data.error || "提交失败");
+            listingDraft.status = "submitted";
+            listingDraft.ozon_task_id = data.task_id || "";
+            listingDraft.workbench_validation = data.validation || listingDraft.workbench_validation;
+            markDirty();
+            await saveDraft();
+            workbenchLog("已提交 Ozon task_id=" + (data.task_id || ""));
+            showMsg("✅ 已提交/更新到 Ozon，任务 ID: " + (data.task_id || ""));
+        } catch (e) {
+            showMsg("❌ 工作台提交失败: " + e.message, true);
+            workbenchLog("提交失败: " + e.message);
+        } finally {
+            done();
+        }
+    }
+
     function formatQualityReport(report) {
         if (!report) return "";
         var parts = ["评分 " + report.score + "/" + report.target_score];
@@ -2954,6 +3233,12 @@
             }
         });
     }
+
+    if (btnWorkbenchGenerate) btnWorkbenchGenerate.addEventListener("click", autoGenerateWorkbenchDraft);
+    if (btnWorkbenchValidate) btnWorkbenchValidate.addEventListener("click", validateWorkbenchDraft);
+    if (btnWorkbenchImages) btnWorkbenchImages.addEventListener("click", prepareWorkbenchImages);
+    if (btnWorkbenchRating) btnWorkbenchRating.addEventListener("click", loadOfficialRating);
+    if (btnWorkbenchUpsert) btnWorkbenchUpsert.addEventListener("click", upsertWorkbenchDraft);
 
     // ===== 提交到 Ozon =====
     btnSubmit.addEventListener("click", async function() {

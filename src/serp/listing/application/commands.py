@@ -25,6 +25,7 @@ from ..domain.ozon_workbench import (
     build_wallet_rich_content,
     collect_ozon_skus,
     match_wallet_category,
+    resolve_wallet_brand,
     rich_content_to_attribute_value,
     validate_workbench_payload,
 )
@@ -720,8 +721,7 @@ class ListingApplicationService(ListingFacade):
         manual_data: dict,
         image_urls: list[str],
     ) -> list[dict]:
-        brand = str(product_data.get("brand") or "Bostanten").strip()
-        brand_source = "product_data" if product_data.get("brand") else "operator"
+        brand = resolve_wallet_brand(product_data, manual_data)
         rich_value = rich_content_to_attribute_value(image_urls) if len(image_urls) >= 3 else json.dumps(
             build_wallet_rich_content([
                 "https://example.com/1.png",
@@ -732,7 +732,12 @@ class ListingApplicationService(ListingFacade):
         )
         weight = manual_data.get("weight_g") or manual_data.get("effective_weight_g") or "200"
         return [
-            {"attribute_id": 85, "value": brand, "dictionary_value_id": 971068372 if brand.lower() == "bostanten" else None, "source": brand_source},
+            {
+                "attribute_id": 85,
+                "value": brand["value"],
+                "dictionary_value_id": brand["dictionary_value_id"],
+                "source": brand["source"],
+            },
             {"attribute_id": 4180, "value": title, "source": "rule"},
             {"attribute_id": 4191, "value": description, "source": "rule"},
             {"attribute_id": 4383, "value": str(weight), "source": "rule"},
