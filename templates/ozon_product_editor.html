@@ -28,8 +28,6 @@
         button.orange { background: #ff7f38; border-color: #ff7f38; color: #fff; }
         button.green { background: #00a878; border-color: #00a878; color: #fff; }
         button.link { height: auto; border: 0; background: transparent; color: #2f8fca; padding: 0 4px; }
-
-        /* only the header navigation is ours */
         .topbar {
             height: 58px;
             background: #2f8fca;
@@ -51,7 +49,6 @@
         }
         .nav.active { background: #257bb1; }
         .top-right { margin-left: auto; display: flex; gap: 14px; align-items: center; padding-right: 28px; }
-
         .workspace {
             width: calc(100% - 44px);
             margin: 0 auto;
@@ -59,58 +56,59 @@
             display: grid;
             grid-template-columns: minmax(760px, 1010px) minmax(300px, 360px);
             gap: 16px;
-            align-items: start;
             justify-content: center;
+            align-items: start;
         }
-        .page {
+        .ozon-form-module {
             width: 1010px;
             max-width: 100%;
             position: relative;
         }
-        .ozon-form-module {
-            min-width: 0;
-        }
-        .crumb {
-            color: #999;
-            margin-bottom: 28px;
-        }
+        .crumb { color: #999; margin-bottom: 28px; }
         .actions-top {
             position: absolute;
             right: 0;
-            top: 24px;
+            top: -6px;
             display: flex;
             gap: 10px;
         }
-        .section {
+        .form-card {
             background: #fff;
             border: 1px solid #e4e4e4;
             margin-bottom: 14px;
         }
-        .section-title {
+        .form-card-header {
             height: 44px;
             line-height: 44px;
             border-bottom: 1px solid #eee;
             padding-left: 18px;
+        }
+        .form-card-title {
             font-size: 15px;
             font-weight: 700;
         }
-        .section-title .note { color: #999; font-size: 12px; font-weight: 400; }
-        .section-body { padding: 20px 0 26px; }
-        .row {
+        .form-card-title--desc {
+            color: #999;
+            font-size: 12px;
+            font-weight: 400;
+            margin-left: 6px;
+        }
+        .form-card-content { padding: 20px 0 26px; }
+        .ant-form-item {
             display: grid;
             grid-template-columns: 185px 1fr;
             align-items: start;
             min-height: 38px;
             margin-bottom: 14px;
         }
-        .label {
+        .ant-form-item-label {
             text-align: right;
             color: #555;
             padding: 8px 12px 0 0;
             font-size: 14px;
         }
-        .required:before { content: "*"; color: #d9534f; margin-right: 2px; }
-        .control { min-width: 0; }
+        .ant-form-item-required:before { content: "*"; color: #d9534f; margin-right: 2px; }
+        .ant-form-item-control { min-width: 0; }
         .input, .select, textarea {
             height: 34px;
             border: 1px solid #d8d8d8;
@@ -139,7 +137,6 @@
         }
         .cat-path { color: #7f3f3f; margin-top: 10px; line-height: 1.6; }
         .empty-category { color: #8a4b00; margin-top: 10px; }
-
         .attr-area {
             width: 830px;
             height: 545px;
@@ -164,7 +161,7 @@
             height: 92px;
             background: #bcbcbc;
         }
-        .attr-row {
+        .attr-line {
             display: grid;
             grid-template-columns: 165px 1fr;
             align-items: start;
@@ -307,60 +304,6 @@
             font-size: 11px;
             text-align: center;
         }
-
-        .anchors {
-            position: fixed;
-            left: calc(50% + 525px);
-            top: 92px;
-            width: 110px;
-        }
-        .anchors a {
-            display: block;
-            height: 25px;
-            line-height: 25px;
-            color: #666;
-        }
-        .anchors a:before {
-            content: "";
-            display: inline-block;
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #278ccd;
-            margin-right: 8px;
-            vertical-align: middle;
-        }
-        .float-tools {
-            position: fixed;
-            left: calc(50% + 548px);
-            top: 300px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .float-tools div {
-            width: 25px;
-            height: 25px;
-            background: #aaa;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .bottom-actions {
-            position: fixed;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            height: 58px;
-            background: #fff;
-            border-top: 1px solid #ddd;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            z-index: 5;
-        }
         .ai-zone {
             position: sticky;
             top: 74px;
@@ -381,13 +324,8 @@
             font-size: 15px;
             font-weight: 700;
         }
-        .ai-card-body {
-            padding: 14px;
-        }
-        .ai-main-actions {
-            display: grid;
-            gap: 10px;
-        }
+        .ai-card-body { padding: 14px; }
+        .ai-main-actions { display: grid; gap: 10px; }
         .ai-action {
             width: 100%;
             height: 42px;
@@ -403,6 +341,54 @@
             border-color: #2f8fca;
             color: #fff;
         }
+        .product-picker {
+            display: none;
+            margin-top: 12px;
+            border-top: 1px solid #eee;
+            padding-top: 12px;
+        }
+        .product-search-row { display: flex; gap: 6px; }
+        .product-search-row input {
+            flex: 1;
+            height: 32px;
+            border: 1px solid #d8d8d8;
+            padding: 6px 8px;
+        }
+        .product-results {
+            max-height: 320px;
+            overflow-y: auto;
+            margin-top: 10px;
+            border: 1px solid #eee;
+        }
+        .product-result {
+            display: grid;
+            grid-template-columns: 48px 1fr;
+            gap: 8px;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            background: #fff;
+        }
+        .product-result:hover { background: #f5fbff; }
+        .product-result:last-child { border-bottom: 0; }
+        .product-thumb {
+            width: 48px;
+            height: 48px;
+            border: 1px solid #ddd;
+            background: #f5f5f5;
+            object-fit: cover;
+        }
+        .product-title {
+            color: #333;
+            line-height: 1.35;
+            max-height: 36px;
+            overflow: hidden;
+        }
+        .product-meta {
+            color: #999;
+            font-size: 11px;
+            margin-top: 4px;
+        }
         .ai-status {
             border-top: 1px solid #eee;
             margin-top: 12px;
@@ -410,21 +396,26 @@
             color: #666;
             line-height: 1.7;
         }
-        .ai-status b {
-            display: block;
-            color: #333;
-            margin-bottom: 4px;
-        }
+        .ai-status b { display: block; color: #333; margin-bottom: 4px; }
         .ai-step {
             padding: 9px 0;
             border-bottom: 1px solid #f0f0f0;
             line-height: 1.6;
         }
-        .ai-step:last-child {
-            border-bottom: 0;
-        }
-        .anchors, .float-tools {
-            display: none;
+        .ai-step:last-child { border-bottom: 0; }
+        .bottom-actions {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 58px;
+            background: #fff;
+            border-top: 1px solid #ddd;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            z-index: 5;
         }
     </style>
 </head>
@@ -435,232 +426,233 @@
     <a class="nav active" href="/product-maintenance">产品</a>
     <a class="nav" href="/knowledge-base">知识库</a>
     <a class="nav" href="/ozon-listing">Ozon上架(旧)</a>
-    <div class="top-right"><span>Ozon API</span><span>AI运营助手</span><span id="top-skc">Dianxm000610</span></div>
+    <div class="top-right"><span>Ozon API</span><span>AI运营助手</span><span id="top-skc">未选品</span></div>
 </div>
 
 <div class="workspace">
-<div class="page ozon-form-module">
-    <div class="crumb">ozon产品 &gt; {{ '创建产品' if mode == 'create' else '在线产品 > 编辑' }}</div>
-    <div class="actions-top">
-        <button>一键翻译⌄</button>
-        <button>存为模板</button>
-        {% if mode == 'create' %}<button class="orange">引用产品⌄</button><button class="orange">保存</button><button class="green">发布</button>{% else %}<button class="green">更新</button>{% endif %}
-    </div>
+    <main class="ozon-form-module">
+        <div class="crumb">ozon产品 &gt; {{ '创建产品' if mode == 'create' else '在线产品 > 编辑' }}</div>
+        <div class="actions-top">
+            <button>一键翻译⌄</button>
+            <button>存为模板</button>
+            {% if mode == 'create' %}
+            <button class="orange">引用产品⌄</button><button class="orange">保存</button><button class="green">发布</button>
+            {% else %}
+            <button class="green">更新</button>
+            {% endif %}
+        </div>
 
-    <section class="section" id="base">
-        <div class="section-title">基本信息</div>
-        <div class="section-body">
-            <div class="row">
-                <div class="label required">店铺名称:</div>
-                <div class="control">
-                    <select class="select" id="store-select">
-                        <option>{{ '---- 请选择店铺 ----' if mode == 'create' else 'Ozon 安凌' }}</option>
-                    </select>
-                </div>
-            </div>
-            <div class="row">
-                <div class="label required">产品分类:</div>
-                <div class="control">
-                    <select class="select" id="category-select">
-                        <option>{{ '---- 请选择分类 ----' if mode == 'create' else '钱包(Кошелек)' }}</option>
-                    </select>
-                    <button class="blue" id="btn-select-category" style="margin-left:10px">选择分类</button>
-                    {% if mode == 'create' %}
-                    <div class="empty-category" id="cat-path">未选择分类</div>
-                    {% else %}
-                    <div class="cat-path" id="cat-path">小百货和配饰(Галантерея и аксессуары) &gt; 配饰(Аксессуары) &gt; 钱包(Кошелек)</div>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="row" id="attr-row" {% if mode == 'create' %}style="display:none"{% endif %}>
-                <div class="label">产品属性:</div>
-                <div class="control" id="attr-host">
-                    <div class="attr-area">
-                        <div class="scrollbar"></div>
-                        <div class="attr-row">
-                            <div class="attr-label required">性别 (Пол) <span class="q">?</span></div>
-                            <div class="checks four">
-                                <label><input type="checkbox"> 男士(Мужской)</label>
-                                <label><input type="checkbox" checked> 女士(Женский)</label>
-                                <label><input type="checkbox"> 女童(Девочки)</label>
-                                <label><input type="checkbox"> 男童(Мальчики)</label>
-                            </div>
-                        </div>
-                        <div class="attr-row">
-                            <div class="attr-label">商品重量，克 (Вес товара, г) <span class="q">?</span></div>
-                            <div><input class="input" value="200"></div>
-                        </div>
-                        <div class="attr-row">
-                            <div class="attr-label">配套 (Комплектация) <span class="q">?</span></div>
-                            <div><input class="input" value="Кошелек, съемный ремешок"></div>
-                        </div>
-                        <div class="attr-row">
-                            <div class="attr-label">保修期 (Гарантийный срок) <span class="q">?</span></div>
-                            <div><input class="input" value=""></div>
-                        </div>
-                        <div class="attr-row">
-                            <div class="attr-label">包装 (Упаковка) <span class="q">?</span></div>
-                            <div>
-                                <div class="add-line"><input class="input" value="更多属性值请搜索添加"><button class="blue">添加</button></div>
-                                <div class="value-list">
-                                    <label><input type="checkbox"> 金属罐(Банка мета...)</label><label><input type="checkbox"> 吸 塑(Блистер)</label><label><input type="checkbox"> 包装纸(Бумажная о...)</label>
-                                    <label><input type="checkbox"> 桶(Ведерко)</label><label><input type="checkbox"> 显示(Дисплей)</label><label><input type="checkbox"> 塑料外壳(Кейс плас...)</label>
-                                    <label><input type="checkbox"> 容器(Контейнер)</label><label><input type="checkbox"> 金属盒(Коробка ме...)</label><label><input type="checkbox"> 塑料盒(Коробка пл...)</label>
-                                    <label><input type="checkbox"> 礼品袋(Пакет пода...)</label><label><input type="checkbox"> 纸板文件夹(Папка к...)</label><label><input type="checkbox"> 铅笔盒(Пенал)</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="attr-row">
-                            <div class="attr-label">原产国 (Страна-изготовитель) <span class="q">?</span></div>
-                            <div>
-                                <div class="add-line"><input class="input" value="更多属性值请搜索添加"><button class="blue">添加</button></div>
-                                <div class="value-list">
-                                    <label><input type="checkbox"> 俄罗斯(Россия)</label><label><input type="checkbox" checked> 中国(Китай)</label><label><input type="checkbox"> 未指定(Не указана)</label>
-                                    <label><input type="checkbox"> 意大利(Италия)</label><label><input type="checkbox"> 美国(США)</label><label><input type="checkbox"> 德国(Германия)</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="attr-row">
-                            <div class="attr-label">高度，厘米 (Высота, см)</div>
-                            <div><input class="input" value="12"></div>
+        <section class="form-card base-info" id="basicInfo">
+            <div class="form-card-header"><h4 class="form-card-title">基本信息 <span class="form-card-title--desc"></span></h4></div>
+            <div class="form-card-content">
+                <form class="ant-form ant-form-horizontal base-info-form">
+                    <div class="ant-form-item shop-form-item">
+                        <div class="ant-form-item-label"><label class="ant-form-item-required">店铺名称</label></div>
+                        <div class="ant-form-item-control"><select class="select" id="store-select"><option value="">{{ '---- 请选择店铺 ----' if mode == 'create' else 'Ozon 安凌' }}</option></select></div>
+                    </div>
+                    <div class="ant-form-item category-form-item">
+                        <div class="ant-form-item-label"><label class="ant-form-item-required">产品分类</label></div>
+                        <div class="ant-form-item-control">
+                            <select class="select" id="category-select"><option>{{ '---- 请选择分类 ----' if mode == 'create' else '钱包(Кошелек)' }}</option></select>
+                            <button type="button" class="blue" id="btn-select-category" style="margin-left:10px">选择分类</button>
+                            {% if mode == 'create' %}
+                            <div class="empty-category" id="cat-path">未选择分类</div>
+                            {% else %}
+                            <div class="cat-path" id="cat-path">小百货和配饰(Галантерея и аксессуары) &gt; 配饰(Аксессуары) &gt; 钱包(Кошелек)</div>
+                            {% endif %}
                         </div>
                     </div>
+                    <div class="ant-form-item attrs-form-item" id="attr-row" {% if mode == 'create' %}style="display:none"{% endif %}>
+                        <div class="ant-form-item-label"><label>产品属性</label></div>
+                        <div class="ant-form-item-control">
+                            <div class="attr-area">
+                                <div class="scrollbar"></div>
+                                <div class="attr-line">
+                                    <div class="attr-label"><span style="color:#d9534f">*</span>性别 (Пол) <span class="q">?</span></div>
+                                    <div class="checks four">
+                                        <label><input type="checkbox"> 男士(Мужской)</label>
+                                        <label><input type="checkbox" checked> 女士(Женский)</label>
+                                        <label><input type="checkbox"> 女童(Девочки)</label>
+                                        <label><input type="checkbox"> 男童(Мальчики)</label>
+                                    </div>
+                                </div>
+                                <div class="attr-line">
+                                    <div class="attr-label">商品重量，克 (Вес товара, г) <span class="q">?</span></div>
+                                    <div><input class="input" id="weight-input" value="200"></div>
+                                </div>
+                                <div class="attr-line">
+                                    <div class="attr-label">配套 (Комплектация) <span class="q">?</span></div>
+                                    <div><input class="input" id="comp-input" value="Кошелек, съемный ремешок"></div>
+                                </div>
+                                <div class="attr-line">
+                                    <div class="attr-label">保修期 (Гарантийный срок) <span class="q">?</span></div>
+                                    <div><input class="input" value=""></div>
+                                </div>
+                                <div class="attr-line">
+                                    <div class="attr-label">包装 (Упаковка) <span class="q">?</span></div>
+                                    <div>
+                                        <div class="add-line"><input class="input" value="更多属性值请搜索添加"><button type="button" class="blue">添加</button></div>
+                                        <div class="value-list">
+                                            <label><input type="checkbox"> 金属罐(Банка мета...)</label><label><input type="checkbox"> 吸塑(Блистер)</label><label><input type="checkbox"> 包装纸(Бумажная о...)</label>
+                                            <label><input type="checkbox"> 桶(Ведерко)</label><label><input type="checkbox"> 显示(Дисплей)</label><label><input type="checkbox"> 塑料外壳(Кейс плас...)</label>
+                                            <label><input type="checkbox"> 容器(Контейнер)</label><label><input type="checkbox"> 金属盒(Коробка ме...)</label><label><input type="checkbox"> 塑料盒(Коробка пл...)</label>
+                                            <label><input type="checkbox"> 礼品袋(Пакет пода...)</label><label><input type="checkbox"> 纸板文件夹(Папка к...)</label><label><input type="checkbox"> 铅笔盒(Пенал)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="attr-line">
+                                    <div class="attr-label">原产国 (Страна-изготовитель) <span class="q">?</span></div>
+                                    <div>
+                                        <div class="add-line"><input class="input" value="更多属性值请搜索添加"><button type="button" class="blue">添加</button></div>
+                                        <div class="value-list">
+                                            <label><input type="checkbox"> 俄罗斯(Россия)</label><label><input type="checkbox" checked> 中国(Китай)</label><label><input type="checkbox"> 未指定(Не указана)</label>
+                                            <label><input type="checkbox"> 意大利(Италия)</label><label><input type="checkbox"> 美国(США)</label><label><input type="checkbox"> 德国(Германия)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="attr-line">
+                                    <div class="attr-label">高度，厘米 (Высота, см)</div>
+                                    <div><input class="input" value="12"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section class="form-card" id="salesInfo">
+            <div class="form-card-header"><h4 class="form-card-title">店小秘信息 <span class="form-card-title--desc">（注：下列信息，仅在店小秘系统生效）</span></h4></div>
+            <div class="form-card-content">
+                <div class="ant-form-item"><div class="ant-form-item-label"><label>店小秘分类</label></div><div class="ant-form-item-control"><select class="select"><option>选择分类</option></select> <a style="margin-left:10px">+ 管理分类</a></div></div>
+                <div class="ant-form-item"><div class="ant-form-item-label"><label>来源URL</label></div><div class="ant-form-item-control"><input class="input long" value="用于记录供货渠道URL，方便采购。仅在店小秘显示，不会同步到OZON平台！"><button type="button">访问</button><button type="button">找货源</button><a style="margin-left:12px">+</a></div></div>
+            </div>
+        </section>
+
+        <section class="form-card" id="productInfo">
+            <div class="form-card-header"><h4 class="form-card-title">产品信息</h4></div>
+            <div class="form-card-content">
+                <div class="ant-form-item">
+                    <div class="ant-form-item-label"><label>产品标题</label></div>
+                    <div class="ant-form-item-control">
+                        <input class="input long" id="title-input" placeholder="请输入" value="{{ '' if mode == 'create' else 'Koшелек ANLING: Мужской/женский С Защитой NFC/RFID' }}"><button type="button" style="margin-left:0">↻</button><button type="button">Tt</button><span style="margin-left:8px;color:#999">0 / 255</span>
+                        <div class="hint"><span class="tip">说明</span>根据OZON平台要求，部分类目平台会自动生成标题，不支持自定义标题，点击查看详情</div>
+                    </div>
+                </div>
+                <div class="ant-form-item"><div class="ant-form-item-label"><label>VAT</label></div><div class="ant-form-item-control"><select class="select"><option>请选择</option></select></div></div>
+            </div>
+        </section>
+
+        {% if mode != 'create' %}
+        <section class="form-card" id="descriptionInfo">
+            <div class="form-card-header"><h4 class="form-card-title">描述信息</h4></div>
+            <div class="form-card-content">
+                <div class="ant-form-item"><div class="ant-form-item-label"><label>产品描述</label></div><div class="ant-form-item-control"><textarea>Компактный кошелек с защитой от NFC/RFID.</textarea><div class="hint" style="text-align:right;width:720px">0 / 6000</div></div></div>
+                <div class="ant-form-item"><div class="ant-form-item-label"><label>JSON富文本</label></div><div class="ant-form-item-control"><input class="input" value="请选择内容模板"><label style="margin-left:14px"><input type="checkbox"> 立即创建</label><div class="rich-empty">Rich Content 空白编辑区</div></div></div>
+                <div class="ant-form-item"><div class="ant-form-item-label"><label>产品视频</label></div><div class="ant-form-item-control"><div class="upload-card"><b>+</b>添加视频</div><div class="upload-card"><b>+</b>添加视频封面</div></div></div>
+            </div>
+        </section>
+
+        <section class="form-card" id="variantTheme">
+            <div class="form-card-header"><h4 class="form-card-title">变种属性 <button type="button" style="float:right;margin:5px 18px 0 0">一键套用变种模板</button></h4></div>
+            <div class="form-card-content">
+                <div class="ant-form-item"><div class="ant-form-item-label"><label>变种主题</label></div><div class="ant-form-item-control"><div class="variant-box">
+                    <div class="variant-row"><b>颜色名称(Цвет товара)</b><div><span class="pill">黑色/чёрный</span><span class="pill">咖啡色/кофейный</span></div><input class="input" placeholder="颜色名称(Name)"><a>移除</a></div>
+                    <div class="variant-row"><b>SKU 图片绑定</b><div><span class="pill">black</span><span class="pill">coffee</span><span class="pill">pink</span></div><input class="input" placeholder="图片集名称"><a>添加</a></div>
+                </div></div></div>
+            </div>
+        </section>
+
+        <section class="form-card" id="variantInfo">
+            <div class="form-card-header"><h4 class="form-card-title">变种信息 <span style="float:right;font-weight:400;margin-right:18px"><label><input type="checkbox"> 设置sku标题</label> <label><input type="checkbox"> 自动补全</label> <a>+ 自定义变种属性</a></span></h4></div>
+            <div class="form-card-content">
+                <table>
+                    <thead><tr><th>颜色名称</th><th>颜色值</th><th>SKU</th><th>售价(CNY)</th><th>原价(CNY)</th><th>库存</th><th>尺寸(cm)</th><th>重量(g)</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr><td>黑色/чёрный</td><td>black</td><td><input class="tbl-input" value="wallet-0006-black"></td><td><input class="tbl-input" value="1290"></td><td><input class="tbl-input" value="1890"></td><td><input class="tbl-input" value="20"></td><td><input class="tbl-input" value="20 12 4"></td><td><input class="tbl-input" value="200"></td><td><a>移除</a></td></tr>
+                        <tr><td>咖啡色/кофейный</td><td>coffee</td><td><input class="tbl-input" value="wallet-0006-coffee"></td><td><input class="tbl-input" value="1290"></td><td><input class="tbl-input" value="1890"></td><td><input class="tbl-input" value="18"></td><td><input class="tbl-input" value="20 12 4"></td><td><input class="tbl-input" value="200"></td><td><a>移除</a></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="form-card" id="variantImage">
+            <div class="form-card-header"><h4 class="form-card-title">变种图片</h4></div>
+            <div class="form-card-content">
+                <div class="img-row"><div class="img-title">黑色/чёрный<br><span style="color:#999">[2/30] 图片</span></div><div><button type="button">选择图片</button> <a>商品图片</a> <a>从链接导入</a> <a>图片空间</a><br><div class="pic"></div><div class="pic" style="background:linear-gradient(135deg,#222,#bbb)"></div></div></div>
+                <div class="img-row"><div class="img-title">咖啡色/кофейный<br><span style="color:#999">[1/30] 图片</span></div><div><button type="button">选择图片</button> <a>商品图片</a> <a>从链接导入</a> <a>图片空间</a><br><div class="pic" style="background:linear-gradient(135deg,#563b2b,#c29a78)"></div></div></div>
+            </div>
+        </section>
+        {% endif %}
+
+        <section class="form-card" id="scoreInfo">
+            <div class="form-card-header"><h4 class="form-card-title">积分评价推广</h4></div>
+            <div class="form-card-content">
+                <div class="ant-form-item"><div class="ant-form-item-label"><label>积分评价</label></div><div class="ant-form-item-control"><label><input type="checkbox"> 开启积分评价，买家评价后将获得积分，可用于促进买家留评。有评价的商品添加进购物车的频率最多可高出1倍。</label><div class="hint"><span class="tip">说明</span>买家获得的积分可用于在Ozon平台上购买其它商品</div></div></div>
+            </div>
+        </section>
+    </main>
+
+    <aside class="ai-zone">
+        <section class="ai-card">
+            <div class="ai-card-title">AI区</div>
+            <div class="ai-card-body">
+                <div class="ai-main-actions">
+                    <button class="ai-action" id="btn-ai-pick" type="button">选品 <span>从正式产品中选</span></button>
+                    <button class="ai-action primary" id="btn-ai-category" type="button">自动分类 <span>AI匹配Ozon类目</span></button>
+                    <button class="ai-action primary" id="btn-ai-fill" type="button">自动填充 <span>拉属性并填值</span></button>
+                </div>
+                <div class="product-picker" id="product-picker">
+                    <div class="product-search-row">
+                        <input id="product-search" placeholder="搜索正式产品标题 / SKC">
+                        <button id="btn-product-search" type="button">搜索</button>
+                    </div>
+                    <div class="product-results" id="product-results">
+                        <div class="hint" style="padding:10px">输入关键词，或直接搜索加载正式产品。</div>
+                    </div>
+                </div>
+                <div class="ai-status" id="ai-status">
+                    <b>当前状态</b>
+                    左侧是人工操作区；右侧才是AI操作区。
                 </div>
             </div>
-        </div>
-    </section>
-
-    <section class="section" id="sales">
-        <div class="section-title">店小秘信息 <span class="note">（注：下列信息，仅在店小秘系统生效）</span></div>
-        <div class="section-body">
-            <div class="row">
-                <div class="label">店小秘分类:</div>
-                <div class="control"><select class="select"><option>选择分类</option></select> <a style="margin-left:10px">+ 管理分类</a></div>
+        </section>
+        <section class="ai-card">
+            <div class="ai-card-title">执行顺序</div>
+            <div class="ai-card-body">
+                <div class="ai-step"><b>1. 选品</b><br>从正式产品库选择 SKC，带出标题和商品上下文。</div>
+                <div class="ai-step"><b>2. 自动分类</b><br>AI 像运营一样判断 Ozon 类目，程序验证 type_id。</div>
+                <div class="ai-step"><b>3. 自动填充</b><br>程序拉官方属性，AI 填重要字段，程序再验证。</div>
             </div>
-            <div class="row">
-                <div class="label">来源URL:</div>
-                <div class="control"><input class="input long" value="用于记录供货渠道URL，方便采购。仅在店小秘显示，不会同步到OZON平台！"><button>访问</button><button>找货源</button><a style="margin-left:12px">+</a></div>
-            </div>
-        </div>
-    </section>
-
-    <section class="section" id="info">
-        <div class="section-title">产品信息</div>
-        <div class="section-body">
-            <div class="row">
-                <div class="label">产品标题:</div>
-                <div class="control"><input class="input long" placeholder="请输入" value="{{ '' if mode == 'create' else 'Koшелек ANLING: Мужской/женский С Защитой NFC/RFID' }}"><button style="margin-left:0">↻</button><button>Tt</button><span style="margin-left:8px;color:#999">0 / 255</span><div class="hint"><span class="tip">说明</span>根据OZON平台要求，部分类目平台会自动生成标题，不支持自定义标题，点击查看详情</div></div>
-            </div>
-            <div class="row">
-                <div class="label">VAT:</div>
-                <div class="control"><select class="select"><option>请选择</option></select></div>
-            </div>
-        </div>
-    </section>
-
-    {% if mode != 'create' %}
-    <section class="section" id="desc">
-        <div class="section-title">描述信息</div>
-        <div class="section-body">
-            <div class="row"><div class="label">产品描述:</div><div class="control"><textarea>Компактный кошелек с защитой от NFC/RFID.</textarea><div class="hint" style="text-align:right;width:720px">0 / 6000</div></div></div>
-            <div class="row"><div class="label">JSON富文本:</div><div class="control"><input class="input" value="请选择内容模板"><label style="margin-left:14px"><input type="checkbox"> 立即创建</label><div class="hint"><span class="tip">说明</span>与 Ozon 富内容规则一致，普通描述和 JSON 富内容保持一致。</div><div class="rich-empty">Rich Content 空白编辑区</div></div></div>
-            <div class="row"><div class="label">产品视频:</div><div class="control"><div class="upload-card"><b>+</b>添加视频</div><div class="upload-card"><b>+</b>添加视频封面</div><div class="hint"><span class="tip">说明</span>Ozon 视频和视频封面是两个不同字段，页面按店小秘样式合并展示。</div></div></div>
-        </div>
-    </section>
-
-    <section class="section" id="variant-theme">
-        <div class="section-title">变种属性 <button style="float:right;margin:5px 18px 0 0">一键套用变种模板</button></div>
-        <div class="section-body">
-            <div class="row"><div class="label">变种主题:</div><div class="control"><div class="variant-box">
-                <div class="variant-row"><b>颜色名称(Цвет товара)</b><div><span class="pill">黑色/чёрный</span><span class="pill">咖啡色/кофейный</span></div><input class="input" placeholder="颜色名称(Name)"><a>移除</a></div>
-                <div class="variant-row"><b>SKU 图片绑定</b><div><span class="pill">black</span><span class="pill">coffee</span><span class="pill">pink</span></div><input class="input" placeholder="图片集名称"><a>添加</a></div>
-            </div></div></div>
-        </div>
-    </section>
-
-    <section class="section" id="variant-info">
-        <div class="section-title">变种信息 <span style="float:right;font-weight:400;margin-right:18px"><label><input type="checkbox"> 设置sku标题</label>　<label><input type="checkbox"> 自动补全</label>　<a>+ 自定义变种属性</a></span></div>
-        <div class="section-body">
-            <table>
-                <thead><tr><th>颜色名称</th><th>颜色值</th><th>SKU</th><th>售价(CNY)</th><th>原价(CNY)</th><th>库存</th><th>尺寸(cm)</th><th>重量(g)</th><th>操作</th></tr></thead>
-                <tbody>
-                    <tr><td>黑色/чёрный</td><td>black</td><td><input class="tbl-input" value="wallet-0006-black"></td><td><input class="tbl-input" value="1290"></td><td><input class="tbl-input" value="1890"></td><td><input class="tbl-input" value="20"></td><td><input class="tbl-input" value="20 12 4"></td><td><input class="tbl-input" value="200"></td><td><a>移除</a></td></tr>
-                    <tr><td>咖啡色/кофейный</td><td>coffee</td><td><input class="tbl-input" value="wallet-0006-coffee"></td><td><input class="tbl-input" value="1290"></td><td><input class="tbl-input" value="1890"></td><td><input class="tbl-input" value="18"></td><td><input class="tbl-input" value="20 12 4"></td><td><input class="tbl-input" value="200"></td><td><a>移除</a></td></tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
-
-    <section class="section" id="variant-img">
-        <div class="section-title">变种图片</div>
-        <div class="section-body">
-            <div class="row"><div class="label">变种图片:</div><div class="control"><div class="hint"><span class="tip">说明</span>一张图片建议为主图，支持拖拽排序、上传本地图片、图片空间选择。</div></div></div>
-            <div class="img-row"><div class="img-title">黑色/чёрный<br><span style="color:#999">[2/30] 图片</span></div><div><button>选择图片</button>　<a>商品图片</a>　<a>从链接导入</a>　<a>图片空间</a><br><div class="pic"></div><div class="pic" style="background:linear-gradient(135deg,#222,#bbb)"></div></div></div>
-            <div class="img-row"><div class="img-title">咖啡色/кофейный<br><span style="color:#999">[1/30] 图片</span></div><div><button>选择图片</button>　<a>商品图片</a>　<a>从链接导入</a>　<a>图片空间</a><br><div class="pic" style="background:linear-gradient(135deg,#563b2b,#c29a78)"></div></div></div>
-            <div class="img-row"><div class="img-title">粉色/розовый<br><span style="color:#999">[2/30] 图片</span></div><div><button>选择图片</button>　<a>商品图片</a>　<a>从链接导入</a>　<a>图片空间</a><br><div class="pic" style="background:linear-gradient(135deg,#df9db4,#ffe0ea)"></div><div class="pic" style="background:linear-gradient(135deg,#f1bdcf,#fff)"></div></div></div>
-        </div>
-    </section>
-    {% endif %}
-
-    <section class="section" id="score">
-        <div class="section-title">积分评价推广</div>
-        <div class="section-body">
-            <div class="row">
-                <div class="label">积分评价:</div>
-                <div class="control"><label><input type="checkbox"> 开启积分评价，买家评价后将获得积分，可用于促进买家留评。有评价的商品添加进购物车的频率最多可高出1倍。</label><div class="hint"><span class="tip">说明</span>买家获得的积分可用于在Ozon平台上购买其它商品</div></div>
-            </div>
-        </div>
-    </section>
+        </section>
+    </aside>
 </div>
 
-<aside class="ai-zone">
-    <section class="ai-card">
-        <div class="ai-card-title">AI区</div>
-        <div class="ai-card-body">
-            <div class="ai-main-actions">
-                <button class="ai-action" id="btn-ai-pick">选品 <span>选择/载入商品</span></button>
-                <button class="ai-action primary" id="btn-ai-category">自动分类 <span>AI匹配Ozon类目</span></button>
-                <button class="ai-action primary" id="btn-ai-fill">自动填充 <span>拉属性并填值</span></button>
-            </div>
-            <div class="ai-status" id="ai-status">
-                <b>当前状态</b>
-                左侧是店小秘 ozon-form-module 的表单还原；右侧只负责触发 AI 流程。
-            </div>
-        </div>
-    </section>
-    <section class="ai-card">
-        <div class="ai-card-title">执行顺序</div>
-        <div class="ai-card-body">
-            <div class="ai-step"><b>1. 选品</b><br>确认 SKC、店铺、采集数据和图片集。</div>
-            <div class="ai-step"><b>2. 自动分类</b><br>AI 像运营一样判断 Ozon 类目，程序验证 type_id。</div>
-            <div class="ai-step"><b>3. 自动填充</b><br>程序拉官方属性，AI 填重要字段，程序再验证。</div>
-        </div>
-    </section>
-</aside>
-</div>
-
-<div class="anchors">
-    <a href="#base">基本信息</a>
-    <a href="#sales">店小秘信息</a>
-    <a href="#info">产品信息</a>
-    {% if mode != 'create' %}<a href="#desc">描述信息</a><a href="#variant-info">变种信息</a><a href="#variant-img">变种图片</a>{% endif %}
-    <a href="#score">积分评价推广</a>
-</div>
-<div class="float-tools"><div>×</div><div>▣</div><div>?</div><div>⌂</div></div>
 <div class="bottom-actions">
     <button>一键翻译⌄</button>
     <button>存为模板</button>
-    {% if mode == 'create' %}<button class="orange">引用产品⌄</button><button class="orange">保存</button><button class="green">发布</button>{% else %}<button class="green">更新</button>{% endif %}
+    {% if mode == 'create' %}
+    <button class="orange">引用产品⌄</button><button class="orange">保存</button><button class="green">发布</button>
+    {% else %}
+    <button class="green">更新</button>
+    {% endif %}
 </div>
 
 <script>
 var query = new URLSearchParams(location.search);
 var pageState = {
     storeId: query.get("store_id") || "",
-    skc: query.get("skc") || "WALLET-0006"
+    skc: query.get("skc") || "",
+    product: null
 };
 
 function $(id) { return document.getElementById(id); }
+
+function esc(value) {
+    var div = document.createElement("div");
+    div.textContent = value == null ? "" : String(value);
+    return div.innerHTML;
+}
 
 async function api(url, options) {
     var res = await fetch(url, options || {});
@@ -669,12 +661,17 @@ async function api(url, options) {
     return data;
 }
 
+function setAiStatus(title, detail) {
+    $("ai-status").innerHTML = "<b>" + esc(title) + "</b>" + detail;
+}
+
 async function loadStores() {
     try {
-        var stores = await api("/api/stores");
+        var data = await api("/api/stores");
+        var stores = Array.isArray(data) ? data : (data.stores || []);
         var select = $("store-select");
-        var currentText = select.options[0] ? select.options[0].textContent : "";
-        select.innerHTML = '<option value="">' + currentText + '</option>';
+        var firstText = select.options[0] ? select.options[0].textContent : "---- 请选择店铺 ----";
+        select.innerHTML = '<option value="">' + esc(firstText) + '</option>';
         stores.forEach(function (store) {
             var opt = document.createElement("option");
             opt.value = store.id;
@@ -696,14 +693,119 @@ async function loadStores() {
     }
 }
 
-function showWalletCategory(match) {
+function firstImage(product) {
+    var images = product.images || product.product_images || [];
+    if (images.length) {
+        var img = images[0];
+        return img.url || img.src || img.path || img.local_url || "";
+    }
+    var sets = product.image_sets || {};
+    for (var key in sets) {
+        if (Array.isArray(sets[key]) && sets[key].length) {
+            var setImg = sets[key][0];
+            return setImg.url || setImg.src || setImg.path || setImg.local_url || "";
+        }
+    }
+    return "";
+}
+
+function renderProducts(products) {
+    var host = $("product-results");
+    if (!products.length) {
+        host.innerHTML = '<div class="hint" style="padding:10px">没有找到正式产品。</div>';
+        return;
+    }
+    host.innerHTML = products.map(function (product) {
+        var skc = product.skc || product.SKC || product.id || "";
+        var title = product.title || product.name || skc;
+        var img = firstImage(product);
+        return '<div class="product-result" data-skc="' + esc(skc) + '">' +
+            (img ? '<img class="product-thumb" src="' + esc(img) + '">' : '<div class="product-thumb"></div>') +
+            '<div><div class="product-title">' + esc(title) + '</div>' +
+            '<div class="product-meta">SKC: ' + esc(skc) + ' · ' + esc(product.platform || product.source || "") + '</div></div>' +
+            '</div>';
+    }).join("");
+    host.querySelectorAll(".product-result").forEach(function (el) {
+        el.addEventListener("click", function () {
+            selectProduct(el.dataset.skc);
+        });
+    });
+}
+
+async function searchProducts() {
+    var queryText = $("product-search").value.trim();
+    $("product-results").innerHTML = '<div class="hint" style="padding:10px">加载正式产品中...</div>';
+    try {
+        var data = await api("/api/products?query=" + encodeURIComponent(queryText));
+        renderProducts(data.products || []);
+    } catch (e) {
+        $("product-results").innerHTML = '<div class="hint" style="padding:10px;color:#d9534f">加载失败：' + esc(e.message) + '</div>';
+    }
+}
+
+async function selectProduct(skc) {
+    if (!skc) return;
+    try {
+        var product = await api("/api/products/" + encodeURIComponent(skc));
+        pageState.product = product;
+        pageState.skc = product.skc || skc;
+        $("top-skc").textContent = pageState.skc;
+        $("title-input").value = product.title || product.name || "";
+        setAiStatus("已选品", "已从正式产品库载入：" + esc(pageState.skc) + "<br>" + esc(product.title || product.name || ""));
+    } catch (e) {
+        setAiStatus("选品失败", esc(e.message));
+    }
+}
+
+function openProductPicker() {
+    var picker = $("product-picker");
+    picker.style.display = picker.style.display === "block" ? "none" : "block";
+    if (picker.style.display === "block") searchProducts();
+}
+
+function showCategory(match) {
     var categoryId = match.description_category_id || match.category_id || match.id || 17027904;
     var typeId = match.type_id || 93338;
     var path = match.path || match.category_path || "小百货和配饰(Галантерея и аксессуары) > 配饰(Аксессуары) > 钱包(Кошелек)";
-    $("category-select").innerHTML = '<option value="' + categoryId + '">钱包(Кошелек)</option>';
+    $("category-select").innerHTML = '<option value="' + esc(categoryId) + '">钱包(Кошелек)</option>';
     $("cat-path").className = "cat-path";
     $("cat-path").textContent = path + " / type_id: " + typeId;
     $("attr-row").style.display = "grid";
+}
+
+function openManualCategoryTree() {
+    showCategory({});
+    setAiStatus("人工选择分类", "左侧是人工操作：这里先展开分类结果占位，后续接分类树弹窗。");
+}
+
+async function autoCategory() {
+    pageState.storeId = $("store-select").value || pageState.storeId;
+    if (!pageState.storeId) {
+        alert("请先选择店铺");
+        return;
+    }
+    if (!pageState.skc) {
+        alert("请先在右侧选品");
+        return;
+    }
+    var btn = $("btn-ai-category");
+    var oldText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "自动分类中...";
+    try {
+        var data = await api("/api/ozon/" + encodeURIComponent(pageState.storeId) + "/listing/auto-category", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ skc: pageState.skc })
+        });
+        showCategory(data.category || data.best_match || data.result || data);
+        setAiStatus("自动分类完成", "AI 已匹配 Ozon 类目，并展开左侧平台属性区。");
+    } catch (e) {
+        setAiStatus("自动分类失败", esc(e.message));
+    } finally {
+        btn.disabled = false;
+        btn.textContent = oldText;
+    }
 }
 
 function fillKnownWalletAttributes(draft) {
@@ -711,132 +813,65 @@ function fillKnownWalletAttributes(draft) {
     attrs.forEach(function (attr) {
         var value = attr.value || attr.values || "";
         if (Array.isArray(value)) value = value.map(function (v) { return v.value || v; }).join(", ");
-        if (attr.attribute_id === 4389 && String(value).trim()) {
-            var labels = document.querySelectorAll(".value-list label");
-            labels.forEach(function (label) {
-                if (label.textContent.indexOf("中国") >= 0) {
-                    var input = label.querySelector("input");
-                    if (input) input.checked = true;
-                }
-            });
-        }
         if (attr.attribute_id === 20926 && String(value).trim()) {
-            var packageInput = document.querySelector('.attr-row input[value="Кошелек, съемный ремешок"]');
-            if (packageInput) packageInput.value = String(value);
+            $("comp-input").value = String(value);
         }
     });
 }
 
-async function autoCategoryThenFill() {
-    var btn = $("btn-select-category");
-    var oldText = btn.textContent;
+async function autoFill() {
     pageState.storeId = $("store-select").value || pageState.storeId;
     if (!pageState.storeId) {
         alert("请先选择店铺");
         return;
     }
-    btn.disabled = true;
-    btn.textContent = "自动匹配中...";
-    try {
-        var cat = await api("/api/ozon/" + encodeURIComponent(pageState.storeId) + "/listing/auto-category", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ skc: pageState.skc })
-        });
-        showWalletCategory(cat.category || cat.best_match || cat.result || cat);
-
-        btn.textContent = "自动填属性...";
-        var draft = await api("/api/ozon/" + encodeURIComponent(pageState.storeId) + "/listing/generate-draft", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ skc: pageState.skc })
-        });
-        fillKnownWalletAttributes(draft.draft || draft);
-    } catch (e) {
-        console.warn("auto category/fill failed", e);
-        showWalletCategory({});
-    } finally {
-        btn.disabled = false;
-        btn.textContent = oldText;
-    }
-}
-
-function setAiStatus(title, detail) {
-    $("ai-status").innerHTML = "<b>" + title + "</b>" + detail;
-}
-
-function pickProduct() {
-    pageState.storeId = $("store-select").value || pageState.storeId;
-    setAiStatus("已选品", "当前商品：" + pageState.skc + "<br>当前店铺：" + (pageState.storeId || "未选择"));
-}
-
-async function autoCategoryOnly(triggerId) {
-    var btn = $(triggerId || "btn-ai-category");
-    var oldText = btn.textContent;
-    pageState.storeId = $("store-select").value || pageState.storeId;
-    if (!pageState.storeId) {
-        alert("请先选择店铺");
+    if (!pageState.skc) {
+        alert("请先在右侧选品");
         return;
     }
-    btn.disabled = true;
-    btn.textContent = "自动分类中...";
-    try {
-        var cat = await api("/api/ozon/" + encodeURIComponent(pageState.storeId) + "/listing/auto-category", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ skc: pageState.skc })
-        });
-        showWalletCategory(cat.category || cat.best_match || cat.result || cat);
-        setAiStatus("自动分类完成", "已匹配到 Ozon 类目，并展开左侧平台属性区。");
-    } catch (e) {
-        console.warn("auto category failed", e);
-        showWalletCategory({});
-        setAiStatus("自动分类使用兜底", "接口失败时暂时展示钱包类目兜底，后续需要程序验证。");
-    } finally {
-        btn.disabled = false;
-        btn.textContent = oldText;
-    }
-}
-
-async function autoFillOnly() {
     var btn = $("btn-ai-fill");
     var oldText = btn.textContent;
-    pageState.storeId = $("store-select").value || pageState.storeId;
-    if (!pageState.storeId) {
-        alert("请先选择店铺");
-        return;
-    }
     btn.disabled = true;
     btn.textContent = "自动填充中...";
     try {
-        var draft = await api("/api/ozon/" + encodeURIComponent(pageState.storeId) + "/listing/generate-draft", {
+        var data = await api("/api/ozon/" + encodeURIComponent(pageState.storeId) + "/listing/generate-draft", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ skc: pageState.skc })
         });
-        if (draft.draft) {
-            showWalletCategory({
-                category_id: draft.draft.category_id,
-                type_id: draft.draft.type_id,
-                category_path: draft.draft.category_path
+        if (data.draft) {
+            showCategory({
+                category_id: data.draft.category_id,
+                type_id: data.draft.type_id,
+                category_path: data.draft.category_path
             });
+            fillKnownWalletAttributes(data.draft);
         }
-        fillKnownWalletAttributes(draft.draft || draft);
         setAiStatus("自动填充完成", "已根据 Ozon 属性定义和商品数据填充左侧表单。");
     } catch (e) {
-        console.warn("auto fill failed", e);
-        setAiStatus("自动填充失败", e.message || "请检查商品、店铺和 Ozon API 配置。");
+        setAiStatus("自动填充失败", esc(e.message));
     } finally {
         btn.disabled = false;
         btn.textContent = oldText;
     }
 }
 
-loadStores();
-$("btn-ai-pick").addEventListener("click", pickProduct);
-$("btn-ai-category").addEventListener("click", function () { autoCategoryOnly("btn-ai-category"); });
-$("btn-ai-fill").addEventListener("click", autoFillOnly);
-$("btn-select-category").addEventListener("click", function () { autoCategoryOnly("btn-select-category"); });
+function init() {
+    loadStores();
+    if (pageState.skc) {
+        selectProduct(pageState.skc);
+    }
+    $("btn-ai-pick").addEventListener("click", openProductPicker);
+    $("btn-product-search").addEventListener("click", searchProducts);
+    $("product-search").addEventListener("keydown", function (event) {
+        if (event.key === "Enter") searchProducts();
+    });
+    $("btn-select-category").addEventListener("click", openManualCategoryTree);
+    $("btn-ai-category").addEventListener("click", autoCategory);
+    $("btn-ai-fill").addEventListener("click", autoFill);
+}
+
+init();
 </script>
 </body>
 </html>
