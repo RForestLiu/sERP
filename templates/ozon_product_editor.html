@@ -1205,12 +1205,22 @@ async function autoCategory() {
     btn.disabled = true;
     btn.textContent = "自动分类中...";
     try {
-        var data = await api("/api/ozon/" + encodeURIComponent(pageState.storeId) + "/listing/auto-category", {
+        var prodData = pageState.product && pageState.product.product_data ? pageState.product.product_data : {};
+        var description = [prodData.about_item, prodData.product_description, prodData.description]
+            .filter(Boolean).join(" ");
+        var data = await api("/api/ozon/" + encodeURIComponent(pageState.storeId) + "/match-category", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ skc: pageState.skc })
+            body: JSON.stringify({
+                product_title: (pageState.product && (pageState.product.title || pageState.product.name)) || "",
+                product_category: (pageState.product && pageState.product.category) || prodData.category || "",
+                product_description: description
+            })
         });
-        showCategory(data.category || data.match || data.best_match || data.result || data);
+        if (!data.success || !data.best_match || !data.best_match.id) {
+            throw new Error(data.error || data.warning || "LLM 未返回可用匹配结果");
+        }
+        showCategory(data.best_match);
         setAiStatus("自动分类完成", "AI 已匹配 Ozon 类目，并展开左侧平台属性区。");
     } catch (e) {
         setAiStatus("自动分类失败", esc(e.message));

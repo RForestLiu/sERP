@@ -24,7 +24,6 @@ from ..domain.ozon_workbench import (
     WALLET_TYPE_ID,
     build_wallet_rich_content,
     collect_ozon_skus,
-    match_wallet_category,
     resolve_wallet_brand,
     rich_content_to_attribute_value,
     validate_workbench_payload,
@@ -356,28 +355,20 @@ class ListingApplicationService(ListingFacade):
         result = self._ozon_category_facade.match_category(store_id, {
             "product_title": product_info.get("product_title") or product_info.get("name") or product_info.get("title") or "",
             "product_category": product_info.get("product_category") or product_info.get("category") or "",
-            "product_description": product_info.get("product_description") or product_info.get("description") or "",
+            "product_description": (
+                product_info.get("product_description")
+                or product_info.get("description")
+                or " ".join(
+                    str((product_info.get("product_data") or {}).get(key, ""))
+                    for key in ("about_item", "product_description", "description")
+                    if (product_info.get("product_data") or {}).get(key)
+                )
+            ),
         })
         if result.get("error"):
             return {"success": False, "store_id": store_id, "error": result["error"]}
         best_match = result.get("best_match") or {}
         if not best_match.get("id"):
-            rule_match = match_wallet_category(product_info)
-            if rule_match.get("matched"):
-                return {
-                    "success": True,
-                    "store_id": store_id,
-                    "match": {
-                        "id": rule_match["description_category_id"],
-                        "type_id": rule_match["type_id"],
-                        "name": rule_match["name"],
-                        "path": rule_match["path"],
-                        "confidence": rule_match["confidence"],
-                        "source": rule_match["source"],
-                    },
-                    "raw": result,
-                    "fallback": "wallet_rule",
-                }
             return {
                 "success": False,
                 "store_id": store_id,
