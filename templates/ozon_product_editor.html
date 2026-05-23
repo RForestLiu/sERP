@@ -52,11 +52,23 @@
         .nav.active { background: #257bb1; }
         .top-right { margin-left: auto; display: flex; gap: 14px; align-items: center; padding-right: 28px; }
 
-        .page {
-            width: 1010px;
+        .workspace {
+            width: calc(100% - 44px);
             margin: 0 auto;
             padding: 30px 0 82px;
+            display: grid;
+            grid-template-columns: minmax(760px, 1010px) minmax(300px, 360px);
+            gap: 16px;
+            align-items: start;
+            justify-content: center;
+        }
+        .page {
+            width: 1010px;
+            max-width: 100%;
             position: relative;
+        }
+        .ozon-form-module {
+            min-width: 0;
         }
         .crumb {
             color: #999;
@@ -349,6 +361,71 @@
             gap: 10px;
             z-index: 5;
         }
+        .ai-zone {
+            position: sticky;
+            top: 74px;
+            max-height: calc(100vh - 96px);
+            overflow-y: auto;
+        }
+        .ai-card {
+            background: #fff;
+            border: 1px solid #e4e4e4;
+            margin-bottom: 14px;
+            box-shadow: 0 6px 20px rgba(20, 39, 70, 0.10);
+        }
+        .ai-card-title {
+            height: 44px;
+            line-height: 44px;
+            border-bottom: 1px solid #eee;
+            padding: 0 16px;
+            font-size: 15px;
+            font-weight: 700;
+        }
+        .ai-card-body {
+            padding: 14px;
+        }
+        .ai-main-actions {
+            display: grid;
+            gap: 10px;
+        }
+        .ai-action {
+            width: 100%;
+            height: 42px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 14px;
+            font-size: 14px;
+        }
+        .ai-action.primary {
+            background: #2f8fca;
+            border-color: #2f8fca;
+            color: #fff;
+        }
+        .ai-status {
+            border-top: 1px solid #eee;
+            margin-top: 12px;
+            padding-top: 12px;
+            color: #666;
+            line-height: 1.7;
+        }
+        .ai-status b {
+            display: block;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .ai-step {
+            padding: 9px 0;
+            border-bottom: 1px solid #f0f0f0;
+            line-height: 1.6;
+        }
+        .ai-step:last-child {
+            border-bottom: 0;
+        }
+        .anchors, .float-tools {
+            display: none;
+        }
     </style>
 </head>
 <body data-mode="{{ mode }}">
@@ -361,7 +438,8 @@
     <div class="top-right"><span>Ozon API</span><span>AI运营助手</span><span id="top-skc">Dianxm000610</span></div>
 </div>
 
-<div class="page">
+<div class="workspace">
+<div class="page ozon-form-module">
     <div class="crumb">ozon产品 &gt; {{ '创建产品' if mode == 'create' else '在线产品 > 编辑' }}</div>
     <div class="actions-top">
         <button>一键翻译⌄</button>
@@ -535,6 +613,32 @@
     </section>
 </div>
 
+<aside class="ai-zone">
+    <section class="ai-card">
+        <div class="ai-card-title">AI区</div>
+        <div class="ai-card-body">
+            <div class="ai-main-actions">
+                <button class="ai-action" id="btn-ai-pick">选品 <span>选择/载入商品</span></button>
+                <button class="ai-action primary" id="btn-ai-category">自动分类 <span>AI匹配Ozon类目</span></button>
+                <button class="ai-action primary" id="btn-ai-fill">自动填充 <span>拉属性并填值</span></button>
+            </div>
+            <div class="ai-status" id="ai-status">
+                <b>当前状态</b>
+                左侧是店小秘 ozon-form-module 的表单还原；右侧只负责触发 AI 流程。
+            </div>
+        </div>
+    </section>
+    <section class="ai-card">
+        <div class="ai-card-title">执行顺序</div>
+        <div class="ai-card-body">
+            <div class="ai-step"><b>1. 选品</b><br>确认 SKC、店铺、采集数据和图片集。</div>
+            <div class="ai-step"><b>2. 自动分类</b><br>AI 像运营一样判断 Ozon 类目，程序验证 type_id。</div>
+            <div class="ai-step"><b>3. 自动填充</b><br>程序拉官方属性，AI 填重要字段，程序再验证。</div>
+        </div>
+    </section>
+</aside>
+</div>
+
 <div class="anchors">
     <a href="#base">基本信息</a>
     <a href="#sales">店小秘信息</a>
@@ -657,8 +761,82 @@ async function autoCategoryThenFill() {
     }
 }
 
+function setAiStatus(title, detail) {
+    $("ai-status").innerHTML = "<b>" + title + "</b>" + detail;
+}
+
+function pickProduct() {
+    pageState.storeId = $("store-select").value || pageState.storeId;
+    setAiStatus("已选品", "当前商品：" + pageState.skc + "<br>当前店铺：" + (pageState.storeId || "未选择"));
+}
+
+async function autoCategoryOnly(triggerId) {
+    var btn = $(triggerId || "btn-ai-category");
+    var oldText = btn.textContent;
+    pageState.storeId = $("store-select").value || pageState.storeId;
+    if (!pageState.storeId) {
+        alert("请先选择店铺");
+        return;
+    }
+    btn.disabled = true;
+    btn.textContent = "自动分类中...";
+    try {
+        var cat = await api("/api/ozon/" + encodeURIComponent(pageState.storeId) + "/listing/auto-category", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ skc: pageState.skc })
+        });
+        showWalletCategory(cat.category || cat.best_match || cat.result || cat);
+        setAiStatus("自动分类完成", "已匹配到 Ozon 类目，并展开左侧平台属性区。");
+    } catch (e) {
+        console.warn("auto category failed", e);
+        showWalletCategory({});
+        setAiStatus("自动分类使用兜底", "接口失败时暂时展示钱包类目兜底，后续需要程序验证。");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = oldText;
+    }
+}
+
+async function autoFillOnly() {
+    var btn = $("btn-ai-fill");
+    var oldText = btn.textContent;
+    pageState.storeId = $("store-select").value || pageState.storeId;
+    if (!pageState.storeId) {
+        alert("请先选择店铺");
+        return;
+    }
+    btn.disabled = true;
+    btn.textContent = "自动填充中...";
+    try {
+        var draft = await api("/api/ozon/" + encodeURIComponent(pageState.storeId) + "/listing/generate-draft", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ skc: pageState.skc })
+        });
+        if (draft.draft) {
+            showWalletCategory({
+                category_id: draft.draft.category_id,
+                type_id: draft.draft.type_id,
+                category_path: draft.draft.category_path
+            });
+        }
+        fillKnownWalletAttributes(draft.draft || draft);
+        setAiStatus("自动填充完成", "已根据 Ozon 属性定义和商品数据填充左侧表单。");
+    } catch (e) {
+        console.warn("auto fill failed", e);
+        setAiStatus("自动填充失败", e.message || "请检查商品、店铺和 Ozon API 配置。");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = oldText;
+    }
+}
+
 loadStores();
-$("btn-select-category").addEventListener("click", autoCategoryThenFill);
+$("btn-ai-pick").addEventListener("click", pickProduct);
+$("btn-ai-category").addEventListener("click", function () { autoCategoryOnly("btn-ai-category"); });
+$("btn-ai-fill").addEventListener("click", autoFillOnly);
+$("btn-select-category").addEventListener("click", function () { autoCategoryOnly("btn-select-category"); });
 </script>
 </body>
 </html>
