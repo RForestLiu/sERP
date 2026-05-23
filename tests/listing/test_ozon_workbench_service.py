@@ -90,6 +90,15 @@ class FakeCategoryFacade:
         }
 
 
+class FakeCategoryFacadeNoMatch(FakeCategoryFacade):
+    def match_category(self, store_id, product_info):
+        return {
+            "success": True,
+            "best_match": None,
+            "warning": "LLM 未返回可用匹配结果",
+        }
+
+
 class FakeBus:
     def publish(self, event):
         pass
@@ -108,6 +117,19 @@ def make_service():
     )
 
 
+def make_service_with_category(category_facade):
+    return ListingApplicationService(
+        draft_repo=FakeDraftRepo(),
+        ozon_api=FakeOzonApi(),
+        autofill_client=FakeAutoFill(),
+        settings_facade=FakeSettings(),
+        product_facade=FakeProductFacade(),
+        ozon_category_facade=category_facade,
+        event_bus=FakeBus(),
+        data_root="data",
+    )
+
+
 def test_generate_workbench_draft_for_wallet():
     service = make_service()
 
@@ -120,6 +142,17 @@ def test_generate_workbench_draft_for_wallet():
     assert result["validation"]["success"] is True
     assert any(attr["attribute_id"] == 11254 for attr in result["draft"]["attributes"])
     assert any(attr["attribute_id"] == 4180 and attr["value"] == "AI title" for attr in result["draft"]["attributes"])
+
+
+def test_auto_category_falls_back_to_wallet_rule_when_llm_returns_no_match():
+    service = make_service_with_category(FakeCategoryFacadeNoMatch())
+
+    result = service.auto_category("ozon_anling", {"skc": "WALLET-0006"})
+
+    assert result["success"] is True
+    assert result["match"]["id"] == 17027904
+    assert result["match"]["type_id"] == 93338
+    assert result["fallback"] == "wallet_rule"
 
 
 def test_official_rating_resolves_numeric_sku_before_rating_call():

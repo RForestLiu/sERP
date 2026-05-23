@@ -694,16 +694,27 @@ async function loadStores() {
 }
 
 function firstImage(product) {
+    if (product.thumbnail) return product.thumbnail;
     var images = product.images || product.product_images || [];
     if (images.length) {
         var img = images[0];
-        return img.url || img.src || img.path || img.local_url || "";
+        if (img.url || img.src || img.path || img.local_url) {
+            return img.url || img.src || img.path || img.local_url;
+        }
+        if (img.filename && product.skc) {
+            return "/product_images/" + encodeURIComponent(product.skc) + "/" + img.filename.split("/").map(encodeURIComponent).join("/");
+        }
     }
     var sets = product.image_sets || {};
     for (var key in sets) {
         if (Array.isArray(sets[key]) && sets[key].length) {
             var setImg = sets[key][0];
-            return setImg.url || setImg.src || setImg.path || setImg.local_url || "";
+            if (setImg.url || setImg.src || setImg.path || setImg.local_url) {
+                return setImg.url || setImg.src || setImg.path || setImg.local_url;
+            }
+            if (setImg.filename && product.skc) {
+                return "/product_images/" + encodeURIComponent(product.skc) + "/" + setImg.filename.split("/").map(encodeURIComponent).join("/");
+            }
         }
     }
     return "";
@@ -801,7 +812,7 @@ async function autoCategory() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ skc: pageState.skc })
         });
-        showCategory(data.category || data.best_match || data.result || data);
+        showCategory(data.category || data.match || data.best_match || data.result || data);
         setAiStatus("自动分类完成", "AI 已匹配 Ozon 类目，并展开左侧平台属性区。");
     } catch (e) {
         setAiStatus("自动分类失败", esc(e.message));

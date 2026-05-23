@@ -24,6 +24,7 @@ from ..domain.ozon_workbench import (
     WALLET_TYPE_ID,
     build_wallet_rich_content,
     collect_ozon_skus,
+    match_wallet_category,
     resolve_wallet_brand,
     rich_content_to_attribute_value,
     validate_workbench_payload,
@@ -361,6 +362,22 @@ class ListingApplicationService(ListingFacade):
             return {"success": False, "store_id": store_id, "error": result["error"]}
         best_match = result.get("best_match") or {}
         if not best_match.get("id"):
+            rule_match = match_wallet_category(product_info)
+            if rule_match.get("matched"):
+                return {
+                    "success": True,
+                    "store_id": store_id,
+                    "match": {
+                        "id": rule_match["description_category_id"],
+                        "type_id": rule_match["type_id"],
+                        "name": rule_match["name"],
+                        "path": rule_match["path"],
+                        "confidence": rule_match["confidence"],
+                        "source": rule_match["source"],
+                    },
+                    "raw": result,
+                    "fallback": "wallet_rule",
+                }
             return {
                 "success": False,
                 "store_id": store_id,
