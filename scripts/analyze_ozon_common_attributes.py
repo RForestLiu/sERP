@@ -81,7 +81,7 @@ selected = []
 for parent, cats in sorted(by_parent.items()):
     if cats:
         selected.append(cats[0])  # First type from each branch
-    if len(selected) >= 12:
+    if len(selected) >= 20:
         break
 
 print(f"Selected {len(selected)} categories from different branches:")

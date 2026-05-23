@@ -804,6 +804,12 @@ var pageState = {
     categoryAttributes: []
 };
 
+var PUBLIC_OZON_ATTRIBUTE_IDS = new Set([
+    85, 8229, 4180, 4191, 9024, 23171, 11254, 22232, 22390,
+    21837, 21841, 21845, 22273, 8789, 8790, 4383, 4389,
+    9048, 23249, 11650, 4497
+]);
+
 function $(id) { return document.getElementById(id); }
 
 function esc(value) {
@@ -1048,14 +1054,21 @@ function renderAttributeInput(attr) {
     return '<input class="input" data-attr-id="' + id + '" data-attr-type="' + esc(attr.type || "String") + '" placeholder="' + esc(attr.type || "String") + '">';
 }
 
+function isPublicOzonAttribute(attr) {
+    var attrId = Number(attr && (attr.id || attr.attribute_id));
+    return PUBLIC_OZON_ATTRIBUTE_IDS.has(attrId);
+}
+
 function renderCategoryAttributes(attrs) {
-    pageState.categoryAttributes = attrs || [];
+    attrs = attrs || [];
+    var dynamicAttrs = attrs.filter(function (attr) { return !isPublicOzonAttribute(attr); });
+    pageState.categoryAttributes = dynamicAttrs;
     var area = $("attr-area");
-    if (!attrs.length) {
-        area.innerHTML = '<div class="attr-empty">当前分类没有返回可填写属性，请换一个更具体的末级分类。</div>';
+    if (!dynamicAttrs.length) {
+        area.innerHTML = '<div class="attr-empty">当前分类没有返回非公共产品属性；公共属性请在基础信息、产品信息、描述信息、变种、图片/视频等固定区域填写。</div>';
         return;
     }
-    area.innerHTML = attrs.map(function (attr) {
+    area.innerHTML = dynamicAttrs.map(function (attr) {
         return '<div class="attr-line">' +
             '<div class="attr-label">' + attrLabel(attr) + '</div>' +
             '<div class="attr-control-wrap" data-attr-wrap="' + esc(attr.id || "") + '">' +
