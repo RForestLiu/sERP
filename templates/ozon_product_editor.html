@@ -416,6 +416,82 @@
         .category-dependent.is-hidden {
             display: none;
         }
+        .category-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, .35);
+        }
+        .category-modal {
+            width: 760px;
+            max-height: 78vh;
+            background: #fff;
+            border: 1px solid #d9d9d9;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, .18);
+            display: flex;
+            flex-direction: column;
+        }
+        .category-modal-header {
+            height: 44px;
+            padding: 0 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #eee;
+            font-size: 15px;
+            font-weight: 700;
+        }
+        .category-modal-body {
+            padding: 12px;
+            overflow: hidden;
+        }
+        .category-search {
+            width: 100%;
+            height: 34px;
+            border: 1px solid #d8d8d8;
+            padding: 6px 10px;
+            margin-bottom: 10px;
+        }
+        .category-tree {
+            height: 420px;
+            border: 1px solid #eee;
+            overflow-y: auto;
+            background: #fff;
+        }
+        .category-node {
+            min-height: 30px;
+            padding: 7px 12px;
+            cursor: pointer;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            border-bottom: 1px solid #f7f7f7;
+        }
+        .category-node:hover { background: #f2fbff; }
+        .category-node.selected {
+            background: #dff2ff;
+            box-shadow: inset 3px 0 0 #2f8fca;
+        }
+        .category-name-cn { color: #333; font-weight: 700; }
+        .category-name-ru { color: #777; margin-left: 4px; }
+        .category-path-preview {
+            min-height: 32px;
+            padding: 8px 2px 0;
+            color: #666;
+            line-height: 1.6;
+        }
+        .category-modal-footer {
+            height: 52px;
+            border-top: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 0 14px;
+        }
         .bottom-actions {
             position: fixed;
             left: 0;
@@ -641,6 +717,26 @@
     </aside>
 </div>
 
+<div class="category-modal-overlay" id="category-modal">
+    <div class="category-modal">
+        <div class="category-modal-header">
+            <span>选择 Ozon 产品分类</span>
+            <button type="button" class="link" id="btn-close-category">关闭</button>
+        </div>
+        <div class="category-modal-body">
+            <input class="category-search" id="category-search" placeholder="搜索分类名称 / 俄文名称">
+            <div class="category-tree" id="category-tree">
+                <div class="hint" style="padding:12px">点击后加载 Ozon 分类树...</div>
+            </div>
+            <div class="category-path-preview" id="category-preview">请选择一个末级分类</div>
+        </div>
+        <div class="category-modal-footer">
+            <button type="button" id="btn-cancel-category">取消</button>
+            <button type="button" class="blue" id="btn-confirm-category" disabled>确认选择</button>
+        </div>
+    </div>
+</div>
+
 <div class="bottom-actions">
     <button>一键翻译⌄</button>
     <button>存为模板</button>
@@ -657,7 +753,10 @@ var pageState = {
     storeId: query.get("store_id") || "",
     skc: query.get("skc") || "",
     product: null,
-    pendingProductSkc: ""
+    pendingProductSkc: "",
+    categoryTree: null,
+    categoryFlat: [],
+    selectedCategory: null
 };
 
 function $(id) { return document.getElementById(id); }
@@ -805,10 +904,12 @@ function confirmProductSelection() {
 }
 
 function showCategory(match) {
+    match = match || {};
     var categoryId = match.description_category_id || match.category_id || match.id || 17027904;
-    var typeId = match.type_id || 93338;
+    var typeId = match.type_id || match.category_type_id || 93338;
+    var name = match.name || match.category_name || match.type_name || "钱包(Кошелек)";
     var path = match.path || match.category_path || "小百货和配饰(Галантерея и аксессуары) > 配饰(Аксессуары) > 钱包(Кошелек)";
-    $("category-select").innerHTML = '<option value="' + esc(categoryId) + '">钱包(Кошелек)</option>';
+    $("category-select").innerHTML = '<option value="' + esc(categoryId) + '">' + esc(name) + '</option>';
     $("cat-path").className = "cat-path";
     $("cat-path").textContent = path + " / type_id: " + typeId;
     $("attr-row").style.display = "grid";
@@ -817,9 +918,173 @@ function showCategory(match) {
     });
 }
 
-function openManualCategoryTree() {
-    showCategory({});
-    setAiStatus("人工选择分类", "左侧是人工操作：这里先展开分类结果占位，后续接分类树弹窗。");
+function nodeId(node) {
+    return node.type_id || node.description_category_id || node.id;
+}
+
+function nodeName(node) {
+    return node.type_name || node.category_name || node.name || "";
+}
+
+function nodeCnName(node) {
+    return node._name_cn || "";
+}
+
+function categoryLabel(node) {
+    var name = nodeName(node);
+    var cn = nodeCnName(node);
+    return cn && cn !== name ? cn + "(" + name + ")" : name;
+}
+
+function makeCategoryItem(node, path, inheritedCategoryId) {
+    var label = categoryLabel(node);
+    var currentPath = path ? path + " > " + label : label;
+    var categoryId = node.description_category_id || inheritedCategoryId || nodeId(node);
+    var typeId = node.type_id || null;
+    return {
+        description_category_id: categoryId,
+        type_id: typeId || categoryId,
+        name: label,
+        raw_name: nodeName(node),
+        path: currentPath,
+        search: (currentPath + " " + nodeName(node) + " " + nodeCnName(node)).toLowerCase()
+    };
+}
+
+function categoryTitleHtml(label) {
+    var parts = label.match(/^(.*)\((.*)\)$/);
+    if (parts) {
+        return '<span class="category-name-cn">' + esc(parts[1]) + '</span><span class="category-name-ru">' + esc(parts[2]) + '</span>';
+    }
+    return '<span class="category-name-cn">' + esc(label) + '</span>';
+}
+
+function buildCategoryIndex(nodes) {
+    var flat = [];
+    function walk(items, path, inheritedCategoryId) {
+        items.forEach(function (node) {
+            var item = makeCategoryItem(node, path, inheritedCategoryId);
+            var children = node.children || [];
+            if (children.length) {
+                walk(children, item.path, item.description_category_id);
+            } else {
+                flat.push(item);
+            }
+        });
+    }
+    walk(nodes || [], "", null);
+    return flat;
+}
+
+async function loadCategoryTree() {
+    if (pageState.categoryTree) return;
+    pageState.storeId = $("store-select").value || pageState.storeId;
+    if (!pageState.storeId) {
+        alert("请先选择店铺");
+        return;
+    }
+    $("category-tree").innerHTML = '<div class="hint" style="padding:12px">正在加载 Ozon 分类树...</div>';
+    var data = await api("/api/ozon/" + encodeURIComponent(pageState.storeId) + "/category-tree");
+    if (!data.success) throw new Error(data.error || "分类树加载失败");
+    pageState.categoryTree = data.category_tree || [];
+    pageState.categoryFlat = buildCategoryIndex(pageState.categoryTree);
+}
+
+function renderCategoryResults(keyword) {
+    var tree = $("category-tree");
+    var q = (keyword || "").trim().toLowerCase();
+    if (!q) {
+        renderCategoryTree(pageState.categoryTree || []);
+        return;
+    }
+    var list = pageState.categoryFlat.filter(function (item) {
+        return item.search.indexOf(q) >= 0;
+    }).slice(0, 300);
+    if (!list.length) {
+        tree.innerHTML = '<div class="hint" style="padding:12px">没有找到匹配分类</div>';
+        return;
+    }
+    tree.innerHTML = list.map(function (item, index) {
+        var title = categoryTitleHtml(item.name);
+        return '<div class="category-node" data-index="' + index + '">' +
+            '<span>□</span><span>' + title + '<span style="color:#aaa;margin-left:8px">ID: ' + esc(item.description_category_id) + ' / type: ' + esc(item.type_id) + '</span></span>' +
+            '</div>';
+    }).join("");
+    tree.querySelectorAll(".category-node").forEach(function (el) {
+        el.addEventListener("click", function () {
+            var selected = list[Number(el.dataset.index)];
+            pageState.selectedCategory = selected;
+            tree.querySelectorAll(".category-node").forEach(function (node) {
+                node.classList.remove("selected");
+            });
+            el.classList.add("selected");
+            $("category-preview").textContent = selected.path;
+            $("btn-confirm-category").disabled = false;
+        });
+    });
+}
+
+function renderCategoryTree(nodes) {
+    var tree = $("category-tree");
+    tree.innerHTML = "";
+
+    function draw(node, depth, path, inheritedCategoryId) {
+        var children = node.children || [];
+        var item = makeCategoryItem(node, path, inheritedCategoryId);
+        var row = document.createElement("div");
+        row.className = "category-node";
+        row.style.paddingLeft = (12 + depth * 18) + "px";
+        row.innerHTML = '<span>' + (children.length ? (node._expanded ? "▾" : "▸") : "□") + '</span><span>' +
+            categoryTitleHtml(item.name) +
+            '<span style="color:#aaa;margin-left:8px">ID: ' + esc(item.description_category_id) + (children.length ? "" : " / type: " + esc(item.type_id)) + '</span></span>';
+        row.addEventListener("click", function () {
+            if (children.length) {
+                node._expanded = !node._expanded;
+                renderCategoryTree(pageState.categoryTree || []);
+                return;
+            }
+            pageState.selectedCategory = item;
+            tree.querySelectorAll(".category-node").forEach(function (nodeEl) {
+                nodeEl.classList.remove("selected");
+            });
+            row.classList.add("selected");
+            $("category-preview").textContent = item.path;
+            $("btn-confirm-category").disabled = false;
+        });
+        tree.appendChild(row);
+        if (children.length && node._expanded) {
+            children.forEach(function (child) {
+                draw(child, depth + 1, item.path, item.description_category_id);
+            });
+        }
+    }
+
+    (nodes || []).forEach(function (node) {
+        draw(node, 0, "", null);
+    });
+}
+
+async function openManualCategoryTree() {
+    $("category-modal").style.display = "flex";
+    $("btn-confirm-category").disabled = true;
+    $("category-preview").textContent = "请选择一个末级分类";
+    try {
+        await loadCategoryTree();
+        renderCategoryResults($("category-search").value);
+    } catch (e) {
+        $("category-tree").innerHTML = '<div class="hint" style="padding:12px;color:#d9534f">加载失败：' + esc(e.message) + '</div>';
+    }
+}
+
+function closeManualCategoryTree() {
+    $("category-modal").style.display = "none";
+}
+
+function confirmManualCategory() {
+    if (!pageState.selectedCategory) return;
+    showCategory(pageState.selectedCategory);
+    closeManualCategoryTree();
+    setAiStatus("人工选择分类", "已按左侧人工选择回填分类：" + esc(pageState.selectedCategory.path));
 }
 
 async function autoCategory() {
@@ -912,6 +1177,15 @@ function init() {
         if (event.key === "Enter") searchProducts();
     });
     $("btn-select-category").addEventListener("click", openManualCategoryTree);
+    $("btn-close-category").addEventListener("click", closeManualCategoryTree);
+    $("btn-cancel-category").addEventListener("click", closeManualCategoryTree);
+    $("btn-confirm-category").addEventListener("click", confirmManualCategory);
+    $("category-modal").addEventListener("click", function (event) {
+        if (event.target === $("category-modal")) closeManualCategoryTree();
+    });
+    $("category-search").addEventListener("input", function () {
+        renderCategoryResults(this.value);
+    });
     $("btn-ai-category").addEventListener("click", autoCategory);
     $("btn-ai-fill").addEventListener("click", autoFill);
 }
