@@ -126,7 +126,7 @@ def create_ozon_category_facade(data_root: str, settings_facade, event_bus):
 
     # API 和 LLM 客户端
     ozon_api = OzonApiClient(_get_ozon_credentials)
-    llm_config = DeepSeekLLMClient.resolve_config(settings_facade, "translation")
+    llm_config = DeepSeekLLMClient.resolve_config(settings_facade, "ozon_category_match")
     llm_client = DeepSeekLLMClient(llm_config)
 
     # 应用服务

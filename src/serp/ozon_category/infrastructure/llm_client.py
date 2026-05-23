@@ -41,6 +41,9 @@ class DeepSeekLLMClient:
         temperature: float = 0.1,
         max_tokens: int = 32768,
         json_format: bool = False,
+        tools: Optional[list[dict]] = None,
+        tool_choice: Optional[dict | str] = None,
+        thinking: Optional[dict] = None,
     ) -> tuple[Optional[dict], str]:
         """
         调用 DeepSeek LLM。
@@ -62,10 +65,16 @@ class DeepSeekLLMClient:
         }
         if json_format:
             payload["response_format"] = {"type": "json_object"}
+        if tools:
+            payload["tools"] = tools
+        if tool_choice:
+            payload["tool_choice"] = tool_choice
+        if thinking:
+            payload["thinking"] = thinking
 
         try:
             resp = requests.post(
-                self._base_url,
+                self._request_url(tools),
                 headers={
                     "Authorization": f"Bearer {self._api_key}",
                     "Content-Type": "application/json",
@@ -81,6 +90,13 @@ class DeepSeekLLMClient:
         except Exception as e:
             logger.error("[DeepSeek] 调用异常: %s", e)
             return None, str(e)
+
+    def _request_url(self, tools: Optional[list[dict]] = None) -> str:
+        """Route strict DeepSeek tool schemas through the beta endpoint."""
+        has_strict_tool = any((t.get("function") or {}).get("strict") is True for t in (tools or []))
+        if has_strict_tool and self._base_url == "https://api.deepseek.com/v1/chat/completions":
+            return "https://api.deepseek.com/beta/chat/completions"
+        return self._base_url
 
     def translate(self, prompt: str, batch_label: str = "翻译") -> tuple[dict[str, str], int, int]:
         """

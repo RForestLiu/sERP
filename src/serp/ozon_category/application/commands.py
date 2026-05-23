@@ -211,11 +211,12 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
 
         tree = self._load_or_fetch_tree(store_id)
         translations = self._trans_cache_repo.load(store_id)
-        excluded_ids = self._excluded_repo.load(store_id)
+        excluded_ids = set()
 
         logger.info("[品类匹配] store=%s, 标题=%s", store_id, product_title[:80])
 
         best_match = None
+        trace = []
         frame_stack = [{
             "nodes": tree.root_nodes,
             "parent_path": [],
@@ -254,7 +255,7 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
             all_leaves = all(c["is_leaf"] for c in candidates)
 
             # 叶子层候选少时用批量关键词验证
-            if all_leaves and len(candidates) <= 20:
+            if False and all_leaves and len(candidates) <= 20:
                 logger.info("[品类匹配] 叶子层 %s 个候选，批量验证", len(candidates))
                 first_c = candidates[0]
                 group_vid = int(first_c.get("description_category_id") or first_c.get("validation_id") or first_c["id"])
@@ -314,24 +315,45 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
             logger.info("[品类匹配] 第 %s 层: %s 个候选 (LLM)", depth, len(candidates))
             chosen_id = None
             for attempt in range(2):
+                allow_no_match = depth > 0 or all_leaves
                 prompt = CategoryMatchingService.build_level_prompt(
                     candidates, product_title, product_category, product_description,
                     f"可选品类（当前层级：{path_desc}）",
+                    allow_null=allow_no_match,
                 )
+                match_tool = CategoryMatchingService.build_category_match_tool(candidates, allow_no_match)
                 llm_response, llm_err = self._llm_client.call(
                     "你是 Ozon 电商品类匹配专家。必须只返回 JSON 对象，字段为 category_id 和 reason；category_id 必须是候选列表里的 ID 或 null。",
                     prompt,
                     0.1,
                     256,
+                    tools=[match_tool],
+                    tool_choice={"type": "function", "function": {"name": "select_ozon_category"}},
+                    thinking={"type": "disabled"},
                 )
                 if llm_err or not llm_response:
+                    trace.append({
+                        "depth": depth,
+                        "path": path_desc,
+                        "candidate_count": len(candidates),
+                        "candidate_ids": [c["id"] for c in candidates[:20]],
+                        "llm_error": llm_err or "empty_response",
+                    })
                     frame["llm_fails"] += 1
                     continue
-                llm_text = llm_response.get("choices", [{}])[0].get("message", {}).get("content", "")
+                llm_text = CategoryMatchingService.extract_match_response_text(llm_response)
                 valid_ids = {str(c["id"]) for c in candidates}
                 cid, parse_err = CategoryMatchingService.parse_match_response(
                     llm_text, valid_ids
                 )
+                trace.append({
+                    "depth": depth,
+                    "path": path_desc,
+                    "candidate_count": len(candidates),
+                    "candidate_ids": [c["id"] for c in candidates[:20]],
+                    "llm_text": llm_text[:500],
+                    "parse_error": parse_err,
+                })
                 if parse_err:
                     logger.warning("[品类匹配] 解析失败: %s", parse_err)
                     frame["llm_fails"] += 1
@@ -415,6 +437,7 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
             "best_match": best_match,
             "elapsed": round(elapsed, 1),
             "warning": "" if best_match else "LLM 未返回可用匹配结果",
+            "trace": trace[-8:],
         }
 
     def get_category_attributes(self, store_id: str, category_id: int, type_id: int | None = None) -> dict:

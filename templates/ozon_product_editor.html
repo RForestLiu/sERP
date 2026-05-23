@@ -1208,7 +1208,7 @@ async function autoCategory() {
         var prodData = pageState.product && pageState.product.product_data ? pageState.product.product_data : {};
         var description = [prodData.about_item, prodData.product_description, prodData.description]
             .filter(Boolean).join(" ");
-        var data = await api("/api/ozon/" + encodeURIComponent(pageState.storeId) + "/match-category", {
+        var res = await fetch("/api/ozon/" + encodeURIComponent(pageState.storeId) + "/match-category", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -1217,8 +1217,19 @@ async function autoCategory() {
                 product_description: description
             })
         });
+        var data = await res.json().catch(function () { return {}; });
+        if (!res.ok) throw new Error(data.error || "HTTP " + res.status);
         if (!data.success || !data.best_match || !data.best_match.id) {
-            throw new Error(data.error || data.warning || "LLM 未返回可用匹配结果");
+            var detail = data.error || data.warning || "LLM 未返回可用匹配结果";
+            if (data.trace && data.trace.length) {
+                var last = data.trace[data.trace.length - 1];
+                detail += "<br>最后层级：" + esc(last.path || "") +
+                    "<br>候选数：" + esc(last.candidate_count || 0) +
+                    "<br>AI回复：" + esc(last.llm_text || "");
+                if (last.llm_error) detail += "<br>LLM错误：" + esc(last.llm_error);
+            }
+            setAiStatus("自动分类失败", detail);
+            return;
         }
         showCategory(data.best_match);
         setAiStatus("自动分类完成", "AI 已匹配 Ozon 类目，并展开左侧平台属性区。");

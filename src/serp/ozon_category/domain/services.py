@@ -105,6 +105,7 @@ class CategoryMatchingService:
         product_category: str,
         product_description: str,
         level_desc: str,
+        allow_null: bool = True,
     ) -> str:
         """构建当前层候选的 LLM prompt"""
         cand_lines = []
@@ -114,6 +115,12 @@ class CategoryMatchingService:
                 display = f"{c['name']}（{c['cn']}）"
             leaf_mark = "" if c["is_leaf"] else " [含子品类]"
             cand_lines.append(f"[{c['id']}] {display}{leaf_mark}")
+
+        null_instruction = (
+            '如果候选都不合适，返回 {"category_id": null, "reason": "<原因>"}。'
+            if allow_null
+            else "必须选择最接近的一个候选；不要返回 null。即使不确定，也选择最可能继续通向正确叶子类目的上级分类。"
+        )
 
         return f"""## 产品信息
 标题: {product_title or "未提供"}
@@ -125,8 +132,53 @@ class CategoryMatchingService:
 
 请选择最匹配的一个品类。必须返回严格 JSON：
 {{"category_id": <候选列表中的ID或null>, "reason": "<简短理由>"}}
-如果都不合适，返回 {{"category_id": null, "reason": "<原因>"}}。
+{null_instruction}
 """
+
+    @staticmethod
+    def build_category_match_tool(candidates: list[dict], allow_null: bool) -> dict:
+        """Build the strict tool schema used for one category matching decision."""
+        candidate_ids = [str(c["id"]) for c in candidates]
+        if allow_null:
+            candidate_ids.append("__NONE__")
+        return {
+            "type": "function",
+            "function": {
+                "name": "select_ozon_category",
+                "description": "Select the best Ozon category candidate for the product.",
+                "strict": True,
+                "parameters": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        "category_id": {
+                            "type": "string",
+                            "description": "Must be one candidate id from the current list; use __NONE__ only when allowed and no leaf fits.",
+                            "enum": candidate_ids,
+                        },
+                        "reason": {
+                            "type": "string",
+                            "description": "Short business reason for the choice.",
+                        },
+                        "confidence": {
+                            "type": "number",
+                            "description": "Confidence from 0 to 1.",
+                        },
+                    },
+                    "required": ["category_id", "reason", "confidence"],
+                },
+            },
+        }
+
+    @staticmethod
+    def extract_match_response_text(llm_response: dict) -> str:
+        """Extract category match JSON from a tool call first, then content."""
+        message = llm_response.get("choices", [{}])[0].get("message", {})
+        for tool_call in message.get("tool_calls") or []:
+            fn = tool_call.get("function") or {}
+            if fn.get("name") == "select_ozon_category":
+                return fn.get("arguments") or ""
+        return message.get("content") or ""
 
     @staticmethod
     def parse_match_response(llm_text: str, valid_ids: set[str]) -> tuple[int | None, str]:
@@ -149,7 +201,7 @@ class CategoryMatchingService:
         if "category_id" not in parsed:
             return None, "缺少 category_id 字段"
         chosen_id = parsed.get("category_id")
-        if chosen_id is None:
+        if chosen_id is None or chosen_id == "__NONE__":
             return None, ""  # LLM 认为无合适品类
         if str(chosen_id) not in valid_ids:
             return None, f"category_id {chosen_id} 不在候选列表"
