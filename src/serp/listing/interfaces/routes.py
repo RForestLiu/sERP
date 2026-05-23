@@ -61,6 +61,55 @@ def create_listing_blueprint(facade: ListingFacade) -> Blueprint:
             return jsonify(result), 502
         return jsonify(result)
 
+    @bp.route("/ozon/<store_id>/listing/auto-category", methods=["POST"])
+    def workbench_auto_category(store_id):
+        data = request.get_json() or {}
+        result = facade.auto_category(store_id, data)
+        if result.get("success") is False:
+            return jsonify(result), 400
+        return jsonify(result)
+
+    @bp.route("/ozon/<store_id>/listing/generate-draft", methods=["POST"])
+    def workbench_generate_draft(store_id):
+        data = request.get_json() or {}
+        result = facade.generate_workbench_draft(store_id, data)
+        if result.get("success") is False:
+            return jsonify(result), 400
+        return jsonify(result)
+
+    @bp.route("/ozon/<store_id>/listing/validate", methods=["POST"])
+    def workbench_validate(store_id):
+        data = request.get_json() or {}
+        result = facade.validate_workbench_payload(store_id, data)
+        if result.get("success") is False:
+            return jsonify(result), 400
+        return jsonify(result)
+
+    @bp.route("/ozon/<store_id>/listing/prepare-images", methods=["POST"])
+    def workbench_prepare_images(store_id):
+        data = request.get_json() or {}
+        data.setdefault("base_url", request.host_url.rstrip("/"))
+        result = facade.prepare_images(store_id, data)
+        if result.get("success") is False:
+            return jsonify(result), 400
+        return jsonify(result)
+
+    @bp.route("/ozon/<store_id>/listing/upsert", methods=["POST"])
+    def workbench_upsert(store_id):
+        data = request.get_json() or {}
+        result = facade.upsert_workbench(store_id, data)
+        if result.get("success") is False:
+            return jsonify(result), 400
+        return jsonify(result)
+
+    @bp.route("/ozon/<store_id>/listing/official-rating", methods=["POST"])
+    def workbench_official_rating(store_id):
+        data = request.get_json() or {}
+        result = facade.official_rating(store_id, data)
+        if result.get("success") is False:
+            return jsonify(result), 502
+        return jsonify(result)
+
     # ── Ozon 导入状态查询 ──
 
     @bp.route("/ozon/<store_id>/listing/check-import", methods=["GET"])

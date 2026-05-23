@@ -19,6 +19,15 @@ from ..domain.services import (
     AttributePresetMatcher,
     DeterministicPreFiller,
 )
+from ..domain.ozon_workbench import (
+    WALLET_CATEGORY_ID,
+    WALLET_TYPE_ID,
+    build_wallet_rich_content,
+    collect_ozon_skus,
+    match_wallet_category,
+    rich_content_to_attribute_value,
+    validate_workbench_payload,
+)
 from ..domain.events import (
     ListingSimulated,
     ProductImportedToOzon,
@@ -337,6 +346,143 @@ class ListingApplicationService(ListingFacade):
             "message": f"同步完成：{matched} 个匹配，{updated} 个状态更新，{new_skus} 个新SKU待注册",
         }
 
+    # ── Ozon Workbench ──
+
+    def auto_category(self, store_id: str, data: dict) -> dict:
+        product = self._find_product_by_skc(data.get("skc", ""))
+        product_info = dict(product or {})
+        product_info.update(data)
+        match = match_wallet_category(product_info)
+        return {"success": True, "store_id": store_id, "match": match}
+
+    def generate_workbench_draft(self, store_id: str, data: dict) -> dict:
+        skc = data.get("skc", "")
+        product = self._find_product_by_skc(skc) or {}
+        product_data = product.get("product_data", {}) or {}
+        manual_data = product.get("manual_data", {}) or {}
+        category = match_wallet_category({**product, **data})
+        image_urls = self._extract_input_image_urls(data.get("images", []))
+
+        offer_id = data.get("offer_id") or (product.get("skus") or [skc])[0] if (product.get("skus") or [skc]) else skc
+        title = data.get("name") or self._default_wallet_title(product, offer_id)
+        description = data.get("description") or self._default_wallet_description(product)
+        price = str(data.get("price") or product.get("price") or "99.00")
+
+        attrs = self._default_wallet_attributes(
+            offer_id=offer_id,
+            title=title,
+            description=description,
+            product_data=product_data,
+            manual_data=manual_data,
+            image_urls=image_urls,
+        )
+        skus = self._default_workbench_skus(product, offer_id, price, data.get("skus") or [])
+        draft = {
+            "skc": skc,
+            "store_id": store_id,
+            "name": title,
+            "description": description,
+            "price": price,
+            "offer_id": offer_id,
+            "category_id": category.get("description_category_id") or WALLET_CATEGORY_ID,
+            "type_id": category.get("type_id") or WALLET_TYPE_ID,
+            "category_match": category,
+            "attributes": attrs,
+            "images": data.get("images") or [],
+            "skus": skus,
+            "llm_sessions": [],
+        }
+        validation = validate_workbench_payload(draft)
+        return {"success": True, "store_id": store_id, "draft": draft, "validation": validation}
+
+    def validate_workbench_payload(self, store_id: str, data: dict) -> dict:
+        report = validate_workbench_payload(data)
+        return {"success": True, "store_id": store_id, "report": report}
+
+    def prepare_images(self, store_id: str, data: dict) -> dict:
+        base_url = str(data.get("base_url") or "").rstrip("/")
+        prepared: list[dict] = []
+        warnings: list[str] = []
+        for img in data.get("images") or []:
+            if not isinstance(img, dict):
+                continue
+            url = str(img.get("url") or "").strip()
+            if url.startswith("/product_images/") and base_url:
+                new_img = dict(img)
+                new_img["url"] = base_url + url
+                new_img["public_url_status"] = "prepared_from_local_static"
+                prepared.append(new_img)
+            elif url.startswith(("http://", "https://")):
+                new_img = dict(img)
+                new_img["public_url_status"] = "already_public"
+                prepared.append(new_img)
+            else:
+                warnings.append(f"图片缺少公网 URL: {img.get('filename') or img.get('local_path') or url}")
+        return {
+            "success": True,
+            "store_id": store_id,
+            "images": prepared,
+            "prepared_count": len(prepared),
+            "warnings": warnings,
+            "provider": "existing-url",
+        }
+
+    def upsert_workbench(self, store_id: str, data: dict) -> dict:
+        report = validate_workbench_payload(data)
+        if not report["can_submit"]:
+            return {"success": False, "error": "Workbench 验证未通过", "validation": report}
+
+        ozon_attrs = self._format_ozon_attributes(data.get("attributes", []))
+        base_image_urls = self._extract_input_image_urls(data.get("images", []))
+        base_video_urls = [v.get("url", "") for v in data.get("videos", []) if v.get("url", "").startswith("http")]
+        weight, depth, width, height = self._extract_item_dimensions(data.get("skc", ""))
+        items = self._build_ozon_items(
+            skus=data.get("skus") or [],
+            name=data.get("name", ""),
+            price=data.get("price", ""),
+            offer_id=data.get("offer_id", ""),
+            barcode=data.get("barcode", ""),
+            category_id=data.get("category_id"),
+            type_id=data.get("type_id"),
+            description=data.get("description", ""),
+            ozon_attrs=ozon_attrs,
+            base_image_urls=base_image_urls,
+            base_video_urls=base_video_urls,
+            images=data.get("images", []),
+            weight=weight,
+            depth=depth,
+            width=width,
+            height=height,
+        )
+        if not items:
+            return {"success": False, "error": "没有可提交的商品变体", "validation": report}
+        result, err = self._ozon_api.call(store_id, "/v3/product/import", {"items": items})
+        if err:
+            return {"success": False, "error": f"Ozon 上架失败: {err}", "validation": report}
+        task_id = result.get("result", {}).get("task_id", "")
+        self._append_lifecycle(data.get("skc", ""), store_id, {
+            "event": "workbench_upsert_submitted",
+            "task_id": task_id,
+            "item_count": len(items),
+            "score": report["score"],
+        })
+        return {"success": True, "task_id": task_id, "item_count": len(items), "validation": report}
+
+    def official_rating(self, store_id: str, data: dict) -> dict:
+        skus = collect_ozon_skus(data.get("skus") or [])
+        offer_id = data.get("offer_id", "")
+        if not skus and offer_id:
+            product_info, err = self._ozon_api.call(store_id, "/v3/product/info/list", {"offer_id": [offer_id]})
+            if err:
+                return {"success": False, "error": f"Ozon product info failed: {err}"}
+            skus = collect_ozon_skus(product_info)
+        if not skus:
+            return {"success": False, "error": "未能解析 Ozon 数字 SKU"}
+        rating, err = self._ozon_api.call(store_id, "/v1/product/rating-by-sku", {"skus": skus})
+        if err:
+            return {"success": False, "error": f"Ozon content rating failed: {err}", "skus": skus}
+        return {"success": True, "store_id": store_id, "skus": skus, "result": rating}
+
     # ── Ozon 导入状态查询 ──
 
     def check_import_status(self, store_id: str, task_id: str) -> dict:
@@ -534,6 +680,97 @@ class ListingApplicationService(ListingFacade):
             if product.get("skc") == skc:
                 return product
         return None
+
+    @staticmethod
+    def _extract_input_image_urls(images: list) -> list[str]:
+        from ..domain.services import _extract_public_image_urls
+        return _extract_public_image_urls(images, 10)
+
+    @staticmethod
+    def _default_wallet_title(product: dict, offer_id: str) -> str:
+        text = str(product.get("title") or "")
+        color = "черный" if "black" in (text + " " + offer_id).lower() else ""
+        suffix = f", {color}" if color else ""
+        return f"Кошелек Bostanten {offer_id.replace('-BLACK', '')}{suffix}".strip()
+
+    @staticmethod
+    def _default_wallet_description(product: dict) -> str:
+        product_data = product.get("product_data", {}) or {}
+        source_text = " ".join(
+            str(product_data.get(key, ""))
+            for key in ("about_item", "product_description", "description")
+        ).strip()
+        if len(source_text) >= 300:
+            return source_text[:1800]
+        return (
+            "Женский кошелек Bostanten из прочного нейлона подходит для ежедневных дел, "
+            "поездок и прогулок. Компактный формат удобно помещается в сумку, а съемный "
+            "ремешок позволяет носить кошелек на запястье. Модель оснащена тремя "
+            "отделениями на молнии, слотами для карт, карманом для монет и местом для "
+            "документов. RFID-защита помогает снизить риск считывания банковских карт. "
+            "Черный цвет и аккуратный дизайн легко сочетаются с повседневным стилем."
+        )
+
+    @staticmethod
+    def _default_wallet_attributes(
+        offer_id: str,
+        title: str,
+        description: str,
+        product_data: dict,
+        manual_data: dict,
+        image_urls: list[str],
+    ) -> list[dict]:
+        brand = str(product_data.get("brand") or "Bostanten").strip()
+        brand_source = "product_data" if product_data.get("brand") else "operator"
+        rich_value = rich_content_to_attribute_value(image_urls) if len(image_urls) >= 3 else json.dumps(
+            build_wallet_rich_content([
+                "https://example.com/1.png",
+                "https://example.com/2.png",
+                "https://example.com/3.png",
+            ]),
+            ensure_ascii=False,
+        )
+        weight = manual_data.get("weight_g") or manual_data.get("effective_weight_g") or "200"
+        return [
+            {"attribute_id": 85, "value": brand, "dictionary_value_id": 971068372 if brand.lower() == "bostanten" else None, "source": brand_source},
+            {"attribute_id": 4180, "value": title, "source": "rule"},
+            {"attribute_id": 4191, "value": description, "source": "rule"},
+            {"attribute_id": 4383, "value": str(weight), "source": "rule"},
+            {"attribute_id": 4384, "value": "Кошелек, съемный ремешок", "source": "rule"},
+            {"attribute_id": 4389, "value": "Китай", "dictionary_value_id": 90296, "source": "rule"},
+            {"attribute_id": 5299, "value": "17.1", "source": "rule"},
+            {"attribute_id": 5309, "value": "Нейлон", "dictionary_value_id": 61965, "source": "rule"},
+            {"attribute_id": 5311, "value": "Металл", "dictionary_value_id": 61936, "source": "rule"},
+            {"attribute_id": 5313, "value": "Полиэстер", "dictionary_value_id": 62040, "source": "rule"},
+            {"attribute_id": 5344, "value": "Молния", "dictionary_value_id": 60850, "source": "rule"},
+            {"attribute_id": 5355, "value": "11.2", "source": "rule"},
+            {"attribute_id": 6573, "value": "2.5", "source": "rule"},
+            {"attribute_id": 8229, "value": "Кошелек", "dictionary_value_id": 93338, "source": "rule"},
+            {"attribute_id": 9024, "value": offer_id, "source": "rule"},
+            {"attribute_id": 9048, "value": offer_id.replace("-BLACK", ""), "source": "rule"},
+            {"attribute_id": 9163, "value": "Женский", "dictionary_value_id": 22881, "source": "rule"},
+            {"attribute_id": 9390, "value": "Взрослая", "dictionary_value_id": 43241, "source": "rule"},
+            {"attribute_id": 9661, "value": "1", "source": "rule"},
+            {"attribute_id": 9725, "value": "Базовая коллекция", "dictionary_value_id": 39116, "source": "rule"},
+            {"attribute_id": 10096, "value": "черный", "dictionary_value_id": 61574, "source": "rule"},
+            {"attribute_id": 10097, "value": "черный", "source": "rule"},
+            {"attribute_id": 10400, "value": "Без гарантии", "dictionary_value_id": 970960203, "source": "rule"},
+            {"attribute_id": 11254, "value": rich_value, "source": "rule"},
+            {"attribute_id": 11650, "value": "1", "source": "rule"},
+            {"attribute_id": 23171, "value": "#женский_кошелек #кошелек_на_молнии #rfid_защита #кошелек_на_запястье", "source": "rule"},
+            {"attribute_id": 23249, "value": "1", "source": "rule"},
+            {"attribute_id": 23287, "value": "Портмоне", "dictionary_value_id": 972848865, "source": "rule"},
+        ]
+
+    @staticmethod
+    def _default_workbench_skus(product: dict, offer_id: str, price: str, submitted_skus: list) -> list[dict]:
+        if submitted_skus:
+            return submitted_skus
+        skus = product.get("skus") or [offer_id]
+        return [
+            {"name": str(sku), "sku_code": str(sku), "price": price, "old_price": "", "stock": "10000", "barcode": "", "images": []}
+            for sku in skus
+        ]
 
     def _extract_item_dimensions(self, skc: str) -> tuple[int | None, int | None, int | None, int | None]:
         """从产品库提取重量(g)和尺寸(mm)，用于 Ozon item 层字段。

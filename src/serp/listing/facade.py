@@ -45,6 +45,36 @@ class ListingFacade(Facade, ABC):
         """同步 Ozon 在售商品"""
         ...
 
+    @abstractmethod
+    def auto_category(self, store_id: str, data: dict) -> dict:
+        """Workbench: 自动匹配 Ozon 类目"""
+        ...
+
+    @abstractmethod
+    def generate_workbench_draft(self, store_id: str, data: dict) -> dict:
+        """Workbench: 生成可验证的 Ozon 草稿"""
+        ...
+
+    @abstractmethod
+    def validate_workbench_payload(self, store_id: str, data: dict) -> dict:
+        """Workbench: 程序验证 Ozon 草稿"""
+        ...
+
+    @abstractmethod
+    def prepare_images(self, store_id: str, data: dict) -> dict:
+        """Workbench: 准备可提交的图片 URL"""
+        ...
+
+    @abstractmethod
+    def upsert_workbench(self, store_id: str, data: dict) -> dict:
+        """Workbench: 批量上架/更新"""
+        ...
+
+    @abstractmethod
+    def official_rating(self, store_id: str, data: dict) -> dict:
+        """Workbench: 查询 Ozon 官方内容评分"""
+        ...
+
     # ── Ozon 导入状态 ──
 
     @abstractmethod
