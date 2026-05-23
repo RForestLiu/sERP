@@ -52,6 +52,8 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
         self._llm_client = llm_client
         self._refresh_tasks: dict[str, dict] = {}
         self._translations_lock = threading.Lock()
+        self._attribute_values_cache: dict[tuple[str, int, int, int], list[dict]] = {}
+        self._attribute_values_lock = threading.Lock()
 
     # ==================== 查询 ====================
 
@@ -509,7 +511,11 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
                 "dictionary_values": [],
             }
 
-            if eattr["type"] == "dictionary" or eattr["dictionary_id"]:
+            enriched.append(eattr)
+
+        value_attrs = [a for a in enriched if a["type"] == "dictionary" or a["dictionary_id"]]
+        if value_attrs:
+            def _load_for_attr(eattr: dict) -> tuple[int, list[dict]]:
                 values_payload = {
                     "attribute_id": eattr["id"],
                     "description_category_id": category_id,
@@ -517,9 +523,16 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
                 }
                 if type_id:
                     values_payload["type_id"] = type_id
-                eattr["dictionary_values"] = self._load_attribute_values(store_id, values_payload)
+                return eattr["id"], self._load_attribute_values(store_id, values_payload)
 
-            enriched.append(eattr)
+            with ThreadPoolExecutor(max_workers=min(6, len(value_attrs))) as executor:
+                futures = [executor.submit(_load_for_attr, a) for a in value_attrs]
+                values_by_attr = {}
+                for future in as_completed(futures):
+                    attr_id, values = future.result()
+                    values_by_attr[attr_id] = values
+                for eattr in value_attrs:
+                    eattr["dictionary_values"] = values_by_attr.get(eattr["id"], [])
 
         # 翻译属性名
         if enriched:
@@ -548,6 +561,17 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
         }
 
     def _load_attribute_values(self, store_id: str, values_payload: dict) -> list[dict]:
+        cache_key = (
+            store_id,
+            int(values_payload.get("description_category_id") or 0),
+            int(values_payload.get("type_id") or 0),
+            int(values_payload.get("attribute_id") or 0),
+        )
+        with self._attribute_values_lock:
+            cached = self._attribute_values_cache.get(cache_key)
+        if cached is not None:
+            return list(cached)
+
         values: list[dict] = []
         payload = dict(values_payload)
         last_value_id = 0
@@ -566,6 +590,8 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
             last_value_id = batch[-1].get("id") or 0
             if not last_value_id:
                 break
+        with self._attribute_values_lock:
+            self._attribute_values_cache[cache_key] = list(values)
         return values
 
     # ==================== 内部方法 ====================

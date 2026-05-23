@@ -112,3 +112,16 @@ def test_category_attributes_load_values_for_string_dictionary_attributes():
     assert by_id[5309]["dictionary_values"] == [{"id": 61965, "value": "Нейлон"}]
     assert by_id[999]["dictionary_values"] == [{"id": 1, "value": "Да"}, {"id": 2, "value": "Нет"}]
     assert by_id[4180]["dictionary_values"] == []
+
+
+def test_category_attribute_values_are_cached():
+    api = FakeOzonApi()
+    service = make_service(api)
+
+    service.get_category_attributes("ozon_anling", 17027904, 93338)
+    first_value_call_count = sum(1 for endpoint, _ in api.calls if endpoint.endswith("/attribute/values"))
+    service.get_category_attributes("ozon_anling", 17027904, 93338)
+    second_value_call_count = sum(1 for endpoint, _ in api.calls if endpoint.endswith("/attribute/values"))
+
+    assert first_value_call_count == 2
+    assert second_value_call_count == first_value_call_count
