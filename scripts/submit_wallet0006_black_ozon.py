@@ -5,15 +5,20 @@ import os
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 import requests
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
 STORE_ID = "ozon_anling"
 OFFER_ID = "WALLET-0006-BLACK"
-SKU = OFFER_ID
+UPLOAD_CACHE = DATA / "ozon_live" / "wallet0006_black_image_urls.json"
 
 
 def load_env() -> None:
@@ -48,6 +53,73 @@ def ozon_post(endpoint: str, payload: dict) -> dict:
     return res.json()
 
 
+def _upload_to_0x0(path: Path, expires_hours: str) -> str:
+    with path.open("rb") as fh:
+        res = requests.post(
+            "https://0x0.st",
+            data={"expires": expires_hours},
+            files={"file": (path.name, fh, "image/png")},
+            timeout=90,
+        )
+    if res.status_code != 200:
+        raise RuntimeError(f"0x0 HTTP {res.status_code}: {res.text[:300]}")
+    url = res.text.strip()
+    if not url.startswith("https://"):
+        raise RuntimeError(f"0x0 returned unexpected response: {url[:300]}")
+    return url
+
+
+def _tmpfiles_direct_url(api_url: str) -> str:
+    if "/dl/" in api_url:
+        return api_url
+    return api_url.replace("https://tmpfiles.org/", "https://tmpfiles.org/dl/", 1)
+
+
+def _upload_to_tmpfiles(path: Path) -> str:
+    with path.open("rb") as fh:
+        res = requests.post(
+            "https://tmpfiles.org/api/v1/upload",
+            files={"file": (path.name, fh, "image/png")},
+            timeout=90,
+        )
+    if res.status_code != 200:
+        raise RuntimeError(f"tmpfiles HTTP {res.status_code}: {res.text[:300]}")
+    try:
+        data: dict[str, Any] = res.json()
+    except ValueError as exc:
+        raise RuntimeError(f"tmpfiles returned non-JSON response: {res.text[:300]}") from exc
+    url = data.get("data", {}).get("url")
+    if not isinstance(url, str) or not url.startswith("https://tmpfiles.org/"):
+        raise RuntimeError(f"tmpfiles returned unexpected response: {data}")
+    return _tmpfiles_direct_url(url)
+
+
+def _load_cached_image_urls() -> list[str]:
+    if "--no-cache" in sys.argv or not UPLOAD_CACHE.exists():
+        return []
+    try:
+        data = json.loads(UPLOAD_CACHE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    urls = data.get("urls", [])
+    if isinstance(urls, list) and all(isinstance(url, str) for url in urls) and len(urls) >= 5:
+        print(f"using cached public image URLs: {len(urls)} ({UPLOAD_CACHE})", flush=True)
+        return urls
+    return []
+
+
+def _save_cached_image_urls(urls: list[str], provider: str) -> None:
+    UPLOAD_CACHE.parent.mkdir(exist_ok=True)
+    UPLOAD_CACHE.write_text(
+        json.dumps(
+            {"provider": provider, "urls": urls, "created_at": time.strftime("%Y-%m-%d %H:%M:%S")},
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+
 def upload_public_images() -> list[str]:
     configured = os.environ.get("OZON_WALLET0006_BLACK_IMAGE_URLS", "").strip()
     if configured:
@@ -56,10 +128,15 @@ def upload_public_images() -> list[str]:
             print(f"using configured public image URLs: {len(urls)}", flush=True)
             return urls
 
-    if "--upload-0x0" not in sys.argv:
+    should_upload = "--upload-0x0" in sys.argv or "--upload-tempfiles" in sys.argv
+    if not should_upload:
+        cached = _load_cached_image_urls()
+        if cached:
+            return cached
         raise RuntimeError(
             "No public image URLs configured. Set OZON_WALLET0006_BLACK_IMAGE_URLS "
-            "or rerun with --upload-0x0 after explicitly approving third-party public image hosting."
+            "or rerun with --upload-0x0 after explicitly approving third-party public image hosting. "
+            "Use --no-cache to ignore cached temporary URLs."
         )
 
     image_dir = DATA / "collect_amz_f5d272d6" / "images" / "Black"
@@ -71,22 +148,125 @@ def upload_public_images() -> list[str]:
 
     urls: list[str] = []
     expires_hours = os.environ.get("OZON_IMAGE_EXPIRES_HOURS", "720")
-    for path in paths[:6]:
-        with path.open("rb") as fh:
-            res = requests.post(
-                "https://0x0.st",
-                data={"expires": expires_hours},
-                files={"file": (path.name, fh)},
-                timeout=90,
-            )
-        if res.status_code != 200:
-            raise RuntimeError(f"image upload failed for {path.name}: HTTP {res.status_code} {res.text[:300]}")
-        url = res.text.strip()
-        if not url.startswith("https://"):
-            raise RuntimeError(f"image upload returned unexpected URL for {path.name}: {url}")
+    provider = "0x0" if "--upload-0x0" in sys.argv else "tmpfiles"
+    cache_provider = provider
+    if provider == "0x0":
+        print(f"upload provider=0x0 expires_hours={expires_hours}", flush=True)
+        print("fallback provider=tmpfiles if 0x0 is unavailable", flush=True)
+    else:
+        print("upload provider=tmpfiles expires=about 60 minutes", flush=True)
+
+    for index, path in enumerate(paths[:6], start=1):
+        print(f"uploading image {index}/{min(6, len(paths))}: {path.name} ({path.stat().st_size} bytes)", flush=True)
+        try:
+            if provider == "0x0":
+                try:
+                    url = _upload_to_0x0(path, expires_hours)
+                except RuntimeError as exc:
+                    print(f"0x0 upload failed for {path.name}: {exc}", flush=True)
+                    print("retrying with tmpfiles", flush=True)
+                    url = _upload_to_tmpfiles(path)
+                    cache_provider = "tmpfiles"
+            else:
+                url = _upload_to_tmpfiles(path)
+        except requests.RequestException as exc:
+            raise RuntimeError(f"{provider} upload failed for {path.name}: {exc}") from exc
         urls.append(url)
-        print(f"uploaded image {len(urls)}: {url}", flush=True)
+        print(f"uploaded image {index}: {url}", flush=True)
+    _save_cached_image_urls(urls, cache_provider)
+    print(f"saved image URL cache: {UPLOAD_CACHE}", flush=True)
     return urls
+
+
+def build_rich_content(image_urls: list[str]) -> str:
+    blocks = [
+        {
+            "imgLink": "",
+            "img": {
+                "src": image_urls[0],
+                "srcMobile": image_urls[0],
+                "alt": "Черный женский кошелек Bostanten",
+                "position": "width_full",
+                "positionMobile": "width_full",
+                "width": 900,
+                "height": 1200,
+                "widthMobile": 640,
+                "heightMobile": 853,
+            },
+            "title": {
+                "content": ["Компактный кошелек на каждый день"],
+                "size": "size4",
+                "align": "left",
+                "color": "color1",
+            },
+            "text": {
+                "size": "size2",
+                "align": "left",
+                "color": "color1",
+                "content": [
+                    "Черный женский кошелек Bostanten удобно носить в сумке или на запястье благодаря съемному ремешку."
+                ]
+            },
+        },
+        {
+            "imgLink": "",
+            "img": {
+                "src": image_urls[1],
+                "srcMobile": image_urls[1],
+                "alt": "Отделения кошелька на молнии",
+                "position": "width_full",
+                "positionMobile": "width_full",
+                "width": 900,
+                "height": 1200,
+                "widthMobile": 640,
+                "heightMobile": 853,
+            },
+            "title": {
+                "content": ["Продуманное хранение"],
+                "size": "size4",
+                "align": "left",
+                "color": "color1",
+            },
+            "text": {
+                "size": "size2",
+                "align": "left",
+                "color": "color1",
+                "content": [
+                    "Три отделения на молнии помогают разложить карты, купюры, монеты, документы и небольшие повседневные вещи."
+                ]
+            },
+        },
+        {
+            "imgLink": "",
+            "img": {
+                "src": image_urls[2],
+                "srcMobile": image_urls[2],
+                "alt": "Нейлоновый кошелек с RFID защитой",
+                "position": "width_full",
+                "positionMobile": "width_full",
+                "width": 900,
+                "height": 1200,
+                "widthMobile": 640,
+                "heightMobile": 853,
+            },
+            "title": {
+                "content": ["Нейлон, RFID-защита и легкий уход"],
+                "size": "size4",
+                "align": "left",
+                "color": "color1",
+            },
+            "text": {
+                "size": "size2",
+                "align": "left",
+                "color": "color1",
+                "content": [
+                    "Прочный нейлон, металлическая фурнитура и RFID-защита делают аксессуар практичным для поездок, прогулок и покупок."
+                ]
+            },
+        },
+    ]
+    content = {"content": [{"widgetName": "raShowcase", "type": "billboard", "blocks": blocks}], "version": 0.3}
+    return json.dumps(content, ensure_ascii=False)
 
 
 def build_payload(image_urls: list[str]) -> dict:
@@ -125,6 +305,7 @@ def build_payload(image_urls: list[str]) -> dict:
         {"id": 10096, "values": [{"dictionary_value_id": 61574, "value": "черный"}]},
         {"id": 10097, "values": [{"value": "черный"}]},
         {"id": 10400, "values": [{"dictionary_value_id": 970960203, "value": "Без гарантии"}]},
+        {"id": 11254, "values": [{"value": build_rich_content(image_urls)}]},
         {"id": 11650, "values": [{"value": "1"}]},
         {"id": 20926, "values": [
             {"dictionary_value_id": 971098553, "value": "3 отделения для купюр"},
@@ -165,6 +346,36 @@ def save_artifact(name: str, data: dict) -> Path:
     return path
 
 
+def _collect_skus(value: Any) -> list[int]:
+    skus: list[int] = []
+
+    def add(candidate: Any) -> None:
+        try:
+            sku = int(candidate)
+        except (TypeError, ValueError):
+            return
+        if sku > 0 and sku not in skus:
+            skus.append(sku)
+
+    if isinstance(value, dict):
+        for key in ("sku", "fbo_sku", "fbs_sku"):
+            add(value.get(key))
+        for source in value.get("sources", []) or []:
+            if isinstance(source, dict):
+                for key in ("sku", "fbo_sku", "fbs_sku"):
+                    add(source.get(key))
+        for item in value.get("items", []) or []:
+            skus.extend(sku for sku in _collect_skus(item) if sku not in skus)
+        result = value.get("result")
+        result_items = result.get("items", []) if isinstance(result, dict) else []
+        for item in result_items:
+            skus.extend(sku for sku in _collect_skus(item) if sku not in skus)
+    elif isinstance(value, list):
+        for item in value:
+            skus.extend(sku for sku in _collect_skus(item) if sku not in skus)
+    return skus
+
+
 def main() -> None:
     print(f"starting {Path(__file__).name} argv={sys.argv[1:]}", flush=True)
     load_env()
@@ -188,12 +399,18 @@ def main() -> None:
             if items:
                 statuses = {item.get("offer_id"): item.get("status") for item in items}
                 print(f"statuses={statuses}", flush=True)
-                if all(item.get("status") in {"imported", "failed"} for item in items):
+                if all(item.get("status") in {"imported", "failed", "skipped"} for item in items):
                     break
 
     try:
-        rating = ozon_post("/v1/product/rating-by-sku", {"skus": [SKU]})
-        report["events"].append({"event": "content_rating", "result": rating})
+        product_info = ozon_post("/v3/product/info/list", {"offer_id": [OFFER_ID]})
+        report["events"].append({"event": "product_info", "result": product_info})
+        skus = _collect_skus(product_info)
+        print(f"resolved ozon skus={skus}", flush=True)
+        if not skus:
+            raise RuntimeError("Ozon product info returned no numeric sku yet")
+        rating = ozon_post("/v1/product/rating-by-sku", {"skus": skus})
+        report["events"].append({"event": "content_rating", "skus": skus, "result": rating})
         print(json.dumps(rating, ensure_ascii=False, indent=2), flush=True)
     except Exception as exc:
         report["events"].append({"event": "content_rating_failed", "error": str(exc)})
