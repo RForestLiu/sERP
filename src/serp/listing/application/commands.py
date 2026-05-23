@@ -694,12 +694,12 @@ class ListingApplicationService(ListingFacade):
         if fill_result.get("error"):
             return []
 
-        raw_attrs = (
-            fill_result.get("filled_attributes")
-            or fill_result.get("attributes")
-            or fill_result.get("results")
-            or []
-        )
+        raw_attrs = []
+        for key in ("mappings", "attributes", "results", "filled_attributes"):
+            value = fill_result.get(key)
+            if isinstance(value, list):
+                raw_attrs = value
+                break
         attr_index = {str(attr.get("id") or attr.get("attribute_id")): attr for attr in ozon_attributes}
         normalized: list[dict] = []
         for item in raw_attrs:

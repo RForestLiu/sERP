@@ -49,6 +49,21 @@ class FakeAutoFill:
         }
 
 
+class FakeAutoFillMappings:
+    is_configured = True
+
+    def fill_ozon_attributes(self, skc, product_title, product_data, manual_data, ozon_attributes):
+        return {
+            "success": True,
+            "mappings": [{
+                "attribute_id": 4180,
+                "value": "AI title from mappings",
+                "source": "llm_autofill",
+            }],
+            "filled_attributes": 1,
+        }
+
+
 class FakeSettings:
     pass
 
@@ -117,6 +132,19 @@ def make_service():
     )
 
 
+def make_service_with_autofill(autofill_client):
+    return ListingApplicationService(
+        draft_repo=FakeDraftRepo(),
+        ozon_api=FakeOzonApi(),
+        autofill_client=autofill_client,
+        settings_facade=FakeSettings(),
+        product_facade=FakeProductFacade(),
+        ozon_category_facade=FakeCategoryFacade(),
+        event_bus=FakeBus(),
+        data_root="data",
+    )
+
+
 def make_service_with_category(category_facade):
     return ListingApplicationService(
         draft_repo=FakeDraftRepo(),
@@ -142,6 +170,18 @@ def test_generate_workbench_draft_for_wallet():
     assert result["validation"]["success"] is True
     assert any(attr["attribute_id"] == 11254 for attr in result["draft"]["attributes"])
     assert any(attr["attribute_id"] == 4180 and attr["value"] == "AI title" for attr in result["draft"]["attributes"])
+
+
+def test_generate_workbench_draft_accepts_mapping_result_with_numeric_count():
+    service = make_service_with_autofill(FakeAutoFillMappings())
+
+    result = service.generate_workbench_draft("ozon_anling", {"skc": "WALLET-0006"})
+
+    assert result["success"] is True
+    assert any(
+        attr["attribute_id"] == 4180 and attr["value"] == "AI title from mappings"
+        for attr in result["draft"]["attributes"]
+    )
 
 
 def test_auto_category_fails_when_llm_returns_no_match():

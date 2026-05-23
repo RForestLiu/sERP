@@ -774,7 +774,8 @@ var pageState = {
     categoryFlat: [],
     selectedCategory: null,
     categoryId: null,
-    categoryTypeId: null
+    categoryTypeId: null,
+    categoryAttributes: []
 };
 
 function $(id) { return document.getElementById(id); }
@@ -950,7 +951,7 @@ function showCategory(match) {
     document.querySelectorAll(".category-dependent").forEach(function (section) {
         section.classList.remove("is-hidden");
     });
-    loadCategoryAttributes(categoryId, typeId);
+    return loadCategoryAttributes(categoryId, typeId);
 }
 
 function attrLabel(attr) {
@@ -967,25 +968,26 @@ function renderAttributeInput(attr) {
     if (values.length > 0 && attr.is_collection && values.length <= 24) {
         return '<div class="checks">' + values.map(function (value) {
             var text = value.value || value.info || value.name || value.id || "";
-            return '<label><input type="checkbox" data-attr-id="' + id + '" value="' + esc(value.id || text) + '"> ' + esc(text) + '</label>';
+            return '<label><input type="checkbox" data-attr-id="' + id + '" data-dictionary-value-id="' + esc(value.id || "") + '" value="' + esc(value.id || text) + '"> ' + esc(text) + '</label>';
         }).join("") + '</div>';
     }
     if (values.length > 0) {
-        return '<select class="select" data-attr-id="' + id + '">' +
+        return '<select class="select" data-attr-id="' + id + '" data-attr-type="dictionary">' +
             '<option value="">请选择</option>' +
             values.slice(0, 200).map(function (value) {
                 var text = value.value || value.info || value.name || value.id || "";
-                return '<option value="' + esc(value.id || text) + '">' + esc(text) + '</option>';
+                return '<option value="' + esc(value.id || text) + '" data-label="' + esc(text) + '">' + esc(text) + '</option>';
             }).join("") +
             '</select>';
     }
     if (String(attr.type || "").toLowerCase() === "boolean") {
-        return '<select class="select" data-attr-id="' + id + '"><option value="">请选择</option><option value="true">是</option><option value="false">否</option></select>';
+        return '<select class="select" data-attr-id="' + id + '" data-attr-type="Boolean"><option value="">请选择</option><option value="true">是</option><option value="false">否</option></select>';
     }
-    return '<input class="input" data-attr-id="' + id + '" placeholder="' + esc(attr.type || "String") + '">';
+    return '<input class="input" data-attr-id="' + id + '" data-attr-type="' + esc(attr.type || "String") + '" placeholder="' + esc(attr.type || "String") + '">';
 }
 
 function renderCategoryAttributes(attrs) {
+    pageState.categoryAttributes = attrs || [];
     var area = $("attr-area");
     if (!attrs.length) {
         area.innerHTML = '<div class="attr-empty">当前分类没有返回可填写属性，请换一个更具体的末级分类。</div>';
@@ -997,6 +999,73 @@ function renderCategoryAttributes(attrs) {
             '<div>' + renderAttributeInput(attr) + '</div>' +
             '</div>';
     }).join("");
+}
+
+function findAttrMeta(attrId) {
+    return (pageState.categoryAttributes || []).find(function (attr) {
+        return String(attr.id || attr.attribute_id) === String(attrId);
+    }) || {};
+}
+
+function normalizeBooleanValue(value) {
+    var text = String(value || "").trim().toLowerCase();
+    if (["true", "1", "yes", "да", "是", "y"].indexOf(text) >= 0) return "true";
+    if (["false", "0", "no", "нет", "否", "n"].indexOf(text) >= 0) return "false";
+    return "";
+}
+
+function optionValueByLabel(select, value) {
+    var target = String(value || "").trim().toLowerCase();
+    if (!target) return "";
+    for (var i = 0; i < select.options.length; i += 1) {
+        var opt = select.options[i];
+        var label = (opt.getAttribute("data-label") || opt.textContent || "").trim().toLowerCase();
+        if (label === target || String(opt.value).trim().toLowerCase() === target) return opt.value;
+    }
+    return "";
+}
+
+function setAttributeControlValue(attr) {
+    var attrId = attr.attribute_id || attr.id;
+    if (!attrId) return false;
+    var controls = document.querySelectorAll('[data-attr-id="' + String(attrId).replace(/"/g, '\\"') + '"]');
+    if (!controls.length) return false;
+    var value = attr.dictionary_value_id || attr.value || "";
+    var meta = findAttrMeta(attrId);
+    var filled = false;
+    controls.forEach(function (control) {
+        if (control.type === "checkbox") {
+            var values = Array.isArray(attr.values) ? attr.values : [value];
+            control.checked = values.some(function (item) {
+                var itemValue = item && typeof item === "object" ? (item.dictionary_value_id || item.value || item.id) : item;
+                return String(itemValue) === String(control.value) ||
+                    String(itemValue) === String(control.getAttribute("data-dictionary-value-id") || "");
+            });
+            filled = true;
+            return;
+        }
+        if (control.tagName === "SELECT") {
+            var nextValue = "";
+            if (attr.dictionary_value_id) nextValue = optionValueByLabel(control, attr.dictionary_value_id);
+            if (!nextValue && value) nextValue = optionValueByLabel(control, value);
+            if (!nextValue && String(meta.type || "").toLowerCase() === "boolean") nextValue = normalizeBooleanValue(value);
+            control.value = nextValue || "";
+            filled = true;
+            return;
+        }
+        control.value = Array.isArray(value) ? value.join(", ") : String(value || "");
+        filled = true;
+    });
+    return filled;
+}
+
+function applyDraftAttributes(draft) {
+    var attrs = draft.attributes || [];
+    var filled = 0;
+    attrs.forEach(function (attr) {
+        if (setAttributeControlValue(attr)) filled += 1;
+    });
+    return filled;
 }
 
 async function loadCategoryAttributes(categoryId, typeId) {
@@ -1273,15 +1342,15 @@ async function autoFill() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ skc: pageState.skc })
         });
-        if (data.draft) {
-            showCategory({
-                category_id: data.draft.category_id,
-                type_id: data.draft.type_id,
-                category_path: data.draft.category_path
-            });
-            fillKnownWalletAttributes(data.draft);
-        }
-        setAiStatus("自动填充完成", "已根据 Ozon 属性定义和商品数据填充左侧表单。");
+        if (!data.draft) throw new Error(data.error || "未返回草稿");
+        await showCategory({
+            category_id: data.draft.category_id,
+            type_id: data.draft.type_id,
+            category_path: data.draft.category_path
+        });
+        var filled = applyDraftAttributes(data.draft);
+        fillKnownWalletAttributes(data.draft);
+        setAiStatus("自动填充完成", "已根据 Ozon 属性定义和商品数据填充左侧表单，已回填 " + filled + " 个属性。");
     } catch (e) {
         setAiStatus("自动填充失败", esc(e.message));
     } finally {
