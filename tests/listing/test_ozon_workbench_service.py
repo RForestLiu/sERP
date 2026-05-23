@@ -37,7 +37,16 @@ class FakeOzonApi:
 
 
 class FakeAutoFill:
-    is_configured = False
+    is_configured = True
+
+    def fill_ozon_attributes(self, skc, product_title, product_data, manual_data, ozon_attributes):
+        return {
+            "attributes": [{
+                "attribute_id": 4180,
+                "value": "AI title",
+                "source": "llm_autofill",
+            }]
+        }
 
 
 class FakeSettings:
@@ -57,8 +66,28 @@ class FakeProductFacade:
 
 
 class FakeCategoryFacade:
-    def get_category_attributes(self, store_id, category_id):
-        return {"success": True, "attributes": []}
+    def match_category(self, store_id, product_info):
+        return {
+            "success": True,
+            "best_match": {
+                "id": 17027904,
+                "type_id": 93338,
+                "name": "Кошелек",
+                "path": "Галантерея и аксессуары > Аксессуары > Кошелек",
+                "reason": "AI selected the wallet category",
+            },
+        }
+
+    def get_category_attributes(self, store_id, category_id, type_id=None):
+        return {
+            "success": True,
+            "attributes": [{
+                "id": 4180,
+                "name": "Название модели",
+                "type": "String",
+                "is_required": True,
+            }],
+        }
 
 
 class FakeBus:
@@ -87,8 +116,10 @@ def test_generate_workbench_draft_for_wallet():
     assert result["success"] is True
     assert result["draft"]["category_id"] == 17027904
     assert result["draft"]["type_id"] == 93338
+    assert result["draft"]["category_attributes_count"] == 1
     assert result["validation"]["success"] is True
     assert any(attr["attribute_id"] == 11254 for attr in result["draft"]["attributes"])
+    assert any(attr["attribute_id"] == 4180 and attr["value"] == "AI title" for attr in result["draft"]["attributes"])
 
 
 def test_official_rating_resolves_numeric_sku_before_rating_call():

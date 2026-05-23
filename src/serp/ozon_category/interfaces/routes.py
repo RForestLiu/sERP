@@ -90,10 +90,11 @@ def create_ozon_category_blueprint(facade: OzonCategoryFacade) -> Blueprint:
         try:
             data = request.get_json() or {}
             category_id = data.get("description_category_id", 0)
+            type_id = data.get("type_id")
             if not category_id:
                 return jsonify({"error": "请提供 description_category_id"}), 400
 
-            result = facade.get_category_attributes(store_id, int(category_id))
+            result = facade.get_category_attributes(store_id, int(category_id), int(type_id) if type_id else None)
             return jsonify(result)
         except Exception as e:
             logger.error("[属性] 获取失败: %s", e)

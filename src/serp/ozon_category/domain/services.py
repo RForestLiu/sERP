@@ -158,8 +158,8 @@ class CategoryMatchingService:
     @staticmethod
     def keyword_score(candidate: dict, title_words: set[str]) -> int:
         """计算候选品类与标题关键词的匹配度"""
-        name_lower = c["name"].lower()
-        cn = c.get("cn", "").lower()
+        name_lower = str(candidate.get("name", "")).lower()
+        cn = str(candidate.get("cn", "")).lower()
         score = 0
         for w in title_words:
             if len(w) > 1 and w in name_lower:

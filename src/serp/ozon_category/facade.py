@@ -37,6 +37,6 @@ class OzonCategoryFacade(Facade, ABC):
         ...
 
     @abstractmethod
-    def get_category_attributes(self, store_id: str, category_id: int) -> dict:
+    def get_category_attributes(self, store_id: str, category_id: int, type_id: int | None = None) -> dict:
         """获取品类属性及字典值"""
         ...

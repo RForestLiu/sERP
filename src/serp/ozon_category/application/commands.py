@@ -404,13 +404,15 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
             "warning": "" if best_match else "LLM 未返回可用匹配结果",
         }
 
-    def get_category_attributes(self, store_id: str, category_id: int) -> dict:
+    def get_category_attributes(self, store_id: str, category_id: int, type_id: int | None = None) -> dict:
         """获取品类属性及字典值"""
         logger.info("[品类属性] store=%s, category_id=%s", store_id, category_id)
         if not category_id:
             return {"error": "请提供 description_category_id"}
 
         payload = {"description_category_id": category_id}
+        if type_id:
+            payload["type_id"] = type_id
         result, err = self._ozon_api.call(
             store_id, "/v1/description-category/attribute", payload
         )
@@ -475,6 +477,8 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
                     "attribute_id": eattr["id"],
                     "description_category_id": category_id,
                 }
+                if type_id:
+                    values_payload["type_id"] = type_id
                 vals_result, vals_err = self._ozon_api.call(
                     store_id, "/v1/description-category/attribute/values", values_payload
                 )
@@ -503,6 +507,7 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
         return {
             "success": True,
             "description_category_id": category_id,
+            "type_id": type_id,
             "attributes": enriched,
             "is_leaf": is_leaf,
             "warning": "" if is_leaf else f"当前品类（ID: {category_id}）没有可配置的产品属性，请尝试选择一个更具体的子品类。",

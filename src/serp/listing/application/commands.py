@@ -24,7 +24,6 @@ from ..domain.ozon_workbench import (
     WALLET_TYPE_ID,
     build_wallet_rich_content,
     collect_ozon_skus,
-    match_wallet_category,
     resolve_wallet_brand,
     rich_content_to_attribute_value,
     validate_workbench_payload,
@@ -353,15 +352,38 @@ class ListingApplicationService(ListingFacade):
         product = self._find_product_by_skc(data.get("skc", ""))
         product_info = dict(product or {})
         product_info.update(data)
-        match = match_wallet_category(product_info)
-        return {"success": True, "store_id": store_id, "match": match}
+        result = self._ozon_category_facade.match_category(store_id, {
+            "product_title": product_info.get("product_title") or product_info.get("name") or product_info.get("title") or "",
+            "product_category": product_info.get("product_category") or product_info.get("category") or "",
+            "product_description": product_info.get("product_description") or product_info.get("description") or "",
+        })
+        if result.get("error"):
+            return {"success": False, "store_id": store_id, "error": result["error"]}
+        best_match = result.get("best_match") or {}
+        if not best_match.get("id"):
+            return {
+                "success": False,
+                "store_id": store_id,
+                "error": result.get("warning") or "AI category match did not return a usable category",
+                "raw": result,
+            }
+        return {"success": True, "store_id": store_id, "match": best_match, "raw": result}
 
     def generate_workbench_draft(self, store_id: str, data: dict) -> dict:
         skc = data.get("skc", "")
         product = self._find_product_by_skc(skc) or {}
         product_data = product.get("product_data", {}) or {}
         manual_data = product.get("manual_data", {}) or {}
-        category = match_wallet_category({**product, **data})
+        category_result = self.auto_category(store_id, {**product, **data})
+        if not category_result.get("success"):
+            return category_result
+        category = category_result["match"]
+        category_id = category.get("id")
+        type_id = category.get("type_id")
+        category_attrs_result = self._ozon_category_facade.get_category_attributes(store_id, int(category_id), int(type_id) if type_id else None)
+        if category_attrs_result.get("error"):
+            return {"success": False, "store_id": store_id, "error": category_attrs_result["error"]}
+        ozon_attributes = category_attrs_result.get("attributes") or []
         image_urls = self._extract_input_image_urls(data.get("images", []))
 
         offer_id = data.get("offer_id") or (product.get("skus") or [skc])[0] if (product.get("skus") or [skc]) else skc
@@ -377,6 +399,15 @@ class ListingApplicationService(ListingFacade):
             manual_data=manual_data,
             image_urls=image_urls,
         )
+        autofill_result = self.fill_ozon_fields({
+            "skc": skc,
+            "product_title": title,
+            "product_data": product_data,
+            "manual_data": manual_data,
+            "ozon_attributes": ozon_attributes,
+        })
+        llm_attrs = self._normalize_autofill_attributes(autofill_result, ozon_attributes)
+        attrs = self._merge_workbench_attributes(attrs, llm_attrs)
         skus = self._default_workbench_skus(product, offer_id, price, data.get("skus") or [])
         draft = {
             "skc": skc,
@@ -385,13 +416,19 @@ class ListingApplicationService(ListingFacade):
             "description": description,
             "price": price,
             "offer_id": offer_id,
-            "category_id": category.get("description_category_id") or WALLET_CATEGORY_ID,
-            "type_id": category.get("type_id") or WALLET_TYPE_ID,
+            "category_id": category_id,
+            "type_id": type_id,
             "category_match": category,
+            "category_attributes_count": len(ozon_attributes),
             "attributes": attrs,
             "images": data.get("images") or [],
             "skus": skus,
-            "llm_sessions": [],
+            "llm_sessions": [{
+                "name": "ozon_attribute_autofill",
+                "success": not bool(autofill_result.get("error")),
+                "error": autofill_result.get("error", ""),
+                "filled_count": len(llm_attrs),
+            }],
         }
         validation = validate_workbench_payload(draft)
         return {"success": True, "store_id": store_id, "draft": draft, "validation": validation}
@@ -643,6 +680,61 @@ class ListingApplicationService(ListingFacade):
             return {"error": str(e)}
 
     # ==================== 内部辅助方法 ====================
+
+    @staticmethod
+    def _normalize_autofill_attributes(fill_result: dict, ozon_attributes: list[dict]) -> list[dict]:
+        if fill_result.get("error"):
+            return []
+
+        raw_attrs = (
+            fill_result.get("filled_attributes")
+            or fill_result.get("attributes")
+            or fill_result.get("results")
+            or []
+        )
+        attr_index = {str(attr.get("id") or attr.get("attribute_id")): attr for attr in ozon_attributes}
+        normalized: list[dict] = []
+        for item in raw_attrs:
+            if not isinstance(item, dict):
+                continue
+            attr_id = item.get("attribute_id") or item.get("id")
+            try:
+                attr_id = int(attr_id)
+            except (TypeError, ValueError):
+                continue
+            attr_meta = attr_index.get(str(attr_id), {})
+            value = item.get("value", "")
+            if value is None:
+                value = ""
+            normalized_item = {
+                "attribute_id": attr_id,
+                "value": str(value),
+                "type": item.get("type") or attr_meta.get("type") or "String",
+                "source": item.get("source") or "llm_autofill",
+            }
+            dictionary_value_id = item.get("dictionary_value_id")
+            if dictionary_value_id:
+                normalized_item["dictionary_value_id"] = dictionary_value_id
+            if item.get("evidence"):
+                normalized_item["evidence"] = item["evidence"]
+            if item.get("confidence") is not None:
+                normalized_item["confidence"] = item["confidence"]
+            normalized.append(normalized_item)
+        return normalized
+
+    @staticmethod
+    def _merge_workbench_attributes(base_attrs: list[dict], override_attrs: list[dict]) -> list[dict]:
+        merged: dict[int, dict] = {}
+        order: list[int] = []
+        for attr in base_attrs + override_attrs:
+            try:
+                attr_id = int(attr.get("attribute_id") or attr.get("id"))
+            except (TypeError, ValueError):
+                continue
+            if attr_id not in merged:
+                order.append(attr_id)
+            merged[attr_id] = dict(attr, attribute_id=attr_id)
+        return [merged[attr_id] for attr_id in order]
 
     def _append_lifecycle(self, skc: str, store_id: str, event: dict):
         """追加生命周期事件到草稿"""
