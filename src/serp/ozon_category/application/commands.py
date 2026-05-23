@@ -851,14 +851,21 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
             return cached
 
         logger.info("[属性翻译] 翻译 %s 个属性名", len(untranslated))
-        prompt = f"""翻译以下俄语电商属性名为中文，返回 JSON 对象格式：{{"俄语名": "中文翻译"}}
+        prompt = f"""业务语境：
+- 这些文本来自俄罗斯电商平台 Ozon 的商品上架/更新属性表单。
+- 译文的读者是中国运营人员，用来人工理解和填写 Ozon 属性。
+- 请按跨境电商属性语境翻译，不要按普通词典硬翻。
+- 译文要短、像表单字段名；保留品牌名、专有名词、计量单位和平台术语原意。
+- 例如：Тип застежки 应译为“扣件类型/闭合方式”，Коллекция 应按商品系列语境译为“系列”。
+
+翻译以下俄语电商属性名为中文，返回 JSON 对象格式：{{"俄语名": "中文翻译"}}
 只返回 JSON，不要其他内容。
 
 {json.dumps(untranslated, ensure_ascii=False)}"""
 
         try:
             result, err = self._llm_client.call(
-                "你是俄语→中文跨境电商翻译助手。只返回严格 JSON。",
+                "你是 Ozon 商品上架属性的俄语→中文本地化助手，服务对象是中国运营人员。只返回严格 JSON。",
                 prompt, temperature=0.1, max_tokens=4096,
             )
             if not err and result:
@@ -887,14 +894,21 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
             return cached
 
         logger.info("[描述翻译] 翻译 %s 个属性描述", len(untranslated))
-        prompt = f"""翻译以下俄语电商属性描述为中文，返回 JSON 对象格式：{{"俄语描述": "中文翻译"}}
+        prompt = f"""业务语境：
+- 这些文本来自俄罗斯电商平台 Ozon 的商品上架/更新属性表单。
+- 译文的读者是中国运营人员，用来人工理解 Ozon 属性要求和填写规则。
+- 请按跨境电商属性语境翻译，不要按普通词典硬翻。
+- 译文要清楚说明运营该怎么填；保留品牌名、专有名词、计量单位和平台术语原意。
+- 如果原文说明必须从列表选择，请在中文里明确“从列表选择”。
+
+翻译以下俄语电商属性描述为中文，返回 JSON 对象格式：{{"俄语描述": "中文翻译"}}
 只返回 JSON，不要其他内容。
 
 {json.dumps(untranslated, ensure_ascii=False)}"""
 
         try:
             result, err = self._llm_client.call(
-                "你是俄语→中文跨境电商翻译助手。只返回严格 JSON。",
+                "你是 Ozon 商品上架属性的俄语→中文本地化助手，服务对象是中国运营人员。只返回严格 JSON。",
                 prompt, temperature=0.1, max_tokens=4096,
             )
             if not err and result:

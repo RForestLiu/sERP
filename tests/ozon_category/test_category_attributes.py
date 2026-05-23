@@ -54,7 +54,11 @@ class FakeExcludedRepo:
 
 
 class FakeLlm:
+    def __init__(self):
+        self.calls = []
+
     def call(self, *args, **kwargs):
+        self.calls.append((args, kwargs))
         return {"choices": [{"message": {"content": "{}"}}]}, ""
 
 
@@ -161,3 +165,24 @@ def test_category_attribute_value_translations_are_cached():
     assert attr_repo.value_translations["Да"] == "是"
     assert attr_repo.value_translations["Нет"] == "否"
     assert len(attr_repo.saved_value_translations) == save_count_after_first_load
+
+
+def test_attribute_translation_prompt_includes_ozon_operator_context():
+    api = FakeOzonApi()
+    llm = FakeLlm()
+    service = OzonCategoryApplicationService(
+        tree_cache_repo=FakeTreeRepo(),
+        trans_cache_repo=FakeTranslationRepo(),
+        attr_trans_cache_repo=FakeAttrTranslationRepo(),
+        excluded_repo=FakeExcludedRepo(),
+        ozon_api=api,
+        llm_client=llm,
+    )
+
+    service._translate_attr_names("ozon_anling", ["Тип застежки"])
+    service._translate_attr_descs("ozon_anling", ["Выберите материал товара"])
+
+    prompts = "\n".join(args[0] + "\n" + args[1] for args, _ in llm.calls)
+    assert "Ozon" in prompts
+    assert "中国运营人员" in prompts
+    assert "属性表单" in prompts
