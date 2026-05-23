@@ -140,7 +140,7 @@
         .attr-area {
             width: 830px;
             height: 545px;
-            overflow: hidden;
+            overflow-y: auto;
             position: relative;
             background: #eee;
             border: 1px solid #e1e1e1;
@@ -166,6 +166,11 @@
             grid-template-columns: 165px 1fr;
             align-items: start;
             margin-bottom: 16px;
+        }
+        .attr-empty {
+            color: #777;
+            line-height: 1.8;
+            padding: 10px;
         }
         .attr-label {
             text-align: right;
@@ -564,7 +569,7 @@
                     <div class="ant-form-item attrs-form-item" id="attr-row" {% if mode == 'create' %}style="display:none"{% endif %}>
                         <div class="ant-form-item-label"><label>产品属性</label></div>
                         <div class="ant-form-item-control">
-                            <div class="attr-area">
+                            <div class="attr-area" id="attr-area">
                                 <div class="scrollbar"></div>
                                 <div class="attr-line">
                                     <div class="attr-label"><span style="color:#d9534f">*</span>性别 (Пол) <span class="q">?</span></div>
@@ -767,7 +772,9 @@ var pageState = {
     pendingProductSkc: "",
     categoryTree: null,
     categoryFlat: [],
-    selectedCategory: null
+    selectedCategory: null,
+    categoryId: null,
+    categoryTypeId: null
 };
 
 function $(id) { return document.getElementById(id); }
@@ -934,6 +941,8 @@ function showCategory(match) {
     var typeId = match.type_id || match.category_type_id || 93338;
     var name = match.name || match.category_name || match.type_name || "钱包(Кошелек)";
     var path = match.path || match.category_path || "小百货和配饰(Галантерея и аксессуары) > 配饰(Аксессуары) > 钱包(Кошелек)";
+    pageState.categoryId = categoryId;
+    pageState.categoryTypeId = typeId;
     $("category-select").innerHTML = '<option value="' + esc(categoryId) + '">' + esc(name) + '</option>';
     $("cat-path").className = "cat-path";
     $("cat-path").textContent = path + " / type_id: " + typeId;
@@ -941,6 +950,75 @@ function showCategory(match) {
     document.querySelectorAll(".category-dependent").forEach(function (section) {
         section.classList.remove("is-hidden");
     });
+    loadCategoryAttributes(categoryId, typeId);
+}
+
+function attrLabel(attr) {
+    var cn = attr.name_cn && attr.name_cn !== attr.name ? attr.name_cn : "";
+    return (attr.is_required ? '<span style="color:#d9534f">*</span>' : "") +
+        esc(cn || attr.name || ("属性 " + attr.id)) +
+        (cn ? " (" + esc(attr.name || "") + ")" : "") +
+        ' <span class="q" title="' + esc(attr.description_cn || attr.description || "") + '">?</span>';
+}
+
+function renderAttributeInput(attr) {
+    var values = attr.dictionary_values || [];
+    var id = esc(attr.id || "");
+    if (values.length > 0 && attr.is_collection && values.length <= 24) {
+        return '<div class="checks">' + values.map(function (value) {
+            var text = value.value || value.info || value.name || value.id || "";
+            return '<label><input type="checkbox" data-attr-id="' + id + '" value="' + esc(value.id || text) + '"> ' + esc(text) + '</label>';
+        }).join("") + '</div>';
+    }
+    if (values.length > 0) {
+        return '<select class="select" data-attr-id="' + id + '">' +
+            '<option value="">请选择</option>' +
+            values.slice(0, 200).map(function (value) {
+                var text = value.value || value.info || value.name || value.id || "";
+                return '<option value="' + esc(value.id || text) + '">' + esc(text) + '</option>';
+            }).join("") +
+            '</select>';
+    }
+    if (String(attr.type || "").toLowerCase() === "boolean") {
+        return '<select class="select" data-attr-id="' + id + '"><option value="">请选择</option><option value="true">是</option><option value="false">否</option></select>';
+    }
+    return '<input class="input" data-attr-id="' + id + '" placeholder="' + esc(attr.type || "String") + '">';
+}
+
+function renderCategoryAttributes(attrs) {
+    var area = $("attr-area");
+    if (!attrs.length) {
+        area.innerHTML = '<div class="attr-empty">当前分类没有返回可填写属性，请换一个更具体的末级分类。</div>';
+        return;
+    }
+    area.innerHTML = attrs.map(function (attr) {
+        return '<div class="attr-line">' +
+            '<div class="attr-label">' + attrLabel(attr) + '</div>' +
+            '<div>' + renderAttributeInput(attr) + '</div>' +
+            '</div>';
+    }).join("");
+}
+
+async function loadCategoryAttributes(categoryId, typeId) {
+    pageState.storeId = $("store-select").value || pageState.storeId;
+    if (!pageState.storeId || !categoryId) return;
+    $("attr-area").innerHTML = '<div class="attr-empty">正在加载该分类的 Ozon 属性...</div>';
+    try {
+        var payload = { description_category_id: categoryId };
+        if (typeId) payload.type_id = typeId;
+        var data = await api("/api/ozon/" + encodeURIComponent(pageState.storeId) + "/category-attributes", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        if (!data.success) throw new Error(data.error || "属性加载失败");
+        renderCategoryAttributes(data.attributes || []);
+        if (data.warning) {
+            setAiStatus("分类属性提示", esc(data.warning));
+        }
+    } catch (e) {
+        $("attr-area").innerHTML = '<div class="attr-empty" style="color:#d9534f">属性加载失败：' + esc(e.message) + '</div>';
+    }
 }
 
 function nodeId(node) {
@@ -1148,7 +1226,8 @@ function fillKnownWalletAttributes(draft) {
         var value = attr.value || attr.values || "";
         if (Array.isArray(value)) value = value.map(function (v) { return v.value || v; }).join(", ");
         if (attr.attribute_id === 20926 && String(value).trim()) {
-            $("comp-input").value = String(value);
+            var comp = document.querySelector('[data-attr-id="20926"]') || $("comp-input");
+            if (comp) comp.value = String(value);
         }
     });
 }
