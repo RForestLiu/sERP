@@ -370,6 +370,10 @@
             background: #fff;
         }
         .product-result:hover { background: #f5fbff; }
+        .product-result.selected {
+            background: #eaf5ff;
+            box-shadow: inset 3px 0 0 #2f8fca;
+        }
         .product-result:last-child { border-bottom: 0; }
         .product-thumb {
             width: 48px;
@@ -388,6 +392,12 @@
             color: #999;
             font-size: 11px;
             margin-top: 4px;
+        }
+        .product-picker-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 10px;
         }
         .ai-status {
             border-top: 1px solid #eee;
@@ -598,7 +608,7 @@
             <div class="ai-card-title">AI区</div>
             <div class="ai-card-body">
                 <div class="ai-main-actions">
-                    <button class="ai-action" id="btn-ai-pick" type="button">选品 <span>从正式产品中选</span></button>
+                    <button class="ai-action" id="btn-ai-pick" type="button">选择产品 <span>从正式产品中选</span></button>
                     <button class="ai-action primary" id="btn-ai-category" type="button">自动分类 <span>AI匹配Ozon类目</span></button>
                     <button class="ai-action primary" id="btn-ai-fill" type="button">自动填充 <span>拉属性并填值</span></button>
                 </div>
@@ -610,6 +620,9 @@
                     <div class="product-results" id="product-results">
                         <div class="hint" style="padding:10px">输入关键词，或直接搜索加载正式产品。</div>
                     </div>
+                    <div class="product-picker-actions">
+                        <button id="btn-product-confirm" type="button">确认选择</button>
+                    </div>
                 </div>
                 <div class="ai-status" id="ai-status">
                     <b>当前状态</b>
@@ -620,7 +633,7 @@
         <section class="ai-card">
             <div class="ai-card-title">执行顺序</div>
             <div class="ai-card-body">
-                <div class="ai-step"><b>1. 选品</b><br>从正式产品库选择 SKC，带出标题和商品上下文。</div>
+                <div class="ai-step"><b>1. 选择产品</b><br>从正式产品库选择 SKC，双击或确认后带出标题和商品上下文。</div>
                 <div class="ai-step"><b>2. 自动分类</b><br>AI 像运营一样判断 Ozon 类目，程序验证 type_id。</div>
                 <div class="ai-step"><b>3. 自动填充</b><br>程序拉官方属性，AI 填重要字段，程序再验证。</div>
             </div>
@@ -643,7 +656,8 @@ var query = new URLSearchParams(location.search);
 var pageState = {
     storeId: query.get("store_id") || "",
     skc: query.get("skc") || "",
-    product: null
+    product: null,
+    pendingProductSkc: ""
 };
 
 function $(id) { return document.getElementById(id); }
@@ -738,6 +752,14 @@ function renderProducts(products) {
     }).join("");
     host.querySelectorAll(".product-result").forEach(function (el) {
         el.addEventListener("click", function () {
+            pageState.pendingProductSkc = el.dataset.skc || "";
+            host.querySelectorAll(".product-result").forEach(function (item) {
+                item.classList.remove("selected");
+            });
+            el.classList.add("selected");
+            setAiStatus("待确认产品", "已高亮：" + esc(pageState.pendingProductSkc) + "<br>双击该产品或点击“确认选择”。");
+        });
+        el.addEventListener("dblclick", function () {
             selectProduct(el.dataset.skc);
         });
     });
@@ -770,8 +792,16 @@ async function selectProduct(skc) {
 
 function openProductPicker() {
     var picker = $("product-picker");
-    picker.style.display = picker.style.display === "block" ? "none" : "block";
-    if (picker.style.display === "block") searchProducts();
+    picker.style.display = "block";
+    searchProducts();
+}
+
+function confirmProductSelection() {
+    if (!pageState.pendingProductSkc) {
+        alert("请先在列表中选择一个产品");
+        return;
+    }
+    selectProduct(pageState.pendingProductSkc);
 }
 
 function showCategory(match) {
@@ -877,6 +907,7 @@ function init() {
     }
     $("btn-ai-pick").addEventListener("click", openProductPicker);
     $("btn-product-search").addEventListener("click", searchProducts);
+    $("btn-product-confirm").addEventListener("click", confirmProductSelection);
     $("product-search").addEventListener("keydown", function (event) {
         if (event.key === "Enter") searchProducts();
     });
