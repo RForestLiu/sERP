@@ -403,6 +403,9 @@
             line-height: 1.6;
         }
         .ai-step:last-child { border-bottom: 0; }
+        .category-dependent.is-hidden {
+            display: none;
+        }
         .bottom-actions {
             position: fixed;
             left: 0;
@@ -543,8 +546,7 @@
             </div>
         </section>
 
-        {% if mode != 'create' %}
-        <section class="form-card" id="descriptionInfo">
+        <section class="form-card category-dependent{% if mode == 'create' %} is-hidden{% endif %}" id="descriptionInfo">
             <div class="form-card-header"><h4 class="form-card-title">描述信息</h4></div>
             <div class="form-card-content">
                 <div class="ant-form-item"><div class="ant-form-item-label"><label>产品描述</label></div><div class="ant-form-item-control"><textarea>Компактный кошелек с защитой от NFC/RFID.</textarea><div class="hint" style="text-align:right;width:720px">0 / 6000</div></div></div>
@@ -553,7 +555,7 @@
             </div>
         </section>
 
-        <section class="form-card" id="variantTheme">
+        <section class="form-card category-dependent{% if mode == 'create' %} is-hidden{% endif %}" id="variantTheme">
             <div class="form-card-header"><h4 class="form-card-title">变种属性 <button type="button" style="float:right;margin:5px 18px 0 0">一键套用变种模板</button></h4></div>
             <div class="form-card-content">
                 <div class="ant-form-item"><div class="ant-form-item-label"><label>变种主题</label></div><div class="ant-form-item-control"><div class="variant-box">
@@ -563,7 +565,7 @@
             </div>
         </section>
 
-        <section class="form-card" id="variantInfo">
+        <section class="form-card category-dependent{% if mode == 'create' %} is-hidden{% endif %}" id="variantInfo">
             <div class="form-card-header"><h4 class="form-card-title">变种信息 <span style="float:right;font-weight:400;margin-right:18px"><label><input type="checkbox"> 设置sku标题</label> <label><input type="checkbox"> 自动补全</label> <a>+ 自定义变种属性</a></span></h4></div>
             <div class="form-card-content">
                 <table>
@@ -576,15 +578,13 @@
             </div>
         </section>
 
-        <section class="form-card" id="variantImage">
+        <section class="form-card category-dependent{% if mode == 'create' %} is-hidden{% endif %}" id="variantImage">
             <div class="form-card-header"><h4 class="form-card-title">变种图片</h4></div>
             <div class="form-card-content">
                 <div class="img-row"><div class="img-title">黑色/чёрный<br><span style="color:#999">[2/30] 图片</span></div><div><button type="button">选择图片</button> <a>商品图片</a> <a>从链接导入</a> <a>图片空间</a><br><div class="pic"></div><div class="pic" style="background:linear-gradient(135deg,#222,#bbb)"></div></div></div>
                 <div class="img-row"><div class="img-title">咖啡色/кофейный<br><span style="color:#999">[1/30] 图片</span></div><div><button type="button">选择图片</button> <a>商品图片</a> <a>从链接导入</a> <a>图片空间</a><br><div class="pic" style="background:linear-gradient(135deg,#563b2b,#c29a78)"></div></div></div>
             </div>
         </section>
-        {% endif %}
-
         <section class="form-card" id="scoreInfo">
             <div class="form-card-header"><h4 class="form-card-title">积分评价推广</h4></div>
             <div class="form-card-content">
@@ -771,6 +771,9 @@ function showCategory(match) {
     $("cat-path").className = "cat-path";
     $("cat-path").textContent = path + " / type_id: " + typeId;
     $("attr-row").style.display = "grid";
+    document.querySelectorAll(".category-dependent").forEach(function (section) {
+        section.classList.remove("is-hidden");
+    });
 }
 
 function openManualCategoryTree() {
