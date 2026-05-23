@@ -4144,7 +4144,7 @@
                                 cell.dataset.status = "待发布";
                             } catch (e) { showMsg("❌ 更新失败: " + e.message, true); return; }
                         }
-                        window.open(`/ozon-listing?skc=${skc}&store_id=${storeId}`, "_blank");
+                        window.open(`/ozon-product/add?skc=${encodeURIComponent(skc)}&store_id=${encodeURIComponent(storeId)}`, "_blank");
                     });
                 }
                 // 点击单元格区域切换状态
@@ -4155,7 +4155,7 @@
                     const badge = this.querySelector(".store-status-badge");
                     const currentStatus = badge ? badge.textContent : this.dataset.status;
                     if (currentStatus === "待发布" || currentStatus === "审核中" || currentStatus === "审核拒绝") {
-                        window.open(`/ozon-listing?skc=${skc}&store_id=${storeId}`, "_blank");
+                        window.open(`/ozon-product/add?skc=${encodeURIComponent(skc)}&store_id=${encodeURIComponent(storeId)}`, "_blank");
                         return;
                     }
                     const statuses = ["未上架", "已上架", "下架回归中"];

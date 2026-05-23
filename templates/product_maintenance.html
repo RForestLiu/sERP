@@ -313,6 +313,10 @@
             width: 120px;
             color: var(--text-secondary);
         }
+        .store-listing-link {
+            margin-left: auto;
+            text-decoration: none;
+        }
         .store-status {
             padding: 2px 8px;
             border-radius: 3px;
@@ -645,6 +649,19 @@ function escHtml(s) {
     return d.innerHTML;
 }
 
+function listingUrl(storeId) {
+    const skc = state.selectedProduct ? state.selectedProduct.skc : state.selectedSku;
+    return `/ozon-product/add?skc=${encodeURIComponent(skc || '')}&store_id=${encodeURIComponent(storeId || '')}`;
+}
+
+function listingActionLabel(status) {
+    if (status === '已上架') return '编辑';
+    if (status === '待发布') return '继续上架';
+    if (status === '审核拒绝') return '修复';
+    if (status === '审核中') return '查看';
+    return '上架';
+}
+
 // ============ Init ============
 async function init() {
     await loadProducts();
@@ -755,6 +772,13 @@ function renderDetail() {
     const pd = p.product_data || {};
     const md = p.manual_data || {};
     const ss = p.store_status || {};
+    const storeRows = (state._stores && state._stores.length)
+        ? state._stores.map(store => ({
+            id: store.id,
+            name: store.label || store.name || store.id,
+            status: ss[store.id] || '未上架',
+        }))
+        : Object.entries(ss).map(([sid, st]) => ({ id: sid, name: sid, status: st }));
 
     let html = `<div class="detail-header">
         <span class="product-skc">${escHtml(p.skc)}</span>
@@ -795,11 +819,12 @@ function renderDetail() {
             &#127970; 店铺状态
         </div>
         <div class="detail-section-body">
-            ${Object.keys(ss).length
-                ? Object.entries(ss).map(([sid, st]) => `
+            ${storeRows.length
+                ? storeRows.map(store => `
                     <div class="store-status-row">
-                        <span class="store-name">${escHtml(sid)}</span>
-                        <span class="store-status s-${escHtml(st)}">${escHtml(st)}</span>
+                        <span class="store-name">${escHtml(store.name)}</span>
+                        <span class="store-status s-${escHtml(store.status)}">${escHtml(store.status)}</span>
+                        <a class="btn btn-sm store-listing-link" href="${listingUrl(store.id)}">${listingActionLabel(store.status)}</a>
                     </div>`).join('')
                 : '<div style="color:var(--text-muted);font-size:12px;">无店铺状态记录</div>'}
         </div>
