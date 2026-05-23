@@ -178,6 +178,26 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
             "message": "品类树刷新任务已启动",
         }
 
+    @staticmethod
+    def _candidate_from_node(node, translations: dict[str, str], parent_description_category_id: int | None = None) -> dict:
+        nid = int(node.id) if node.id else 0
+        description_category_id = (
+            getattr(node, "description_category_id", 0)
+            or parent_description_category_id
+            or (0 if node.type_id else nid)
+        )
+        type_id = node.type_id or None
+        return {
+            "id": nid,
+            "name": node.name or node.type_name,
+            "cn": translations.get(str(nid), ""),
+            "is_leaf": node.is_leaf,
+            "node": node,
+            "description_category_id": int(description_category_id or 0),
+            "type_id": int(type_id) if type_id else None,
+            "validation_id": int(description_category_id or nid),
+        }
+
     def match_category(self, store_id: str, product_info: dict) -> dict:
         """AI 匹配最合适的品类"""
         product_title = product_info.get("product_title", "")
@@ -212,25 +232,17 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
             candidates = []
 
             for node in frame["nodes"]:
-                nid = int(node.id) if node.id else 0
-                name = node.name or node.type_name
-                is_leaf = node.is_leaf
-                dcid = node.id if not node.type_id else node.type_id
-                if is_leaf and dcid and int(dcid) in excluded_ids:
+                parent_description_category_id = None
+                if frame.get("parent_path"):
+                    parent_description_category_id = frame["parent_path"][-1].get("description_category_id")
+                candidate = self._candidate_from_node(node, translations, parent_description_category_id)
+                nid = candidate["id"]
+                if candidate["is_leaf"] and candidate["description_category_id"] and int(candidate["description_category_id"]) in excluded_ids:
                     continue
                 if nid in frame["tried_ids"]:
                     continue
-                validation_id = frame.get("entry_id") or nid
-                if is_leaf:
-                    validation_id = str(nid if not node.type_id else nid)
-                candidates.append({
-                    "id": nid,
-                    "name": name,
-                    "cn": translations.get(str(nid), ""),
-                    "is_leaf": is_leaf,
-                    "node": node,
-                    "validation_id": validation_id,
-                })
+                candidate["validation_id"] = frame.get("entry_id") or candidate["description_category_id"] or candidate["id"]
+                candidates.append(candidate)
 
             if not candidates:
                 self._mark_branch_exhausted(frame_stack)
@@ -245,11 +257,10 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
             if all_leaves and len(candidates) <= 20:
                 logger.info("[品类匹配] 叶子层 %s 个候选，批量验证", len(candidates))
                 first_c = candidates[0]
-                group_vid = first_c.get("validation_id") or first_c["id"]
-                group_tid = first_c["id"]
+                group_vid = int(first_c.get("description_category_id") or first_c.get("validation_id") or first_c["id"])
                 payload = {"description_category_id": group_vid}
-                if group_tid and str(group_tid) != str(group_vid):
-                    payload["type_id"] = group_tid
+                if first_c.get("type_id"):
+                    payload["type_id"] = int(first_c["type_id"])
                 result, err = self._ozon_api.call(
                     store_id, "/v1/description-category/attribute", payload
                 )
@@ -271,7 +282,8 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
                 found = False
                 for c in sorted_candidates:
                     frame["parent_path"].append({
-                        "id": c["id"], "name": c["name"], "node": c["node"]
+                        "id": c["id"], "name": c["name"], "node": c["node"],
+                        "description_category_id": c.get("description_category_id"),
                     })
                     path_nodes = frame["parent_path"]
                     path_str = CategoryMatchingService.build_path_str(
@@ -281,8 +293,8 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
                         path_nodes, translations
                     )
                     best_match = {
-                        "id": c.get("validation_id") or c["id"],
-                        "type_id": c["id"] if c["id"] != (c.get("validation_id") or c["id"]) else None,
+                        "id": c.get("description_category_id") or c.get("validation_id") or c["id"],
+                        "type_id": c.get("type_id"),
                         "name": c["name"],
                         "path": path_str,
                         "node_path_names": node_path_names,
@@ -347,11 +359,10 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
                 continue
 
             if chosen["is_leaf"]:
-                vid = chosen.get("validation_id") or chosen["id"]
-                tid = chosen["id"]
+                vid = int(chosen.get("description_category_id") or chosen.get("validation_id") or chosen["id"])
                 payload = {"description_category_id": vid}
-                if tid and str(tid) != str(vid):
-                    payload["type_id"] = tid
+                if chosen.get("type_id"):
+                    payload["type_id"] = int(chosen["type_id"])
                 logger.info("[品类匹配] 验证叶子: %s (ID=%s)", chosen["name"], chosen["id"])
                 result, err = self._ozon_api.call(
                     store_id, "/v1/description-category/attribute", payload
@@ -363,7 +374,8 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
                     continue
 
                 frame["parent_path"].append({
-                    "id": chosen["id"], "name": chosen["name"], "node": chosen["node"]
+                    "id": chosen["id"], "name": chosen["name"], "node": chosen["node"],
+                    "description_category_id": chosen.get("description_category_id"),
                 })
                 path_nodes = frame["parent_path"]
                 path_str = CategoryMatchingService.build_path_str(
@@ -373,8 +385,8 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
                     path_nodes, translations
                 )
                 best_match = {
-                    "id": chosen.get("validation_id") or chosen["id"],
-                    "type_id": chosen["id"] if chosen["id"] != (chosen.get("validation_id") or chosen["id"]) else None,
+                    "id": chosen.get("description_category_id") or chosen.get("validation_id") or chosen["id"],
+                    "type_id": chosen.get("type_id"),
                     "name": chosen["name"],
                     "path": path_str,
                     "node_path_names": node_path_names,
@@ -385,14 +397,15 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
                 break
             else:
                 frame["parent_path"].append({
-                    "id": chosen["id"], "name": chosen["name"], "node": chosen["node"]
+                    "id": chosen["id"], "name": chosen["name"], "node": chosen["node"],
+                    "description_category_id": chosen.get("description_category_id"),
                 })
                 children = chosen["node"].children
                 frame_stack.append({
                     "nodes": children,
                     "parent_path": list(frame["parent_path"]),
                     "tried_ids": set(),
-                    "entry_id": chosen["id"],
+                    "entry_id": chosen.get("description_category_id") or chosen["id"],
                     "llm_fails": 0,
                 })
 

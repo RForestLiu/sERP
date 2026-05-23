@@ -13,6 +13,7 @@ class CategoryNode(Entity):
     children: list["CategoryNode"] = field(default_factory=list, repr=False)
     type_id: int = 0
     type_name: str = ""
+    description_category_id: int = 0
     _name_cn: str = ""  # 翻译后的中文名（从翻译缓存注入）
 
     @property
@@ -46,7 +47,7 @@ class CategoryNode(Entity):
         """序列化为字典"""
         result = {
             "type_id": self.type_id if self.type_id else None,
-            "description_category_id": int(self.id) if self.id else None,
+            "description_category_id": self.description_category_id or (int(self.id) if self.id and not self.type_id else None),
             "type_name": self.type_name or self.name,
             "category_name": self.name,
         }
@@ -61,17 +62,24 @@ class CategoryNode(Entity):
     @classmethod
     def from_dict(cls, data: dict) -> "CategoryNode":
         """从 Ozon API 返回的节点 dict 构建"""
-        node_id = str(data.get("type_id") or data.get("description_category_id") or data.get("category_id") or "")
+        description_category_id = data.get("description_category_id") or data.get("category_id") or 0
+        type_id = data.get("type_id") or 0
+        node_id = str(type_id or description_category_id or "")
         name = data.get("type_name") or data.get("category_name") or data.get("title") or ""
         children_data = data.get("children", [])
         children = [CategoryNode.from_dict(c) for c in children_data] if children_data else []
-        return cls(
+        node = cls(
             id=node_id,
             name=name,
             children=children,
-            type_id=data.get("type_id") or 0,
+            type_id=type_id,
             type_name=data.get("type_name") or "",
+            description_category_id=int(description_category_id or 0),
         )
+        for child in node.children:
+            if not child.description_category_id and node.description_category_id:
+                child.description_category_id = node.description_category_id
+        return node
 
 
 @dataclass
