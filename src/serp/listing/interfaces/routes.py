@@ -172,6 +172,14 @@ def create_listing_page_blueprint() -> Blueprint:
     def listing_workbench_page():
         return render_template("listing_workbench.html")
 
+    @bp.route("/ozon-product/add")
+    def ozon_product_add_page():
+        return render_template("ozon_product_editor.html", mode="create")
+
+    @bp.route("/ozon-product/edit")
+    def ozon_product_edit_page():
+        return render_template("ozon_product_editor.html", mode="update")
+
     @bp.route("/product-maintenance")
     def product_maintenance_page():
         return render_template("product_maintenance.html")
