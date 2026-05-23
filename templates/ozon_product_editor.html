@@ -953,12 +953,15 @@ function confirmProductSelection() {
     selectProduct(pageState.pendingProductSkc);
 }
 
-function showCategory(match) {
+function showCategory(match, options) {
     match = match || {};
+    options = options || {};
     var categoryId = match.description_category_id || match.category_id || match.id || 17027904;
     var typeId = match.type_id || match.category_type_id || 93338;
     var name = match.name || match.category_name || match.type_name || "钱包(Кошелек)";
     var path = match.path || match.category_path || "小百货和配饰(Галантерея и аксессуары) > 配饰(Аксессуары) > 钱包(Кошелек)";
+    var sameCategory = String(pageState.categoryId || "") === String(categoryId || "") &&
+        String(pageState.categoryTypeId || "") === String(typeId || "");
     pageState.categoryId = categoryId;
     pageState.categoryTypeId = typeId;
     $("category-select").innerHTML = '<option value="' + esc(categoryId) + '">' + esc(name) + '</option>';
@@ -968,6 +971,9 @@ function showCategory(match) {
     document.querySelectorAll(".category-dependent").forEach(function (section) {
         section.classList.remove("is-hidden");
     });
+    if (options.preserveAttributes && sameCategory && (pageState.categoryAttributes || []).length) {
+        return Promise.resolve();
+    }
     return loadCategoryAttributes(categoryId, typeId);
 }
 
@@ -979,21 +985,34 @@ function attrLabel(attr) {
         ' <span class="q" title="' + esc(attr.description_cn || attr.description || "") + '">?</span>';
 }
 
+function dictionaryValueText(value) {
+    return value.value || value.info || value.name || value.id || "";
+}
+
+function dictionaryValueLabel(value) {
+    var original = String(dictionaryValueText(value) || "");
+    var cn = String(value.value_cn || value.name_cn || "").trim();
+    if (cn && cn !== original) return cn + " (" + original + ")";
+    return original;
+}
+
 function renderAttributeInput(attr) {
     var values = attr.dictionary_values || [];
     var id = esc(attr.id || "");
     if (values.length > 0 && attr.is_collection && values.length <= 24) {
         return '<div class="checks">' + values.map(function (value) {
-            var text = value.value || value.info || value.name || value.id || "";
-            return '<label><input type="checkbox" data-attr-id="' + id + '" data-dictionary-value-id="' + esc(value.id || "") + '" value="' + esc(value.id || text) + '"> ' + esc(text) + '</label>';
+            var text = dictionaryValueText(value);
+            var label = dictionaryValueLabel(value);
+            return '<label><input type="checkbox" data-attr-id="' + id + '" data-dictionary-value-id="' + esc(value.id || "") + '" value="' + esc(value.id || text) + '"> ' + esc(label) + '</label>';
         }).join("") + '</div>';
     }
     if (values.length > 0 && attr.is_collection) {
         return '<input class="input attr-search" data-attr-search="' + id + '" placeholder="搜索可选值">' +
             '<select class="select multi-select" multiple size="6" data-attr-id="' + id + '" data-attr-type="dictionary">' +
             values.map(function (value) {
-                var text = value.value || value.info || value.name || value.id || "";
-                return '<option value="' + esc(value.id || text) + '" data-label="' + esc(text) + '">' + esc(text) + '</option>';
+                var text = dictionaryValueText(value);
+                var label = dictionaryValueLabel(value);
+                return '<option value="' + esc(value.id || text) + '" data-label="' + esc(label) + '" data-original-label="' + esc(text) + '">' + esc(label) + '</option>';
             }).join("") +
             '</select><input class="input attr-manual" data-attr-manual="' + id + '" placeholder="手动补充，多个值用分号分隔">' +
             '<div class="selected-values" data-attr-selected="' + id + '"></div>' +
@@ -1004,8 +1023,9 @@ function renderAttributeInput(attr) {
         return search + '<select class="select" data-attr-id="' + id + '" data-attr-type="dictionary">' +
             '<option value="">请选择</option>' +
             values.map(function (value) {
-                var text = value.value || value.info || value.name || value.id || "";
-                return '<option value="' + esc(value.id || text) + '" data-label="' + esc(text) + '">' + esc(text) + '</option>';
+                var text = dictionaryValueText(value);
+                var label = dictionaryValueLabel(value);
+                return '<option value="' + esc(value.id || text) + '" data-label="' + esc(label) + '" data-original-label="' + esc(text) + '">' + esc(label) + '</option>';
             }).join("") +
             '</select>';
     }
@@ -1052,7 +1072,8 @@ function optionValueByLabel(select, value) {
     for (var i = 0; i < select.options.length; i += 1) {
         var opt = select.options[i];
         var label = (opt.getAttribute("data-label") || opt.textContent || "").trim().toLowerCase();
-        if (label === target || String(opt.value).trim().toLowerCase() === target) return opt.value;
+        var original = (opt.getAttribute("data-original-label") || "").trim().toLowerCase();
+        if (label === target || original === target || String(opt.value).trim().toLowerCase() === target) return opt.value;
     }
     return "";
 }
@@ -1543,7 +1564,7 @@ async function autoFill() {
             category_id: data.draft.category_id,
             type_id: data.draft.type_id,
             category_path: data.draft.category_path
-        });
+        }, { preserveAttributes: true });
         var filled = applyDraftAttributes(data.draft);
         fillKnownWalletAttributes(data.draft);
         setAiStatus("自动填充完成", "已根据 Ozon 属性定义和商品数据填充左侧表单，已回填 " + filled + " 个属性。");

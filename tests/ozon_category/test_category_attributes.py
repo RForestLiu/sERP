@@ -21,6 +21,10 @@ class FakeTranslationRepo:
 
 
 class FakeAttrTranslationRepo:
+    def __init__(self):
+        self.value_translations = {}
+        self.saved_value_translations = []
+
     def load_names(self, store_id):
         return {"Материал": "材质", "Крышка в комплекте": "含盖子"}
 
@@ -32,6 +36,13 @@ class FakeAttrTranslationRepo:
 
     def save_descriptions(self, store_id, translations):
         pass
+
+    def load_values(self, store_id):
+        return dict(self.value_translations)
+
+    def save_values(self, store_id, translations):
+        self.value_translations = dict(translations)
+        self.saved_value_translations.append(dict(translations))
 
 
 class FakeExcludedRepo:
@@ -109,8 +120,11 @@ def test_category_attributes_load_values_for_string_dictionary_attributes():
 
     by_id = {attr["id"]: attr for attr in result["attributes"]}
     assert by_id[5309]["dictionary_id"] == 1503
-    assert by_id[5309]["dictionary_values"] == [{"id": 61965, "value": "Нейлон"}]
-    assert by_id[999]["dictionary_values"] == [{"id": 1, "value": "Да"}, {"id": 2, "value": "Нет"}]
+    assert by_id[5309]["dictionary_values"] == [{"id": 61965, "value": "Нейлон", "value_cn": "尼龙"}]
+    assert by_id[999]["dictionary_values"] == [
+        {"id": 1, "value": "Да", "value_cn": "是"},
+        {"id": 2, "value": "Нет", "value_cn": "否"},
+    ]
     assert by_id[4180]["dictionary_values"] == []
 
 
@@ -125,3 +139,25 @@ def test_category_attribute_values_are_cached():
 
     assert first_value_call_count == 2
     assert second_value_call_count == first_value_call_count
+
+
+def test_category_attribute_value_translations_are_cached():
+    api = FakeOzonApi()
+    attr_repo = FakeAttrTranslationRepo()
+    service = OzonCategoryApplicationService(
+        tree_cache_repo=FakeTreeRepo(),
+        trans_cache_repo=FakeTranslationRepo(),
+        attr_trans_cache_repo=attr_repo,
+        excluded_repo=FakeExcludedRepo(),
+        ozon_api=api,
+        llm_client=FakeLlm(),
+    )
+
+    service.get_category_attributes("ozon_anling", 17027904, 93338)
+    save_count_after_first_load = len(attr_repo.saved_value_translations)
+    service.get_category_attributes("ozon_anling", 17027904, 93338)
+
+    assert attr_repo.value_translations["Нейлон"] == "尼龙"
+    assert attr_repo.value_translations["Да"] == "是"
+    assert attr_repo.value_translations["Нет"] == "否"
+    assert len(attr_repo.saved_value_translations) == save_count_after_first_load

@@ -63,6 +63,16 @@ class AttributeTranslationCacheRepository(ABC):
         """保存属性描述翻译缓存"""
         ...
 
+    @abstractmethod
+    def load_values(self, store_id: str) -> dict[str, str]:
+        """加载属性可选值翻译缓存 {original_value: chinese}"""
+        ...
+
+    @abstractmethod
+    def save_values(self, store_id: str, translations: dict[str, str]):
+        """保存属性可选值翻译缓存"""
+        ...
+
 
 class ExcludedCategoriesRepository(ABC):
     """无属性品类排除列表仓储"""

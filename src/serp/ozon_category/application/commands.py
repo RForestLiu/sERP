@@ -54,6 +54,7 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
         self._translations_lock = threading.Lock()
         self._attribute_values_cache: dict[tuple[str, int, int, int], list[dict]] = {}
         self._attribute_values_lock = threading.Lock()
+        self._attribute_value_translations_lock = threading.Lock()
 
     # ==================== 查询 ====================
 
@@ -584,7 +585,7 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
             if vals_err or not vals_result:
                 break
             batch = vals_result.get("result", []) or []
-            values.extend(batch)
+            values.extend(self._attach_value_translations(store_id, batch))
             if not vals_result.get("has_next") or not batch:
                 break
             last_value_id = batch[-1].get("id") or 0
@@ -593,6 +594,72 @@ class OzonCategoryApplicationService(OzonCategoryFacade):
         with self._attribute_values_lock:
             self._attribute_values_cache[cache_key] = list(values)
         return values
+
+    def _attach_value_translations(self, store_id: str, values: list[dict]) -> list[dict]:
+        cached = self._attr_trans_cache_repo.load_values(store_id)
+        changed = False
+        enriched: list[dict] = []
+        for item in values:
+            if not isinstance(item, dict):
+                continue
+            value_text = str(item.get("value") or item.get("name") or item.get("info") or "").strip()
+            if not value_text:
+                enriched.append(dict(item))
+                continue
+            value_cn = cached.get(value_text)
+            if value_cn is None:
+                value_cn = self._known_attribute_value_cn(value_text)
+                if value_cn:
+                    cached[value_text] = value_cn
+                    changed = True
+            next_item = dict(item)
+            if value_cn:
+                next_item["value_cn"] = value_cn
+            enriched.append(next_item)
+
+        if changed:
+            with self._attribute_value_translations_lock:
+                latest = self._attr_trans_cache_repo.load_values(store_id)
+                latest.update({k: v for k, v in cached.items() if v})
+                self._attr_trans_cache_repo.save_values(store_id, latest)
+        return enriched
+
+    @staticmethod
+    def _known_attribute_value_cn(value: str) -> str:
+        translations = {
+            "Да": "是",
+            "Нет": "否",
+            "Китай": "中国",
+            "Россия": "俄罗斯",
+            "Китай (Тайвань)": "中国台湾",
+            "Китай (Гонконг)": "中国香港",
+            "Нейлон": "尼龙",
+            "Металл": "金属",
+            "Полиэстер": "聚酯纤维",
+            "Пластик": "塑料",
+            "ABS пластик": "ABS塑料",
+            "Искусственная кожа": "人造革",
+            "Натуральная кожа": "真皮",
+            "Металлический сплав": "金属合金",
+            "Металлизированный материал": "金属化材料",
+            "Нетканое полотно": "无纺布",
+            "Женский": "女",
+            "Мужской": "男",
+            "Унисекс": "男女通用",
+            "черный": "黑色",
+            "белый": "白色",
+            "коричневый": "棕色",
+            "бежевый": "米色",
+            "розовый": "粉色",
+            "синий": "蓝色",
+            "красный": "红色",
+            "серый": "灰色",
+            "зеленый": "绿色",
+            "желтый": "黄色",
+            "фиолетовый": "紫色",
+            "оранжевый": "橙色",
+        }
+        return translations.get(value.strip(), "")
 
     # ==================== 内部方法 ====================
 

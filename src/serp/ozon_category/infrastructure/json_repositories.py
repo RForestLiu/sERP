@@ -86,6 +86,9 @@ class JsonAttributeTranslationCacheRepository(AttributeTranslationCacheRepositor
     def _descs_path(self, store_id: str) -> str:
         return os.path.join(self._cache_dir, f"{store_id}_attr_desc_translations.json")
 
+    def _values_path(self, store_id: str) -> str:
+        return os.path.join(self._cache_dir, f"{store_id}_attr_value_translations.json")
+
     def load_names(self, store_id: str) -> dict[str, str]:
         store = JsonFileStore(self._names_path(store_id))
         data = store.read()
@@ -104,6 +107,16 @@ class JsonAttributeTranslationCacheRepository(AttributeTranslationCacheRepositor
     def save_descriptions(self, store_id: str, translations: dict[str, str]):
         with self._lock:
             store = JsonFileStore(self._descs_path(store_id))
+            store.write(translations)
+
+    def load_values(self, store_id: str) -> dict[str, str]:
+        store = JsonFileStore(self._values_path(store_id))
+        data = store.read()
+        return data if isinstance(data, dict) else {}
+
+    def save_values(self, store_id: str, translations: dict[str, str]):
+        with self._lock:
+            store = JsonFileStore(self._values_path(store_id))
             store.write(translations)
 
 
