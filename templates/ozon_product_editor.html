@@ -347,6 +347,16 @@
             border-top: 1px solid #eee;
             padding-top: 12px;
         }
+        .selected-product {
+            display: none;
+            margin-top: 12px;
+            border: 1px solid #e5e5e5;
+            background: #fbfbfb;
+            padding: 8px;
+            grid-template-columns: 48px 1fr;
+            gap: 8px;
+            align-items: center;
+        }
         .product-search-row { display: flex; gap: 6px; }
         .product-search-row input {
             flex: 1;
@@ -688,6 +698,7 @@
                     <button class="ai-action primary" id="btn-ai-category" type="button">自动分类 <span>AI匹配Ozon类目</span></button>
                     <button class="ai-action primary" id="btn-ai-fill" type="button">自动填充 <span>拉属性并填值</span></button>
                 </div>
+                <div class="selected-product" id="selected-product"></div>
                 <div class="product-picker" id="product-picker">
                     <div class="product-search-row">
                         <input id="product-search" placeholder="搜索正式产品标题 / SKC">
@@ -864,6 +875,17 @@ function renderProducts(products) {
     });
 }
 
+function renderSelectedProduct(product) {
+    var host = $("selected-product");
+    var skc = product.skc || product.SKC || pageState.skc || "";
+    var title = product.title || product.name || skc;
+    var img = firstImage(product);
+    host.innerHTML = (img ? '<img class="product-thumb" src="' + esc(img) + '">' : '<div class="product-thumb"></div>') +
+        '<div><div class="product-title">' + esc(title) + '</div>' +
+        '<div class="product-meta">SKC: ' + esc(skc) + '</div></div>';
+    host.style.display = "grid";
+}
+
 async function searchProducts() {
     var queryText = $("product-search").value.trim();
     $("product-results").innerHTML = '<div class="hint" style="padding:10px">加载正式产品中...</div>';
@@ -883,6 +905,9 @@ async function selectProduct(skc) {
         pageState.skc = product.skc || skc;
         $("top-skc").textContent = pageState.skc;
         $("title-input").value = product.title || product.name || "";
+        renderSelectedProduct(product);
+        $("product-picker").style.display = "none";
+        pageState.pendingProductSkc = "";
         setAiStatus("已选品", "已从正式产品库载入：" + esc(pageState.skc) + "<br>" + esc(product.title || product.name || ""));
     } catch (e) {
         setAiStatus("选品失败", esc(e.message));
