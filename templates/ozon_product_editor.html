@@ -3,92 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ozon商品{{ '创建' if mode == 'create' else '更新' }} - sERP</title>
+    <title>Ozon商品{{ '创建' if mode == 'create' else '编辑' }} - sERP</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: Arial, "Microsoft YaHei", sans-serif;
-            font-size: 13px;
-            color: #333;
-            background: #f3f3f3;
             min-width: 1180px;
+            background: #f5f5f5;
+            color: #333;
+            font-family: Arial, "Microsoft YaHei", sans-serif;
+            font-size: 12px;
         }
-        button, input, select, textarea { font-family: inherit; font-size: 13px; }
+        a { color: #2f8fca; text-decoration: none; }
+        button, input, select, textarea { font-family: inherit; font-size: 12px; }
         button {
             height: 32px;
             border: 1px solid #d8d8d8;
+            border-radius: 2px;
             background: #fff;
             color: #555;
-            border-radius: 2px;
             padding: 0 14px;
             cursor: pointer;
         }
-        button.primary { background: #2f8fca; border-color: #2f8fca; color: #fff; }
+        button.blue { background: #5da2d8; border-color: #5da2d8; color: #fff; }
         button.orange { background: #ff7f38; border-color: #ff7f38; color: #fff; }
         button.green { background: #00a878; border-color: #00a878; color: #fff; }
-        button.linkish { border: 0; background: transparent; color: #2f8fca; padding: 0 4px; height: auto; }
+        button.link { height: auto; border: 0; background: transparent; color: #2f8fca; padding: 0 4px; }
+
+        /* only the header navigation is ours */
         .topbar {
             height: 58px;
             background: #2f8fca;
             color: #fff;
             display: flex;
             align-items: center;
-            padding: 0 24px;
-            gap: 0;
+            padding-left: 66px;
         }
-        .logo { width: 170px; font-size: 22px; font-weight: 700; }
+        .logo { width: 156px; font-size: 24px; font-weight: 700; }
         .logo small { display: block; font-size: 10px; font-weight: 400; margin-top: 1px; }
         .nav {
             height: 58px;
             line-height: 58px;
-            padding: 0 14px;
+            padding: 0 16px;
             color: #fff;
             font-size: 15px;
             font-weight: 700;
             text-decoration: none;
         }
         .nav.active { background: #257bb1; }
-        .top-right { margin-left: auto; display: flex; align-items: center; gap: 14px; font-size: 13px; }
+        .top-right { margin-left: auto; display: flex; gap: 14px; align-items: center; padding-right: 28px; }
+
         .page {
-            width: calc(100% - 44px);
+            width: 1010px;
             margin: 0 auto;
-            padding: 26px 0 86px;
-            display: grid;
-            grid-template-columns: minmax(760px, 2fr) minmax(340px, 1fr);
-            gap: 14px;
+            padding: 30px 0 82px;
+            position: relative;
         }
-        .main { min-width: 0; }
-        .breadcrumb {
-            height: 32px;
+        .crumb {
             color: #999;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
+            margin-bottom: 28px;
         }
-        .breadcrumb b { color: #666; font-weight: 400; }
-        .top-actions { display: flex; gap: 8px; }
-        .panel {
+        .actions-top {
+            position: absolute;
+            right: 0;
+            top: 24px;
+            display: flex;
+            gap: 10px;
+        }
+        .section {
             background: #fff;
             border: 1px solid #e4e4e4;
             margin-bottom: 14px;
         }
-        .panel-title {
-            height: 42px;
-            line-height: 42px;
+        .section-title {
+            height: 44px;
+            line-height: 44px;
             border-bottom: 1px solid #eee;
-            padding: 0 18px;
-            font-weight: 700;
+            padding-left: 18px;
             font-size: 15px;
+            font-weight: 700;
         }
-        .panel-title .sub { color: #999; font-size: 12px; font-weight: 400; margin-left: 8px; }
-        .panel-body { padding: 20px 0 22px; }
+        .section-title .note { color: #999; font-size: 12px; font-weight: 400; }
+        .section-body { padding: 20px 0 26px; }
         .row {
             display: grid;
-            grid-template-columns: 170px 1fr;
-            min-height: 38px;
-            margin-bottom: 12px;
+            grid-template-columns: 185px 1fr;
             align-items: start;
+            min-height: 38px;
+            margin-bottom: 14px;
         }
         .label {
             text-align: right;
@@ -104,51 +105,71 @@
             background: #fff;
             color: #666;
             padding: 6px 10px;
-            width: 260px;
         }
-        .input.long { width: 650px; max-width: 100%; }
-        .input.mid { width: 430px; max-width: 100%; }
-        textarea { width: 720px; max-width: 100%; height: 170px; resize: vertical; line-height: 1.5; }
-        .hint { color: #999; font-size: 12px; margin-top: 6px; line-height: 1.6; }
-        .warn-text { color: #8a4b00; }
+        .select { width: 260px; }
+        .input { width: 282px; }
+        .input.mid { width: 430px; }
+        .input.long { width: 650px; }
+        textarea {
+            width: 720px;
+            height: 190px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+        .hint { color: #999; font-size: 12px; line-height: 1.7; margin-top: 6px; }
+        .tip {
+            display: inline-block;
+            background: #19b8b0;
+            color: #fff;
+            border-radius: 2px;
+            padding: 1px 5px;
+            margin-right: 6px;
+        }
         .cat-path { color: #7f3f3f; margin-top: 10px; line-height: 1.6; }
-        .ozon-attrs {
-            width: min(850px, calc(100vw - 560px));
-            min-width: 620px;
-            max-height: 560px;
-            overflow: auto;
+        .empty-category { color: #8a4b00; margin-top: 10px; }
+
+        .attr-area {
+            width: 830px;
+            height: 545px;
+            overflow: hidden;
+            position: relative;
             background: #eee;
             border: 1px solid #e1e1e1;
-            padding: 22px 18px;
+            padding: 22px 18px 20px 16px;
         }
-        .empty-attrs {
-            width: min(850px, calc(100vw - 560px));
-            min-width: 620px;
-            background: #f7f7f7;
-            border: 1px dashed #d4d4d4;
-            padding: 28px;
-            color: #777;
-            line-height: 1.8;
+        .scrollbar {
+            position: absolute;
+            right: 4px;
+            top: 0;
+            width: 7px;
+            height: 100%;
+            background: #d7d7d7;
+        }
+        .scrollbar:before {
+            content: "";
+            display: block;
+            width: 7px;
+            height: 92px;
+            background: #bcbcbc;
         }
         .attr-row {
             display: grid;
-            grid-template-columns: 180px 1fr;
-            gap: 12px;
-            margin-bottom: 16px;
+            grid-template-columns: 165px 1fr;
             align-items: start;
+            margin-bottom: 16px;
         }
         .attr-label {
             text-align: right;
+            padding: 7px 14px 0 0;
             color: #555;
             line-height: 1.35;
-            padding-top: 7px;
         }
         .q {
             display: inline-flex;
-            width: 14px;
-            height: 14px;
             align-items: center;
             justify-content: center;
+            width: 14px;
+            height: 14px;
             border: 1px solid #9aa3ad;
             border-radius: 50%;
             color: #777;
@@ -157,132 +178,164 @@
         }
         .checks {
             display: grid;
-            grid-template-columns: repeat(3, minmax(160px, 1fr));
-            gap: 10px 26px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px 28px;
             color: #444;
+            padding-top: 2px;
         }
-        .checks label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .add-line { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-        .tag {
+        .checks.four { grid-template-columns: repeat(4, 1fr); }
+        .checks label {
             display: inline-flex;
             align-items: center;
-            height: 22px;
-            padding: 0 7px;
-            border-radius: 2px;
-            background: #eaf5ff;
-            color: #2f8fca;
-            border: 1px solid #cce3f6;
-            font-size: 12px;
-            margin-left: 6px;
+            gap: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-        .tag.warn { background: #fff7e6; color: #8a4b00; border-color: #efd099; }
-        .tag.ok { background: #ecf8f1; color: #197c4c; border-color: #c9ecd8; }
-        .media-line {
+        input[type="checkbox"] { width: 14px; height: 14px; margin: 0; }
+        .add-line { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+        .value-list {
             display: grid;
-            grid-template-columns: 120px 1fr 150px;
-            gap: 10px;
-            align-items: center;
-            border: 1px solid #e2e2e2;
-            border-bottom: 0;
-            padding: 10px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px 28px;
+            max-height: 115px;
+            overflow: hidden;
         }
-        .media-line:last-child { border-bottom: 1px solid #e2e2e2; }
-        .dropzone {
-            min-height: 82px;
-            border: 1px dashed #b8c4d1;
-            background: #fafafa;
+        .rich-empty {
+            width: 640px;
+            height: 310px;
+            border: 1px solid #ddd;
+            background: #fff;
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 8px;
-            color: #888;
+            justify-content: center;
+            color: #b7c5d5;
+            margin-top: 8px;
         }
-        .thumb {
-            width: 58px;
-            height: 68px;
+        .upload-card {
+            display: inline-flex;
+            width: 112px;
+            height: 132px;
+            border: 1px dashed #b9c1cc;
+            margin-right: 16px;
+            background: #fafafa;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            font-size: 14px;
+            color: #555;
+        }
+        .upload-card b { font-size: 34px; line-height: 34px; color: #333; font-weight: 300; }
+        .variant-box {
+            width: 720px;
+            background: #f7f7f7;
+            border: 1px solid #e0e0e0;
+            padding: 14px;
+        }
+        .variant-row {
+            display: grid;
+            grid-template-columns: 130px 1fr 250px 50px;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .pill {
+            display: inline-block;
+            background: #2796df;
+            color: #fff;
+            padding: 4px 8px;
+            margin: 2px;
+            border-radius: 2px;
+        }
+        table {
+            width: 960px;
+            margin: 0 auto;
+            border-collapse: collapse;
+            background: #fff;
+        }
+        th {
+            border: 1px solid #ddd;
+            background: #f3f3f3;
+            color: #666;
+            font-weight: 400;
+            padding: 8px;
+            text-align: center;
+        }
+        td {
+            border: 1px solid #ddd;
+            padding: 7px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .tbl-input { width: 92%; height: 28px; border: 1px solid #ddd; padding: 4px; }
+        .img-row {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .img-title { text-align: right; color: #555; line-height: 1.6; }
+        .pic {
+            display: inline-block;
+            width: 92px;
+            height: 108px;
             border: 1px solid #ddd;
             background: linear-gradient(135deg, #111, #777);
-            flex: 0 0 auto;
+            margin: 0 8px 8px 0;
             position: relative;
         }
-        .thumb.main:after {
-            content: "主";
+        .pic:after {
+            content: "800 x 800";
             position: absolute;
-            right: 2px;
-            top: 2px;
-            background: #2f8fca;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,.45);
             color: #fff;
             font-size: 11px;
-            padding: 1px 3px;
+            text-align: center;
         }
-        .media-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-        .media-actions button { height: 26px; padding: 0 8px; font-size: 12px; }
-        .media-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; padding-right: 24px; }
-        .media-card { border: 1px solid #e2e2e2; background: #fafafa; padding: 12px; }
-        .slot { height: 66px; border: 1px dashed #b8c4d1; background: #fff; display: flex; align-items: center; justify-content: center; color: #888; margin-top: 8px; }
-        table { border-collapse: collapse; width: calc(100% - 40px); margin: 0 20px; background: #fff; }
-        th { background: #f3f3f3; border: 1px solid #ddd; padding: 8px; color: #666; font-weight: 400; text-align: center; }
-        td { border: 1px solid #ddd; padding: 7px; text-align: center; vertical-align: middle; }
-        .tbl-input { height: 28px; border: 1px solid #ddd; width: 96%; padding: 4px 6px; }
-        .ai-rail {
+
+        .anchors {
             position: fixed;
-            right: 22px;
-            top: 82px;
-            bottom: 72px;
-            width: calc((100% - 58px) / 3);
-            min-width: 340px;
-            overflow-y: auto;
+            left: calc(50% + 525px);
+            top: 92px;
+            width: 110px;
+        }
+        .anchors a {
+            display: block;
+            height: 25px;
+            line-height: 25px;
+            color: #666;
+        }
+        .anchors a:before {
+            content: "";
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #278ccd;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        .float-tools {
+            position: fixed;
+            left: calc(50% + 548px);
+            top: 300px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            z-index: 2;
+            gap: 4px;
         }
-        .ai-card {
-            background: #fff;
-            border: 1px solid #d8e0ea;
-            box-shadow: 0 6px 22px rgba(20, 39, 70, 0.12);
-        }
-        .ai-head {
-            height: 40px;
-            line-height: 40px;
-            border-bottom: 1px solid #edf1f5;
-            padding: 0 14px;
-            font-weight: 700;
-        }
-        .ai-body { padding: 12px 14px; }
-        .score { display: grid; grid-template-columns: 82px 1fr; gap: 12px; align-items: center; }
-        .ring {
-            width: 76px;
-            height: 76px;
-            border-radius: 50%;
-            background: conic-gradient(#00a878 0 78%, #dce6ef 78%);
+        .float-tools div {
+            width: 25px;
+            height: 25px;
+            background: #aaa;
+            color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        .ring span {
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #00a878;
-            font-size: 22px;
-            font-weight: 700;
-        }
-        .ai-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .ai-actions button { width: 100%; }
-        .ai-item { border-bottom: 1px solid #edf1f5; padding: 9px 0; line-height: 1.55; }
-        .ai-item:last-child { border-bottom: 0; }
-        .ai-item b { display: block; margin-bottom: 3px; }
-        .issue { display: grid; grid-template-columns: 18px 1fr; gap: 8px; padding: 8px 0; border-bottom: 1px solid #edf1f5; line-height: 1.5; }
-        .issue:last-child { border-bottom: 0; }
-        .dot { width: 14px; height: 14px; border-radius: 50%; background: #f1b54d; margin-top: 2px; }
-        .dot.ok { background: #00a878; }
-        .dot.bad { background: #d9534f; }
-        .bottom-bar {
+        .bottom-actions {
             position: fixed;
             left: 0;
             right: 0;
@@ -291,16 +344,10 @@
             background: #fff;
             border-top: 1px solid #ddd;
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             gap: 10px;
-            z-index: 4;
-        }
-        @media (max-width: 1180px) {
-            body { min-width: 0; }
-            .page { grid-template-columns: 1fr; }
-            .ai-rail { position: static; width: auto; min-width: 0; margin-bottom: 70px; }
-            .ozon-attrs, .empty-attrs { width: 100%; min-width: 0; }
+            z-index: 5;
         }
     </style>
 </head>
@@ -309,233 +356,204 @@
     <div class="logo">sERP<small>Ozon商品编辑</small></div>
     <a class="nav" href="/">首页</a>
     <a class="nav active" href="/product-maintenance">产品</a>
-    <a class="nav" href="/listing-workbench">旧工作台</a>
     <a class="nav" href="/knowledge-base">知识库</a>
-    <div class="top-right"><span>Ozon API</span><span>AI运营助手</span><span id="top-skc">未选择商品</span></div>
+    <a class="nav" href="/ozon-listing">Ozon上架(旧)</a>
+    <div class="top-right"><span>Ozon API</span><span>AI运营助手</span><span id="top-skc">Dianxm000610</span></div>
 </div>
 
 <div class="page">
-    <main class="main">
-        <div class="breadcrumb">
-            <div>ozon产品 &gt; <b id="crumb-mode">{{ '创建产品' if mode == 'create' else '在线产品 > 编辑' }}</b></div>
-            <div class="top-actions">
-                <button>一键翻译</button>
-                <button>存为模板</button>
-                {% if mode == 'create' %}<button class="orange">引用产品</button><button class="orange" id="btn-save-top">保存</button>{% endif %}
-                <button class="green" id="btn-upsert-top">{{ '发布' if mode == 'create' else '更新' }}</button>
+    <div class="crumb">ozon产品 &gt; {{ '创建产品' if mode == 'create' else '在线产品 > 编辑' }}</div>
+    <div class="actions-top">
+        <button>一键翻译⌄</button>
+        <button>存为模板</button>
+        {% if mode == 'create' %}<button class="orange">引用产品⌄</button><button class="orange">保存</button><button class="green">发布</button>{% else %}<button class="green">更新</button>{% endif %}
+    </div>
+
+    <section class="section" id="base">
+        <div class="section-title">基本信息</div>
+        <div class="section-body">
+            <div class="row">
+                <div class="label required">店铺名称:</div>
+                <div class="control">
+                    <select class="select" id="store-select">
+                        <option>{{ '---- 请选择店铺 ----' if mode == 'create' else 'Ozon 安凌' }}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="label required">产品分类:</div>
+                <div class="control">
+                    <select class="select" id="category-select">
+                        <option>{{ '---- 请选择分类 ----' if mode == 'create' else '钱包(Кошелек)' }}</option>
+                    </select>
+                    <button class="blue" id="btn-select-category" style="margin-left:10px">选择分类</button>
+                    {% if mode == 'create' %}
+                    <div class="empty-category" id="cat-path">未选择分类</div>
+                    {% else %}
+                    <div class="cat-path" id="cat-path">小百货和配饰(Галантерея и аксессуары) &gt; 配饰(Аксессуары) &gt; 钱包(Кошелек)</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="row" id="attr-row" {% if mode == 'create' %}style="display:none"{% endif %}>
+                <div class="label">产品属性:</div>
+                <div class="control" id="attr-host">
+                    <div class="attr-area">
+                        <div class="scrollbar"></div>
+                        <div class="attr-row">
+                            <div class="attr-label required">性别 (Пол) <span class="q">?</span></div>
+                            <div class="checks four">
+                                <label><input type="checkbox"> 男士(Мужской)</label>
+                                <label><input type="checkbox" checked> 女士(Женский)</label>
+                                <label><input type="checkbox"> 女童(Девочки)</label>
+                                <label><input type="checkbox"> 男童(Мальчики)</label>
+                            </div>
+                        </div>
+                        <div class="attr-row">
+                            <div class="attr-label">商品重量，克 (Вес товара, г) <span class="q">?</span></div>
+                            <div><input class="input" value="200"></div>
+                        </div>
+                        <div class="attr-row">
+                            <div class="attr-label">配套 (Комплектация) <span class="q">?</span></div>
+                            <div><input class="input" value="Кошелек, съемный ремешок"></div>
+                        </div>
+                        <div class="attr-row">
+                            <div class="attr-label">保修期 (Гарантийный срок) <span class="q">?</span></div>
+                            <div><input class="input" value=""></div>
+                        </div>
+                        <div class="attr-row">
+                            <div class="attr-label">包装 (Упаковка) <span class="q">?</span></div>
+                            <div>
+                                <div class="add-line"><input class="input" value="更多属性值请搜索添加"><button class="blue">添加</button></div>
+                                <div class="value-list">
+                                    <label><input type="checkbox"> 金属罐(Банка мета...)</label><label><input type="checkbox"> 吸 塑(Блистер)</label><label><input type="checkbox"> 包装纸(Бумажная о...)</label>
+                                    <label><input type="checkbox"> 桶(Ведерко)</label><label><input type="checkbox"> 显示(Дисплей)</label><label><input type="checkbox"> 塑料外壳(Кейс плас...)</label>
+                                    <label><input type="checkbox"> 容器(Контейнер)</label><label><input type="checkbox"> 金属盒(Коробка ме...)</label><label><input type="checkbox"> 塑料盒(Коробка пл...)</label>
+                                    <label><input type="checkbox"> 礼品袋(Пакет пода...)</label><label><input type="checkbox"> 纸板文件夹(Папка к...)</label><label><input type="checkbox"> 铅笔盒(Пенал)</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="attr-row">
+                            <div class="attr-label">原产国 (Страна-изготовитель) <span class="q">?</span></div>
+                            <div>
+                                <div class="add-line"><input class="input" value="更多属性值请搜索添加"><button class="blue">添加</button></div>
+                                <div class="value-list">
+                                    <label><input type="checkbox"> 俄罗斯(Россия)</label><label><input type="checkbox" checked> 中国(Китай)</label><label><input type="checkbox"> 未指定(Не указана)</label>
+                                    <label><input type="checkbox"> 意大利(Италия)</label><label><input type="checkbox"> 美国(США)</label><label><input type="checkbox"> 德国(Германия)</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="attr-row">
+                            <div class="attr-label">高度，厘米 (Высота, см)</div>
+                            <div><input class="input" value="12"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+    </section>
 
-        <section class="panel">
-            <div class="panel-title">基本信息</div>
-            <div class="panel-body">
-                <div class="row">
-                    <div class="label required">店铺名称:</div>
-                    <div class="control"><select class="select" id="store-select"><option value="">---- 请选择店铺 ----</option></select></div>
-                </div>
-                <div class="row">
-                    <div class="label required">产品SKC:</div>
-                    <div class="control">
-                        <input class="input" id="skc-input" value="{{ request.args.get('skc', '') }}" placeholder="如 WALLET-0006">
-                        <button class="primary" id="btn-load-product" style="margin-left:8px">加载商品</button>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="label required">产品分类:</div>
-                    <div class="control">
-                        <select class="select" id="category-select"><option value="">---- 请选择分类 ----</option></select>
-                        <button class="primary" id="btn-ai-category" style="margin-left:8px">AI选择分类</button>
-                        <div class="cat-path" id="cat-path">{{ '未选择分类' if mode == 'create' else '等待加载 Ozon 类目' }}</div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="label">产品属性:</div>
-                    <div class="control" id="attr-host">
-                        {% if mode == 'create' %}
-                        <div class="empty-attrs">
-                            创建状态：先选择店铺和产品分类。类目确定后，程序会从 Ozon 拉取属性定义，再出现类似店小秘的灰色平台属性区。
-                        </div>
-                        {% else %}
-                        <div class="ozon-attrs">
-                            <div class="attr-row">
-                                <div class="attr-label required">性别 (Пол) <span class="q">?</span></div>
-                                <div class="checks">
-                                    <label><input type="checkbox"> 男士(Мужской)</label>
-                                    <label><input type="checkbox" checked> 女士(Женский)</label>
-                                    <label><input type="checkbox"> 女童(Девочки)</label>
-                                    <label><input type="checkbox"> 男童(Мальчики)</label>
-                                </div>
-                            </div>
-                            <div class="attr-row">
-                                <div class="attr-label">商品重量，克 (Вес товара, г) <span class="q">?</span></div>
-                                <div><input class="input" data-attr="weight" value="200"></div>
-                            </div>
-                            <div class="attr-row">
-                                <div class="attr-label">配套 (Комплектация) <span class="q">?</span></div>
-                                <div><input class="input mid" data-attr="package" value="Кошелек, съемный ремешок"></div>
-                            </div>
-                            <div class="attr-row">
-                                <div class="attr-label">包装 (Упаковка) <span class="q">?</span></div>
-                                <div>
-                                    <div class="add-line"><input class="input mid" placeholder="更多属性值请搜索添加"><button class="primary">添加</button></div>
-                                    <div class="checks">
-                                        <label><input type="checkbox"> 金属罐(Банка металлическая)</label>
-                                        <label><input type="checkbox"> 吸塑(Блистер)</label>
-                                        <label><input type="checkbox"> 包装纸(Бумажная обертка)</label>
-                                        <label><input type="checkbox"> 塑料盒(Коробка пластиковая)</label>
-                                        <label><input type="checkbox"> 礼品袋(Пакет подарочный)</label>
-                                        <label><input type="checkbox"> 铅笔盒(Пенал)</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="attr-row">
-                                <div class="attr-label">原产国 (Страна-изготовитель) <span class="q">?</span></div>
-                                <div>
-                                    <div class="add-line"><input class="input mid" placeholder="更多属性值请搜索添加"><button class="primary">添加</button></div>
-                                    <div class="checks">
-                                        <label><input type="checkbox" checked> 中国(Китай)</label>
-                                        <label><input type="checkbox"> 俄罗斯(Россия)</label>
-                                        <label><input type="checkbox"> 未指定(Не указана)</label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
+    <section class="section" id="sales">
+        <div class="section-title">店小秘信息 <span class="note">（注：下列信息，仅在店小秘系统生效）</span></div>
+        <div class="section-body">
+            <div class="row">
+                <div class="label">店小秘分类:</div>
+                <div class="control"><select class="select"><option>选择分类</option></select> <a style="margin-left:10px">+ 管理分类</a></div>
             </div>
-        </section>
+            <div class="row">
+                <div class="label">来源URL:</div>
+                <div class="control"><input class="input long" value="用于记录供货渠道URL，方便采购。仅在店小秘显示，不会同步到OZON平台！"><button>访问</button><button>找货源</button><a style="margin-left:12px">+</a></div>
+            </div>
+        </div>
+    </section>
 
-        <section class="panel">
-            <div class="panel-title">店小秘信息 <span class="sub">仅在本系统生效，用于运营管理和溯源</span></div>
-            <div class="panel-body">
-                <div class="row"><div class="label">本地分类:</div><div class="control"><select class="select"><option>钱包 / Ozon</option></select> <button class="linkish">+ 管理分类</button></div></div>
-                <div class="row"><div class="label">来源URL:</div><div class="control"><input class="input long" placeholder="记录采集来源URL，方便追踪"><button style="margin-left:8px">访问</button><button>找货源</button></div></div>
+    <section class="section" id="info">
+        <div class="section-title">产品信息</div>
+        <div class="section-body">
+            <div class="row">
+                <div class="label">产品标题:</div>
+                <div class="control"><input class="input long" placeholder="请输入" value="{{ '' if mode == 'create' else 'Koшелек ANLING: Мужской/женский С Защитой NFC/RFID' }}"><button style="margin-left:0">↻</button><button>Tt</button><span style="margin-left:8px;color:#999">0 / 255</span><div class="hint"><span class="tip">说明</span>根据OZON平台要求，部分类目平台会自动生成标题，不支持自定义标题，点击查看详情</div></div>
             </div>
-        </section>
+            <div class="row">
+                <div class="label">VAT:</div>
+                <div class="control"><select class="select"><option>请选择</option></select></div>
+            </div>
+        </div>
+    </section>
 
-        <section class="panel">
-            <div class="panel-title">产品信息</div>
-            <div class="panel-body">
-                <div class="row">
-                    <div class="label">产品标题:</div>
-                    <div class="control">
-                        <input class="input long" id="title-input" placeholder="请输入俄文标题">
-                        <span class="tag">AI生成</span>
-                        <div class="hint">根据 Ozon 规则，部分类目会自动生成标题；这里保留标题预览和覆盖入口。</div>
-                    </div>
-                </div>
-                <div class="row"><div class="label">VAT:</div><div class="control"><select class="select"><option>请选择</option></select></div></div>
-                <div class="row"><div class="label">描述:</div><div class="control"><textarea id="description-input" placeholder="请输入俄文描述"></textarea></div></div>
-                <div class="row">
-                    <div class="label">高级附件:</div>
-                    <div class="control">
-                        <details>
-                            <summary>PDF / 合规文件 / 说明书</summary>
-                            <div class="hint">这类字段可能来自 Ozon 全量属性或独立接口。默认收起，AI 或 Ozon 校验提示需要时再展开。</div>
-                            <input class="input long" placeholder="PDF 或证书链接">
-                        </details>
-                    </div>
-                </div>
-            </div>
-        </section>
+    {% if mode != 'create' %}
+    <section class="section" id="desc">
+        <div class="section-title">描述信息</div>
+        <div class="section-body">
+            <div class="row"><div class="label">产品描述:</div><div class="control"><textarea>Компактный кошелек с защитой от NFC/RFID.</textarea><div class="hint" style="text-align:right;width:720px">0 / 6000</div></div></div>
+            <div class="row"><div class="label">JSON富文本:</div><div class="control"><input class="input" value="请选择内容模板"><label style="margin-left:14px"><input type="checkbox"> 立即创建</label><div class="hint"><span class="tip">说明</span>与 Ozon 富内容规则一致，普通描述和 JSON 富内容保持一致。</div><div class="rich-empty">Rich Content 空白编辑区</div></div></div>
+            <div class="row"><div class="label">产品视频:</div><div class="control"><div class="upload-card"><b>+</b>添加视频</div><div class="upload-card"><b>+</b>添加视频封面</div><div class="hint"><span class="tip">说明</span>Ozon 视频和视频封面是两个不同字段，页面按店小秘样式合并展示。</div></div></div>
+        </div>
+    </section>
 
-        <section class="panel">
-            <div class="panel-title">媒体中心 <span class="sub">图片按 SKU 分行；视频和视频封面合并成运营控件</span></div>
-            <div class="panel-body" style="padding-left:20px;padding-right:20px">
-                <div id="media-lines">
-                    <div class="media-line">
-                        <div><b>black</b><div class="hint">wallet-0006-black</div></div>
-                        <div class="dropzone"><div class="thumb main"></div><div class="thumb"></div><span>拖拽 black 图片到这里，默认只绑定 black SKU。</span></div>
-                        <div class="media-actions"><button>上传</button><button>排序</button><button>清空</button></div>
-                    </div>
-                    <div class="media-line">
-                        <div><b>coffee</b><div class="hint">wallet-0006-coffee</div></div>
-                        <div class="dropzone"><div class="thumb main" style="background:linear-gradient(135deg,#563b2b,#c29a78)"></div><span>可拖拽上传或从图片集选择。</span></div>
-                        <div class="media-actions"><button>上传</button><button>排序</button><button>清空</button></div>
-                    </div>
-                </div>
-                <div class="media-grid">
-                    <div class="media-card"><b>商品视频</b><div class="slot">添加视频 / 填写视频链接</div><div class="hint">底层视频链接、视频ID、上传状态由程序处理。</div></div>
-                    <div class="media-card"><b>视频封面</b><div class="slot">添加视频封面 / 从主图生成</div><div class="hint">封面字段和视频字段在页面合并管理。</div></div>
-                </div>
-            </div>
-        </section>
+    <section class="section" id="variant-theme">
+        <div class="section-title">变种属性 <button style="float:right;margin:5px 18px 0 0">一键套用变种模板</button></div>
+        <div class="section-body">
+            <div class="row"><div class="label">变种主题:</div><div class="control"><div class="variant-box">
+                <div class="variant-row"><b>颜色名称(Цвет товара)</b><div><span class="pill">黑色/чёрный</span><span class="pill">咖啡色/кофейный</span></div><input class="input" placeholder="颜色名称(Name)"><a>移除</a></div>
+                <div class="variant-row"><b>SKU 图片绑定</b><div><span class="pill">black</span><span class="pill">coffee</span><span class="pill">pink</span></div><input class="input" placeholder="图片集名称"><a>添加</a></div>
+            </div></div></div>
+        </div>
+    </section>
 
-        <section class="panel">
-            <div class="panel-title">变种信息 <span class="sub">支持增删改，默认继承 SKC 属性</span></div>
-            <div class="panel-body">
-                <table>
-                    <thead><tr><th>启用</th><th>颜色</th><th>SKU / Offer ID</th><th>标题预览</th><th>售价</th><th>原价</th><th>库存</th><th>属性覆盖</th><th>操作</th></tr></thead>
-                    <tbody id="variant-body">
-                        <tr><td><input type="checkbox" checked></td><td>Черный</td><td><input class="tbl-input" value="wallet-0006-black"></td><td>Женский кошелек черный</td><td><input class="tbl-input" value="1290"></td><td><input class="tbl-input" value="1890"></td><td><input class="tbl-input" value="20"></td><td><span class="tag">图片/颜色</span></td><td><button class="linkish">编辑</button><button class="linkish">删除</button></td></tr>
-                        <tr><td><input type="checkbox" checked></td><td>Кофейный</td><td><input class="tbl-input" value="wallet-0006-coffee"></td><td>Женский кошелек кофейный</td><td><input class="tbl-input" value="1290"></td><td><input class="tbl-input" value="1890"></td><td><input class="tbl-input" value="18"></td><td><span class="tag">图片/颜色</span></td><td><button class="linkish">编辑</button><button class="linkish">删除</button></td></tr>
-                    </tbody>
-                </table>
-                <div style="padding:12px 20px 0"><button class="primary" id="btn-add-variant">新增变体</button><button style="margin-left:8px">批量编辑</button></div>
-            </div>
-        </section>
-    </main>
+    <section class="section" id="variant-info">
+        <div class="section-title">变种信息 <span style="float:right;font-weight:400;margin-right:18px"><label><input type="checkbox"> 设置sku标题</label>　<label><input type="checkbox"> 自动补全</label>　<a>+ 自定义变种属性</a></span></div>
+        <div class="section-body">
+            <table>
+                <thead><tr><th>颜色名称</th><th>颜色值</th><th>SKU</th><th>售价(CNY)</th><th>原价(CNY)</th><th>库存</th><th>尺寸(cm)</th><th>重量(g)</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td>黑色/чёрный</td><td>black</td><td><input class="tbl-input" value="wallet-0006-black"></td><td><input class="tbl-input" value="1290"></td><td><input class="tbl-input" value="1890"></td><td><input class="tbl-input" value="20"></td><td><input class="tbl-input" value="20 12 4"></td><td><input class="tbl-input" value="200"></td><td><a>移除</a></td></tr>
+                    <tr><td>咖啡色/кофейный</td><td>coffee</td><td><input class="tbl-input" value="wallet-0006-coffee"></td><td><input class="tbl-input" value="1290"></td><td><input class="tbl-input" value="1890"></td><td><input class="tbl-input" value="18"></td><td><input class="tbl-input" value="20 12 4"></td><td><input class="tbl-input" value="200"></td><td><a>移除</a></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
 
-    <aside class="ai-rail">
-        <section class="ai-card">
-            <div class="ai-head">AI上架助手</div>
-            <div class="ai-body">
-                <div class="score">
-                    <div class="ring"><span id="local-score">78</span></div>
-                    <div><b>本地预估分</b><div class="hint">官方评分需要提交/更新后再回填。目标 75+。</div></div>
-                </div>
+    <section class="section" id="variant-img">
+        <div class="section-title">变种图片</div>
+        <div class="section-body">
+            <div class="row"><div class="label">变种图片:</div><div class="control"><div class="hint"><span class="tip">说明</span>一张图片建议为主图，支持拖拽排序、上传本地图片、图片空间选择。</div></div></div>
+            <div class="img-row"><div class="img-title">黑色/чёрный<br><span style="color:#999">[2/30] 图片</span></div><div><button>选择图片</button>　<a>商品图片</a>　<a>从链接导入</a>　<a>图片空间</a><br><div class="pic"></div><div class="pic" style="background:linear-gradient(135deg,#222,#bbb)"></div></div></div>
+            <div class="img-row"><div class="img-title">咖啡色/кофейный<br><span style="color:#999">[1/30] 图片</span></div><div><button>选择图片</button>　<a>商品图片</a>　<a>从链接导入</a>　<a>图片空间</a><br><div class="pic" style="background:linear-gradient(135deg,#563b2b,#c29a78)"></div></div></div>
+            <div class="img-row"><div class="img-title">粉色/розовый<br><span style="color:#999">[2/30] 图片</span></div><div><button>选择图片</button>　<a>商品图片</a>　<a>从链接导入</a>　<a>图片空间</a><br><div class="pic" style="background:linear-gradient(135deg,#df9db4,#ffe0ea)"></div><div class="pic" style="background:linear-gradient(135deg,#f1bdcf,#fff)"></div></div></div>
+        </div>
+    </section>
+    {% endif %}
+
+    <section class="section" id="score">
+        <div class="section-title">积分评价推广</div>
+        <div class="section-body">
+            <div class="row">
+                <div class="label">积分评价:</div>
+                <div class="control"><label><input type="checkbox"> 开启积分评价，买家评价后将获得积分，可用于促进买家留评。有评价的商品添加进购物车的频率最多可高出1倍。</label><div class="hint"><span class="tip">说明</span>买家获得的积分可用于在Ozon平台上购买其它商品</div></div>
             </div>
-        </section>
-        <section class="ai-card">
-            <div class="ai-head">AI动作</div>
-            <div class="ai-body">
-                <div class="ai-actions">
-                    <button class="primary" id="btn-ai-category-rail">AI选品类</button>
-                    <button>拉官方属性</button>
-                    <button class="primary">AI填属性</button>
-                    <button>匹配图片</button>
-                    <button>程序验证</button>
-                    <button>查官方分</button>
-                    <button>生成描述</button>
-                    <button class="green">提交更新</button>
-                </div>
-            </div>
-        </section>
-        <section class="ai-card">
-            <div class="ai-head">当前判断</div>
-            <div class="ai-body">
-                <div class="ai-item"><b>页面模型</b>创建和更新共用同一个编辑页。创建是空状态，选类目后变成可编辑状态。</div>
-                <div class="ai-item"><b>属性处理</b>左侧不展开全部候选给运营翻；AI 在右侧完成候选比较，左侧显示最终值和必要控件。</div>
-                <div class="ai-item"><b>媒体处理</b>视频和视频封面合并成一个运营模块，底层字段由程序编译回 Ozon payload。</div>
-            </div>
-        </section>
-        <section class="ai-card">
-            <div class="ai-head">问题与警告</div>
-            <div class="ai-body">
-                <div class="issue"><span class="dot ok"></span><div><b>钱包类目已验证</b><br>编辑页会出现 Ozon 平台属性灰色区。</div></div>
-                <div class="issue"><span class="dot"></span><div><b>品牌不能直接用店铺名</b><br>需要 AI 给证据，程序拦截采集店铺名。</div></div>
-                <div class="issue"><span class="dot"></span><div><b>PDF 等低频字段</b><br>默认收进高级附件，Ozon 校验需要时再展开。</div></div>
-            </div>
-        </section>
-    </aside>
+        </div>
+    </section>
 </div>
 
-<div class="bottom-bar">
-    <button>一键翻译</button>
+<div class="anchors">
+    <a href="#base">基本信息</a>
+    <a href="#sales">店小秘信息</a>
+    <a href="#info">产品信息</a>
+    {% if mode != 'create' %}<a href="#desc">描述信息</a><a href="#variant-info">变种信息</a><a href="#variant-img">变种图片</a>{% endif %}
+    <a href="#score">积分评价推广</a>
+</div>
+<div class="float-tools"><div>×</div><div>▣</div><div>?</div><div>⌂</div></div>
+<div class="bottom-actions">
+    <button>一键翻译⌄</button>
     <button>存为模板</button>
-    {% if mode == 'create' %}<button class="orange">引用产品</button><button class="orange">保存</button>{% endif %}
-    <button class="green">{{ '发布' if mode == 'create' else '更新' }}</button>
+    {% if mode == 'create' %}<button class="orange">引用产品⌄</button><button class="orange">保存</button><button class="green">发布</button>{% else %}<button class="green">更新</button>{% endif %}
 </div>
 
 <script>
-var pageMode = document.body.dataset.mode;
 var query = new URLSearchParams(location.search);
-var state = {
+var pageState = {
     storeId: query.get("store_id") || "",
-    skc: query.get("skc") || "",
-    product: null,
-    category: pageMode === "update" ? { id: 17027904, type_id: 93338, path: "小百货和配饰 > 配饰 > 钱包(Кошелек)" } : null
+    skc: query.get("skc") || "WALLET-0006"
 };
 
 function $(id) { return document.getElementById(id); }
@@ -550,91 +568,97 @@ async function api(url, options) {
 async function loadStores() {
     try {
         var stores = await api("/api/stores");
-        var sel = $("store-select");
-        sel.innerHTML = '<option value="">---- 请选择店铺 ----</option>';
-        stores.forEach(function (s) {
+        var select = $("store-select");
+        var currentText = select.options[0] ? select.options[0].textContent : "";
+        select.innerHTML = '<option value="">' + currentText + '</option>';
+        stores.forEach(function (store) {
             var opt = document.createElement("option");
-            opt.value = s.id;
-            opt.textContent = s.label || s.id;
-            if (state.storeId && s.id === state.storeId) opt.selected = true;
-            sel.appendChild(opt);
+            opt.value = store.id;
+            opt.textContent = store.label || store.name || store.id;
+            if (pageState.storeId && store.id === pageState.storeId) opt.selected = true;
+            select.appendChild(opt);
         });
-        if (!state.storeId) {
-            var ozon = stores.find(function (s) { return String(s.platform || "").toLowerCase() === "ozon"; });
-            if (ozon) { state.storeId = ozon.id; sel.value = ozon.id; }
+        if (!pageState.storeId) {
+            var firstOzon = stores.find(function (store) {
+                return String(store.platform || "").toLowerCase() === "ozon";
+            });
+            if (firstOzon) {
+                pageState.storeId = firstOzon.id;
+                select.value = firstOzon.id;
+            }
         }
     } catch (e) {
-        console.warn("stores load failed", e);
+        console.warn("store load failed", e);
     }
 }
 
-function setCategory(cat) {
-    state.category = cat;
-    $("category-select").innerHTML = '<option value="' + cat.id + '">钱包(Кошелек)</option>';
-    $("cat-path").innerHTML = cat.path + ' <span class="tag ok">type_id: ' + cat.type_id + '</span>';
-    renderAttributePanel();
+function showWalletCategory(match) {
+    var categoryId = match.description_category_id || match.category_id || match.id || 17027904;
+    var typeId = match.type_id || 93338;
+    var path = match.path || match.category_path || "小百货和配饰(Галантерея и аксессуары) > 配饰(Аксессуары) > 钱包(Кошелек)";
+    $("category-select").innerHTML = '<option value="' + categoryId + '">钱包(Кошелек)</option>';
+    $("cat-path").className = "cat-path";
+    $("cat-path").textContent = path + " / type_id: " + typeId;
+    $("attr-row").style.display = "grid";
 }
 
-function renderAttributePanel() {
-    var host = $("attr-host");
-    if (!state.category) return;
-    host.innerHTML = [
-        '<div class="ozon-attrs">',
-        '<div class="attr-row"><div class="attr-label required">性别 (Пол) <span class="q">?</span></div><div class="checks"><label><input type="checkbox"> 男士(Мужской)</label><label><input type="checkbox" checked> 女士(Женский)</label><label><input type="checkbox"> 女童(Девочки)</label><label><input type="checkbox"> 男童(Мальчики)</label></div></div>',
-        '<div class="attr-row"><div class="attr-label">商品重量，克 (Вес товара, г) <span class="q">?</span></div><div><input class="input" value="200"></div></div>',
-        '<div class="attr-row"><div class="attr-label">配套 (Комплектация) <span class="q">?</span></div><div><input class="input mid" value="Кошелек, съемный ремешок"></div></div>',
-        '<div class="attr-row"><div class="attr-label">材料 (Материал) <span class="q">?</span></div><div><input class="input mid" value="Искусственная кожа"><span class="tag warn">AI需验证字典值</span></div></div>',
-        '<div class="attr-row"><div class="attr-label">Коллекция / 系列 <span class="q">?</span></div><div><input class="input mid" value="Базовая коллекция"><span class="tag warn">运营语义字段</span></div></div>',
-        '</div>'
-    ].join("");
+function fillKnownWalletAttributes(draft) {
+    var attrs = draft.attributes || [];
+    attrs.forEach(function (attr) {
+        var value = attr.value || attr.values || "";
+        if (Array.isArray(value)) value = value.map(function (v) { return v.value || v; }).join(", ");
+        if (attr.attribute_id === 4389 && String(value).trim()) {
+            var labels = document.querySelectorAll(".value-list label");
+            labels.forEach(function (label) {
+                if (label.textContent.indexOf("中国") >= 0) {
+                    var input = label.querySelector("input");
+                    if (input) input.checked = true;
+                }
+            });
+        }
+        if (attr.attribute_id === 20926 && String(value).trim()) {
+            var packageInput = document.querySelector('.attr-row input[value="Кошелек, съемный ремешок"]');
+            if (packageInput) packageInput.value = String(value);
+        }
+    });
 }
 
-async function runAiCategory() {
-    state.storeId = $("store-select").value || state.storeId;
-    state.skc = $("skc-input").value || state.skc;
-    if (!state.storeId) { alert("请先选择店铺"); return; }
+async function autoCategoryThenFill() {
+    var btn = $("btn-select-category");
+    var oldText = btn.textContent;
+    pageState.storeId = $("store-select").value || pageState.storeId;
+    if (!pageState.storeId) {
+        alert("请先选择店铺");
+        return;
+    }
+    btn.disabled = true;
+    btn.textContent = "自动匹配中...";
     try {
-        var data = await api("/api/ozon/" + encodeURIComponent(state.storeId) + "/listing/auto-category", {
+        var cat = await api("/api/ozon/" + encodeURIComponent(pageState.storeId) + "/listing/auto-category", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ skc: state.skc || "WALLET-0006", title: $("title-input").value || "wallet" })
+            body: JSON.stringify({ skc: pageState.skc })
         });
-        var match = data.category || data.best_match || data.result || {};
-        setCategory({
-            id: match.description_category_id || match.id || 17027904,
-            type_id: match.type_id || 93338,
-            path: match.path || "小百货和配饰 > 配饰 > 钱包(Кошелек)"
+        showWalletCategory(cat.category || cat.best_match || cat.result || cat);
+
+        btn.textContent = "自动填属性...";
+        var draft = await api("/api/ozon/" + encodeURIComponent(pageState.storeId) + "/listing/generate-draft", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ skc: pageState.skc })
         });
+        fillKnownWalletAttributes(draft.draft || draft);
     } catch (e) {
-        setCategory({ id: 17027904, type_id: 93338, path: "小百货和配饰 > 配饰 > 钱包(Кошелек)" });
+        console.warn("auto category/fill failed", e);
+        showWalletCategory({});
+    } finally {
+        btn.disabled = false;
+        btn.textContent = oldText;
     }
 }
 
-function addVariant() {
-    var tbody = $("variant-body");
-    var tr = document.createElement("tr");
-    tr.innerHTML = '<td><input type="checkbox" checked></td><td>New</td><td><input class="tbl-input" value="wallet-0006-new"></td><td>Женский кошелек</td><td><input class="tbl-input" value="1290"></td><td><input class="tbl-input" value="1890"></td><td><input class="tbl-input" value="0"></td><td><span class="tag">继承</span></td><td><button class="linkish">编辑</button><button class="linkish js-remove-variant">删除</button></td>';
-    tr.querySelector(".js-remove-variant").addEventListener("click", function () {
-        tr.remove();
-    });
-    tbody.appendChild(tr);
-}
-
-function init() {
-    $("top-skc").textContent = state.skc || "未选择商品";
-    if (state.skc) $("skc-input").value = state.skc;
-    loadStores();
-    if (state.category) setCategory(state.category);
-    $("btn-ai-category").addEventListener("click", runAiCategory);
-    $("btn-ai-category-rail").addEventListener("click", runAiCategory);
-    $("btn-add-variant").addEventListener("click", addVariant);
-    $("btn-load-product").addEventListener("click", function () {
-        state.skc = $("skc-input").value;
-        $("top-skc").textContent = state.skc || "未选择商品";
-    });
-}
-
-init();
+loadStores();
+$("btn-select-category").addEventListener("click", autoCategoryThenFill);
 </script>
 </body>
 </html>
