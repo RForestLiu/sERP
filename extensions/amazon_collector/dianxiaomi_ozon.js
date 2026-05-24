@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.34";
+  var SERP_EXTENSION_VERSION = "3.2.35";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -224,7 +224,7 @@
     "#serp-hint-panel .hint-save-btn:hover{background:#428bca;color:#fff;}",
     "#serp-hint-panel .hint-save-btn.saved{background:#16a34a;color:#fff;border-color:#16a34a;}",
     "/* ===== 填充结果面板 ===== */",
-    "#serp-results-panel{position:fixed;left:8px;top:auto;z-index:999989;background:#fff;border-radius:10px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,0.12);font-family:\"Microsoft YaHei\",sans-serif;font-size:12px;max-width:360px;max-height:400px;overflow-y:auto;display:none;}",
+    "#serp-results-panel{position:fixed;right:12px;top:86px;z-index:999989;background:#fff;border-radius:8px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,0.12);font-family:\"Microsoft YaHei\",sans-serif;font-size:12px;width:360px;max-width:calc(100vw - 420px);max-height:calc(100vh - 110px);overflow-y:auto;display:none;}",
     "#serp-results-panel.visible{display:block;}",
     "#serp-results-panel .sr-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0;}",
     "#serp-results-panel .sr-header .sr-title{font-weight:600;font-size:13px;color:#333;}",
@@ -3424,15 +3424,11 @@
   }
 
   function positionResultsPanel() {
-    var tbRect = toolbar.getBoundingClientRect();
-    var top = tbRect.bottom + 8;
-    // 如果产品信息区已展开，放到它下面
-    if (productInfo.classList.contains("visible")) {
-      var piRect = productInfo.getBoundingClientRect();
-      top = piRect.bottom + 8;
-    }
+    var top = Math.max(76, Math.min(110, toolbar.getBoundingClientRect().top));
+    // Dock fill results in the right-side blank area of the listing page.
     resultsPanel.style.top = top + "px";
-    resultsPanel.style.left = "8px";
+    resultsPanel.style.left = "auto";
+    resultsPanel.style.right = "12px";
   }
 
   function renderFillResults(allResults, totalFields) {
