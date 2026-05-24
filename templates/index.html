@@ -4658,6 +4658,11 @@
         }
 
         function bindImageMgmtGridDrop(gridWrap) {
+            function getDroppedImageFiles(e) {
+                return Array.from((e.dataTransfer && e.dataTransfer.files) || []).filter(function(file) {
+                    return file && file.type && file.type.indexOf("image/") === 0;
+                });
+            }
             gridWrap.ondragover = function(e) {
                 var hasFiles = e.dataTransfer && Array.from(e.dataTransfer.types || []).indexOf("Files") !== -1;
                 var hasImagePayload = e.dataTransfer && Array.from(e.dataTransfer.types || []).indexOf("text/plain") !== -1;
@@ -4676,9 +4681,7 @@
                     showMsg("请先选择左侧图片集", true);
                     return;
                 }
-                var files = Array.from((e.dataTransfer && e.dataTransfer.files) || []).filter(function(file) {
-                    return file && file.type && file.type.indexOf("image/") === 0;
-                });
+                var files = getDroppedImageFiles(e);
                 if (files.length) {
                     await uploadImageMgmtFiles(files, currentSetName);
                     return;
@@ -4752,10 +4755,19 @@
             });
             item.addEventListener("dragover", function(e) {
                 e.preventDefault();
-                e.dataTransfer.dropEffect = "move";
+                var hasFiles = e.dataTransfer && Array.from(e.dataTransfer.types || []).indexOf("Files") !== -1;
+                e.dataTransfer.dropEffect = hasFiles ? "copy" : "move";
             });
-            item.addEventListener("drop", function(e) {
+            item.addEventListener("drop", async function(e) {
                 e.preventDefault();
+                e.stopPropagation();
+                var files = Array.from((e.dataTransfer && e.dataTransfer.files) || []).filter(function(file) {
+                    return file && file.type && file.type.indexOf("image/") === 0;
+                });
+                if (files.length) {
+                    await uploadImageMgmtFiles(files, currentSetName);
+                    return;
+                }
                 try {
                     var payload = JSON.parse(e.dataTransfer.getData("text/plain"));
                     var fromKey = payload.sourceKey;
