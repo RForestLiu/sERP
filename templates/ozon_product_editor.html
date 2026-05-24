@@ -1033,7 +1033,7 @@ function renderAttributeInput(attr) {
     if (values.length > 0 && attr.is_collection) {
         return '<input class="input attr-search" data-attr-search="' + id + '" placeholder="搜索可选值">' +
             renderDictionaryCheckboxes(attr, true) +
-            '<input class="input attr-manual" data-attr-manual="' + id + '" placeholder="手动补充，多个值用分号分隔">' +
+            '<input class="input attr-manual" data-attr-manual="' + id + '">' +
             '<div class="selected-values" data-attr-selected="' + id + '"></div>' +
             '<div class="hint">勾选即可多选；找不到合适值时可手动补充。</div>';
     }
@@ -1051,7 +1051,7 @@ function renderAttributeInput(attr) {
     if (String(attr.type || "").toLowerCase() === "boolean") {
         return '<select class="select" data-attr-id="' + id + '" data-attr-type="Boolean"><option value="">请选择</option><option value="true">是</option><option value="false">否</option></select>';
     }
-    return '<input class="input" data-attr-id="' + id + '" data-attr-type="' + esc(attr.type || "String") + '" placeholder="' + esc(attr.type || "String") + '">';
+    return '<input class="input" data-attr-id="' + id + '" data-attr-type="' + esc(attr.type || "String") + '">';
 }
 
 function isPublicOzonAttribute(attr) {

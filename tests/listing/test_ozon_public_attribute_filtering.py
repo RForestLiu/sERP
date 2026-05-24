@@ -28,3 +28,10 @@ def test_listing_docs_define_cross_platform_public_attribute_area_rule():
     assert "后续 Amazon、Wildberries 等平台也沿用同一规则" in requirements
     assert "公共属性由固定区域承接" in handoff
     assert "动态属性区只渲染当前分类的非公共属性" in handoff
+
+
+def test_ozon_dynamic_attribute_fill_inputs_have_no_placeholder():
+    template = read_text("templates/ozon_product_editor.html")
+
+    assert 'data-attr-type="\' + esc(attr.type || "String") + \'" placeholder=' not in template
+    assert 'data-attr-manual="\' + id + \'" placeholder=' not in template
