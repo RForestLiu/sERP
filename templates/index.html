@@ -5024,6 +5024,15 @@
         document.querySelector('.nav-item[data-module="product-manage"]').addEventListener("click", () => {
             _onModuleActivated("product-manage");
         });
+
+        (function openImageMgmtFromQuery() {
+            const params = new URLSearchParams(window.location.search);
+            const skc = params.get("img_mgmt");
+            if (!skc) return;
+            switchModule("product-manage", false);
+            _onModuleActivated("product-manage");
+            setTimeout(() => openImageMgmt(skc), 300);
+        })();
     </script>
 </body>
 </html>

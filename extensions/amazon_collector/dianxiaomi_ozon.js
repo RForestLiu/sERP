@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.25";
+  var SERP_EXTENSION_VERSION = "3.2.26";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -132,6 +132,9 @@
     "#serp-toolbar .image-set-head span:last-child{color:#94a3b8;font-weight:600;}",
     "#serp-toolbar .image-grid{display:flex;flex-wrap:wrap;gap:5px;}",
     "#serp-toolbar .image-grid img{width:60px;height:60px;object-fit:cover;display:block;border:1px solid #e2e8f0;border-radius:5px;background:#eef2f7;cursor:zoom-in;}",
+    "#serp-toolbar .image-manage-row{display:flex;margin-top:8px;}",
+    "#serp-toolbar .image-manage-btn{width:100%;border:1px solid #2563eb;background:#eff6ff;color:#1d4ed8;border-radius:5px;padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer;}",
+    "#serp-toolbar .image-manage-btn:hover{background:#dbeafe;border-color:#1d4ed8;}",
     "#serp-image-preview{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:500px;height:500px;padding:10px;border:1px solid #d1d5db;border-radius:8px;background:#fff;box-shadow:0 20px 60px rgba(15,23,42,0.25);z-index:1000003;display:none;}",
     "#serp-image-preview.visible{display:block;}",
     "#serp-image-preview img{width:100%;height:100%;object-fit:contain;display:block;background:#f8fafc;}",
@@ -1276,11 +1279,14 @@
     productDataBody.innerHTML = renderCollectedProductData(selectedProduct);
 
     var sets = collectProductImageSets(selectedProduct);
+    var imageManageHtml = selectedProduct.skc
+      ? '<div class="image-manage-row"><button type="button" class="image-manage-btn" id="serp-open-image-manager">打开图片管理</button></div>'
+      : "";
     if (!sets.length) {
-      productImageBody.innerHTML = '<div class="pi-meta">暂无图片数据集</div>';
+      productImageBody.innerHTML = imageManageHtml + '<div class="pi-meta">暂无图片数据集</div>';
       return;
     }
-    productImageBody.innerHTML = '<div class="image-sets">' + sets.map(function (set) {
+    productImageBody.innerHTML = imageManageHtml + '<div class="image-sets">' + sets.map(function (set) {
       var imgs = (set.images || []).map(function (img) { return productPanelImageUrl(selectedProduct, img); }).filter(Boolean);
       return '<div class="image-set">' +
         '<div class="image-set-head"><span>' + escapeHtml(set.name || "图片集") + '</span><span>' + imgs.length + ' 张</span></div>' +
@@ -1289,6 +1295,12 @@
         }).join("") + '</div>' +
       '</div>';
     }).join("") + '</div>';
+  }
+
+  function productImageManagerUrl(product) {
+    var skc = product && product.skc ? String(product.skc).trim() : "";
+    if (!skc) return FLASK_BASE + "/#product-manage";
+    return FLASK_BASE + "/?img_mgmt=" + encodeURIComponent(skc) + "#product-manage";
   }
 
   function normalizeImageUrl(url) {
@@ -4216,6 +4228,13 @@
     imagePicker.classList.remove("visible");
   });
   productInfo.addEventListener("click", function (e) {
+    var manageBtn = e.target.closest("#serp-open-image-manager");
+    if (manageBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      window.open(productImageManagerUrl(selectedProduct), "_blank", "noopener");
+      return;
+    }
     var img = e.target.closest(".image-grid img");
     if (!img) return;
     e.stopPropagation();
