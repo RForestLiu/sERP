@@ -268,6 +268,7 @@ class Product(AggregateRoot):
             "images": self.images,
             "video_url": self.video_url,
             "image_sets": dict(self._image_sets),
+            "image_subsets": dict(self._image_subsets),
             "pending_approvals": list(self._pending_approvals),
         }
 
