@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.32";
+  var SERP_EXTENSION_VERSION = "3.2.33";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -1551,11 +1551,18 @@
 
     var prodData = selectedProduct.product_data || {};
     var desc = (prodData.about_item || "") + " " + (prodData.product_description || "");
-    return bgFetch(FLASK_BASE + "/api/" + platform + "/" + storeId + "/match-category", {
+    function finishCategoryMatch() {
+      _categoryMatchRunning = false;
+      setBtnLoading(btnCategory, false);
+    }
+    return bgFetchWithTimeout(FLASK_BASE + "/api/" + platform + "/" + storeId + "/match-category", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ product_title: selectedProduct.title || "", product_category: selectedProduct.category || "", product_description: desc.trim() })
+    }, 180000)
+    .then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
     })
-    .then(function (r) { return r.json(); })
     .then(function (data) {
       if (!data.success || !data.best_match || !data.best_match.id) { showToast("品类匹配失败: " + (data.error || data.warning || "无匹配结果"), "error"); return; }
       var m = data.best_match;
@@ -1564,7 +1571,10 @@
       return fillCategorySelect(m, platform);
     })
     .catch(function (e) { console.error("[sERP] 品类匹配异常:", e); showToast("品类匹配失败: " + e.message, "error"); })
-    .then(function () { _categoryMatchRunning = false; setBtnLoading(btnCategory, false); });
+    .then(finishCategoryMatch, function (e) {
+      console.error("[sERP] category match cleanup error:", e);
+      finishCategoryMatch();
+    });
   }
 
   // ===== 平台策略分发 =====
