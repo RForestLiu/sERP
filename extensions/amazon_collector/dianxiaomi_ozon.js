@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.28";
+  var SERP_EXTENSION_VERSION = "3.2.29";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -923,10 +923,8 @@
     var pricing = computePricingV2(product);
     var v = pricing.vars || {};
     var b = pricingBreakdownV2(pricing);
-    var sourceText = pricing.sourceMoney ? (pricing.sourceMoney.currency + " " + pricing.sourceMoney.value.toFixed(2)) : "--";
     return [
       '<div class="pi-price-row"><span>公式(Formula)</span><strong>' + ((pricing.formula && pricing.formula.name) || "--") + '</strong></div>',
-      '<div class="pi-price-row"><span>采集价(Source)</span><strong>' + sourceText + '</strong></div>',
       '<div class="pi-price-row"><span>成本价(Cost CNY)</span><strong data-price-summary="cost">' + priceAmountPctTextV2(b.cost, b.sale) + '</strong></div>',
       '<div class="pi-price-row"><span>物流费(Logistics)</span><strong data-price-summary="logistics">' + priceAmountPctTextV2(b.logistics, b.sale) + '</strong></div>',
       '<div class="pi-price-row"><span>平台佣金(Commission)</span><strong data-price-summary="commission">' + priceAmountPctTextV2(b.commission, b.sale) + '</strong></div>',
