@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.36";
+  var SERP_EXTENSION_VERSION = "3.2.37";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -1437,17 +1437,18 @@
 
   function selectPanelImagesInRect(rect) {
     if (!productImageBody) return 0;
-    var selectedCount = 0;
+    var toggledCount = 0;
     productImageBody.querySelectorAll(".image-choice").forEach(function (node) {
       var box = node.getBoundingClientRect();
       var url = node.getAttribute("data-url") || "";
       if (url && rectsIntersect(rect, box)) {
-        selectedPanelImageUrls[url] = true;
-        selectedCount++;
+        if (selectedPanelImageUrls[url]) delete selectedPanelImageUrls[url];
+        else selectedPanelImageUrls[url] = true;
+        toggledCount++;
       }
     });
     updatePanelImageSelectionUI();
-    return selectedCount;
+    return toggledCount;
   }
 
   function finishPanelImageDrag(e) {
