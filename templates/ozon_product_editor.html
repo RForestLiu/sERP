@@ -280,10 +280,15 @@
         }
         .variant-row {
             display: grid;
-            grid-template-columns: 130px 1fr 250px 50px;
+            grid-template-columns: 130px 1fr 1fr 52px;
             gap: 8px;
             align-items: center;
             margin-bottom: 8px;
+        }
+        .variant-theme-actions {
+            margin-top: 10px;
+            display: flex;
+            justify-content: flex-end;
         }
         .pill {
             display: inline-block;
@@ -769,8 +774,8 @@
             <div class="form-card-header"><h4 class="form-card-title">变种属性 <button type="button" style="float:right;margin:5px 18px 0 0">一键套用变种模板</button></h4></div>
             <div class="form-card-content">
                 <div class="ant-form-item"><div class="ant-form-item-label"><label>变种主题</label></div><div class="ant-form-item-control"><div class="variant-box">
-                    <div class="variant-row"><b>颜色名称(Цвет товара)</b><div><span class="pill">黑色/чёрный</span><span class="pill">咖啡色/кофейный</span></div><input class="input" placeholder="颜色名称(Name)"><a>移除</a></div>
-                    <div class="variant-row"><b>SKU 图片绑定</b><div><span class="pill">black</span><span class="pill">coffee</span><span class="pill">pink</span></div><input class="input" placeholder="图片集名称"><a>添加</a></div>
+                    <div id="variant-theme-list"></div>
+                    <div class="variant-theme-actions"><button type="button" class="blue" data-action="add-variant-theme">添加变种</button></div>
                 </div></div></div>
             </div>
         </section>
@@ -780,20 +785,14 @@
             <div class="form-card-content">
                 <table>
                     <thead><tr><th>颜色名称</th><th>颜色值</th><th>SKU</th><th>售价(CNY)</th><th>原价(CNY)</th><th>库存</th><th>长(cm)</th><th>宽(cm)</th><th>高(cm)</th><th>重量(g)</th><th>操作</th></tr></thead>
-                    <tbody>
-                        <tr><td>黑色/чёрный</td><td>black</td><td><input class="tbl-input" value="wallet-0006-black"></td><td><input class="tbl-input" value="1290"></td><td><input class="tbl-input" value="1890"></td><td><input class="tbl-input" value="20"></td><td><input class="tbl-input" value="20"></td><td><input class="tbl-input" value="12"></td><td><input class="tbl-input" value="4"></td><td><input class="tbl-input" value="200"></td><td><a>移除</a></td></tr>
-                        <tr><td>咖啡色/кофейный</td><td>coffee</td><td><input class="tbl-input" value="wallet-0006-coffee"></td><td><input class="tbl-input" value="1290"></td><td><input class="tbl-input" value="1890"></td><td><input class="tbl-input" value="18"></td><td><input class="tbl-input" value="20"></td><td><input class="tbl-input" value="12"></td><td><input class="tbl-input" value="4"></td><td><input class="tbl-input" value="200"></td><td><a>移除</a></td></tr>
-                    </tbody>
+                    <tbody id="variant-info-body"></tbody>
                 </table>
             </div>
         </section>
 
         <section class="form-card category-dependent{% if mode == 'create' %} is-hidden{% endif %}" id="variantImage">
             <div class="form-card-header"><h4 class="form-card-title">变种图片</h4></div>
-            <div class="form-card-content">
-                <div class="img-row" data-variant-key="black"><div class="img-title">黑色/чёрный<br><span style="color:#999">[0/30] 图片</span></div><div><button type="button" data-action="pick-variant-images" data-variant-key="black">选择图片</button> <a>商品图片</a> <a>从链接导入</a> <a>图片空间</a><br><div class="variant-selected-images" data-variant-images="black"></div></div></div>
-                <div class="img-row" data-variant-key="coffee"><div class="img-title">咖啡色/кофейный<br><span style="color:#999">[0/30] 图片</span></div><div><button type="button" data-action="pick-variant-images" data-variant-key="coffee">选择图片</button> <a>商品图片</a> <a>从链接导入</a> <a>图片空间</a><br><div class="variant-selected-images" data-variant-images="coffee"></div></div></div>
-            </div>
+            <div class="form-card-content" id="variant-image-rows"></div>
         </section>
         <section class="form-card" id="scoreInfo">
             <div class="form-card-header"><h4 class="form-card-title">积分评价推广</h4></div>
@@ -911,6 +910,10 @@ var pageState = {
     categoryTypeId: null,
     categoryAttributes: [],
     attributeEvidence: {},
+    variantThemes: [
+        { label: "黑色/чёрный", key: "black", sku: "wallet-0006-black", price: "1290", old_price: "1890", stock: "20", depth: "20", width: "12", height: "4", weight: "200" },
+        { label: "咖啡色/кофейный", key: "coffee", sku: "wallet-0006-coffee", price: "1290", old_price: "1890", stock: "18", depth: "20", width: "12", height: "4", weight: "200" }
+    ],
     variantImages: {},
     activeVariantKey: "",
     productImageSets: [],
@@ -1039,6 +1042,87 @@ function renderSelectedProduct(product) {
     host.style.display = "grid";
 }
 
+function renderVariantThemes() {
+    var host = $("variant-theme-list");
+    if (!host) return;
+    host.innerHTML = pageState.variantThemes.map(function (theme, index) {
+        return '<div class="variant-row" data-variant-theme-index="' + index + '">' +
+            '<b>颜色名称(Цвет товара)</b>' +
+            '<input class="input" data-variant-theme-field="label" data-variant-theme-index="' + index + '" value="' + esc(theme.label || "") + '">' +
+            '<input class="input" data-variant-theme-field="key" data-variant-theme-index="' + index + '" value="' + esc(theme.key || "") + '">' +
+            '<a data-action="remove-variant-theme" data-variant-theme-index="' + index + '">移除</a>' +
+            '</div>';
+    }).join("");
+    renderVariantInfoRows();
+    renderVariantImageRows();
+}
+
+function renderVariantInfoRows() {
+    var body = $("variant-info-body");
+    if (!body) return;
+    body.innerHTML = pageState.variantThemes.map(function (theme, index) {
+        return '<tr data-variant-key="' + esc(theme.key || "") + '">' +
+            '<td>' + esc(theme.label || "") + '</td>' +
+            '<td>' + esc(theme.key || "") + '</td>' +
+            '<td><input class="tbl-input" data-variant-theme-field="sku" data-variant-theme-index="' + index + '" value="' + esc(theme.sku || "") + '"></td>' +
+            '<td><input class="tbl-input" data-variant-theme-field="price" data-variant-theme-index="' + index + '" value="' + esc(theme.price || "") + '"></td>' +
+            '<td><input class="tbl-input" data-variant-theme-field="old_price" data-variant-theme-index="' + index + '" value="' + esc(theme.old_price || "") + '"></td>' +
+            '<td><input class="tbl-input" data-variant-theme-field="stock" data-variant-theme-index="' + index + '" value="' + esc(theme.stock || "") + '"></td>' +
+            '<td><input class="tbl-input" data-variant-theme-field="depth" data-variant-theme-index="' + index + '" value="' + esc(theme.depth || "") + '"></td>' +
+            '<td><input class="tbl-input" data-variant-theme-field="width" data-variant-theme-index="' + index + '" value="' + esc(theme.width || "") + '"></td>' +
+            '<td><input class="tbl-input" data-variant-theme-field="height" data-variant-theme-index="' + index + '" value="' + esc(theme.height || "") + '"></td>' +
+            '<td><input class="tbl-input" data-variant-theme-field="weight" data-variant-theme-index="' + index + '" value="' + esc(theme.weight || "") + '"></td>' +
+            '<td><a data-action="remove-variant-theme" data-variant-theme-index="' + index + '">移除</a></td>' +
+            '</tr>';
+    }).join("");
+}
+
+function renderVariantImageRows() {
+    var host = $("variant-image-rows");
+    if (!host) return;
+    host.innerHTML = pageState.variantThemes.map(function (theme) {
+        var key = theme.key || "";
+        var count = (pageState.variantImages[key] || []).length;
+        return '<div class="img-row" data-variant-key="' + esc(key) + '">' +
+            '<div class="img-title">' + esc(theme.label || key) + '<br><span style="color:#999">[' + count + '/30] 图片</span></div>' +
+            '<div><button type="button" data-action="pick-variant-images" data-variant-key="' + esc(key) + '">选择图片</button> ' +
+            '<a>商品图片</a> <a>从链接导入</a> <a>图片空间</a><br>' +
+            '<div class="variant-selected-images" data-variant-images="' + esc(key) + '"></div></div>' +
+            '</div>';
+    }).join("");
+    pageState.variantThemes.forEach(function (theme) {
+        renderVariantSelectedImages(theme.key || "");
+    });
+}
+
+function addVariantTheme() {
+    pageState.variantThemes.push({ label: "", key: "", sku: "", price: "", old_price: "", stock: "", depth: "", width: "", height: "", weight: "" });
+    renderVariantThemes();
+}
+
+function updateVariantTheme(index, field, value) {
+    var theme = pageState.variantThemes[index];
+    if (!theme) return;
+    var oldKey = theme.key;
+    theme[field] = value;
+    if (field === "key" && oldKey !== value) {
+        pageState.variantImages[value] = pageState.variantImages[oldKey] || [];
+        delete pageState.variantImages[oldKey];
+    }
+    if (field === "label" || field === "key") {
+        renderVariantInfoRows();
+        renderVariantImageRows();
+    }
+}
+
+function removeVariantTheme(index) {
+    var theme = pageState.variantThemes[index];
+    if (!theme) return;
+    delete pageState.variantImages[theme.key];
+    pageState.variantThemes.splice(index, 1);
+    renderVariantThemes();
+}
+
 function imageDisplayName(image, index) {
     var raw = image.filename || image.local_path || image.url || ("图片 " + (index + 1));
     return String(raw).split(/[\\/]/).pop();
@@ -1051,7 +1135,7 @@ function renderVariantSelectedImages(variantKey) {
     host.innerHTML = images.map(function (image) {
         return '<span class="pic"><img src="' + esc(image.url || "") + '" alt=""></span>';
     }).join("");
-    var row = document.querySelector('[data-variant-key="' + String(variantKey).replace(/"/g, '\\"') + '"]');
+    var row = document.querySelector('.img-row[data-variant-key="' + String(variantKey).replace(/"/g, '\\"') + '"]');
     if (row) {
         var count = row.querySelector(".img-title span");
         if (count) count.textContent = "[" + images.length + "/30] 图片";
@@ -1142,6 +1226,7 @@ async function selectProduct(skc) {
         pageState.product = product;
         pageState.skc = product.skc || skc;
         pageState.variantImages = {};
+        renderVariantImageRows();
         $("top-skc").textContent = pageState.skc;
         $("title-input").value = product.title || product.name || "";
         renderSelectedProduct(product);
@@ -1478,6 +1563,11 @@ function markAttributeStatus(attrId, attr, filled, matched) {
 }
 
 document.addEventListener("change", function (event) {
+    var variantField = event.target && event.target.getAttribute && event.target.getAttribute("data-variant-theme-field");
+    if (variantField) {
+        updateVariantTheme(Number(event.target.getAttribute("data-variant-theme-index")), variantField, event.target.value);
+        return;
+    }
     var attrId = event.target && event.target.getAttribute && event.target.getAttribute("data-attr-id");
     if (!attrId) return;
     var status = document.querySelector('[data-attr-status="' + String(attrId).replace(/"/g, '\\"') + '"]');
@@ -1521,6 +1611,16 @@ document.addEventListener("input", function (event) {
 });
 
 document.addEventListener("click", function (event) {
+    var addVariantBtn = event.target && event.target.closest && event.target.closest('[data-action="add-variant-theme"]');
+    if (addVariantBtn) {
+        addVariantTheme();
+        return;
+    }
+    var removeVariantBtn = event.target && event.target.closest && event.target.closest('[data-action="remove-variant-theme"]');
+    if (removeVariantBtn) {
+        removeVariantTheme(Number(removeVariantBtn.getAttribute("data-variant-theme-index")));
+        return;
+    }
     var pickBtn = event.target && event.target.closest && event.target.closest('[data-action="pick-variant-images"]');
     if (pickBtn) {
         openVariantImagePicker(pickBtn.getAttribute("data-variant-key") || "");
@@ -1966,6 +2066,7 @@ async function autoFill() {
 }
 
 function init() {
+    renderVariantThemes();
     loadStores();
     if (pageState.skc) {
         selectProduct(pageState.skc);
