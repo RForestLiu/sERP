@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.35";
+  var SERP_EXTENSION_VERSION = "3.2.36";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -3060,6 +3060,7 @@
         return idx;
       }
 
+      // Materials can be a searchable checkbox group: search, add, then check the newly rendered option.
       async function fillSearchableCheckboxGroup(entry, rawValue) {
         var rootEl = (entry.els && entry.els[0]) ? entry.els[0] : entry.el;
         var root = rootEl ? (rootEl.closest(".checkbox-wrapper") || rootEl.closest(".ant-form-item")) : null;
@@ -3069,36 +3070,66 @@
           return (btn.textContent || "").replace(/\s+/g, "").indexOf("添加") !== -1;
         });
         if (!searchSelect || !addBtn) return false;
-        var candidates = [rawValue];
-        var paren = String(rawValue || "").match(/\(([^)]+)\)/);
-        if (paren && paren[1]) candidates.push(paren[1]);
-        var bare = String(rawValue || "").replace(/[()]/g, " ").replace(/\s+/g, " ").trim();
-        if (bare && bare !== rawValue) candidates.push(bare);
 
-        for (var ci = 0; ci < candidates.length; ci++) {
-          var candidate = candidates[ci];
-          if (!candidate) continue;
-          var selected = await fillAntSelect(searchSelect, candidate, entry.label);
-          if (!selected) continue;
-          await sleep(250);
-          addBtn.click();
-          await sleep(700);
-          var refreshedItems = Array.from(root.querySelectorAll('input[type="checkbox"]')).map(function (cb) {
+        function checkboxItems() {
+          return Array.from(root.querySelectorAll('input[type="checkbox"]')).map(function (cb) {
             var txt = (cb.parentElement ? cb.parentElement.textContent : "").trim();
             return { cb: cb, text: txt };
           });
-          var vNormSearch = norm(rawValue);
-          var matchedItem = refreshedItems.find(function (item) {
-            var opt = norm(item.text);
-            return opt && (indexOfWord(opt, vNormSearch) !== -1 || indexOfWord(vNormSearch, opt) !== -1);
-          });
-          if (matchedItem) {
-            matchedItem.cb.checked = true;
-            trigger(matchedItem.cb, "change");
-          }
+        }
+
+        function markCheckbox(item) {
+          if (!item || !item.cb) return false;
+          if (!item.cb.checked) item.cb.click();
+          item.cb.checked = true;
+          trigger(item.cb, "input");
+          trigger(item.cb, "change");
           return true;
         }
-        return false;
+
+        var values = String(rawValue || "").split(/[,，、|]/).map(function (s) { return s.trim(); }).filter(Boolean);
+        if (!values.length) values = [String(rawValue || "").trim()];
+        var filledAny = false;
+
+        for (var vi = 0; vi < values.length; vi++) {
+          var oneValue = values[vi];
+          var candidates = selectCandidatesForValue(oneValue, entry.label);
+          var matchedThisValue = false;
+          for (var ci = 0; ci < candidates.length; ci++) {
+            var candidate = candidates[ci];
+            if (!candidate) continue;
+            var beforeTexts = {};
+            checkboxItems().forEach(function (item) { beforeTexts[norm(item.text)] = true; });
+            var selected = await fillAntSelect(searchSelect, candidate, entry.label);
+            if (!selected) continue;
+            await sleep(250);
+            addBtn.click();
+            await sleep(700);
+            var refreshedItems = checkboxItems();
+            var matchNorms = selectCandidatesForValue(oneValue, entry.label).concat([candidate]).map(norm).filter(Boolean);
+            var matchedItem = refreshedItems.find(function (item) {
+              var opt = norm(item.text);
+              return opt && matchNorms.some(function (vNormSearch) {
+                return indexOfWord(opt, vNormSearch) !== -1 || indexOfWord(vNormSearch, opt) !== -1;
+              });
+            });
+            if (!matchedItem) {
+              matchedItem = refreshedItems.find(function (item) {
+                var opt = norm(item.text);
+                return opt && !beforeTexts[opt];
+              });
+            }
+            if (markCheckbox(matchedItem)) {
+              filledAny = true;
+              matchedThisValue = true;
+              break;
+            }
+          }
+          if (!matchedThisValue) {
+            console.warn("[sERP] searchable checkbox no match after add: label=" + (entry.label || "?") + " value=" + oneValue);
+          }
+        }
+        return filledAny;
       }
 
       if (entry.jsonEditor) {
