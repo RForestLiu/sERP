@@ -123,6 +123,7 @@ class DeepSeekAutoFillClient:
         product_text = "\n".join(t for t in product_texts if t)
 
         # 表单字段摘要
+        full_product_data_text = _json.dumps(product_data, ensure_ascii=False, indent=2)
         fields_text, field_by_index, valid_field_indices = self._build_form_fields_summary(form_fields)
 
         # System prompt
@@ -137,6 +138,8 @@ SKC: {skc}
 
 ### 产品描述文本
 {product_text[:3000]}
+### 完整产品数据
+{full_product_data_text}
 {hints_text}
 ### 人工登记数据
 {_json.dumps(manual_data, ensure_ascii=False, indent=2)}
@@ -219,6 +222,7 @@ SKC: {skc}
         if product_details:
             product_texts.append("### 产品规格\n" + _json.dumps(product_details, ensure_ascii=False, indent=2))
         product_text = "\n".join(t for t in product_texts if t)
+        full_product_data_text = _json.dumps(product_data, ensure_ascii=False, indent=2)
 
         # 拆分重要/常规属性
         important_attrs, regular_attrs = self._split_ozon_attrs(ozon_attributes)
@@ -247,6 +251,8 @@ SKC: {skc}
 SKC: {skc}
 标题: {product_title}
 产品文本: {product_text[:3000]}
+### 完整产品数据
+{full_product_data_text}
 {hints_text}
 人工登记: {_json.dumps(manual_data, ensure_ascii=False, indent=2)}
 
@@ -264,6 +270,8 @@ SKC: {skc}
 SKC: {skc}
 标题: {product_title}
 产品文本: {product_text[:3000]}
+### 完整产品数据
+{full_product_data_text}
 {hints_text}
 人工登记: {_json.dumps(manual_data, ensure_ascii=False, indent=2)}
 
