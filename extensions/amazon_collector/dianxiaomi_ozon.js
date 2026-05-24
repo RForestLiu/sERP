@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.33";
+  var SERP_EXTENSION_VERSION = "3.2.34";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -130,6 +130,12 @@
     "#serp-toolbar .image-set{border:1px solid #e5e7eb;background:#fbfcfd;border-radius:6px;padding:7px;}",
     "#serp-toolbar .image-set-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;font-size:11px;color:#374151;font-weight:700;}",
     "#serp-toolbar .image-set-head span:last-child{color:#94a3b8;font-weight:600;}",
+    "#serp-toolbar .image-derived-details{margin-top:7px;border-top:1px dashed #dbe3ef;padding-top:5px;}",
+    "#serp-toolbar .image-derived-details>summary{cursor:pointer;list-style:none;font-size:11px;font-weight:700;color:#2563eb;line-height:1.5;}",
+    "#serp-toolbar .image-derived-details>summary::-webkit-details-marker{display:none;}",
+    "#serp-toolbar .image-derived-details>summary:before{content:\"▸\";display:inline-block;width:12px;color:#94a3b8;}",
+    "#serp-toolbar .image-derived-details[open]>summary:before{content:\"▾\";}",
+    "#serp-toolbar .image-derived-set{margin-top:6px;padding:6px;border:1px solid #e5e7eb;border-radius:5px;background:#fff;}",
     "#serp-toolbar .image-tools{display:flex;align-items:center;gap:8px;margin-top:8px;}",
     "#serp-toolbar .image-copy-btn{flex:1;border:1px solid #16a34a;background:#f0fdf4;color:#15803d;border-radius:5px;padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer;}",
     "#serp-toolbar .image-copy-btn:hover:not(:disabled){background:#dcfce7;border-color:#15803d;}",
@@ -142,6 +148,7 @@
     "#serp-toolbar .image-choice.selected .image-select-toggle{background:#16a34a;border-color:#16a34a;}",
     "#serp-toolbar .image-choice.selected .image-select-toggle:after{content:\"\";position:absolute;left:5px;top:2px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg);}",
     "#serp-toolbar .image-grid img{width:60px;height:60px;object-fit:cover;display:block;border:1px solid #e2e8f0;border-radius:5px;background:#eef2f7;cursor:zoom-in;}",
+    "#serp-image-select-box{position:fixed;display:none;z-index:1000004;border:1px solid #2563eb;background:rgba(37,99,235,0.14);pointer-events:none;}",
     "#serp-toolbar .image-manage-row{display:flex;margin-top:8px;}",
     "#serp-toolbar .image-manage-btn{width:100%;border:1px solid #2563eb;background:#eff6ff;color:#1d4ed8;border-radius:5px;padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer;}",
     "#serp-toolbar .image-manage-btn:hover{background:#dbeafe;border-color:#1d4ed8;}",
@@ -335,6 +342,10 @@
   imagePreview.innerHTML = '<img alt="产品大图预览">';
   document.body.appendChild(imagePreview);
 
+  var imageSelectBox = document.createElement("div");
+  imageSelectBox.id = "serp-image-select-box";
+  document.body.appendChild(imageSelectBox);
+
   var resultsPanel = document.createElement("div");
   resultsPanel.id = "serp-results-panel";
   resultsPanel.innerHTML =
@@ -457,6 +468,8 @@
   var imageCopy = document.getElementById("serp-image-copy");
   var selectedImageUrls = {};
   var selectedPanelImageUrls = {};
+  var imagePanelDrag = null;
+  var imagePanelSuppressClickUntil = 0;
 
   // ==================== 平台检测 ====================
   function detectPlatform() {
@@ -1187,6 +1200,7 @@
     var sets = [];
     var imageSubsets = product.image_subsets || {};
     var derivedFilenamesBySet = {};
+    var derivedSetsBySet = {};
     Object.keys(imageSubsets).forEach(function (variantName) {
       var subsetMap = imageSubsets[variantName] || {};
       Object.keys(subsetMap).forEach(function (subsetName) {
@@ -1197,7 +1211,8 @@
           if (!derivedFilenamesBySet[variantName]) derivedFilenamesBySet[variantName] = {};
           derivedFilenamesBySet[variantName][fn] = true;
         });
-        if (items.length) sets.push({ name: variantName + " / 衍生集 / " + subsetName, images: items });
+        if (!derivedSetsBySet[variantName]) derivedSetsBySet[variantName] = [];
+        derivedSetsBySet[variantName].push({ name: subsetName, images: items });
       });
     });
     var imageSets = product.image_sets || {};
@@ -1213,7 +1228,9 @@
           var fn = item && item.filename ? String(item.filename) : "";
           return !fn || !derivedFilenames[fn];
         });
-        if (imgs.length) sets.push({ name: name, images: imgs });
+        if (imgs.length || (derivedSetsBySet[name] || []).length) {
+          sets.push({ name: name, images: imgs, derivedSets: derivedSetsBySet[name] || [] });
+        }
       });
     }
     if (product.images && product.images.length) sets.push({ name: "采集图片", images: product.images });
@@ -1303,6 +1320,19 @@
     return '<div class="product-data-list">' + basics + '</div>' + bulletHtml + detailHtml + variantHtml;
   }
 
+  function renderPanelImageGrid(setName, images) {
+    var imgs = (images || []).map(function (img) { return productPanelImageUrl(selectedProduct, img); }).filter(Boolean);
+    return {
+      count: imgs.length,
+      html: '<div class="image-grid">' + imgs.map(function (url, i) {
+        return '<span class="image-choice" data-url="' + escapeHtml(url) + '">' +
+          '<button type="button" class="image-select-toggle" title="选择图片" aria-label="选择图片"></button>' +
+          '<img src="' + escapeHtml(url) + '" data-url="' + escapeHtml(url) + '" alt="' + escapeHtml((setName || "图片") + " " + (i + 1)) + '">' +
+        '</span>';
+      }).join("") + '</div>'
+    };
+  }
+
   function renderSelectedProductPanel() {
     if (!productSummaryBody || !productDataBody || !productImageBody) return;
     selectedPanelImageUrls = {};
@@ -1351,6 +1381,19 @@
     '</div>';
     productImageBody.innerHTML = imageManageHtml + imageToolsHtml + '<div class="image-sets">' + sets.map(function (set) {
       var imgs = (set.images || []).map(function (img) { return productPanelImageUrl(selectedProduct, img); }).filter(Boolean);
+      var derivedSets = set.derivedSets || [];
+      var derivedCount = derivedSets.reduce(function (sum, child) { return sum + ((child.images || []).length); }, 0);
+      var derivedHtml = derivedSets.length
+        ? '<details class="image-derived-details"><summary>衍生集 ' + derivedSets.length + ' 个 / ' + derivedCount + ' 张</summary>' +
+          derivedSets.map(function (child) {
+            var childGrid = renderPanelImageGrid((set.name || "") + " / " + (child.name || "衍生集"), child.images || []);
+            return '<div class="image-derived-set">' +
+              '<div class="image-set-head"><span>' + escapeHtml(child.name || "衍生集") + '</span><span>' + childGrid.count + ' 张</span></div>' +
+              childGrid.html +
+            '</div>';
+          }).join("") +
+        '</details>'
+        : "";
       return '<div class="image-set">' +
         '<div class="image-set-head"><span>' + escapeHtml(set.name || "图片集") + '</span><span>' + imgs.length + ' 张</span></div>' +
         '<div class="image-grid">' + imgs.map(function (url, i) {
@@ -1358,7 +1401,7 @@
             '<button type="button" class="image-select-toggle" title="选择图片" aria-label="选择图片"></button>' +
             '<img src="' + escapeHtml(url) + '" data-url="' + escapeHtml(url) + '" alt="' + escapeHtml((set.name || "图片") + " " + (i + 1)) + '">' +
           '</span>';
-        }).join("") + '</div>' +
+        }).join("") + '</div>' + derivedHtml +
       '</div>';
     }).join("") + '</div>';
     updatePanelImageSelectionUI();
@@ -1375,6 +1418,68 @@
       var url = node.getAttribute("data-url") || "";
       node.classList.toggle("selected", !!selectedPanelImageUrls[url]);
     });
+  }
+
+  function setPanelSelectBoxRect(a, b) {
+    var left = Math.min(a.x, b.x);
+    var top = Math.min(a.y, b.y);
+    var width = Math.abs(a.x - b.x);
+    var height = Math.abs(a.y - b.y);
+    imageSelectBox.style.left = left + "px";
+    imageSelectBox.style.top = top + "px";
+    imageSelectBox.style.width = width + "px";
+    imageSelectBox.style.height = height + "px";
+  }
+
+  function rectsIntersect(a, b) {
+    return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+  }
+
+  function selectPanelImagesInRect(rect) {
+    if (!productImageBody) return 0;
+    var selectedCount = 0;
+    productImageBody.querySelectorAll(".image-choice").forEach(function (node) {
+      var box = node.getBoundingClientRect();
+      var url = node.getAttribute("data-url") || "";
+      if (url && rectsIntersect(rect, box)) {
+        selectedPanelImageUrls[url] = true;
+        selectedCount++;
+      }
+    });
+    updatePanelImageSelectionUI();
+    return selectedCount;
+  }
+
+  function finishPanelImageDrag(e) {
+    if (!imagePanelDrag) return;
+    document.removeEventListener("mousemove", movePanelImageDrag, true);
+    document.removeEventListener("mouseup", finishPanelImageDrag, true);
+    imageSelectBox.style.display = "none";
+    if (imagePanelDrag.active) {
+      var rect = {
+        left: Math.min(imagePanelDrag.startX, e.clientX),
+        top: Math.min(imagePanelDrag.startY, e.clientY),
+        right: Math.max(imagePanelDrag.startX, e.clientX),
+        bottom: Math.max(imagePanelDrag.startY, e.clientY)
+      };
+      var count = selectPanelImagesInRect(rect);
+      imagePanelSuppressClickUntil = Date.now() + 350;
+      if (count) showToast("已选择 " + count + " 张图片", "success");
+    }
+    imagePanelDrag = null;
+  }
+
+  function movePanelImageDrag(e) {
+    if (!imagePanelDrag) return;
+    var dx = Math.abs(e.clientX - imagePanelDrag.startX);
+    var dy = Math.abs(e.clientY - imagePanelDrag.startY);
+    if (!imagePanelDrag.active && (dx > 5 || dy > 5)) {
+      imagePanelDrag.active = true;
+      imageSelectBox.style.display = "block";
+    }
+    if (!imagePanelDrag.active) return;
+    e.preventDefault();
+    setPanelSelectBoxRect({ x: imagePanelDrag.startX, y: imagePanelDrag.startY }, { x: e.clientX, y: e.clientY });
   }
 
   function productImageManagerUrl(product) {
@@ -4349,7 +4454,21 @@
   document.getElementById("serp-image-close").addEventListener("click", function () {
     imagePicker.classList.remove("visible");
   });
+  productInfo.addEventListener("mousedown", function (e) {
+    if (e.button !== 0) return;
+    if (e.target.closest(".image-select-toggle")) return;
+    var grid = e.target.closest("#serp-product-image-body .image-grid");
+    if (!grid) return;
+    imagePanelDrag = { startX: e.clientX, startY: e.clientY, active: false };
+    document.addEventListener("mousemove", movePanelImageDrag, true);
+    document.addEventListener("mouseup", finishPanelImageDrag, true);
+  });
   productInfo.addEventListener("click", function (e) {
+    if (Date.now() < imagePanelSuppressClickUntil) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
     var manageBtn = e.target.closest("#serp-open-image-manager");
     if (manageBtn) {
       e.preventDefault();
