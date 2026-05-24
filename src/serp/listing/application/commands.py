@@ -495,6 +495,7 @@ class ListingApplicationService(ListingFacade):
             base_image_urls=base_image_urls,
             base_video_urls=base_video_urls,
             images=data.get("images", []),
+            vat=data.get("vat", "0"),
             weight=weight,
             depth=depth,
             width=width,
@@ -988,6 +989,7 @@ class ListingApplicationService(ListingFacade):
         category_id, type_id, description: str,
         ozon_attrs: list[dict], base_image_urls: list[str],
         base_video_urls: list[str], images: list,
+        vat: str = "0",
         weight: int | None = None,
         depth: int | None = None,
         width: int | None = None,
@@ -1011,7 +1013,7 @@ class ListingApplicationService(ListingFacade):
                     "currency_code": "CNY",
                     "description_category_id": int(category_id),
                     "attributes": ozon_attrs,
-                    "vat": "0",
+                    "vat": str(vat or "0"),
                 }
                 if weight is not None:
                     item["weight"] = weight
@@ -1046,7 +1048,7 @@ class ListingApplicationService(ListingFacade):
                 "currency_code": "CNY",
                 "description_category_id": int(category_id),
                 "attributes": ozon_attrs,
-                "vat": "0",
+                "vat": str(vat or "0"),
             }
             if weight is not None:
                 item["weight"] = weight

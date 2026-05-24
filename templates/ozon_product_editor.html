@@ -757,7 +757,7 @@
                         <div class="hint"><span class="tip">说明</span>根据OZON平台要求，部分类目平台会自动生成标题，不支持自定义标题，点击查看详情</div>
                     </div>
                 </div>
-                <div class="ant-form-item"><div class="ant-form-item-label"><label>VAT</label></div><div class="ant-form-item-control"><select class="select"><option>请选择</option></select></div></div>
+                <div class="ant-form-item"><div class="ant-form-item-label"><label>VAT</label></div><div class="ant-form-item-control"><select class="select" id="vat-select"><option value="">请选择</option><option value="0" selected>0% / 不征税</option><option value="0.05">5%</option><option value="0.07">7%</option><option value="0.1">10%</option><option value="0.2">20%</option></select></div></div>
             </div>
         </section>
 
@@ -1704,6 +1704,11 @@ function collectWorkbenchAttributes() {
     return attrs;
 }
 
+function collectVatValue() {
+    var select = $("vat-select");
+    return select ? select.value : "";
+}
+
 function collectSkuRows() {
     var rows = [];
     document.querySelectorAll("#variantInfo tbody tr").forEach(function (row) {
@@ -1732,6 +1737,7 @@ function buildWorkbenchPayload() {
         name: $("title-input") ? $("title-input").value : "",
         category_id: pageState.categoryId,
         type_id: pageState.categoryTypeId,
+        vat: collectVatValue(),
         attributes: collectWorkbenchAttributes(),
         rich_content: collectRichContentValue(),
         skus: collectSkuRows()
