@@ -335,6 +335,51 @@
             font-size: 11px;
             text-align: center;
         }
+        .pic img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .variant-selected-images {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .variant-image-option-grid {
+            max-height: 420px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 10px;
+        }
+        .variant-image-option {
+            border: 1px solid #ddd;
+            background: #fff;
+            padding: 6px;
+            cursor: pointer;
+        }
+        .variant-image-option.selected {
+            border-color: #2f8fca;
+            box-shadow: inset 0 0 0 2px #2f8fca;
+        }
+        .variant-image-option img {
+            width: 100%;
+            height: 92px;
+            object-fit: cover;
+            display: block;
+            background: #f5f5f5;
+        }
+        .variant-image-option span {
+            display: block;
+            margin-top: 4px;
+            font-size: 11px;
+            color: #666;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
         .ai-zone {
             position: sticky;
             top: 74px;
@@ -533,6 +578,9 @@
             gap: 10px;
             padding: 0 14px;
         }
+        .variant-image-modal .category-modal {
+            width: 880px;
+        }
         .bottom-actions {
             position: fixed;
             left: 0;
@@ -708,8 +756,8 @@
         <section class="form-card category-dependent{% if mode == 'create' %} is-hidden{% endif %}" id="variantImage">
             <div class="form-card-header"><h4 class="form-card-title">变种图片</h4></div>
             <div class="form-card-content">
-                <div class="img-row"><div class="img-title">黑色/чёрный<br><span style="color:#999">[2/30] 图片</span></div><div><button type="button">选择图片</button> <a>商品图片</a> <a>从链接导入</a> <a>图片空间</a><br><div class="pic"></div><div class="pic" style="background:linear-gradient(135deg,#222,#bbb)"></div></div></div>
-                <div class="img-row"><div class="img-title">咖啡色/кофейный<br><span style="color:#999">[1/30] 图片</span></div><div><button type="button">选择图片</button> <a>商品图片</a> <a>从链接导入</a> <a>图片空间</a><br><div class="pic" style="background:linear-gradient(135deg,#563b2b,#c29a78)"></div></div></div>
+                <div class="img-row" data-variant-key="black"><div class="img-title">黑色/чёрный<br><span style="color:#999">[0/30] 图片</span></div><div><button type="button" data-action="pick-variant-images" data-variant-key="black">选择图片</button> <a>商品图片</a> <a>从链接导入</a> <a>图片空间</a><br><div class="variant-selected-images" data-variant-images="black"></div></div></div>
+                <div class="img-row" data-variant-key="coffee"><div class="img-title">咖啡色/кофейный<br><span style="color:#999">[0/30] 图片</span></div><div><button type="button" data-action="pick-variant-images" data-variant-key="coffee">选择图片</button> <a>商品图片</a> <a>从链接导入</a> <a>图片空间</a><br><div class="variant-selected-images" data-variant-images="coffee"></div></div></div>
             </div>
         </section>
         <section class="form-card" id="scoreInfo">
@@ -779,6 +827,23 @@
     </div>
 </div>
 
+<div class="category-modal-overlay variant-image-modal" id="variant-image-modal">
+    <div class="category-modal">
+        <div class="category-modal-header">
+            <span>从产品图片集中选择图片</span>
+            <button type="button" class="link" id="btn-close-variant-images">关闭</button>
+        </div>
+        <div class="category-modal-body">
+            <div id="variant-image-picker-status" class="hint" style="padding-bottom:10px">请先选择产品。</div>
+            <div class="variant-image-option-grid" id="variant-image-picker"></div>
+        </div>
+        <div class="category-modal-footer">
+            <button type="button" id="btn-cancel-variant-images">取消</button>
+            <button type="button" class="blue" id="btn-confirm-variant-images">确认选择</button>
+        </div>
+    </div>
+</div>
+
 <div class="bottom-actions">
     <button>一键翻译⌄</button>
     <button>存为模板</button>
@@ -801,7 +866,11 @@ var pageState = {
     selectedCategory: null,
     categoryId: null,
     categoryTypeId: null,
-    categoryAttributes: []
+    categoryAttributes: [],
+    variantImages: {},
+    activeVariantKey: "",
+    productImageSets: [],
+    pendingVariantImageUrls: []
 };
 
 var PUBLIC_OZON_ATTRIBUTE_IDS = new Set([
@@ -926,6 +995,91 @@ function renderSelectedProduct(product) {
     host.style.display = "grid";
 }
 
+function imageDisplayName(image, index) {
+    var raw = image.filename || image.local_path || image.url || ("图片 " + (index + 1));
+    return String(raw).split(/[\\/]/).pop();
+}
+
+function renderVariantSelectedImages(variantKey) {
+    var host = document.querySelector('[data-variant-images="' + String(variantKey).replace(/"/g, '\\"') + '"]');
+    if (!host) return;
+    var images = pageState.variantImages[variantKey] || [];
+    host.innerHTML = images.map(function (image) {
+        return '<span class="pic"><img src="' + esc(image.url || "") + '" alt=""></span>';
+    }).join("");
+    var row = document.querySelector('[data-variant-key="' + String(variantKey).replace(/"/g, '\\"') + '"]');
+    if (row) {
+        var count = row.querySelector(".img-title span");
+        if (count) count.textContent = "[" + images.length + "/30] 图片";
+    }
+}
+
+function flattenProductImageSets(data) {
+    var sets = data.image_sets || [];
+    if (!sets.length && (data.images || []).length) {
+        sets = [{ name: "", label: "全部图片 (" + data.images.length + "张)", images: data.images }];
+    }
+    return sets;
+}
+
+function renderVariantImageSetPicker(imageSets) {
+    var host = $("variant-image-picker");
+    if (!imageSets.length) {
+        host.innerHTML = '<div class="hint">当前产品没有可选图片。</div>';
+        return;
+    }
+    host.innerHTML = imageSets.map(function (set) {
+        var title = esc(set.label || set.name || "图片集");
+        return (set.images || []).map(function (image, index) {
+            var url = image.url || "";
+            var selected = pageState.pendingVariantImageUrls.indexOf(url) >= 0 ? " selected" : "";
+            return '<div class="variant-image-option' + selected + '" data-image-url="' + esc(url) + '">' +
+                '<img src="' + esc(url) + '" alt="">' +
+                '<span title="' + title + ' / ' + esc(imageDisplayName(image, index)) + '">' + title + ' / ' + esc(imageDisplayName(image, index)) + '</span>' +
+                '</div>';
+        }).join("");
+    }).join("");
+}
+
+async function openVariantImagePicker(variantKey) {
+    if (!pageState.skc) {
+        alert("请先选择产品");
+        return;
+    }
+    pageState.activeVariantKey = variantKey;
+    pageState.pendingVariantImageUrls = (pageState.variantImages[variantKey] || []).map(function (image) { return image.url; });
+    $("variant-image-modal").style.display = "flex";
+    $("variant-image-picker-status").textContent = "正在加载产品图片集...";
+    $("variant-image-picker").innerHTML = "";
+    try {
+        var data = await api("/api/products/" + encodeURIComponent(pageState.skc) + "/images");
+        pageState.productImageSets = flattenProductImageSets(data);
+        $("variant-image-picker-status").textContent = "已加载 " + (data.images || []).length + " 张图片，可多选后确认。";
+        renderVariantImageSetPicker(pageState.productImageSets);
+    } catch (e) {
+        $("variant-image-picker-status").textContent = "加载图片集失败：" + e.message;
+    }
+}
+
+function closeVariantImagePicker() {
+    $("variant-image-modal").style.display = "none";
+}
+
+function confirmVariantImages() {
+    if (!pageState.activeVariantKey) return;
+    var selected = [];
+    pageState.productImageSets.forEach(function (set) {
+        (set.images || []).forEach(function (image) {
+            if (pageState.pendingVariantImageUrls.indexOf(image.url || "") >= 0) {
+                selected.push({ url: image.url, source: image.source || "product-image-set" });
+            }
+        });
+    });
+    pageState.variantImages[pageState.activeVariantKey] = selected.slice(0, 30);
+    renderVariantSelectedImages(pageState.activeVariantKey);
+    closeVariantImagePicker();
+}
+
 async function searchProducts() {
     var queryText = $("product-search").value.trim();
     $("product-results").innerHTML = '<div class="hint" style="padding:10px">加载正式产品中...</div>';
@@ -943,6 +1097,7 @@ async function selectProduct(skc) {
         var product = await api("/api/products/" + encodeURIComponent(skc));
         pageState.product = product;
         pageState.skc = product.skc || skc;
+        pageState.variantImages = {};
         $("top-skc").textContent = pageState.skc;
         $("title-input").value = product.title || product.name || "";
         renderSelectedProduct(product);
@@ -1255,6 +1410,26 @@ document.addEventListener("input", function (event) {
     }
 });
 
+document.addEventListener("click", function (event) {
+    var pickBtn = event.target && event.target.closest && event.target.closest('[data-action="pick-variant-images"]');
+    if (pickBtn) {
+        openVariantImagePicker(pickBtn.getAttribute("data-variant-key") || "");
+        return;
+    }
+    var option = event.target && event.target.closest && event.target.closest(".variant-image-option");
+    if (option) {
+        var url = option.getAttribute("data-image-url") || "";
+        var idx = pageState.pendingVariantImageUrls.indexOf(url);
+        if (idx >= 0) {
+            pageState.pendingVariantImageUrls.splice(idx, 1);
+            option.classList.remove("selected");
+        } else {
+            pageState.pendingVariantImageUrls.push(url);
+            option.classList.add("selected");
+        }
+    }
+});
+
 function collectAttributeFormValues() {
     var result = [];
     (pageState.categoryAttributes || []).forEach(function (meta) {
@@ -1293,13 +1468,34 @@ function collectAttributeFormValues() {
     return result;
 }
 
+function collectSkuRows() {
+    var rows = [];
+    document.querySelectorAll("#variantInfo tbody tr").forEach(function (row) {
+        var cells = row.querySelectorAll("td");
+        var inputs = row.querySelectorAll("input");
+        var variantKey = cells[1] ? cells[1].textContent.trim() : "";
+        rows.push({
+            name: cells[0] ? cells[0].textContent.trim() : variantKey,
+            sku_code: inputs[0] ? inputs[0].value.trim() : "",
+            price: inputs[1] ? inputs[1].value.trim() : "",
+            old_price: inputs[2] ? inputs[2].value.trim() : "",
+            stock: inputs[3] ? inputs[3].value.trim() : "",
+            size: inputs[4] ? inputs[4].value.trim() : "",
+            weight: inputs[5] ? inputs[5].value.trim() : "",
+            images: pageState.variantImages[variantKey] || []
+        });
+    });
+    return rows.filter(function (row) { return row.sku_code; });
+}
+
 function buildWorkbenchPayload() {
     return {
         skc: pageState.skc || "",
         name: $("title-input") ? $("title-input").value : "",
         category_id: pageState.categoryId,
         type_id: pageState.categoryTypeId,
-        attributes: collectAttributeFormValues()
+        attributes: collectAttributeFormValues(),
+        skus: collectSkuRows()
     };
 }
 
@@ -1637,6 +1833,12 @@ function init() {
     $("btn-confirm-category").addEventListener("click", confirmManualCategory);
     $("category-modal").addEventListener("click", function (event) {
         if (event.target === $("category-modal")) closeManualCategoryTree();
+    });
+    $("btn-close-variant-images").addEventListener("click", closeVariantImagePicker);
+    $("btn-cancel-variant-images").addEventListener("click", closeVariantImagePicker);
+    $("btn-confirm-variant-images").addEventListener("click", confirmVariantImages);
+    $("variant-image-modal").addEventListener("click", function (event) {
+        if (event.target === $("variant-image-modal")) closeVariantImagePicker();
     });
     $("category-search").addEventListener("input", function () {
         renderCategoryResults(this.value);
