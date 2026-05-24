@@ -75,7 +75,7 @@
             <div class="toolbar">
                 <button onclick="selectAll()">全选</button>
                 <button onclick="deselectAll()">取消全选</button>
-                <button onclick="saveAsSubset()" style="background:#8b5cf6;color:white;border-color:#8b5cf6;">💾 保存为子集</button>
+                <button onclick="saveAsSubset()" style="background:#8b5cf6;color:white;border-color:#8b5cf6;">💾 保存为衍生集</button>
             </div>
             <div class="set-list" id="set-list">
                 <div class="canvas-placeholder" style="padding:20px;">
@@ -112,11 +112,31 @@
                 const data = await res.json();
                 allSets = data.image_sets || {};
                 allSubsets = data.image_subsets || {};
+                normalizeDerivedImagesOutOfSets();
                 renderSetList();
             } catch(e) {
                 document.getElementById("set-list").innerHTML =
                     '<div class="canvas-placeholder" style="padding:20px;color:#e74c3c;">加载失败: ' + e.message + '</div>';
             }
+        }
+
+        function normalizeDerivedImagesOutOfSets() {
+            Object.keys(allSubsets || {}).forEach(setName => {
+                const derivedFiles = {};
+                const subMap = allSubsets[setName] || {};
+                Object.keys(subMap).forEach(subName => {
+                    (subMap[subName] || []).forEach(entry => {
+                        if (entry && entry.filename) derivedFiles[entry.filename] = true;
+                    });
+                });
+                if (Object.keys(derivedFiles).length === 0 || !allSets[setName]) return;
+                allSets[setName] = (allSets[setName] || []).filter(entry => {
+                    return !entry || !entry.filename || !derivedFiles[entry.filename];
+                }).map((entry, idx) => {
+                    entry.index = idx;
+                    return entry;
+                });
+            });
         }
 
         function renderSetList() {
@@ -214,8 +234,7 @@
 
         async function saveAsSubset() {
             if (!currentSet) { alert("请先选择左侧图片集"); return; }
-            if (selectedImages.size === 0) { alert("请先在底部缩略图选择图片"); return; }
-            const subName = prompt("输入子集名称:", "已处理");
+            const subName = prompt("输入衍生集名称:", "已处理");
             if (!subName) return;
 
             // Collect selected entries
@@ -240,10 +259,10 @@
                 const saveRes = await fetch(`/api/products/${skc}/image-sets`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ image_sets: data.image_sets || {}, image_subsets: allSubs })
+                    body: JSON.stringify({ image_sets: allSets || {}, image_subsets: allSubs })
                 });
                 if (!saveRes.ok) throw new Error("保存失败");
-                alert("✅ 子集「" + subName + "」已保存 (" + subsetEntries.length + "张)");
+                alert("✅ 衍生集「" + subName + "」已保存 (" + subsetEntries.length + "张)");
                 // Reload
                 allSubsets = allSubs;
                 renderSetList();

@@ -383,7 +383,7 @@ class ImageTaskApplicationService(ImageTaskFacade):
     # ==================== 导出 ====================
 
     def save_to_product(self, task_id: str, data: dict) -> dict:
-        """将任务的生成图片复制到指定产品的图片集/子集"""
+        """将任务的生成图片复制到指定产品的图片集/衍生集"""
         skc = data.get("skc")
         setName = data.get("setName")
         subName = data.get("subName", "")
@@ -431,12 +431,6 @@ class ImageTaskApplicationService(ImageTaskFacade):
         image_sets = product.get("image_sets", {})
         if setName not in image_sets:
             image_sets[setName] = []
-        max_idx = max([e.get("index", 0) for e in image_sets[setName]], default=-1)
-        for entry in saved:
-            max_idx += 1
-            entry["index"] = max_idx
-            image_sets[setName].append(entry)
-
         if subName:
             image_subsets = product.get("image_subsets", {})
             image_subsets.setdefault(setName, {}).setdefault(subName, [])
@@ -447,6 +441,12 @@ class ImageTaskApplicationService(ImageTaskFacade):
                 sub_entry["index"] = max_sub_idx
                 image_subsets[setName][subName].append(sub_entry)
             product["image_subsets"] = image_subsets
+        else:
+            max_idx = max([e.get("index", 0) for e in image_sets[setName]], default=-1)
+            for entry in saved:
+                max_idx += 1
+                entry["index"] = max_idx
+                image_sets[setName].append(entry)
 
         product["image_sets"] = image_sets
         self._save_products(products_data)

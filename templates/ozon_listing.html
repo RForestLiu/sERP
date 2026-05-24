@@ -2526,7 +2526,7 @@
                 if (setImages.length > 0) _imageSetsData[setName] = setImages;
             });
 
-            // 加载子集
+            // 加载衍生集
             var subs = data.image_subsets || {};
             Object.keys(subs).forEach(function(setName) {
                 var subSets = subs[setName] || {};
@@ -2535,7 +2535,7 @@
                     var entries = subSets[subName] || [];
                     var subImages = [];
                     entries.forEach(function(entry) {
-                        var img = _makeImg(entry, setName + ' / ' + subName);
+                        var img = _makeImg(entry, setName + ' / 衍生集 / ' + subName);
                         if (img) {
                             img._subsetName = subName;
                             img._parentSet = setName;
@@ -3996,7 +3996,7 @@
         document.getElementById("sku-picker-count").textContent = "0";
     });
 
-    // ===== Set Picker — 按图片集/子集选择 =====
+    // ===== Set Picker — 按图片集/衍生集选择 =====
     var _setPickerTargetTr = null;
 
     function _buildSetCard(setName, imgs, isSubset, tr, currentSet, parentSetName) {
@@ -4081,7 +4081,7 @@
                     list.appendChild(_buildSetCard(setName, imgs, false, tr, currentSet, null));
                 }
 
-                // 子集
+                // 衍生集
                 var subSets = _imageSubsetsData[setName] || {};
                 Object.keys(subSets).forEach(function(subName) {
                     var subImgs = subSets[subName] || [];

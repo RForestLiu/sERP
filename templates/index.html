@@ -1597,7 +1597,7 @@
                         <input type="checkbox" id="auto-compress" checked> 自动压缩
                     </label>
                     <button class="save-all-btn" id="save-images-btn">💾 保存到任务文件夹</button>
-                    <button class="save-all-btn" id="save-to-product-btn">📤 保存为图片子集</button>
+                    <button class="save-all-btn" id="save-to-product-btn">📤 保存为图片衍生集</button>
                     <button class="open-folder-btn" id="open-folder-btn">📂 打开生成图片文件夹</button>
                 </div>
             </div>
@@ -1761,12 +1761,12 @@
                             <button id="img-mgmt-select-all">全选</button>
                             <button id="img-mgmt-deselect-all">取消全选</button>
                             <button id="img-mgmt-switch-batch">🖼️ 批量处理</button>
-                            <button id="img-mgmt-save-subset" class="primary">💾 保存为子集</button>
+                            <button id="img-mgmt-save-subset" class="primary">💾 保存为衍生集</button>
                             <button id="img-mgmt-upload-btn">➕ 上传</button>
                         </span>
                         <span id="img-mgmt-tb-batch" style="display:none">
                             <button id="img-mgmt-switch-manage">📋 管理模式</button>
-                            <button id="img-mgmt-save-subset2" class="primary">💾 保存为子集</button>
+                            <button id="img-mgmt-save-subset2" class="primary">💾 保存为衍生集</button>
                         </span>
                         <span style="flex:1"></span>
                         <span class="mgmt-selection-info" id="img-mgmt-selection-info">已选: 0 / 总计: 0</span>
@@ -1795,7 +1795,7 @@
         </div>
     </div>
 
-    <!-- 保存为图片子集弹窗 -->
+    <!-- 保存为图片衍生集弹窗 -->
     <div class="img-mgmt-overlay" id="save-subset-overlay">
         <div class="img-mgmt-modal" style="max-width:500px;max-height:80vh;">
             <div class="img-mgmt-header">
@@ -1811,11 +1811,11 @@
                 <div id="save-subset-set-list" style="max-height:200px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:4px;padding:4px;">
                     <div style="font-size:12px;color:#bbb;padding:8px;">请先选择产品</div>
                 </div>
-                <label style="font-size:12px;color:#666;margin-top:6px;">新子集名称（可选）</label>
-                <input id="save-subset-new-name" placeholder="输入子集名称以创建新子集…" style="padding:6px;width:100%;border:1px solid #d1d5db;border-radius:4px;font-size:13px;">
+                <label style="font-size:12px;color:#666;margin-top:6px;">新衍生集名称（可选）</label>
+                <input id="save-subset-new-name" placeholder="输入衍生集名称以创建新衍生集…" style="padding:6px;width:100%;border:1px solid #d1d5db;border-radius:4px;font-size:13px;">
                 <div style="display:flex;gap:8px;margin-top:8px;">
                     <button class="btn primary" id="save-subset-exec" style="flex:1;" disabled>执行保存</button>
-                    <button class="btn primary" id="save-subset-new-btn" style="flex:1;background:#8b5cf6;" disabled>保存为子集</button>
+                    <button class="btn primary" id="save-subset-new-btn" style="flex:1;background:#8b5cf6;" disabled>保存为衍生集</button>
                 </div>
                 <div style="margin-top:8px;font-size:11px;color:#999;" id="save-subset-status"></div>
             </div>
@@ -2578,7 +2578,7 @@
             showMsg(`已将 ${data.moved.length} 张生成图片保存至任务文件夹。`);
         });
 
-        // ---------- 保存为图片子集 ----------
+        // ---------- 保存为图片衍生集 ----------
         var saveSubsetOverlay = document.getElementById("save-subset-overlay");
         var saveSubsetProduct = document.getElementById("save-subset-product");
         var saveSubsetSetList = document.getElementById("save-subset-set-list");
@@ -2645,7 +2645,7 @@
                     var ss = subs[setName] || {};
                     Object.keys(ss).sort().forEach(function(subName) {
                         h += '<div class="img-mgmt-task-item save-subset-set-item" data-set="' + setName + '" data-sub="' + subName + '" style="padding-left:28px;cursor:pointer;">';
-                        h += '📄 ' + subName + '<span class="mgmt-count">' + (ss[subName]||[]).length + '</span></div>';
+                        h += '🧬 ' + subName + '<span class="mgmt-count">' + (ss[subName]||[]).length + '</span></div>';
                     });
                 });
                 if (!h) h = '<div style="font-size:12px;color:#bbb;padding:8px;">该产品暂无图片集</div>';
@@ -2659,7 +2659,7 @@
                         saveTargetSet = el.dataset.set;
                         saveTargetSub = el.dataset.sub || "";
                         saveSubsetExec.disabled = false;
-                        // "保存为子集" 需输入新子集名称
+                        // "保存为衍生集" 需输入新衍生集名称
                         _updateNewSubsetBtn();
                         saveSubsetStatus.textContent = "已选: " + saveTargetSet + (saveTargetSub ? " / " + saveTargetSub : "");
                     });
@@ -2695,17 +2695,17 @@
             }
         });
 
-        // 新建子集名称输入 → 控制"保存为子集"按钮
+        // 新建衍生集名称输入 → 控制"保存为衍生集"按钮
         function _updateNewSubsetBtn() {
             saveSubsetNewBtn.disabled = !(saveTargetSet && !saveTargetSub && saveSubsetNewName.value.trim());
         }
         saveSubsetNewName.addEventListener("input", _updateNewSubsetBtn);
 
-        // "保存为子集" → 保存到选中图片集下的新子集
+        // "保存为衍生集" → 保存到选中图片集下的新衍生集
         saveSubsetNewBtn.addEventListener("click", async function() {
             var newSubName = saveSubsetNewName.value.trim();
             if (!currentTaskId || !saveTargetSet || !newSubName) return;
-            if (saveTargetSub) { saveSubsetStatus.textContent = "请选图片集（非子集）再新建"; return; }
+            if (saveTargetSub) { saveSubsetStatus.textContent = "请选图片集（非衍生集）再新建"; return; }
             saveSubsetNewBtn.disabled = true;
             saveSubsetExec.disabled = true;
             saveSubsetStatus.textContent = "保存中...";
@@ -4255,6 +4255,25 @@
 
         function _byId(id) { return document.getElementById(id); }
 
+        function normalizeDerivedImagesOutOfSets() {
+            Object.keys(imageSubsets || {}).forEach(function(setName) {
+                var derivedFiles = {};
+                var subMap = imageSubsets[setName] || {};
+                Object.keys(subMap).forEach(function(subName) {
+                    (subMap[subName] || []).forEach(function(entry) {
+                        if (entry && entry.filename) derivedFiles[entry.filename] = true;
+                    });
+                });
+                if (Object.keys(derivedFiles).length === 0 || !imageSets[setName]) return;
+                imageSets[setName] = (imageSets[setName] || []).filter(function(entry) {
+                    return !entry || !entry.filename || !derivedFiles[entry.filename];
+                }).map(function(entry, idx) {
+                    entry.index = idx;
+                    return entry;
+                });
+            });
+        }
+
         async function openImageMgmt(skc) {
             currentImgSkc = skc;
             imgMgmtSkcLabel.textContent = skc;
@@ -4272,6 +4291,7 @@
                 showMsg("加载图片集出错: " + e.message, true);
                 return;
             }
+            normalizeDerivedImagesOutOfSets();
             if (Object.keys(imageSets).length === 0) { imageSets["采集图片"] = []; }
             _updateSidebar();
             _renderTaskBar();
@@ -4341,9 +4361,9 @@
                     total += subEntries.length;
                     const isSubActive = currentSetName === name && currentSubsetName === subName;
                     h += `<div class="img-mgmt-set-item${isSubActive ? " active" : ""}" data-set="${name}" data-subset="${subName}" data-type="subset" style="padding-left:28px;" draggable="true">`;
-                    h += `📄 ${subName}<span class="mgmt-count">${subEntries.length}</span>`;
+                    h += `🧬 ${subName}<span class="mgmt-count">${subEntries.length}</span>`;
                     h += `<span class="mgmt-actions">`;
-                    h += `<button class="act-delete" title="删除子集" data-action="delete-subset" data-set="${name}" data-subset="${subName}">🗑️</button>`;
+                    h += `<button class="act-delete" title="删除衍生集" data-action="delete-subset" data-set="${name}" data-subset="${subName}">🗑️</button>`;
                     h += `</span></div>`;
                 });
             });
@@ -4465,7 +4485,7 @@
         }
 
         function deleteSubset(setName, subName) {
-            if (confirm("确定删除子集「" + subName + "」？")) {
+            if (confirm("确定删除衍生集「" + subName + "」？")) {
                 if (imageSubsets[setName]) delete imageSubsets[setName][subName];
                 if (currentSetName === setName && currentSubsetName === subName) {
                     currentSubsetName = null; selectedImages.clear();
@@ -4710,8 +4730,7 @@
 
         function _saveAsSubset() {
             if (!currentSetName) { alert("请先选择左侧图片集"); return; }
-            if (selectedImages.size === 0) { alert("请先选择图片"); return; }
-            var subName = prompt("输入子集名称:", "已处理");
+            var subName = prompt("输入衍生集名称:", "已处理");
             if (!subName) return;
 
             var entries = _getCurrentEntries();
@@ -4727,7 +4746,7 @@
 
             _updateSidebar();
             imgMgmtSaveStatus.textContent = "(未保存)";
-            alert("子集「" + subName + "」已创建 (" + subsetEntries.length + "张) — 请点击底部「保存更改」持久化");
+            alert("衍生集「" + subName + "」已创建 (" + subsetEntries.length + "张) — 请点击底部「保存更改」持久化");
         }
 
         function _deleteImageEntry(sourceKey, idx) {

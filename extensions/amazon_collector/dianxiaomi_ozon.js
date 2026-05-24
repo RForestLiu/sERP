@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.31";
+  var SERP_EXTENSION_VERSION = "3.2.32";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -1186,11 +1186,18 @@
     if (!product) return [];
     var sets = [];
     var imageSubsets = product.image_subsets || {};
+    var derivedFilenamesBySet = {};
     Object.keys(imageSubsets).forEach(function (variantName) {
       var subsetMap = imageSubsets[variantName] || {};
       Object.keys(subsetMap).forEach(function (subsetName) {
         var items = subsetMap[subsetName] || [];
-        if (items.length) sets.push({ name: variantName + " / " + subsetName, images: items });
+        items.forEach(function (item) {
+          var fn = item && item.filename ? String(item.filename) : "";
+          if (!fn) return;
+          if (!derivedFilenamesBySet[variantName]) derivedFilenamesBySet[variantName] = {};
+          derivedFilenamesBySet[variantName][fn] = true;
+        });
+        if (items.length) sets.push({ name: variantName + " / 衍生集 / " + subsetName, images: items });
       });
     });
     var imageSets = product.image_sets || {};
@@ -1201,7 +1208,11 @@
       });
     } else {
       Object.keys(imageSets).forEach(function (name) {
-        var imgs = imageSets[name] || [];
+        var derivedFilenames = derivedFilenamesBySet[name] || {};
+        var imgs = (imageSets[name] || []).filter(function (item) {
+          var fn = item && item.filename ? String(item.filename) : "";
+          return !fn || !derivedFilenames[fn];
+        });
         if (imgs.length) sets.push({ name: name, images: imgs });
       });
     }
