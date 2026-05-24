@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.22";
+  var SERP_EXTENSION_VERSION = "3.2.23";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -106,6 +106,14 @@
     "#serp-toolbar .pi-title{font-size:12px;line-height:1.35;font-weight:600;color:#111827;margin-bottom:7px;max-height:50px;overflow:hidden;}",
     "#serp-toolbar .pi-meta{display:grid;gap:4px;font-size:11px;color:#6b7280;}",
     "#serp-toolbar .pi-meta b{color:#374151;font-weight:600;}",
+    "#serp-toolbar .product-summary-empty{font-size:11px;color:#94a3b8;margin-top:8px;}",
+    "#serp-toolbar .product-data-list{display:grid;gap:6px;margin-top:8px;font-size:11px;color:#475569;}",
+    "#serp-toolbar .product-data-row{display:grid;grid-template-columns:72px 1fr;gap:6px;align-items:start;}",
+    "#serp-toolbar .product-data-key{color:#64748b;font-weight:700;}",
+    "#serp-toolbar .product-data-value{color:#111827;word-break:break-word;line-height:1.4;}",
+    "#serp-toolbar .product-data-block{margin-top:8px;border:1px solid #e5e7eb;background:#fbfcfd;border-radius:6px;padding:7px;}",
+    "#serp-toolbar .product-data-block-title{font-size:11px;font-weight:700;color:#374151;margin-bottom:5px;}",
+    "#serp-toolbar .product-data-bullets{margin:0;padding-left:16px;color:#475569;line-height:1.45;}",
     "#serp-toolbar .pi-clear{font-size:10px;color:#ff4d4f;cursor:pointer;margin-top:7px;text-align:center;border:1px solid #ffccc7;border-radius:4px;padding:3px 6px;transition:all 0.2s;}",
     "#serp-toolbar .pi-clear:hover{background:#fff1f0;}",
     "#serp-toolbar .image-sets{display:grid;gap:8px;margin-top:10px;}",
@@ -144,10 +152,11 @@
     "#serp-modal-search .variant-toggle{display:flex;align-items:center;gap:5px;white-space:nowrap;font-size:12px;color:#555;}",
     "#serp-modal-search .variant-toggle input{width:auto;padding:0;}",
     "#serp-modal-list{flex:1;overflow-y:auto;padding:12px 24px;}",
-    ".serp-product-item{display:flex;align-items:center;padding:12px 16px;border-radius:8px;cursor:pointer;transition:all 0.2s;margin-bottom:6px;border:1px solid #f0f0f0;}",
+    ".serp-product-item{display:flex;align-items:center;padding:10px 14px;border-radius:8px;cursor:pointer;transition:all 0.2s;margin-bottom:6px;border:1px solid #f0f0f0;gap:10px;}",
     ".serp-product-item:hover{background:#f8f9ff;border-color:#667eea;transform:translateX(2px);}",
     ".serp-product-item.selected{background:#f0f5ff;border-color:#428bca;}",
-    ".serp-product-item .skc-badge{font-size:12px;font-weight:bold;color:#667eea;background:#eef0ff;padding:3px 10px;border-radius:4px;margin-right:12px;flex-shrink:0;}",
+    ".serp-product-item .product-thumb-sm{width:48px;height:48px;border-radius:6px;object-fit:cover;border:1px solid #e5e7eb;background:#eef2f7;flex-shrink:0;}",
+    ".serp-product-item .skc-badge{font-size:12px;font-weight:bold;color:#667eea;background:#eef0ff;padding:3px 10px;border-radius:4px;flex-shrink:0;}",
     ".serp-product-item .product-info{flex:1;min-width:0;}",
     ".serp-product-item .product-title{font-size:14px;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}",
     ".serp-product-item .product-meta{font-size:12px;color:#999;margin-top:2px;}",
@@ -268,6 +277,7 @@
         '<div class="panel-title">已选 Ozon 品类</div>' +
         '<div class="category-path" id="serp-category-path">未选择品类</div>' +
         '<div class="panel-chips" id="serp-category-chips"></div>' +
+        '<div id="serp-product-summary-body"></div>' +
         '<details class="product-details" id="serp-product-data-details">' +
           '<summary>产品数据</summary>' +
           '<div id="serp-product-data-body"></div>' +
@@ -399,6 +409,7 @@
   var piClear = document.getElementById("serp-pi-clear");
   var categoryPathEl = document.getElementById("serp-category-path");
   var categoryChipsEl = document.getElementById("serp-category-chips");
+  var productSummaryBody = document.getElementById("serp-product-summary-body");
   var productDataBody = document.getElementById("serp-product-data-body");
   var productImageBody = document.getElementById("serp-product-image-body");
   var hintToggle = document.getElementById("serp-hint-toggle");
@@ -1131,6 +1142,20 @@
     return normalizeImageUrl("/product_images/" + encodeURIComponent((product && product.skc) || "") + "/" + raw.replace(/^\/+/, ""));
   }
 
+  function getProductPrimaryImageUrl(product) {
+    if (!product) return "";
+    if (product.thumbnail) return normalizeImageUrl(product.thumbnail);
+    var sets = collectProductImageSets(product);
+    for (var si = 0; si < sets.length; si++) {
+      var imgs = sets[si].images || [];
+      for (var ii = 0; ii < imgs.length; ii++) {
+        var url = productPanelImageUrl(product, imgs[ii]);
+        if (url) return url;
+      }
+    }
+    return "";
+  }
+
   function collectProductImageSets(product) {
     if (!product) return [];
     var sets = [];
@@ -1171,17 +1196,58 @@
     return pd.currentVariant || "";
   }
 
+  function dataRowHtml(key, value) {
+    if (value === undefined || value === null || value === "") return "";
+    return '<div class="product-data-row"><span class="product-data-key">' + escapeHtml(key) + '</span><span class="product-data-value">' + escapeHtml(value) + '</span></div>';
+  }
+
+  function renderCollectedProductData(product) {
+    var pd = (product && product.product_data) || {};
+    if (!Object.keys(pd).length) return '<div class="pi-meta">暂无采集产品数据</div>';
+    var details = pd.product_details || {};
+    var basics = [
+      dataRowHtml("来源", pd.url),
+      dataRowHtml("平台", pd.platform),
+      dataRowHtml("标题", pd.title),
+      dataRowHtml("品牌", pd.brand || details.brand),
+      dataRowHtml("价格", pd.price),
+      dataRowHtml("评分", pd.rating),
+      dataRowHtml("分类", pd.category),
+      dataRowHtml("当前变体", pd.currentVariant)
+    ].filter(Boolean).join("");
+
+    var bullets = Array.isArray(pd.bullets) ? pd.bullets.slice(0, 8) : [];
+    var bulletHtml = bullets.length
+      ? '<div class="product-data-block"><div class="product-data-block-title">采集卖点</div><ul class="product-data-bullets">' + bullets.map(function (b) { return '<li>' + escapeHtml(b) + '</li>'; }).join("") + '</ul></div>'
+      : "";
+
+    var detailKeys = Object.keys(details).slice(0, 24);
+    var detailHtml = detailKeys.length
+      ? '<div class="product-data-block"><div class="product-data-block-title">采集参数</div><div class="product-data-list">' + detailKeys.map(function (key) { return dataRowHtml(key, details[key]); }).join("") + '</div></div>'
+      : "";
+
+    var variants = Array.isArray(pd.variantData) ? pd.variantData : [];
+    var variantHtml = variants.length
+      ? '<div class="product-data-block"><div class="product-data-block-title">采集变体</div><div class="product-data-list">' + variants.slice(0, 12).map(function (v) {
+          return dataRowHtml(v.variantName || v.name || "variant", "图片 " + (v.image_count || 0) + " 张");
+        }).join("") + '</div></div>'
+      : "";
+
+    return '<div class="product-data-list">' + basics + '</div>' + bulletHtml + detailHtml + variantHtml;
+  }
+
   function renderSelectedProductPanel() {
-    if (!productDataBody || !productImageBody) return;
+    if (!productSummaryBody || !productDataBody || !productImageBody) return;
     if (!selectedProduct) {
+      productSummaryBody.innerHTML = '<div class="product-summary-empty">未选择产品</div>';
       productDataBody.innerHTML = '<div class="pi-meta">未选择产品</div>';
       productImageBody.innerHTML = '<div class="pi-meta">未选择产品</div>';
       return;
     }
     var pricing = computePricingV2(selectedProduct);
-    var thumb = normalizeImageUrl(selectedProduct.thumbnail || "");
+    var thumb = getProductPrimaryImageUrl(selectedProduct);
     var storeId = detectStoreId() || "";
-    productDataBody.innerHTML =
+    productSummaryBody.innerHTML =
       '<div class="product-card">' +
         (thumb ? '<img class="product-thumb" src="' + escapeHtml(thumb) + '" alt="产品首图">' : '<div class="product-thumb"></div>') +
         '<div>' +
@@ -1195,6 +1261,7 @@
           '</div>' +
         '</div>' +
       '</div>';
+    productDataBody.innerHTML = renderCollectedProductData(selectedProduct);
 
     var sets = collectProductImageSets(selectedProduct);
     if (!sets.length) {
@@ -1317,7 +1384,9 @@
     listEl.innerHTML = products.map(function (p) {
       var cls = "serp-product-item" + (selectedProduct && selectedProduct.skc === p.skc ? " selected" : "");
       var variantCount = getProductVariantValues(p.product_data || {}).length;
+      var thumb = getProductPrimaryImageUrl(p);
       return '<div class="' + cls + '" data-skc="' + (p.skc || "") + '">' +
+        (thumb ? '<img class="product-thumb-sm" src="' + escapeHtml(thumb) + '" alt="产品主图">' : '<div class="product-thumb-sm"></div>') +
         '<span class="skc-badge">' + (p.skc || "—") + '</span>' +
         '<div class="product-info">' +
           '<div class="product-title">' + (p.title || "未命名产品") + '</div>' +
