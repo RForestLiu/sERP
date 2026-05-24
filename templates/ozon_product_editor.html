@@ -241,16 +241,22 @@
             max-height: 115px;
             overflow: hidden;
         }
-        .rich-empty {
+        .rich-json-editor {
             width: 640px;
             height: 310px;
             border: 1px solid #ddd;
             background: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #b7c5d5;
+            color: #333;
             margin-top: 8px;
+            padding: 10px;
+            resize: vertical;
+            font-family: Consolas, Monaco, monospace;
+            line-height: 1.5;
+        }
+        .rich-json-status {
+            width: 640px;
+            margin-top: 6px;
+            color: #777;
         }
         .upload-card {
             display: inline-flex;
@@ -725,7 +731,7 @@
             <div class="form-card-header"><h4 class="form-card-title">描述信息</h4></div>
             <div class="form-card-content">
                 <div class="ant-form-item"><div class="ant-form-item-label"><label>产品描述</label></div><div class="ant-form-item-control"><textarea>Компактный кошелек с защитой от NFC/RFID.</textarea><div class="hint" style="text-align:right;width:720px">0 / 6000</div></div></div>
-                <div class="ant-form-item"><div class="ant-form-item-label"><label>JSON富文本</label></div><div class="ant-form-item-control"><input class="input" value="请选择内容模板"><label style="margin-left:14px"><input type="checkbox"> 立即创建</label><div class="rich-empty">Rich Content 空白编辑区</div></div></div>
+                <div class="ant-form-item"><div class="ant-form-item-label"><label>JSON富文本</label></div><div class="ant-form-item-control"><textarea class="rich-json-editor" id="rich-json-input"></textarea><div class="hint">填写 Ozon raShowcase JSON；留空则不提交 Rich Content。</div><div class="rich-json-status" id="rich-json-status"></div></div></div>
                 <div class="ant-form-item"><div class="ant-form-item-label"><label>产品视频</label></div><div class="ant-form-item-control"><div class="upload-card"><b>+</b>添加视频</div><div class="upload-card"><b>+</b>添加视频封面</div></div></div>
             </div>
         </section>
@@ -1468,6 +1474,32 @@ function collectAttributeFormValues() {
     return result;
 }
 
+function collectRichContentValue() {
+    var input = $("rich-json-input");
+    var status = $("rich-json-status");
+    var raw = input ? input.value.trim() : "";
+    if (status) status.textContent = "";
+    if (!raw) return "";
+    try {
+        JSON.parse(raw);
+        if (status) status.textContent = "JSON富文本格式正确";
+        return raw;
+    } catch (err) {
+        var message = "JSON富文本格式错误：" + err.message;
+        if (status) status.textContent = message;
+        throw new Error(message);
+    }
+}
+
+function collectWorkbenchAttributes() {
+    var attrs = collectAttributeFormValues();
+    var richContent = collectRichContentValue();
+    if (richContent) {
+        attrs.push({ attribute_id: 11254, value: richContent });
+    }
+    return attrs;
+}
+
 function collectSkuRows() {
     var rows = [];
     document.querySelectorAll("#variantInfo tbody tr").forEach(function (row) {
@@ -1496,7 +1528,8 @@ function buildWorkbenchPayload() {
         name: $("title-input") ? $("title-input").value : "",
         category_id: pageState.categoryId,
         type_id: pageState.categoryTypeId,
-        attributes: collectAttributeFormValues(),
+        attributes: collectWorkbenchAttributes(),
+        rich_content: collectRichContentValue(),
         skus: collectSkuRows()
     };
 }
@@ -1507,7 +1540,13 @@ async function validateEditorPayload() {
         alert("请先选择店铺");
         return;
     }
-    var payload = buildWorkbenchPayload();
+    var payload;
+    try {
+        payload = buildWorkbenchPayload();
+    } catch (err) {
+        setAiStatus("表单校验失败", err.message);
+        return;
+    }
     var data = await api("/api/ozon/" + encodeURIComponent(pageState.storeId) + "/listing/validate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
