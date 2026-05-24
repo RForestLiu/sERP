@@ -378,6 +378,12 @@ SKC: {skc}
     def _api_call_attr(self, sys_prompt: str, usr_prompt: str, label: str = "fill") -> list[dict]:
         """调用 DeepSeek 并解析返回的 mappings（Ozon 属性格式，attribute_id-based）"""
         model = "deepseek-v4-pro"
+        evidence_instruction = (
+            '\n\nReturn JSON only. Every mapping must include "evidence": '
+            'a short quote or concrete product-data source that supports the value.'
+        )
+        if '"evidence"' not in sys_prompt:
+            sys_prompt += evidence_instruction
         payload = {
             "model": model,
             "messages": [
@@ -440,6 +446,8 @@ SKC: {skc}
                         item["needs_review"] = m.get("needs_review")
                     if m.get("reason"):
                         item["reason"] = str(m.get("reason"))
+                    if m.get("evidence"):
+                        item["evidence"] = m.get("evidence")
                     validated.append(item)
             logger.info("[自动填充/%s] 填充 %s 个属性", label, len(validated))
             return validated

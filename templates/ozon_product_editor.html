@@ -51,12 +51,12 @@
         .top-right { margin-left: auto; display: flex; gap: 14px; align-items: center; padding-right: 28px; }
         .workspace {
             width: calc(100% - 44px);
-            margin: 0 auto;
+            margin: 0 0 0 22px;
             padding: 30px 0 82px;
             display: grid;
             grid-template-columns: minmax(760px, 1010px) minmax(300px, 360px);
             gap: 16px;
-            justify-content: center;
+            justify-content: start;
             align-items: start;
         }
         .ozon-form-module {
@@ -499,6 +499,35 @@
             line-height: 1.7;
         }
         .ai-status b { display: block; color: #333; margin-bottom: 4px; }
+        .attr-evidence-list {
+            display: grid;
+            gap: 10px;
+        }
+        .attr-evidence-empty {
+            color: #888;
+            line-height: 1.7;
+        }
+        .attr-evidence-item {
+            border: 1px solid #e7e7e7;
+            background: #fbfbfb;
+            padding: 10px;
+        }
+        .attr-evidence-name {
+            color: #333;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+        .attr-evidence-value {
+            color: #2f8fca;
+            margin-top: 5px;
+            word-break: break-word;
+        }
+        .attr-evidence-text {
+            color: #666;
+            margin-top: 6px;
+            line-height: 1.6;
+            word-break: break-word;
+        }
         .ai-step {
             padding: 9px 0;
             border-bottom: 1px solid #f0f0f0;
@@ -810,6 +839,14 @@
                 <div class="ai-step"><b>3. 自动填充</b><br>程序拉官方属性，AI 填重要字段，程序再验证。</div>
             </div>
         </section>
+        <section class="ai-card">
+            <div class="ai-card-title">属性证据</div>
+            <div class="ai-card-body">
+                <div class="attr-evidence-list" id="attr-evidence-list">
+                    <div class="attr-evidence-empty">AI 填写非公共属性后，这里会显示每个属性的依据。</div>
+                </div>
+            </div>
+        </section>
     </aside>
 </div>
 
@@ -873,6 +910,7 @@ var pageState = {
     categoryId: null,
     categoryTypeId: null,
     categoryAttributes: [],
+    attributeEvidence: {},
     variantImages: {},
     activeVariantKey: "",
     productImageSets: [],
@@ -1224,6 +1262,8 @@ function renderCategoryAttributes(attrs) {
     attrs = attrs || [];
     var dynamicAttrs = attrs.filter(function (attr) { return !isPublicOzonAttribute(attr); });
     pageState.categoryAttributes = dynamicAttrs;
+    pageState.attributeEvidence = {};
+    renderAttributeEvidencePanel();
     var area = $("attr-area");
     if (!dynamicAttrs.length) {
         area.innerHTML = '<div class="attr-empty">当前分类没有返回非公共产品属性；公共属性请在基础信息、产品信息、描述信息、变种、图片/视频等固定区域填写。</div>';
@@ -1244,6 +1284,46 @@ function findAttrMeta(attrId) {
     return (pageState.categoryAttributes || []).find(function (attr) {
         return String(attr.id || attr.attribute_id) === String(attrId);
     }) || {};
+}
+
+function formatAttributeEvidence(evidence) {
+    if (!evidence) return "";
+    if (Array.isArray(evidence)) {
+        return evidence.map(formatAttributeEvidence).filter(Boolean).join("；");
+    }
+    if (typeof evidence === "object") {
+        return JSON.stringify(evidence);
+    }
+    return String(evidence);
+}
+
+function formatAttributeFillValue(attr) {
+    if (Array.isArray(attr.values)) {
+        return attr.values.map(function (item) {
+            return item && typeof item === "object" ? (item.value || item.dictionary_value_id || item.id || "") : item;
+        }).filter(Boolean).join("；");
+    }
+    return attr.value || attr.dictionary_value_id || "";
+}
+
+function renderAttributeEvidencePanel() {
+    var list = $("attr-evidence-list");
+    if (!list) return;
+    var items = [];
+    (pageState.categoryAttributes || []).forEach(function (meta) {
+        var attrId = meta.id || meta.attribute_id;
+        var evidence = pageState.attributeEvidence[String(attrId)];
+        if (!evidence) return;
+        items.push(
+            '<div class="attr-evidence-item">' +
+            '<div class="attr-evidence-name">' + attrLabel(meta) + '</div>' +
+            '<div class="attr-evidence-value">填充值：' + esc(evidence.value || "") + '</div>' +
+            '<div class="attr-evidence-text">证据：' + esc(evidence.evidence || evidence.reason || "未提供") + '</div>' +
+            (evidence.reason ? '<div class="attr-evidence-text">判断：' + esc(evidence.reason) + '</div>' : "") +
+            '</div>'
+        );
+    });
+    list.innerHTML = items.length ? items.join("") : '<div class="attr-evidence-empty">AI 填写非公共属性后，这里会显示每个属性的依据。</div>';
 }
 
 function normalizeBooleanValue(value) {
@@ -1370,7 +1450,20 @@ function markAttributeStatus(attrId, attr, filled, matched) {
     var tips = [];
     if (attr.confidence != null) tips.push("confidence: " + attr.confidence);
     if (attr.reason) tips.push(attr.reason);
+    var evidenceText = formatAttributeEvidence(attr.evidence);
+    if (!evidenceText && String(attr.source || "").indexOf("llm") >= 0) {
+        evidenceText = "未提供证据，需人工复核";
+    }
+    if (evidenceText || attr.reason) {
+        pageState.attributeEvidence[String(attrId)] = {
+            value: formatAttributeFillValue(attr),
+            evidence: evidenceText,
+            reason: attr.reason || ""
+        };
+        tips.push("evidence: " + evidenceText);
+    }
     status.title = tips.join("\n");
+    renderAttributeEvidencePanel();
 }
 
 document.addEventListener("change", function (event) {
