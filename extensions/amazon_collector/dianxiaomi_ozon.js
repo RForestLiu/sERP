@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.30";
+  var SERP_EXTENSION_VERSION = "3.2.31";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -3778,30 +3778,62 @@
     return null;
   }
 
+  function normalizeStockFillValue(stockValue) {
+    var n = parseFloat(stockValue);
+    if (!isFinite(n) || n <= 0) return "";
+    return String(Math.round(n));
+  }
+
+  function isStockBatchInput(input) {
+    var text = [
+      input.getAttribute("placeholder") || "",
+      input.getAttribute("aria-label") || "",
+      input.getAttribute("title") || "",
+      input.getAttribute("name") || "",
+      input.getAttribute("id") || ""
+    ].join(" ").toLowerCase();
+    return text.indexOf("批量") !== -1 || text.indexOf("应用") !== -1 || text.indexOf("batch") !== -1;
+  }
+
+  function isSafeStockModalInput(input) {
+    if (!input || input.disabled || input.readOnly) return false;
+    if (input.classList.contains("ant-select-selection-search-input")) return false;
+    if (input.closest(".ant-select, .ant-picker, .ant-cascader")) return false;
+    var type = (input.getAttribute("type") || "").toLowerCase();
+    if (type === "hidden" || type === "file" || type === "checkbox" || type === "radio") return false;
+    var text = [
+      input.getAttribute("placeholder") || "",
+      input.getAttribute("aria-label") || "",
+      input.getAttribute("title") || "",
+      input.getAttribute("name") || "",
+      input.getAttribute("id") || ""
+    ].join(" ").toLowerCase();
+    if (text.indexOf("搜索") !== -1 || text.indexOf("search") !== -1) return false;
+    return true;
+  }
+
   async function fillStockModal(modal, stockValue) {
     if (!modal) return false;
-    var stock = String(stockValue || 0);
+    var stock = normalizeStockFillValue(stockValue);
+    if (!stock) {
+      console.warn("[sERP] 跳过库存回填：库存值无效", stockValue);
+      return false;
+    }
     var inputs = Array.from(modal.querySelectorAll("input")).filter(function (input) {
-      if (input.classList.contains("ant-select-selection-search-input")) return false;
+      if (!isSafeStockModalInput(input)) return false;
       return input.offsetWidth || input.offsetHeight || input.getClientRects().length;
     });
-    var batchInput = inputs.find(function (input) {
-      return (input.placeholder || "").indexOf("库存") !== -1;
-    }) || inputs[0];
-    if (!batchInput) return false;
-    fillNativeInputDirect(batchInput, stock);
-    await sleep(120);
+    var rowInputs = inputs.filter(function (input) { return !isStockBatchInput(input); });
+    if (!rowInputs.length) {
+      console.warn("[sERP] 跳过库存回填：未找到仓库行库存输入框，避免批量应用写入 0");
+      return false;
+    }
+    rowInputs.forEach(function (input) { fillNativeInputDirect(input, stock); });
+    await sleep(180);
 
     var buttons = Array.from(modal.querySelectorAll("button, .ant-btn")).filter(function (btn) {
       return btn.offsetWidth || btn.offsetHeight || btn.getClientRects().length;
     });
-    var applyBtn = buttons.find(function (btn) { return (btn.textContent || "").trim() === "应用"; });
-    if (applyBtn) {
-      clickElementDirect(applyBtn);
-      await sleep(250);
-    } else {
-      inputs.slice(1).forEach(function (input) { fillNativeInputDirect(input, stock); });
-    }
     var okBtn = buttons.find(function (btn) {
       var text = (btn.textContent || "").trim();
       return text === "确定" || text === "保存" || text === "确认";
