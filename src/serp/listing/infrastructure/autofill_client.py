@@ -211,7 +211,13 @@ SKC: {skc}
         about_item = product_data.get("about_item", "")
         product_description = product_data.get("product_description", "")
         description_text = product_data.get("description", "")
+        product_details = product_data.get("product_details", {})
+        if product_details and isinstance(product_details, dict) and product_details.get("_raw"):
+            product_details = dict(product_details)
+            del product_details["_raw"]
         product_texts = [product_title, about_item, product_description, description_text]
+        if product_details:
+            product_texts.append("### 产品规格\n" + _json.dumps(product_details, ensure_ascii=False, indent=2))
         product_text = "\n".join(t for t in product_texts if t)
 
         # 拆分重要/常规属性
@@ -223,6 +229,8 @@ SKC: {skc}
             hints_text = "\n### 已知确定数据（优先使用）\n" + "\n".join(hints_lines)
 
         # 构建正则批次 prompt
+        hints_text += "\n数据优先级：manual_data 优先级高于采集数据；manual_data 为空时才使用 product_details / product_data 中采集到的数据。"
+
         def _build_regular_batch():
             reg_summary = self._build_ozon_attr_summary(regular_attrs, preset_map)
             reg_system = """你是俄罗斯电商平台（Ozon/Wildberries）属性填充专家。

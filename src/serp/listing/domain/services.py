@@ -442,5 +442,32 @@ class DeterministicPreFiller:
                             hints["known_material"] = val
                         elif any(kw in kl for kw in ["brand"]) and "нет бренда" not in val.lower():
                             hints["known_brand"] = val
+            details = product_data.get("product_details") or {}
+            if "size_spec" not in hints and isinstance(details, dict):
+                parsed = DeterministicPreFiller._extract_dimension_hint(details)
+                if parsed:
+                    hints["size_spec"] = parsed[0]
+                    hints["size_source"] = parsed[1]
 
         return hints
+
+    @staticmethod
+    def _extract_dimension_hint(details: dict) -> tuple[str, str] | None:
+        for key, val in details.items():
+            key_text = str(key).lower()
+            if not val or not any(part in key_text for part in ["dimension", "size"]):
+                continue
+            text = str(val)
+            label_match = re.search(
+                r'([\d.]+)\s*"?\s*d\s*x\s*([\d.]+)\s*"?\s*w\s*x\s*([\d.]+)\s*"?\s*h',
+                text,
+                re.IGNORECASE,
+            )
+            numbers = label_match.groups() if label_match else re.findall(r"[\d.]+", text)[:3]
+            if len(numbers) < 3:
+                continue
+            multiplier = 2.54 if re.search(r'inch|inches|"', text, re.IGNORECASE) else 1
+            dims = [round(float(num) * multiplier, 1) for num in numbers[:3]]
+            size_spec = "x".join(str(dim).rstrip("0").rstrip(".") for dim in dims) + "cm"
+            return size_spec, f"product_details.{key}"
+        return None
