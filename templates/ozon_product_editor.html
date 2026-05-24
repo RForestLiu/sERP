@@ -1167,6 +1167,16 @@ function confirmProductSelection() {
     selectProduct(pageState.pendingProductSkc);
 }
 
+function hasSelectedCategory() {
+    return Boolean(pageState.categoryId && pageState.categoryTypeId);
+}
+
+function refreshAutoFillAvailability() {
+    if ($("btn-ai-fill")) {
+        $("btn-ai-fill").disabled = !hasSelectedCategory();
+    }
+}
+
 function showCategory(match, options) {
     match = match || {};
     options = options || {};
@@ -1185,6 +1195,7 @@ function showCategory(match, options) {
     document.querySelectorAll(".category-dependent").forEach(function (section) {
         section.classList.remove("is-hidden");
     });
+    refreshAutoFillAvailability();
     if (options.preserveAttributes && sameCategory && (pageState.categoryAttributes || []).length) {
         return Promise.resolve();
     }
@@ -1923,6 +1934,10 @@ async function autoFill() {
         alert("请先在右侧选品");
         return;
     }
+    if (!hasSelectedCategory()) {
+        setAiStatus("不能自动填充", "请先选择 Ozon 分类，再自动填充。");
+        return;
+    }
     var btn = $("btn-ai-fill");
     var oldText = btn.textContent;
     btn.disabled = true;
@@ -1979,6 +1994,7 @@ function init() {
     });
     $("btn-ai-category").addEventListener("click", autoCategory);
     $("btn-ai-fill").addEventListener("click", autoFill);
+    refreshAutoFillAvailability();
     ["btn-save-top", "btn-save-bottom", "btn-submit-top", "btn-submit-bottom"].forEach(function (id) {
         var btn = $(id);
         if (btn) btn.addEventListener("click", validateEditorPayload);
