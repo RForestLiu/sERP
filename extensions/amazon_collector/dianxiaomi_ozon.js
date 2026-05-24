@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.21";
+  var SERP_EXTENSION_VERSION = "3.2.22";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -79,35 +79,57 @@
   var style = document.createElement("style");
   style.textContent = [
     "/* ===== 左侧悬浮工具栏 ===== */",
-    "#serp-toolbar{position:fixed;left:8px;top:120px;z-index:999990;display:flex;flex-direction:row;align-items:flex-start;gap:6px;background:#fff;border-radius:10px;padding:8px;box-shadow:0 4px 16px rgba(0,0,0,0.12);font-family:\"Microsoft YaHei\",sans-serif;user-select:none;}",
-    "#serp-toolbar .serp-tb-btn{height:48px;min-width:56px;border-radius:8px;border:1px solid #e8e8e8;background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:all 0.2s;font-size:11px;color:#666;line-height:1.2;gap:2px;padding:0 6px;white-space:nowrap;}",
+    "#serp-toolbar{position:fixed;left:8px;top:96px;z-index:999990;width:340px;max-height:calc(100vh - 120px);overflow:auto;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 10px 30px rgba(15,23,42,0.12);font-family:\"Microsoft YaHei\",sans-serif;user-select:none;}",
+    "#serp-toolbar .serp-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:10px;border-bottom:1px solid #edf0f3;background:#fbfcfd;}",
+    "#serp-toolbar .serp-tb-btn{height:34px;min-width:0;border-radius:6px;border:1px solid #d6dbe1;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;font-size:12px;font-weight:600;color:#374151;line-height:1.2;gap:4px;padding:0 6px;white-space:nowrap;}",
     "#serp-toolbar .serp-tb-btn:hover{background:#f0f5ff;border-color:#428bca;color:#428bca;}",
     "#serp-toolbar .serp-tb-btn:active{transform:scale(0.95);}",
     "#serp-toolbar .serp-tb-btn.loading{pointer-events:none;opacity:0.6;}",
-    "#serp-toolbar .serp-tb-btn .tb-icon{font-size:16px;line-height:1;}",
-    "#serp-toolbar .serp-tb-btn .tb-label{font-size:10px;line-height:1;}",
+    "#serp-toolbar .serp-tb-btn .tb-icon{font-size:13px;line-height:1;}",
+    "#serp-toolbar .serp-tb-btn .tb-label{font-size:12px;line-height:1;}",
     "#serp-toolbar .serp-tb-btn.has-product{border-color:#52c41a;background:#f6ffed;color:#389e0d;}",
-    "/* 产品信息区 — 横向时放在按钮行下方 */",
-    "#serp-toolbar .serp-product-info{display:none;position:absolute;top:100%;left:0;margin-top:6px;background:#fff;border-radius:8px;padding:6px 8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);width:220px;}",
-    "#serp-toolbar .serp-product-info.visible{display:block;}",
-    "#serp-toolbar .serp-product-info .pi-label{font-size:9px;color:#999;margin-bottom:2px;}",
-    "#serp-toolbar .serp-product-info .pi-skc{font-size:11px;font-weight:600;color:#428bca;word-break:break-all;}",
-    "#serp-toolbar .serp-product-info .pi-title{font-size:10px;color:#666;word-break:break-word;max-height:40px;overflow:hidden;line-height:1.3;margin-top:2px;}",
-    "#serp-toolbar .serp-product-info .pi-clear{font-size:10px;color:#ff4d4f;cursor:pointer;margin-top:4px;text-align:center;border:1px solid #ffccc7;border-radius:3px;padding:2px 6px;transition:all 0.2s;}",
-    "#serp-toolbar .serp-product-info .pi-clear:hover{background:#fff1f0;}",
-    "#serp-toolbar .serp-product-info .pi-price-toggle{font-size:10px;color:#428bca;cursor:pointer;margin-top:5px;border:1px solid #d6e4ff;border-radius:3px;padding:3px 6px;text-align:center;background:#f8fbff;}",
-    "#serp-toolbar .serp-product-info .pi-price-detail{display:none;margin-top:5px;padding:5px 6px;border:1px solid #eef1f5;border-radius:4px;background:#fafafa;font-size:10px;color:#555;line-height:1.55;box-sizing:border-box;}",
-    "#serp-toolbar .serp-product-info .pi-price-detail.visible{display:block;}",
-    "#serp-toolbar .serp-product-info .pi-price-row{display:flex;justify-content:space-between;gap:8px;}",
-    "#serp-toolbar .serp-product-info .pi-price-row strong{color:#333;text-align:right;}",
-    "#serp-toolbar .serp-product-info .pi-price-row.is-key strong{color:#1677ff;}",
-    "#serp-toolbar .serp-product-info .pi-price-vars{display:grid;grid-template-columns:1fr;gap:4px;margin-top:5px;}",
-    "#serp-toolbar .serp-product-info .pi-price-var{display:grid;grid-template-columns:minmax(0,1fr) 62px 26px;align-items:center;gap:4px;font-size:9px;color:#777;}",
-    "#serp-toolbar .serp-product-info .pi-price-var input{width:100%;box-sizing:border-box;border:1px solid #d9d9d9;border-radius:3px;padding:2px 4px;font-size:10px;min-width:0;}",
-    "#serp-toolbar .serp-product-info .pi-price-unit{font-size:9px;color:#999;text-align:left;white-space:nowrap;}",
-    "#serp-toolbar .serp-product-info .pi-price-apply{width:100%;margin-top:6px;border:1px solid #1677ff;background:#1677ff;color:#fff;border-radius:4px;padding:5px 8px;font-size:11px;cursor:pointer;}",
-    "#serp-toolbar .serp-product-info .pi-price-apply:hover{background:#0958d9;border-color:#0958d9;}",
-    "#serp-toolbar .serp-product-info .pi-price-note{font-size:9px;color:#888;margin-top:4px;line-height:1.35;}",
+    "#serp-toolbar #serp-btn-extract,#serp-toolbar #serp-btn-images,#serp-toolbar #serp-btn-clear-form,#serp-toolbar #serp-btn-send-html{display:none;}",
+    "#serp-hint-toggle{font-size:10px;color:#8b8b8b;cursor:pointer;text-align:center;margin:0 10px 10px;padding:3px 4px;border:1px dashed #d9d9d9;border-radius:4px;transition:all 0.2s;white-space:nowrap;}",
+    "#serp-hint-toggle:hover{color:#428bca;border-color:#428bca;}",
+    "#serp-hint-toggle.active{color:#428bca;border-color:#428bca;background:#f0f5ff;}",
+    "#serp-toolbar .serp-product-info{display:block;padding:0;}",
+    "#serp-toolbar .panel-section{padding:12px;border-bottom:1px solid #edf0f3;}",
+    "#serp-toolbar .panel-title{font-size:12px;font-weight:700;color:#374151;margin-bottom:7px;}",
+    "#serp-toolbar .category-path{font-size:11px;line-height:1.5;color:#4b5563;background:#f8fafc;border:1px solid #e5e7eb;border-radius:6px;padding:8px;}",
+    "#serp-toolbar .panel-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}",
+    "#serp-toolbar .panel-chip{font-size:10px;color:#475569;background:#eef2f7;border:1px solid #e2e8f0;border-radius:999px;padding:2px 7px;}",
+    "#serp-toolbar details.product-details{margin-top:10px;border-top:1px dashed #d8dee7;padding-top:8px;}",
+    "#serp-toolbar details.product-details summary{cursor:pointer;font-size:12px;font-weight:700;color:#2563eb;list-style-position:outside;}",
+    "#serp-toolbar .product-card{display:grid;grid-template-columns:72px 1fr;gap:10px;padding-top:10px;}",
+    "#serp-toolbar .product-thumb{width:72px;height:96px;border-radius:6px;background:#eef2f7;border:1px solid #e5e7eb;object-fit:cover;}",
+    "#serp-toolbar .pi-skc{font-size:12px;color:#2563eb;font-weight:700;margin-bottom:3px;word-break:break-all;}",
+    "#serp-toolbar .pi-title{font-size:12px;line-height:1.35;font-weight:600;color:#111827;margin-bottom:7px;max-height:50px;overflow:hidden;}",
+    "#serp-toolbar .pi-meta{display:grid;gap:4px;font-size:11px;color:#6b7280;}",
+    "#serp-toolbar .pi-meta b{color:#374151;font-weight:600;}",
+    "#serp-toolbar .pi-clear{font-size:10px;color:#ff4d4f;cursor:pointer;margin-top:7px;text-align:center;border:1px solid #ffccc7;border-radius:4px;padding:3px 6px;transition:all 0.2s;}",
+    "#serp-toolbar .pi-clear:hover{background:#fff1f0;}",
+    "#serp-toolbar .image-sets{display:grid;gap:8px;margin-top:10px;}",
+    "#serp-toolbar .image-set{border:1px solid #e5e7eb;background:#fbfcfd;border-radius:6px;padding:7px;}",
+    "#serp-toolbar .image-set-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;font-size:11px;color:#374151;font-weight:700;}",
+    "#serp-toolbar .image-set-head span:last-child{color:#94a3b8;font-weight:600;}",
+    "#serp-toolbar .image-grid{display:flex;flex-wrap:wrap;gap:5px;}",
+    "#serp-toolbar .image-grid img{width:60px;height:60px;object-fit:cover;display:block;border:1px solid #e2e8f0;border-radius:5px;background:#eef2f7;cursor:zoom-in;}",
+    "#serp-image-preview{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:500px;height:500px;padding:10px;border:1px solid #d1d5db;border-radius:8px;background:#fff;box-shadow:0 20px 60px rgba(15,23,42,0.25);z-index:1000003;display:none;}",
+    "#serp-image-preview.visible{display:block;}",
+    "#serp-image-preview img{width:100%;height:100%;object-fit:contain;display:block;background:#f8fafc;}",
+    ".serp-variant-price-panel{margin:10px 0 14px;border:1px solid #dbeafe;background:#f8fbff;border-radius:6px;padding:10px 12px;font-family:\"Microsoft YaHei\",sans-serif;}",
+    ".serp-variant-price-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;}",
+    ".serp-variant-price-title{font-size:12px;font-weight:700;color:#1e40af;}",
+    ".serp-variant-price-panel .pi-price-row{display:flex;justify-content:space-between;gap:12px;font-size:11px;color:#475569;line-height:1.55;}",
+    ".serp-variant-price-panel .pi-price-row strong{color:#333;text-align:right;}",
+    ".serp-variant-price-panel .pi-price-row.is-key strong{color:#1677ff;}",
+    ".serp-variant-price-panel .pi-price-vars{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:7px;}",
+    ".serp-variant-price-panel .pi-price-var{display:grid;grid-template-columns:minmax(0,1fr) 66px 28px;align-items:center;gap:4px;font-size:10px;color:#777;}",
+    ".serp-variant-price-panel .pi-price-var input{width:100%;box-sizing:border-box;border:1px solid #d9d9d9;border-radius:3px;padding:2px 4px;font-size:11px;min-width:0;}",
+    ".serp-variant-price-panel .pi-price-unit{font-size:9px;color:#999;text-align:left;white-space:nowrap;}",
+    ".serp-variant-price-panel .pi-price-apply{border:1px solid #2563eb;background:#2563eb;color:#fff;border-radius:5px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;}",
+    ".serp-variant-price-panel .pi-price-apply:hover{background:#1d4ed8;border-color:#1d4ed8;}",
+    ".serp-variant-price-panel .pi-price-note{font-size:10px;color:#667085;margin-top:6px;line-height:1.4;}",
     "/* ===== 产品选择弹窗 ===== */",
     "#serp-modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000000;align-items:center;justify-content:center;}",
     "#serp-modal-overlay.active{display:flex;}",
@@ -139,9 +161,6 @@
     "/* ===== 进度条 ===== */",
     "#serp-progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,#667eea,#764ba2);z-index:1000002;transition:width 0.3s ease;width:0%;}",
     "/* ===== 额外提示词面板（居中弹窗） ===== */",
-    "#serp-hint-toggle{font-size:10px;color:#8b8b8b;cursor:pointer;text-align:center;padding:2px 4px;border:1px dashed #d9d9d9;border-radius:4px;transition:all 0.2s;white-space:nowrap;}",
-    "#serp-hint-toggle:hover{color:#428bca;border-color:#428bca;}",
-    "#serp-hint-toggle.active{color:#428bca;border-color:#428bca;background:#f0f5ff;}",
     "#serp-hint-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000001;align-items:center;justify-content:center;}",
     "#serp-hint-overlay.active{display:flex;}",
     "#serp-hint-panel{background:#fff;border-radius:12px;width:560px;max-width:90vw;max-height:85vh;overflow-y:auto;padding:20px 24px;box-shadow:0 20px 60px rgba(0,0,0,0.3);font-family:\"Microsoft YaHei\",sans-serif;}",
@@ -219,17 +238,19 @@
   var toolbar = document.createElement("div");
   toolbar.id = "serp-toolbar";
   toolbar.innerHTML =
+    '<div class="serp-actions">' +
     '<button class="serp-tb-btn" id="serp-btn-select" title="选择产品">' +
       '<span class="tb-icon">📦</span><span class="tb-label">选品</span>' +
     '</button>' +
     '<button class="serp-tb-btn" id="serp-btn-category" title="自动匹配品类">' +
       '<span class="tb-icon">🏷️</span><span class="tb-label">自动分类</span>' +
     '</button>' +
-    '<button class="serp-tb-btn" id="serp-btn-extract" title="提取页面可填字段">' +
-      '<span class="tb-icon">🔍</span><span class="tb-label">提取</span>' +
-    '</button>' +
     '<button class="serp-tb-btn" id="serp-btn-fill" title="自动填充表单">' +
       '<span class="tb-icon">✍️</span><span class="tb-label">自动填充</span>' +
+    '</button>' +
+    '</div>' +
+    '<button class="serp-tb-btn" id="serp-btn-extract" title="提取页面可填字段">' +
+      '<span class="tb-icon">🔍</span><span class="tb-label">提取</span>' +
     '</button>' +
     '<button class="serp-tb-btn" id="serp-btn-images" title="选择变种图片集或单张图片">' +
       '<span class="tb-icon">图</span><span class="tb-label">变种图</span>' +
@@ -243,12 +264,24 @@
     '<div id="serp-ext-version" title="sERP extension version">v' + SERP_EXTENSION_VERSION + '</div>' +
     '<div id="serp-hint-toggle" title="展开设置自定义提示词">💡</div>' +
     '<div class="serp-product-info" id="serp-product-info">' +
-      '<div class="pi-label">已选产品</div>' +
-      '<div class="pi-skc" id="serp-pi-skc"></div>' +
-      '<div class="pi-title" id="serp-pi-title"></div>' +
-      '<div class="pi-price-toggle" id="serp-pi-price-toggle">价格公式 ▾</div>' +
-      '<div class="pi-price-detail" id="serp-pi-price-detail"></div>' +
-      '<div class="pi-clear" id="serp-pi-clear">清除</div>' +
+      '<div class="panel-section">' +
+        '<div class="panel-title">已选 Ozon 品类</div>' +
+        '<div class="category-path" id="serp-category-path">未选择品类</div>' +
+        '<div class="panel-chips" id="serp-category-chips"></div>' +
+        '<details class="product-details" id="serp-product-data-details">' +
+          '<summary>产品数据</summary>' +
+          '<div id="serp-product-data-body"></div>' +
+        '</details>' +
+        '<details class="product-details" id="serp-product-image-details">' +
+          '<summary>产品图片</summary>' +
+          '<div id="serp-product-image-body"></div>' +
+        '</details>' +
+      '</div>' +
+      '<div class="panel-section">' +
+        '<div class="panel-title">产品属性证据</div>' +
+        '<div class="pi-meta">仅显示“基本信息 - 产品属性”内属性行的 AI 证据和状态。</div>' +
+      '</div>' +
+      '<div class="pi-clear" id="serp-pi-clear">清除已选产品</div>' +
     '</div>';
   document.body.appendChild(toolbar);
 
@@ -259,6 +292,11 @@
   var progressBar = document.createElement("div");
   progressBar.id = "serp-progress-bar";
   document.body.appendChild(progressBar);
+
+  var imagePreview = document.createElement("div");
+  imagePreview.id = "serp-image-preview";
+  imagePreview.innerHTML = '<img alt="产品大图预览">';
+  document.body.appendChild(imagePreview);
 
   var resultsPanel = document.createElement("div");
   resultsPanel.id = "serp-results-panel";
@@ -359,6 +397,10 @@
   var piPriceToggle = document.getElementById("serp-pi-price-toggle");
   var piPriceDetail = document.getElementById("serp-pi-price-detail");
   var piClear = document.getElementById("serp-pi-clear");
+  var categoryPathEl = document.getElementById("serp-category-path");
+  var categoryChipsEl = document.getElementById("serp-category-chips");
+  var productDataBody = document.getElementById("serp-product-data-body");
+  var productImageBody = document.getElementById("serp-product-image-body");
   var hintToggle = document.getElementById("serp-hint-toggle");
   var hintPanel = document.getElementById("serp-hint-panel");
   var hintTitle = document.getElementById("serp-hint-title");
@@ -565,22 +607,11 @@
   }
 
   function updateProductUI() {
-    if (selectedProduct) {
-      productInfo.classList.add("visible");
-      piSkc.textContent = selectedProduct.skc || "";
-      piTitle.textContent = selectedProduct.title || "未命名产品";
-      if (piPriceDetail) piPriceDetail.innerHTML = buildPriceFormulaHtmlV2(selectedProduct);
-      btnSelect.classList.add("has-product");
-    } else {
-      productInfo.classList.remove("visible");
-      piSkc.textContent = "";
-      piTitle.textContent = "";
-      if (piPriceDetail) {
-        piPriceDetail.classList.remove("visible");
-        piPriceDetail.innerHTML = "";
-      }
-      btnSelect.classList.remove("has-product");
-    }
+    renderCategoryPanel();
+    renderSelectedProductPanel();
+    installVariantPricingPanel();
+    if (selectedProduct) btnSelect.classList.add("has-product");
+    else btnSelect.classList.remove("has-product");
   }
 
   function parseMoney(value) {
@@ -880,6 +911,89 @@
     ].join("");
   }
 
+  function bindPricingPanelEvents(panel) {
+    if (!panel || panel._serpPricingBound) return;
+    panel._serpPricingBound = true;
+    panel.addEventListener("input", function (e) {
+      var input = e.target.closest("[data-price-var]");
+      if (!input) return;
+      var raw = input.value.trim();
+      var parsed = parseFloat(raw);
+      if (raw === "" || isNaN(parsed)) delete pricingTempVars[input.dataset.priceVar];
+      else pricingTempVars[input.dataset.priceVar] = parsed;
+      updatePriceSummaryV2(selectedProduct);
+    });
+    panel.addEventListener("click", function (e) {
+      var applyBtn = e.target.closest("#serp-pi-price-apply");
+      if (!applyBtn) return;
+      e.preventDefault();
+      applyPricingToCurrentPage();
+    });
+  }
+
+  function findExactVisibleTextNode(text) {
+    var nodes = Array.from(document.querySelectorAll("body *")).filter(isVisibleNode);
+    return nodes.find(function (el) {
+      return (el.textContent || "").replace(/\s+/g, " ").trim() === text;
+    });
+  }
+
+  function findFormSectionMarker(text) {
+    var matches = Array.from(document.querySelectorAll("body *")).filter(function (el) {
+      if (!isVisibleNode(el)) return false;
+      if ((el.textContent || "").replace(/\s+/g, " ").trim() !== text) return false;
+      var rect = el.getBoundingClientRect();
+      if (rect.x > window.innerWidth - 220) return false;
+      return el.tagName !== "A";
+    });
+    return matches.find(function (el) {
+      return /form-card|card-header|title/i.test(String(el.className || ""));
+    }) || matches[0] || null;
+  }
+
+  function installVariantPricingPanel() {
+    var existing = document.getElementById("serp-variant-price-panel");
+    if (!selectedProduct) {
+      if (existing && existing.parentElement) existing.parentElement.removeChild(existing);
+      piPriceDetail = null;
+      return;
+    }
+
+    var marker = findFormSectionMarker("变种信息");
+    if (!marker) {
+      if (existing) existing.style.display = "none";
+      return;
+    }
+    var markerTop = marker.getBoundingClientRect().top + window.scrollY;
+    var nextMarker = findFormSectionMarker("变种图片");
+    var nextTop = nextMarker ? nextMarker.getBoundingClientRect().top + window.scrollY : Number.MAX_SAFE_INTEGER;
+    var tables = Array.from(document.querySelectorAll("table")).filter(function (table) {
+      if (!isVisibleNode(table)) return false;
+      var top = table.getBoundingClientRect().top + window.scrollY;
+      return top >= markerTop && top < nextTop;
+    });
+    var anchor = tables.length ? tables[tables.length - 1] : marker;
+
+    var panel = existing || document.createElement("div");
+    panel.id = "serp-variant-price-panel";
+    panel.className = "serp-variant-price-panel";
+    panel.style.display = "";
+    var productKey = (selectedProduct && selectedProduct.skc) || "";
+    if (!existing || panel._serpProductKey !== productKey || !panel.querySelector("#serp-pi-price-detail")) {
+      panel.innerHTML =
+        '<div class="serp-variant-price-head">' +
+          '<div class="serp-variant-price-title">价格公式</div>' +
+        '</div>' +
+        '<div id="serp-pi-price-detail">' + buildPriceFormulaHtmlV2(selectedProduct) + '</div>';
+      panel._serpProductKey = productKey;
+    }
+    if (anchor.nextSibling !== panel) {
+      anchor.parentElement.insertBefore(panel, anchor.nextSibling);
+    }
+    piPriceDetail = panel.querySelector("#serp-pi-price-detail");
+    bindPricingPanelEvents(panel);
+  }
+
   function updatePriceSummaryV2(product) {
     if (!piPriceDetail) return;
     var pricing = computePricingV2(product || selectedProduct || {});
@@ -966,6 +1080,127 @@
     return String(s || "").replace(/[&<>"']/g, function (ch) {
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
     });
+  }
+
+  function getVisibleText(el) {
+    return (el && (el.getAttribute("title") || el.textContent) || "").replace(/\s+/g, " ").trim();
+  }
+
+  function isVisibleNode(el) {
+    if (!el) return false;
+    return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+  }
+
+  function detectOzonCategoryPathText() {
+    var bodyText = (document.body && document.body.innerText || "").replace(/\s+/g, " ");
+    var pathMatch = bodyText.match(/小百货和配饰\([^)]*\)\s*>\s*配饰\([^)]*\)\s*>\s*钱包\([^)]*\)/);
+    if (pathMatch) return pathMatch[0];
+    var selected = Array.from(document.querySelectorAll(".ant-select-selection-item")).map(getVisibleText).filter(Boolean);
+    var category = selected.find(function (t) { return t.indexOf("钱包") !== -1 || t.indexOf("Кошелек") !== -1; });
+    return category || detectCategory() || "未选择品类";
+  }
+
+  function renderCategoryPanel() {
+    if (!categoryPathEl) return;
+    var pathText = detectOzonCategoryPathText();
+    categoryPathEl.textContent = pathText || "未选择品类";
+    var chips = [];
+    if (pathText && pathText !== "未选择品类") chips.push("分类已选");
+    if ((document.body && document.body.innerText || "").indexOf("产品属性") !== -1) chips.push("产品属性已展开");
+    var checkboxCount = document.querySelectorAll('input[type="checkbox"]').length;
+    if (checkboxCount) chips.push(checkboxCount + " 个复选项");
+    categoryChipsEl.innerHTML = chips.map(function (chip) {
+      return '<span class="panel-chip">' + escapeHtml(chip) + '</span>';
+    }).join("");
+  }
+
+  function productPanelImageUrl(product, img) {
+    if (!img) return "";
+    var raw = typeof img === "string" ? img : (img.url || img.path || img.file || img.filename || img.src || "");
+    if (!raw) return "";
+    if (/^https?:\/\//i.test(raw) || raw.charAt(0) === "/") return normalizeImageUrl(raw);
+    return normalizeImageUrl("/product_images/" + encodeURIComponent((product && product.skc) || "") + "/" + raw.replace(/^\/+/, ""));
+  }
+
+  function collectProductImageSets(product) {
+    if (!product) return [];
+    var sets = [];
+    var imageSubsets = product.image_subsets || {};
+    Object.keys(imageSubsets).forEach(function (variantName) {
+      var subsetMap = imageSubsets[variantName] || {};
+      Object.keys(subsetMap).forEach(function (subsetName) {
+        var items = subsetMap[subsetName] || [];
+        if (items.length) sets.push({ name: variantName + " / " + subsetName, images: items });
+      });
+    });
+    var imageSets = product.image_sets || {};
+    if (Array.isArray(imageSets)) {
+      imageSets.forEach(function (set, idx) {
+        var imgs = set.images || set.items || set.urls || [];
+        if (imgs.length) sets.push({ name: set.label || set.name || ("图片集 " + (idx + 1)), images: imgs });
+      });
+    } else {
+      Object.keys(imageSets).forEach(function (name) {
+        var imgs = imageSets[name] || [];
+        if (imgs.length) sets.push({ name: name, images: imgs });
+      });
+    }
+    if (product.images && product.images.length) sets.push({ name: "采集图片", images: product.images });
+    return sets;
+  }
+
+  function productBrand(product) {
+    var pd = (product && product.product_data) || {};
+    var details = pd.product_details || {};
+    return details.brand || pd.brand || "";
+  }
+
+  function productVariantSummary(product) {
+    var pd = (product && product.product_data) || {};
+    var variants = getProductVariantValues(pd);
+    if (variants.length) return variants.map(function (v) { return v.name || v.variantName || ""; }).filter(Boolean).join(" / ");
+    return pd.currentVariant || "";
+  }
+
+  function renderSelectedProductPanel() {
+    if (!productDataBody || !productImageBody) return;
+    if (!selectedProduct) {
+      productDataBody.innerHTML = '<div class="pi-meta">未选择产品</div>';
+      productImageBody.innerHTML = '<div class="pi-meta">未选择产品</div>';
+      return;
+    }
+    var pricing = computePricingV2(selectedProduct);
+    var thumb = normalizeImageUrl(selectedProduct.thumbnail || "");
+    var storeId = detectStoreId() || "";
+    productDataBody.innerHTML =
+      '<div class="product-card">' +
+        (thumb ? '<img class="product-thumb" src="' + escapeHtml(thumb) + '" alt="产品首图">' : '<div class="product-thumb"></div>') +
+        '<div>' +
+          '<div class="pi-skc">' + escapeHtml(selectedProduct.skc || "") + '</div>' +
+          '<div class="pi-title">' + escapeHtml(selectedProduct.title || "未命名产品") + '</div>' +
+          '<div class="pi-meta">' +
+            '<span><b>店铺</b> ' + escapeHtml(storeId || "未识别") + '</span>' +
+            '<span><b>品牌</b> ' + escapeHtml(productBrand(selectedProduct) || "--") + '</span>' +
+            '<span><b>变体</b> ' + escapeHtml(productVariantSummary(selectedProduct) || "--") + '</span>' +
+            '<span><b>售价</b> ' + escapeHtml(pricing.sale_price_cny ? pricing.sale_price_cny + " CNY" : "--") + '</span>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+    var sets = collectProductImageSets(selectedProduct);
+    if (!sets.length) {
+      productImageBody.innerHTML = '<div class="pi-meta">暂无图片数据集</div>';
+      return;
+    }
+    productImageBody.innerHTML = '<div class="image-sets">' + sets.map(function (set) {
+      var imgs = (set.images || []).map(function (img) { return productPanelImageUrl(selectedProduct, img); }).filter(Boolean);
+      return '<div class="image-set">' +
+        '<div class="image-set-head"><span>' + escapeHtml(set.name || "图片集") + '</span><span>' + imgs.length + ' 张</span></div>' +
+        '<div class="image-grid">' + imgs.map(function (url, i) {
+          return '<img src="' + escapeHtml(url) + '" alt="' + escapeHtml((set.name || "图片") + " " + (i + 1)) + '">';
+        }).join("") + '</div>' +
+      '</div>';
+    }).join("") + '</div>';
   }
 
   function normalizeImageUrl(url) {
@@ -3782,6 +4017,24 @@
   document.getElementById("serp-image-close").addEventListener("click", function () {
     imagePicker.classList.remove("visible");
   });
+  productInfo.addEventListener("click", function (e) {
+    var img = e.target.closest(".image-grid img");
+    if (!img) return;
+    e.stopPropagation();
+    var previewImg = imagePreview.querySelector("img");
+    previewImg.src = img.src;
+    imagePreview.classList.add("visible");
+  });
+  imagePreview.addEventListener("click", function () {
+    imagePreview.classList.remove("visible");
+    imagePreview.querySelector("img").src = "";
+  });
+  document.addEventListener("click", function (e) {
+    if (!imagePreview.classList.contains("visible")) return;
+    if (e.target.closest("#serp-image-preview") || e.target.closest("#serp-toolbar .image-grid img")) return;
+    imagePreview.classList.remove("visible");
+    imagePreview.querySelector("img").src = "";
+  });
   imageCopy.addEventListener("click", async function () {
     var urls = Object.keys(selectedImageUrls);
     if (!urls.length) {
@@ -3810,6 +4063,11 @@
   });
 
   loadAllHints();
+  updateProductUI();
+  setInterval(function () {
+    renderCategoryPanel();
+    installVariantPricingPanel();
+  }, 2000);
   console.log("[sERP ExtensionHelper] 店小秘 Ozon 智能助手已加载");
   console.log("[sERP ExtensionHelper] 左侧工具栏: 选品 → 分类 → 填充 → 发送HTML | 快捷键: Ctrl+Shift+S/C/F/H");
 })();
