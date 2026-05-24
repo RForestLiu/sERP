@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.29";
+  var SERP_EXTENSION_VERSION = "3.2.30";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -1222,6 +1222,36 @@
     return pd.currentVariant || "";
   }
 
+  function productSummarySize(product) {
+    var manual = normalizeManualDataForFill((product && product.manual_data) || {});
+    var pd = (product && product.product_data) || {};
+    var details = pd.product_details || {};
+    var spec = String(manual.effective_size_spec || "").trim();
+    if (spec) {
+      var dims = parseSizeSpecCm(spec);
+      if (dims.length === 3) return dims.join(" x ") + " cm";
+      return spec;
+    }
+    return details.item_dimensions || details.dimensions || pd.size || "";
+  }
+
+  function productSummaryWeight(product) {
+    var manual = normalizeManualDataForFill((product && product.manual_data) || {});
+    var pd = (product && product.product_data) || {};
+    var details = pd.product_details || {};
+    var weight = String(manual.effective_weight_g || "").trim();
+    if (weight) return /[a-zA-Z\u4e00-\u9fa5]/.test(weight) ? weight : weight + " g";
+    return details.item_weight || details.weight || pd.weight || "";
+  }
+
+  function productSummaryCost(product, pricing) {
+    var manual = normalizeManualDataForFill((product && product.manual_data) || {});
+    var cost = String(manual.cost_price || "").trim();
+    if (cost) return /[a-zA-Z¥￥$€₽]/.test(cost) ? cost : cost + " CNY";
+    if (pricing && pricing.cost_price_cny) return pricing.cost_price_cny + " CNY";
+    return "";
+  }
+
   function dataRowHtml(key, value) {
     if (value === undefined || value === null || value === "") return "";
     return '<div class="product-data-row"><span class="product-data-key">' + escapeHtml(key) + '</span><span class="product-data-value">' + escapeHtml(value) + '</span></div>';
@@ -1274,6 +1304,9 @@
     var pricing = computePricingV2(selectedProduct);
     var thumb = getProductPrimaryImageUrl(selectedProduct);
     var storeId = detectStoreId() || "";
+    var summarySize = productSummarySize(selectedProduct);
+    var summaryWeight = productSummaryWeight(selectedProduct);
+    var summaryCost = productSummaryCost(selectedProduct, pricing);
     productSummaryBody.innerHTML =
       '<div class="product-card">' +
         (thumb ? '<img class="product-thumb" src="' + escapeHtml(thumb) + '" alt="产品首图">' : '<div class="product-thumb"></div>') +
@@ -1284,6 +1317,9 @@
             '<span><b>店铺</b> ' + escapeHtml(storeId || "未识别") + '</span>' +
             '<span><b>品牌</b> ' + escapeHtml(productBrand(selectedProduct) || "--") + '</span>' +
             '<span><b>变体</b> ' + escapeHtml(productVariantSummary(selectedProduct) || "--") + '</span>' +
+            '<span><b>长宽高</b> ' + escapeHtml(summarySize || "--") + '</span>' +
+            '<span><b>重量</b> ' + escapeHtml(summaryWeight || "--") + '</span>' +
+            '<span><b>成本价</b> ' + escapeHtml(summaryCost || "--") + '</span>' +
             '<span><b>售价</b> ' + escapeHtml(pricing.sale_price_cny ? pricing.sale_price_cny + " CNY" : "--") + '</span>' +
           '</div>' +
         '</div>' +
