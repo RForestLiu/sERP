@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.24";
+  var SERP_EXTENSION_VERSION = "3.2.25";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -117,6 +117,15 @@
     "#serp-toolbar .product-data-bullets{margin:0;padding-left:16px;color:#475569;line-height:1.45;}",
     "#serp-toolbar .pi-clear{font-size:10px;color:#ff4d4f;cursor:pointer;margin-top:7px;text-align:center;border:1px solid #ffccc7;border-radius:4px;padding:3px 6px;transition:all 0.2s;}",
     "#serp-toolbar .pi-clear:hover{background:#fff1f0;}",
+    ".serp-field-evidence{margin:6px 0 0 0;padding:7px 9px;border:1px solid #dbeafe;border-left:3px solid #2563eb;border-radius:5px;background:#f8fbff;font-family:\"Microsoft YaHei\",sans-serif;font-size:11px;line-height:1.45;color:#475569;}",
+    ".serp-field-evidence .serp-ev-head{display:flex;align-items:center;gap:6px;margin-bottom:3px;}",
+    ".serp-field-evidence .serp-ev-status{display:inline-block;border-radius:999px;padding:1px 7px;font-size:10px;font-weight:700;color:#166534;background:#dcfce7;border:1px solid #bbf7d0;white-space:nowrap;}",
+    ".serp-field-evidence.review{border-color:#fde68a;border-left-color:#f59e0b;background:#fffbeb;}",
+    ".serp-field-evidence.review .serp-ev-status{color:#92400e;background:#fef3c7;border-color:#fde68a;}",
+    ".serp-field-evidence.manual{border-color:#bfdbfe;border-left-color:#2563eb;background:#eff6ff;}",
+    ".serp-field-evidence.manual .serp-ev-status{color:#1e40af;background:#dbeafe;border-color:#bfdbfe;}",
+    ".serp-field-evidence .serp-ev-value{font-weight:700;color:#111827;word-break:break-word;}",
+    ".serp-field-evidence .serp-ev-text{word-break:break-word;}",
     "#serp-toolbar .image-sets{display:grid;gap:8px;margin-top:10px;}",
     "#serp-toolbar .image-set{border:1px solid #e5e7eb;background:#fbfcfd;border-radius:6px;padding:7px;}",
     "#serp-toolbar .image-set-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;font-size:11px;color:#374151;font-weight:700;}",
@@ -3245,6 +3254,109 @@
     resultsPanel.classList.add("visible");
   }
 
+  function visibleTop(el) {
+    if (!el) return 0;
+    return el.getBoundingClientRect().top + window.scrollY;
+  }
+
+  function fieldFormItemFromEntry(entry) {
+    if (!entry) return null;
+    var el = entry.el || (entry.els && entry.els[0]);
+    if (!el && entry.fid) el = document.querySelector(entry.fid);
+    if (!el && entry.fids && entry.fids[0]) el = document.querySelector(entry.fids[0]);
+    if (!el) return null;
+    return el.closest(".ant-form-item, .el-form-item, .form-group, tr") || null;
+  }
+
+  function productAttributeBounds() {
+    var basic = findFormSectionByClass("基本信息");
+    if (!basic || !basic.container) return null;
+    var nodes = Array.from(basic.container.querySelectorAll("*")).filter(isVisibleNode);
+    var attrMarker = nodes.find(function (el) {
+      return (el.textContent || "").replace(/\s+/g, " ").trim() === "产品属性";
+    });
+    if (!attrMarker) return null;
+    var next = findFormSectionByClass("店小秘信息");
+    return {
+      start: visibleTop(attrMarker),
+      end: next && next.header ? visibleTop(next.header) : visibleTop(basic.container) + basic.container.getBoundingClientRect().height + 1
+    };
+  }
+
+  function isProductAttributeFillResult(result) {
+    var entry = resolveFieldByIndex(result && result.index);
+    var formItem = fieldFormItemFromEntry(entry);
+    if (!formItem) return false;
+    var bounds = productAttributeBounds();
+    if (!bounds) return false;
+    var top = visibleTop(formItem);
+    if (top < bounds.start || top >= bounds.end) return false;
+    var label = String((result && result.label) || (entry && entry.label) || "");
+    if (/店铺名称|产品分类|来源URL|产品标题|VAT|品牌|合并属性|型号名称|SKU|售价|原价|库存|变种|图片|视频|描述|JSON/i.test(label)) return false;
+    return true;
+  }
+
+  function mappingEvidenceText(mapping, result) {
+    var m = mapping || {};
+    var parts = [];
+    var evidence = m.evidence || m.reason || m.reasoning || m.explanation || "";
+    if (Array.isArray(evidence)) evidence = evidence.join("；");
+    if (evidence) parts.push(String(evidence));
+    if (m.source_type || m.source) parts.push("来源: " + (m.source_type || m.source));
+    if (m.confidence !== undefined && m.confidence !== null && m.confidence !== "") parts.push("置信度: " + m.confidence);
+    if (!parts.length) {
+      if (result && result.filled) parts.push("AI 根据 manual_data、采集产品数据和额外提示词生成；LLM 未返回具体证据。");
+      else parts.push((result && result.error) || "未填入，需人工核对。");
+    }
+    return parts.join("；");
+  }
+
+  function evidenceStatus(mapping, result) {
+    if (!result || !result.filled) return "AI填写,需核对";
+    var m = mapping || {};
+    if (m.needs_review === true || m.need_review === true || m.review === true) return "AI填写,需核对";
+    var conf = parseFloat(m.confidence);
+    if (!isNaN(conf) && conf > 0 && conf < 0.75) return "AI填写,需核对";
+    return "AI填写";
+  }
+
+  function installManualChangeWatcher(formItem, evidenceEl) {
+    if (!formItem || !evidenceEl || evidenceEl._serpManualWatchBound) return;
+    evidenceEl._serpManualWatchBound = true;
+    var ignoreUntil = Date.now() + 1200;
+    function markManual() {
+      if (Date.now() < ignoreUntil) return;
+      evidenceEl.classList.remove("review");
+      evidenceEl.classList.add("manual");
+      var statusEl = evidenceEl.querySelector(".serp-ev-status");
+      if (statusEl) statusEl.textContent = "人工修改填写";
+    }
+    formItem.addEventListener("input", markManual, true);
+    formItem.addEventListener("change", markManual, true);
+  }
+
+  function renderProductAttributeEvidence(fillResults, mappingByIndex) {
+    document.querySelectorAll(".serp-field-evidence").forEach(function (el) { el.remove(); });
+    if (!fillResults || !fillResults.length) return;
+    fillResults.forEach(function (result) {
+      if (!isProductAttributeFillResult(result)) return;
+      var entry = resolveFieldByIndex(result.index);
+      var formItem = fieldFormItemFromEntry(entry);
+      if (!formItem) return;
+      var mapping = mappingByIndex && mappingByIndex[result.index];
+      var status = evidenceStatus(mapping, result);
+      var cls = status === "AI填写,需核对" ? " review" : "";
+      var evidence = document.createElement("div");
+      evidence.className = "serp-field-evidence" + cls;
+      evidence.innerHTML =
+        '<div class="serp-ev-head"><span class="serp-ev-status">' + escapeHtml(status) + '</span>' +
+        '<span class="serp-ev-value">' + escapeHtml(result.value || "") + '</span></div>' +
+        '<div class="serp-ev-text">' + escapeHtml(mappingEvidenceText(mapping, result)) + '</div>';
+      formItem.appendChild(evidence);
+      installManualChangeWatcher(formItem, evidence);
+    });
+  }
+
   function doExtractFields() {
     resultsPanel.classList.remove("visible");
     var formFields = collectFormFields();
@@ -3902,6 +4014,10 @@
       }
       var result = await r.json();
       var mappings = result.mappings || [];
+      var mappingByIndex = {};
+      mappings.forEach(function (m) {
+        if (m && m.index !== undefined && m.index !== null) mappingByIndex[m.index] = m;
+      });
       markAutoFill("llm-parse");
       setProgress(75);
 
@@ -3943,7 +4059,7 @@
         setProgress(75 + Math.round((mi / mappings.length) * 20));
 
         if (detIdxSet[idx]) {
-          fillResults.push({ index: idx, label: label, value: m.value, filled: true, order: idx, error: null });
+          fillResults.push({ index: idx, label: label, value: deterministicMap[idx] || m.value, filled: true, order: idx, error: null });
           continue;
         }
 
@@ -4020,6 +4136,7 @@
       markAutoFill("render-results");
       showToast("填充完成！成功 " + filledCount + "/" + fillResults.length + " 个字段", filledCount > 0 ? "success" : "error");
       renderFillResults(fillResults, formFields.length);
+      renderProductAttributeEvidence(fillResults, mappingByIndex);
       setBtnLoading(btnFill, false);
     } catch (e) {
       console.error("[sERP] 填充异常:", e);
