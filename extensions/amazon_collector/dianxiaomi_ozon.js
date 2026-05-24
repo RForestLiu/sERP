@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.23";
+  var SERP_EXTENSION_VERSION = "3.2.24";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -89,9 +89,10 @@
     "#serp-toolbar .serp-tb-btn .tb-label{font-size:12px;line-height:1;}",
     "#serp-toolbar .serp-tb-btn.has-product{border-color:#52c41a;background:#f6ffed;color:#389e0d;}",
     "#serp-toolbar #serp-btn-extract,#serp-toolbar #serp-btn-images,#serp-toolbar #serp-btn-clear-form,#serp-toolbar #serp-btn-send-html{display:none;}",
-    "#serp-hint-toggle{font-size:10px;color:#8b8b8b;cursor:pointer;text-align:center;margin:0 10px 10px;padding:3px 4px;border:1px dashed #d9d9d9;border-radius:4px;transition:all 0.2s;white-space:nowrap;}",
-    "#serp-hint-toggle:hover{color:#428bca;border-color:#428bca;}",
-    "#serp-hint-toggle.active{color:#428bca;border-color:#428bca;background:#f0f5ff;}",
+    "#serp-toolbar .serp-panel-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-top:1px solid #edf0f3;background:#fbfcfd;}",
+    "#serp-hint-toggle{font-size:11px;color:#475569;cursor:pointer;text-align:center;padding:4px 8px;border:1px solid #d1d5db;border-radius:5px;transition:all 0.2s;white-space:nowrap;background:#fff;line-height:1.2;}",
+    "#serp-hint-toggle:hover{color:#2563eb;border-color:#93c5fd;background:#eff6ff;}",
+    "#serp-hint-toggle.active{color:#2563eb;border-color:#2563eb;background:#eff6ff;}",
     "#serp-toolbar .serp-product-info{display:block;padding:0;}",
     "#serp-toolbar .panel-section{padding:12px;border-bottom:1px solid #edf0f3;}",
     "#serp-toolbar .panel-title{font-size:12px;font-weight:700;color:#374151;margin-bottom:7px;}",
@@ -238,7 +239,7 @@
     "#serp-image-picker .ip-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-top:1px solid #eee;background:#fff;}",
     "#serp-image-picker .ip-copy{border:1px solid #16a34a;background:#16a34a;color:#fff;border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer;}",
     "#serp-image-picker .ip-empty{color:#888;text-align:center;padding:28px 10px;}",
-    "#serp-ext-version{font-size:10px;color:#999;align-self:center;padding:0 2px;writing-mode:vertical-rl;letter-spacing:0;}"
+    "#serp-ext-version{font-size:10px;color:#94a3b8;line-height:1;white-space:nowrap;}"
   ].join("\n");
   document.head.appendChild(style);
 
@@ -270,8 +271,6 @@
     '<button class="serp-tb-btn" id="serp-btn-send-html" title="发送当前页面HTML到后台分析">' +
       '<span class="tb-icon">📄</span><span class="tb-label">发送HTML</span>' +
     '</button>' +
-    '<div id="serp-ext-version" title="sERP extension version">v' + SERP_EXTENSION_VERSION + '</div>' +
-    '<div id="serp-hint-toggle" title="展开设置自定义提示词">💡</div>' +
     '<div class="serp-product-info" id="serp-product-info">' +
       '<div class="panel-section">' +
         '<div class="panel-title">已选 Ozon 品类</div>' +
@@ -292,6 +291,10 @@
         '<div class="pi-meta">仅显示“基本信息 - 产品属性”内属性行的 AI 证据和状态。</div>' +
       '</div>' +
       '<div class="pi-clear" id="serp-pi-clear">清除已选产品</div>' +
+    '</div>' +
+    '<div class="serp-panel-footer">' +
+      '<div id="serp-ext-version" title="sERP extension version">v' + SERP_EXTENSION_VERSION + '</div>' +
+      '<div id="serp-hint-toggle" title="展开设置自定义提示词">💡 自定义提示词</div>' +
     '</div>';
   document.body.appendChild(toolbar);
 
