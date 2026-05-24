@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.26";
+  var SERP_EXTENSION_VERSION = "3.2.27";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -130,7 +130,17 @@
     "#serp-toolbar .image-set{border:1px solid #e5e7eb;background:#fbfcfd;border-radius:6px;padding:7px;}",
     "#serp-toolbar .image-set-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;font-size:11px;color:#374151;font-weight:700;}",
     "#serp-toolbar .image-set-head span:last-child{color:#94a3b8;font-weight:600;}",
+    "#serp-toolbar .image-tools{display:flex;align-items:center;gap:8px;margin-top:8px;}",
+    "#serp-toolbar .image-copy-btn{flex:1;border:1px solid #16a34a;background:#f0fdf4;color:#15803d;border-radius:5px;padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer;}",
+    "#serp-toolbar .image-copy-btn:hover:not(:disabled){background:#dcfce7;border-color:#15803d;}",
+    "#serp-toolbar .image-copy-btn:disabled{color:#94a3b8;background:#f8fafc;border-color:#e2e8f0;cursor:not-allowed;}",
+    "#serp-toolbar .image-select-count{font-size:10px;color:#64748b;white-space:nowrap;}",
     "#serp-toolbar .image-grid{display:flex;flex-wrap:wrap;gap:5px;}",
+    "#serp-toolbar .image-choice{position:relative;display:block;width:60px;height:60px;border-radius:5px;}",
+    "#serp-toolbar .image-choice.selected img{border-color:#16a34a;box-shadow:0 0 0 2px rgba(22,163,74,0.22);}",
+    "#serp-toolbar .image-select-toggle{position:absolute;right:3px;top:3px;width:17px;height:17px;border:1px solid rgba(15,23,42,0.22);border-radius:50%;background:rgba(255,255,255,0.92);cursor:pointer;z-index:1;padding:0;}",
+    "#serp-toolbar .image-choice.selected .image-select-toggle{background:#16a34a;border-color:#16a34a;}",
+    "#serp-toolbar .image-choice.selected .image-select-toggle:after{content:\"\";position:absolute;left:5px;top:2px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg);}",
     "#serp-toolbar .image-grid img{width:60px;height:60px;object-fit:cover;display:block;border:1px solid #e2e8f0;border-radius:5px;background:#eef2f7;cursor:zoom-in;}",
     "#serp-toolbar .image-manage-row{display:flex;margin-top:8px;}",
     "#serp-toolbar .image-manage-btn{width:100%;border:1px solid #2563eb;background:#eff6ff;color:#1d4ed8;border-radius:5px;padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer;}",
@@ -444,6 +454,7 @@
   var imageCount = document.getElementById("serp-image-count");
   var imageCopy = document.getElementById("serp-image-copy");
   var selectedImageUrls = {};
+  var selectedPanelImageUrls = {};
 
   // ==================== 平台检测 ====================
   function detectPlatform() {
@@ -1253,6 +1264,7 @@
 
   function renderSelectedProductPanel() {
     if (!productSummaryBody || !productDataBody || !productImageBody) return;
+    selectedPanelImageUrls = {};
     if (!selectedProduct) {
       productSummaryBody.innerHTML = '<div class="product-summary-empty">未选择产品</div>';
       productDataBody.innerHTML = '<div class="pi-meta">未选择产品</div>';
@@ -1286,15 +1298,36 @@
       productImageBody.innerHTML = imageManageHtml + '<div class="pi-meta">暂无图片数据集</div>';
       return;
     }
-    productImageBody.innerHTML = imageManageHtml + '<div class="image-sets">' + sets.map(function (set) {
+    var imageToolsHtml = '<div class="image-tools">' +
+      '<button type="button" class="image-copy-btn" id="serp-copy-panel-images" disabled>复制已选URL</button>' +
+      '<span class="image-select-count" id="serp-panel-image-count">已选 0 张</span>' +
+    '</div>';
+    productImageBody.innerHTML = imageManageHtml + imageToolsHtml + '<div class="image-sets">' + sets.map(function (set) {
       var imgs = (set.images || []).map(function (img) { return productPanelImageUrl(selectedProduct, img); }).filter(Boolean);
       return '<div class="image-set">' +
         '<div class="image-set-head"><span>' + escapeHtml(set.name || "图片集") + '</span><span>' + imgs.length + ' 张</span></div>' +
         '<div class="image-grid">' + imgs.map(function (url, i) {
-          return '<img src="' + escapeHtml(url) + '" alt="' + escapeHtml((set.name || "图片") + " " + (i + 1)) + '">';
+          return '<span class="image-choice" data-url="' + escapeHtml(url) + '">' +
+            '<button type="button" class="image-select-toggle" title="选择图片" aria-label="选择图片"></button>' +
+            '<img src="' + escapeHtml(url) + '" data-url="' + escapeHtml(url) + '" alt="' + escapeHtml((set.name || "图片") + " " + (i + 1)) + '">' +
+          '</span>';
         }).join("") + '</div>' +
       '</div>';
     }).join("") + '</div>';
+    updatePanelImageSelectionUI();
+  }
+
+  function updatePanelImageSelectionUI() {
+    if (!productImageBody) return;
+    var count = Object.keys(selectedPanelImageUrls).length;
+    var countEl = document.getElementById("serp-panel-image-count");
+    var copyBtn = document.getElementById("serp-copy-panel-images");
+    if (countEl) countEl.textContent = "已选 " + count + " 张";
+    if (copyBtn) copyBtn.disabled = count === 0;
+    productImageBody.querySelectorAll(".image-choice").forEach(function (node) {
+      var url = node.getAttribute("data-url") || "";
+      node.classList.toggle("selected", !!selectedPanelImageUrls[url]);
+    });
   }
 
   function productImageManagerUrl(product) {
@@ -4233,6 +4266,32 @@
       e.preventDefault();
       e.stopPropagation();
       window.open(productImageManagerUrl(selectedProduct), "_blank", "noopener");
+      return;
+    }
+    var panelCopyBtn = e.target.closest("#serp-copy-panel-images");
+    if (panelCopyBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      var urls = Object.keys(selectedPanelImageUrls);
+      if (!urls.length) {
+        showToast("请先选择图片", "error");
+        return;
+      }
+      copyTextToClipboard(urls.join("\n")).then(function (ok) {
+        showToast(ok ? "已复制 " + urls.length + " 张图片URL" : "复制失败，请手动复制", ok ? "success" : "error");
+      });
+      return;
+    }
+    var selectBtn = e.target.closest(".image-select-toggle");
+    if (selectBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      var choice = selectBtn.closest(".image-choice");
+      var url = choice ? choice.getAttribute("data-url") : "";
+      if (!url) return;
+      if (selectedPanelImageUrls[url]) delete selectedPanelImageUrls[url];
+      else selectedPanelImageUrls[url] = true;
+      updatePanelImageSelectionUI();
       return;
     }
     var img = e.target.closest(".image-grid img");
