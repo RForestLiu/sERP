@@ -744,10 +744,10 @@
             <div class="form-card-header"><h4 class="form-card-title">变种信息 <span style="float:right;font-weight:400;margin-right:18px"><label><input type="checkbox"> 设置sku标题</label> <label><input type="checkbox"> 自动补全</label> <a>+ 自定义变种属性</a></span></h4></div>
             <div class="form-card-content">
                 <table>
-                    <thead><tr><th>颜色名称</th><th>颜色值</th><th>SKU</th><th>售价(CNY)</th><th>原价(CNY)</th><th>库存</th><th>尺寸(cm)</th><th>重量(g)</th><th>操作</th></tr></thead>
+                    <thead><tr><th>颜色名称</th><th>颜色值</th><th>SKU</th><th>售价(CNY)</th><th>原价(CNY)</th><th>库存</th><th>长(cm)</th><th>宽(cm)</th><th>高(cm)</th><th>重量(g)</th><th>操作</th></tr></thead>
                     <tbody>
-                        <tr><td>黑色/чёрный</td><td>black</td><td><input class="tbl-input" value="wallet-0006-black"></td><td><input class="tbl-input" value="1290"></td><td><input class="tbl-input" value="1890"></td><td><input class="tbl-input" value="20"></td><td><input class="tbl-input" value="20 12 4"></td><td><input class="tbl-input" value="200"></td><td><a>移除</a></td></tr>
-                        <tr><td>咖啡色/кофейный</td><td>coffee</td><td><input class="tbl-input" value="wallet-0006-coffee"></td><td><input class="tbl-input" value="1290"></td><td><input class="tbl-input" value="1890"></td><td><input class="tbl-input" value="18"></td><td><input class="tbl-input" value="20 12 4"></td><td><input class="tbl-input" value="200"></td><td><a>移除</a></td></tr>
+                        <tr><td>黑色/чёрный</td><td>black</td><td><input class="tbl-input" value="wallet-0006-black"></td><td><input class="tbl-input" value="1290"></td><td><input class="tbl-input" value="1890"></td><td><input class="tbl-input" value="20"></td><td><input class="tbl-input" value="20"></td><td><input class="tbl-input" value="12"></td><td><input class="tbl-input" value="4"></td><td><input class="tbl-input" value="200"></td><td><a>移除</a></td></tr>
+                        <tr><td>咖啡色/кофейный</td><td>coffee</td><td><input class="tbl-input" value="wallet-0006-coffee"></td><td><input class="tbl-input" value="1290"></td><td><input class="tbl-input" value="1890"></td><td><input class="tbl-input" value="18"></td><td><input class="tbl-input" value="20"></td><td><input class="tbl-input" value="12"></td><td><input class="tbl-input" value="4"></td><td><input class="tbl-input" value="200"></td><td><a>移除</a></td></tr>
                     </tbody>
                 </table>
             </div>
@@ -1480,8 +1480,10 @@ function collectSkuRows() {
             price: inputs[1] ? inputs[1].value.trim() : "",
             old_price: inputs[2] ? inputs[2].value.trim() : "",
             stock: inputs[3] ? inputs[3].value.trim() : "",
-            size: inputs[4] ? inputs[4].value.trim() : "",
-            weight: inputs[5] ? inputs[5].value.trim() : "",
+            depth: inputs[4] ? inputs[4].value.trim() : "",
+            width: inputs[5] ? inputs[5].value.trim() : "",
+            height: inputs[6] ? inputs[6].value.trim() : "",
+            weight: inputs[7] ? inputs[7].value.trim() : "",
             images: pageState.variantImages[variantKey] || []
         });
     });
