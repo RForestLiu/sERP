@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.27";
+  var SERP_EXTENSION_VERSION = "3.2.28";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -151,16 +151,18 @@
     ".serp-variant-price-panel{margin:10px 0 14px;border:1px solid #dbeafe;background:#f8fbff;border-radius:6px;padding:10px 12px;font-family:\"Microsoft YaHei\",sans-serif;}",
     ".serp-variant-price-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;}",
     ".serp-variant-price-title{font-size:12px;font-weight:700;color:#1e40af;}",
-    ".serp-variant-price-panel .pi-price-row{display:flex;justify-content:space-between;gap:12px;font-size:11px;color:#475569;line-height:1.55;}",
+    ".serp-variant-price-panel #serp-pi-price-detail{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,240px));column-gap:18px;row-gap:3px;align-items:start;max-width:780px;}",
+    ".serp-variant-price-panel .pi-price-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;font-size:11px;color:#475569;line-height:1.45;min-width:0;}",
+    ".serp-variant-price-panel .pi-price-row span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}",
     ".serp-variant-price-panel .pi-price-row strong{color:#333;text-align:right;}",
     ".serp-variant-price-panel .pi-price-row.is-key strong{color:#1677ff;}",
-    ".serp-variant-price-panel .pi-price-vars{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:7px;}",
+    ".serp-variant-price-panel .pi-price-vars{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,240px));column-gap:18px;row-gap:6px;margin-top:8px;}",
     ".serp-variant-price-panel .pi-price-var{display:grid;grid-template-columns:minmax(0,1fr) 66px 28px;align-items:center;gap:4px;font-size:10px;color:#777;}",
     ".serp-variant-price-panel .pi-price-var input{width:100%;box-sizing:border-box;border:1px solid #d9d9d9;border-radius:3px;padding:2px 4px;font-size:11px;min-width:0;}",
     ".serp-variant-price-panel .pi-price-unit{font-size:9px;color:#999;text-align:left;white-space:nowrap;}",
-    ".serp-variant-price-panel .pi-price-apply{border:1px solid #2563eb;background:#2563eb;color:#fff;border-radius:5px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;}",
+    ".serp-variant-price-panel .pi-price-apply{grid-column:1/-1;justify-self:start;border:1px solid #2563eb;background:#2563eb;color:#fff;border-radius:5px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;}",
     ".serp-variant-price-panel .pi-price-apply:hover{background:#1d4ed8;border-color:#1d4ed8;}",
-    ".serp-variant-price-panel .pi-price-note{font-size:10px;color:#667085;margin-top:6px;line-height:1.4;}",
+    ".serp-variant-price-panel .pi-price-note{grid-column:1/-1;font-size:10px;color:#667085;margin-top:2px;line-height:1.4;}",
     "/* ===== 产品选择弹窗 ===== */",
     "#serp-modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000000;align-items:center;justify-content:center;}",
     "#serp-modal-overlay.active{display:flex;}",
