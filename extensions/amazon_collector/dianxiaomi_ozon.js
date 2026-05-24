@@ -931,24 +931,28 @@
     });
   }
 
-  function findExactVisibleTextNode(text) {
-    var nodes = Array.from(document.querySelectorAll("body *")).filter(isVisibleNode);
-    return nodes.find(function (el) {
-      return (el.textContent || "").replace(/\s+/g, " ").trim() === text;
-    });
+  function nearestFormCardContainer(el) {
+    var cur = el;
+    while (cur && cur !== document.body) {
+      var cls = String(cur.className || "");
+      if (/form-card/i.test(cls) && !/form-card-header|form-card-title/i.test(cls)) return cur;
+      cur = cur.parentElement;
+    }
+    return null;
   }
 
-  function findFormSectionMarker(text) {
-    var matches = Array.from(document.querySelectorAll("body *")).filter(function (el) {
+  function findFormSectionByClass(title) {
+    var headers = Array.from(document.querySelectorAll(".form-card-header, .form-card-title, [class*='form-card-header'], [class*='form-card-title']")).filter(function (el) {
       if (!isVisibleNode(el)) return false;
-      if ((el.textContent || "").replace(/\s+/g, " ").trim() !== text) return false;
-      var rect = el.getBoundingClientRect();
-      if (rect.x > window.innerWidth - 220) return false;
-      return el.tagName !== "A";
+      var text = (el.textContent || "").replace(/\s+/g, " ").trim();
+      return text === title || text.indexOf(title) !== -1;
     });
-    return matches.find(function (el) {
-      return /form-card|card-header|title/i.test(String(el.className || ""));
-    }) || matches[0] || null;
+    var header = headers.find(function (el) { return /form-card-header/i.test(String(el.className || "")); }) || headers[0] || null;
+    if (!header) return null;
+    return {
+      header: header,
+      container: nearestFormCardContainer(header)
+    };
   }
 
   function installVariantPricingPanel() {
@@ -959,19 +963,24 @@
       return;
     }
 
-    var marker = findFormSectionMarker("变种信息");
-    if (!marker) {
+    var section = findFormSectionByClass("变种信息");
+    if (!section || !section.header) {
       if (existing) existing.style.display = "none";
       return;
     }
+    var marker = section.header;
     var markerTop = marker.getBoundingClientRect().top + window.scrollY;
-    var nextMarker = findFormSectionMarker("变种图片");
-    var nextTop = nextMarker ? nextMarker.getBoundingClientRect().top + window.scrollY : Number.MAX_SAFE_INTEGER;
-    var tables = Array.from(document.querySelectorAll("table")).filter(function (table) {
-      if (!isVisibleNode(table)) return false;
-      var top = table.getBoundingClientRect().top + window.scrollY;
-      return top >= markerTop && top < nextTop;
-    });
+    var nextSection = findFormSectionByClass("变种图片");
+    var nextTop = nextSection && nextSection.header ? nextSection.header.getBoundingClientRect().top + window.scrollY : Number.MAX_SAFE_INTEGER;
+    var tableScope = section.container || document;
+    var tables = Array.from(tableScope.querySelectorAll("table")).filter(isVisibleNode);
+    if (!tables.length) {
+      tables = Array.from(document.querySelectorAll("table")).filter(function (table) {
+        if (!isVisibleNode(table)) return false;
+        var top = table.getBoundingClientRect().top + window.scrollY;
+        return top >= markerTop && top < nextTop;
+      });
+    }
     var anchor = tables.length ? tables[tables.length - 1] : marker;
 
     var panel = existing || document.createElement("div");
