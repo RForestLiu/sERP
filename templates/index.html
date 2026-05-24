@@ -747,6 +747,7 @@
             padding: 0 3px; color: #999; line-height: 1;
         }
         .img-mgmt-set-item .mgmt-actions .act-rename:hover { color: #3498db; }
+        .img-mgmt-set-item .mgmt-actions .act-derived:hover { color: #8b5cf6; }
         .img-mgmt-set-item .mgmt-actions .act-delete:hover { color: #ff4d4f; }
         .img-mgmt-sidebar-footer {
             padding: 8px; border-top: 1px solid #f0f0f0; flex-shrink: 0;
@@ -4350,6 +4351,7 @@
                 h += `📁 ${name}<span class="mgmt-count">${entries.length}</span>`;
                 h += `<span class="mgmt-actions">`;
                 h += `<button class="act-rename" title="重命名" data-action="rename-set" data-set="${name}">✏️</button>`;
+                h += `<button class="act-derived" title="创建空白衍生集" data-action="create-subset" data-set="${name}">+衍生集</button>`;
                 if (name !== "采集图片") {
                     h += `<button class="act-delete" title="删除图片集" data-action="delete-set" data-set="${name}">🗑️</button>`;
                 }
@@ -4381,6 +4383,7 @@
                 var setName = actionBtn.dataset.set;
                 var subName = actionBtn.dataset.subset;
                 if (action === "rename-set") renameSet(setName);
+                else if (action === "create-subset") createEmptySubset(setName);
                 else if (action === "delete-set") deleteSet(setName);
                 else if (action === "delete-subset") deleteSubset(setName, subName);
                 return;
@@ -4470,6 +4473,27 @@
             } else if (newName && imageSets[newName]) {
                 showMsg("图片集名称已存在", true);
             }
+        }
+
+        function createEmptySubset(setName) {
+            if (!setName || !imageSets[setName]) return;
+            var subName = prompt("输入衍生集名称:", "");
+            if (!subName) return;
+            subName = subName.trim();
+            if (!subName) return;
+            if (!imageSubsets[setName]) imageSubsets[setName] = {};
+            if (imageSubsets[setName][subName]) {
+                showMsg("衍生集名称已存在", true);
+                return;
+            }
+            imageSubsets[setName][subName] = [];
+            currentSetName = setName;
+            currentSubsetName = subName;
+            selectedImages.clear();
+            _updateSidebar();
+            _refreshCurrentView();
+            imgMgmtSaveStatus.textContent = "(未保存)";
+            showMsg("已创建空白衍生集「" + subName + "」");
         }
 
         function deleteSet(name) {
