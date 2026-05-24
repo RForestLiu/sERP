@@ -784,6 +784,7 @@ class ProductApplicationService(ProductFacade):
             set_name = file.form.get("set_name", "采集图片")
         if not set_name:
             set_name = "采集图片"
+        sub_name = getattr(file, "sub_name", "") or ""
 
         safe_name = secure_filename(file.filename)
         if set_name == "采集图片":
@@ -797,13 +798,23 @@ class ProductApplicationService(ProductFacade):
         filepath = os.path.join(dest_dir, safe_name)
         file.save(filepath)
 
-        product.add_image_to_set(set_name, {"filename": rel_name})
+        if sub_name:
+            subsets = dict(product._image_subsets or {})
+            set_subsets = dict(subsets.get(set_name, {}) or {})
+            entries = list(set_subsets.get(sub_name, []) or [])
+            entry = {"filename": rel_name, "index": len(entries)}
+            entries.append(entry)
+            set_subsets[sub_name] = entries
+            subsets[set_name] = set_subsets
+            product.update_image_sets(product.image_sets, subsets)
+        else:
+            product.add_image_to_set(set_name, {"filename": rel_name})
         self._product_repo.save(product)
         self._event_bus.publish_all(product.collect_events())
 
         return {
             "success": True,
-            "entry": {"filename": rel_name, "index": len(product._image_sets.get(set_name, [])) - 1},
+            "entry": entry if sub_name else {"filename": rel_name, "index": len(product._image_sets.get(set_name, [])) - 1},
             "url": f"/product_images/{skc}/{rel_name}",
         }
 

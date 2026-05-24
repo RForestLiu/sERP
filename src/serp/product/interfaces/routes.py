@@ -209,7 +209,9 @@ def create_product_blueprint(facade: ProductFacade, data_root: str = "", setting
             return jsonify({"error": "文件名为空"}), 400
         # Inject set_name from form data for the application service
         set_name = request.form.get("set_name", "采集图片")
+        sub_name = request.form.get("sub_name", "")
         file.set_name = set_name
+        file.sub_name = sub_name
         try:
             result = facade.upload_image(skc, file)
             return jsonify(result)

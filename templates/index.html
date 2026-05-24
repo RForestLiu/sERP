@@ -4249,6 +4249,7 @@
         let imageSets = {};
         let imageSubsets = {};
         let _uploadTargetSet = null;
+        let _uploadTargetSubset = null;
         let currentSetName = null;
         let currentSubsetName = null;
         let workspaceMode = "manage";
@@ -4365,6 +4366,7 @@
             imageSets = {};
             imageSubsets = {};
             _uploadTargetSet = null;
+            _uploadTargetSubset = null;
             currentSetName = null;
             currentSubsetName = null;
             workspaceMode = "manage";
@@ -4650,6 +4652,7 @@
             addBtn.title = "上传图片到「" + (currentSubsetName || currentSetName) + "」";
             addBtn.addEventListener("click", function() {
                 _uploadTargetSet = currentSetName;
+                _uploadTargetSubset = currentSubsetName;
                 imgMgmtUploadInput.click();
             });
             gridWrap.appendChild(addBtn);
@@ -4683,7 +4686,7 @@
                 }
                 var files = getDroppedImageFiles(e);
                 if (files.length) {
-                    await uploadImageMgmtFiles(files, currentSetName);
+                    await uploadImageMgmtFiles(files, currentSetName, currentSubsetName);
                     return;
                 }
                 try {
@@ -4765,7 +4768,7 @@
                     return file && file.type && file.type.indexOf("image/") === 0;
                 });
                 if (files.length) {
-                    await uploadImageMgmtFiles(files, currentSetName);
+                    await uploadImageMgmtFiles(files, currentSetName, currentSubsetName);
                     return;
                 }
                 try {
@@ -5076,6 +5079,7 @@
         _byId("img-mgmt-save-subset2").addEventListener("click", _saveAsSubset);
         _byId("img-mgmt-upload-btn").addEventListener("click", function() {
             _uploadTargetSet = currentSetName || Object.keys(imageSets)[0] || "采集图片";
+            _uploadTargetSubset = currentSetName ? currentSubsetName : null;
             imgMgmtUploadInput.click();
         });
         _byId("img-mgmt-new-set-btn").addEventListener("click", function() {
@@ -5091,7 +5095,7 @@
 
         // ============ Upload ============
 
-        async function uploadImageMgmtFiles(files, targetSet) {
+        async function uploadImageMgmtFiles(files, targetSet, targetSubset) {
             targetSet = targetSet || currentSetName || Object.keys(imageSets)[0] || "采集图片";
             if (!currentImgSkc || !targetSet || !files || !files.length) return;
             for (var i = 0; i < files.length; i++) {
@@ -5099,6 +5103,7 @@
                 var fd = new FormData();
                 fd.append("file", file);
                 fd.append("set_name", targetSet);
+                if (targetSubset) fd.append("sub_name", targetSubset);
                 try {
                     var res = await fetch(`/api/products/${currentImgSkc}/images/upload`, {
                         method: "POST", body: fd
@@ -5109,9 +5114,17 @@
                         continue;
                     }
                     var data = await res.json();
-                    if (!imageSets[targetSet]) imageSets[targetSet] = [];
-                    if (!imageSets[targetSet].find(function(e) { return e.filename === data.entry.filename; })) {
-                        imageSets[targetSet].push(data.entry);
+                    if (targetSubset) {
+                        if (!imageSubsets[targetSet]) imageSubsets[targetSet] = {};
+                        if (!imageSubsets[targetSet][targetSubset]) imageSubsets[targetSet][targetSubset] = [];
+                        if (!imageSubsets[targetSet][targetSubset].find(function(e) { return e.filename === data.entry.filename; })) {
+                            imageSubsets[targetSet][targetSubset].push(data.entry);
+                        }
+                    } else {
+                        if (!imageSets[targetSet]) imageSets[targetSet] = [];
+                        if (!imageSets[targetSet].find(function(e) { return e.filename === data.entry.filename; })) {
+                            imageSets[targetSet].push(data.entry);
+                        }
                     }
                 } catch (err) {
                     showMsg("上传 " + file.name + " 出错: " + err.message, true);
@@ -5125,8 +5138,11 @@
         imgMgmtUploadInput.addEventListener("change", async function(e) {
             var files = Array.from(e.target.files);
             var targetSet = _uploadTargetSet || currentSetName || Object.keys(imageSets)[0] || "采集图片";
+            var targetSubset = _uploadTargetSubset || null;
             if (!files.length) return;
-            await uploadImageMgmtFiles(files, targetSet);
+            await uploadImageMgmtFiles(files, targetSet, targetSubset);
+            _uploadTargetSet = null;
+            _uploadTargetSubset = null;
             e.target.value = "";
         });
 
