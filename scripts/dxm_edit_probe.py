@@ -238,6 +238,123 @@ def summarize_store_state(store_snapshot: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
+def _values_by_attribute(items: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    by_id: dict[str, list[dict[str, Any]]] = {}
+    for item in items:
+        attr_id = str(item.get("id") or "")
+        if attr_id:
+            by_id[attr_id] = item.get("values") if isinstance(item.get("values"), list) else []
+    return by_id
+
+
+def _sku_values_by_attribute(variants: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    by_id: dict[str, list[dict[str, Any]]] = {}
+    for variant in variants:
+        sku = variant.get("sku")
+        for attr in variant.get("variantAttribute", []):
+            if not isinstance(attr, dict):
+                continue
+            attr_id = str(attr.get("id") or "")
+            if not attr_id:
+                continue
+            by_id.setdefault(attr_id, []).append({
+                "sku": sku,
+                "values": attr.get("values") if isinstance(attr.get("values"), list) else [],
+            })
+    return by_id
+
+
+def _field_from_meta(
+    meta: dict[str, Any],
+    source_group: str,
+    current_values: list[dict[str, Any]] | None = None,
+    sku_values: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    field = {
+        "sourceGroup": source_group,
+        "attributeId": str(meta.get("attributeId") or ""),
+        "name": meta.get("name"),
+        "nameCn": meta.get("nameCn"),
+        "type": meta.get("type"),
+        "required": meta.get("required"),
+        "collection": meta.get("collection"),
+        "dictionaryId": str(meta.get("dictionaryId") or "0"),
+        "propertyType": meta.get("propertyType"),
+        "optionsNum": meta.get("optionsNum"),
+        "maxValueCount": meta.get("maxValueCount"),
+        "_inputType": meta.get("_inputType"),
+        "_compType": meta.get("_compType"),
+        "_searchFlag": meta.get("_searchFlag"),
+        "_remoteSearch": meta.get("_remoteSearch"),
+        "controlKind": meta.get("controlKind") or infer_control_kind(meta),
+    }
+    if current_values is not None:
+        field["currentValues"] = current_values
+    if sku_values is not None:
+        field["skuValues"] = sku_values
+    return field
+
+
+def build_field_model(report: dict[str, Any]) -> dict[str, Any]:
+    product_summary = report.get("product_summary") if isinstance(report, dict) else {}
+    product_summary = product_summary if isinstance(product_summary, dict) else {}
+    store_summary = report.get("store_summary") if isinstance(report, dict) else {}
+    store_summary = store_summary if isinstance(store_summary, dict) else {}
+    attrs_info = (
+        store_summary.get("ozonProductAddStore", {})
+        .get("attrsInfo", {})
+    )
+    groups = attrs_info.get("groups", {}) if isinstance(attrs_info, dict) else {}
+
+    product_attr_values = _values_by_attribute(product_summary.get("attributes", {}).get("items", []))
+    merge_attr_values = _values_by_attribute(product_summary.get("merge_attributes", {}).get("items", []))
+    sku_attr_values = _sku_values_by_attribute(product_summary.get("variants", {}).get("items", []))
+
+    fields: list[dict[str, Any]] = []
+    for group_name, current_map, sku_map in (
+        ("attrsList", product_attr_values, None),
+        ("mergeAttrsList", merge_attr_values, None),
+        ("skuList", {}, sku_attr_values),
+    ):
+        items = groups.get(group_name, {}).get("items", [])
+        if not isinstance(items, list):
+            continue
+        for meta in items:
+            if not isinstance(meta, dict):
+                continue
+            attr_id = str(meta.get("attributeId") or "")
+            fields.append(_field_from_meta(
+                meta,
+                group_name,
+                current_values=current_map.get(attr_id, []) if sku_map is None else None,
+                sku_values=sku_map.get(attr_id, []) if sku_map is not None else None,
+            ))
+
+    category = product_summary.get("category") if isinstance(product_summary.get("category"), dict) else {}
+    rich_content = product_summary.get("rich_content") if isinstance(product_summary.get("rich_content"), dict) else {}
+    return {
+        "captured_at": report.get("captured_at"),
+        "product_id": report.get("product_id"),
+        "page_url": report.get("page_url"),
+        "category": {
+            "descriptionCategoryId": category.get("descriptionCategoryId", ""),
+            "typeId": category.get("typeId", ""),
+            "newCategoryId": category.get("newCategoryId", ""),
+            "categoryList": category.get("categoryList", []),
+        },
+        "flags": {
+            "richContentPresent": bool(rich_content.get("present")),
+            "richContentBlockCount": rich_content.get("block_count", 0),
+        },
+        "counts": {
+            "product_attributes": len(groups.get("attrsList", {}).get("items", []) or []),
+            "merge_attributes": len(groups.get("mergeAttrsList", {}).get("items", []) or []),
+            "sku_attributes": len(groups.get("skuList", {}).get("items", []) or []),
+        },
+        "fields": fields,
+    }
+
+
 def cdp_json_url(host: str, port: int) -> str:
     return f"http://{host}:{port}/json"
 
@@ -396,6 +513,15 @@ def write_report(report: dict[str, Any], output_dir: Path = OUTPUT_DIR) -> Path:
     return path
 
 
+def write_field_model(field_model: dict[str, Any], output_dir: Path = OUTPUT_DIR) -> Path:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    product_id = field_model.get("product_id") or "unknown"
+    path = output_dir / f"dxm_field_model_{product_id}_{ts}.json"
+    path.write_text(json.dumps(field_model, ensure_ascii=False, indent=2), encoding="utf-8")
+    return path
+
+
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Read-only Dianxiaomi Ozon edit page probe via CDP")
     parser.add_argument("--host", default=CDP_HOST)
@@ -410,15 +536,19 @@ def main(argv: list[str] | None = None) -> int:
     try:
         report = asyncio.run(run_probe(args.host, args.port, args.product_id))
         path = write_report(report, Path(args.output_dir))
+        field_model = build_field_model(report)
+        field_model_path = write_field_model(field_model, Path(args.output_dir))
     except Exception as exc:
         print(f"[!] dxm_edit_probe failed: {exc}", file=sys.stderr)
         return 1
     print(f"[*] Probe written: {path}")
+    print(f"[*] Field model written: {field_model_path}")
     print(json.dumps({
         "product_id": report.get("product_id"),
         "attributes": report.get("product_summary", {}).get("attributes", {}).get("count"),
         "variants": report.get("product_summary", {}).get("variants", {}).get("count"),
         "output": str(path),
+        "field_model": str(field_model_path),
     }, ensure_ascii=False, indent=2))
     return 0
 

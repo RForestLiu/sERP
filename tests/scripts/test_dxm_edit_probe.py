@@ -122,3 +122,87 @@ def test_store_snapshot_expression_compacts_attrs_info_before_transport():
 
     assert "compactAttrsInfo" in expression
     assert "item.attrsInfo = state.attrsInfo" not in expression
+
+
+def test_build_field_model_joins_metadata_with_current_product_values():
+    probe = load_probe_module()
+    report = {
+        "product_id": "16653546877261308",
+        "product_summary": {
+            "category": {
+                "descriptionCategoryId": "17027904",
+                "typeId": "93338",
+                "newCategoryId": "17027904-93338",
+            },
+            "attributes": {
+                "items": [{
+                    "id": "5309",
+                    "values": [{"dictionary_value_id": 61839, "value": "Eco leather"}],
+                }],
+            },
+            "merge_attributes": {
+                "items": [{
+                    "id": "9048",
+                    "values": [{"dictionary_value_id": 0, "value": "MODEL-1"}],
+                }],
+            },
+            "variants": {
+                "items": [{
+                    "sku": "WALLET-0001-RED",
+                    "variantAttribute": [{
+                        "id": "10096",
+                        "values": [{"dictionary_value_id": 972075614, "value": "Red"}],
+                    }],
+                }],
+            },
+            "rich_content": {"present": True, "block_count": 3},
+        },
+        "store_summary": {
+            "ozonProductAddStore": {
+                "attrsInfo": {
+                    "groups": {
+                        "attrsList": {"items": [{
+                            "attributeId": "5309",
+                            "name": "Material",
+                            "nameCn": "材质",
+                            "dictionaryId": "321",
+                            "controlKind": "dictionary-multiple-remote",
+                        }]},
+                        "mergeAttrsList": {"items": [{
+                            "attributeId": "9048",
+                            "name": "Model",
+                            "nameCn": "型号",
+                            "dictionaryId": "0",
+                            "controlKind": "text-input",
+                        }]},
+                        "skuList": {"items": [{
+                            "attributeId": "10096",
+                            "name": "Color",
+                            "nameCn": "商品颜色",
+                            "dictionaryId": "1494",
+                            "controlKind": "dictionary-multiple",
+                        }]},
+                    }
+                }
+            }
+        },
+    }
+
+    model = probe.build_field_model(report)
+
+    assert model["product_id"] == "16653546877261308"
+    assert model["category"]["typeId"] == "93338"
+    assert model["flags"]["richContentPresent"] is True
+    assert model["counts"] == {
+        "product_attributes": 1,
+        "merge_attributes": 1,
+        "sku_attributes": 1,
+    }
+    material = model["fields"][0]
+    assert material["sourceGroup"] == "attrsList"
+    assert material["attributeId"] == "5309"
+    assert material["currentValues"][0]["dictionary_value_id"] == 61839
+    color = model["fields"][2]
+    assert color["sourceGroup"] == "skuList"
+    assert color["skuValues"][0]["sku"] == "WALLET-0001-RED"
+    assert color["skuValues"][0]["values"][0]["dictionary_value_id"] == 972075614
