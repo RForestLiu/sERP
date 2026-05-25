@@ -15,13 +15,28 @@ const fs = require("fs");
   const iifeEnd = extCode.lastIndexOf("})();");
   if (mainIdx < 0 || iifeEnd < 0) throw new Error("Unable to locate content.js main block");
   extCode = extCode.substring(0, mainIdx) +
-    "  window.__serpTest = { buildPayload: buildPayload, extractor: X };\n" +
+    "  window.__serpTest = { buildPayload: buildPayload, collectAllVariants: collectAllVariants, injectUI: injectUI, extractor: X };\n" +
     extCode.substring(iifeEnd);
 
   const browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
   const page = await browser.newPage();
   try {
     await page.goto("file:///" + testFile.replace(/\\/g, "/"), { waitUntil: "load" });
+    await page.evaluate(() => {
+      window.__serpStorageSet = null;
+      window.chrome = {
+        storage: {
+          local: {
+            set(obj, cb) {
+              window.__serpStorageSet = obj;
+            },
+            remove(_key, cb) {
+              if (cb) cb();
+            },
+          },
+        },
+      };
+    });
     await page.evaluate(extCode);
     const payload = await page.evaluate(() => window.__serpTest.buildPayload());
 
@@ -35,6 +50,18 @@ const fs = require("fs");
     assert("material spec collected", payload.product_details["материал"] === "экокожа", JSON.stringify(payload.product_details));
     assert("height spec collected", payload.product_details["высота_предмета"] === "21 см", JSON.stringify(payload.product_details));
     assert("width spec collected", payload.product_details["ширина_предмета"] === "17 см", JSON.stringify(payload.product_details));
+
+    const traversalState = await page.evaluate(async () => {
+      window.__serpTest.injectUI();
+      window.__serpTest.collectAllVariants();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      const stateObj = window.__serpStorageSet || {};
+      return stateObj.serp_wb_traversal || null;
+    });
+    const firstVariant = traversalState && traversalState.allVariants && traversalState.allVariants[0];
+    assert("all specs traversal state created", !!traversalState, JSON.stringify(traversalState));
+    assert("all specs current variant has product details", firstVariant && firstVariant.product_details && firstVariant.product_details["цвет"] === "черный", JSON.stringify(firstVariant));
+    assert("all specs current variant has product description", firstVariant && firstVariant.product_description && firstVariant.product_description.indexOf("Компактная сумка") !== -1, JSON.stringify(firstVariant));
 
     if (failures.length) {
       console.error("Wildberries collect test failed:");

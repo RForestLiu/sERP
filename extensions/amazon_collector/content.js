@@ -1393,7 +1393,9 @@
       price: currentData.price,
       images: currentData.images,
       variantInfo: stack[0],
-      currentVariant: currentData.currentVariant
+      currentVariant: currentData.currentVariant,
+      product_details: currentData.product_details || {},
+      product_description: currentData.product_description || ""
     });
     setStatus("变体 1/" + UI.total + ": " + stack[0].value + " ✓");
     console.log("[sERP] variant 1/" + UI.total + " (current):", stack[0].value, "(" + currentData.images.length + " images)");
