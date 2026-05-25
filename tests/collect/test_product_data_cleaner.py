@@ -152,6 +152,53 @@ def test_cleaner_reports_empty_structured_output(monkeypatch):
     assert "empty structured output" in cleaned["clean_audit"]["error"]
 
 
+def test_cleaner_local_audit_rejects_non_english_output(monkeypatch):
+    calls = []
+
+    def fake_post(_url, headers, json, timeout):
+        calls.append(json)
+        if len(calls) == 1:
+            content = {
+                "product_param": [
+                    {"key": "color", "value": "красный", "evidence": "product_details.color"},
+                    {"key": "material", "value": "натуральная кожа", "evidence": "product_details.material"},
+                ],
+                "product_description": {
+                    "summary": "Кошелек женский из натуральной кожи.",
+                    "evidence": ["product_description"],
+                },
+            }
+        else:
+            content = {"passed": True, "issues": [], "checks": []}
+        return type("Resp", (), {
+            "status_code": 200,
+            "text": "ok",
+            "json": lambda self: {
+                "choices": [{
+                    "message": {
+                        "tool_calls": [{
+                            "function": {"arguments": json_module.dumps(content, ensure_ascii=False)},
+                        }],
+                    },
+                }],
+            },
+        })()
+
+    json_module = json
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
+    monkeypatch.setattr("src.serp.collect.infrastructure.product_data_cleaner.requests.post", fake_post)
+
+    cleaned = ProductDataCleaner(FakeSettings()).clean({
+        "product_details": {"color": "красный", "material": "натуральная кожа"},
+        "product_description": "Кошелек женский из натуральной кожи.",
+    })
+
+    assert cleaned["clean_audit"]["status"] == "review_failed"
+    assert cleaned["clean_audit"]["review"]["passed"] is False
+    assert "language_mismatch" in cleaned["clean_audit"]["review"]["issues"]
+    assert cleaned["clean_audit"]["review"]["checks"][-1]["field"] == "output_language"
+
+
 def test_cleaner_falls_back_when_llm_is_not_configured(monkeypatch):
     monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
     raw = {

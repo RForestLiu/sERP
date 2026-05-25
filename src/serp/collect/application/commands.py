@@ -125,6 +125,7 @@ class CollectApplicationService(CollectFacade):
             return package["clean_status"]
 
         self._clean_cancel_flags[task_id] = False
+        package.setdefault("product_data", {})["cleaned_product_data"] = None
         package["clean_status"] = {
             "status": "cleaning",
             "message": "清洗中",
@@ -415,6 +416,7 @@ class CollectApplicationService(CollectFacade):
                 "updated_at": datetime.now().isoformat(),
             }
         else:
+            package.setdefault("product_data", {})["cleaned_product_data"] = None
             package["clean_audit"] = audit
             package["clean_status"] = {
                 "status": "failed",

@@ -2,6 +2,7 @@ import copy
 import json
 import logging
 import os
+import unicodedata
 from datetime import datetime
 from typing import Optional
 
@@ -33,6 +34,9 @@ class ProductDataCleaner:
             description = self._normalize_description(cleaned.get("product_description", {}))
             audit["evidence"] = evidence
             review = self._call_review_llm(config, language, raw_copy, params, description, evidence)
+            language_review = self._review_output_language(language, params, description)
+            if language_review:
+                review = self._merge_review_failure(review, language_review)
             audit["review"] = review
             audit["status"] = "ok" if review.get("passed") is True else "review_failed"
             return {
@@ -317,6 +321,58 @@ class ProductDataCleaner:
         if isinstance(raw_description, dict):
             return str(raw_description.get("summary", "")).strip()
         return str(raw_description or "").strip()
+
+    @staticmethod
+    def _review_output_language(language: str, params: dict, description: str) -> dict:
+        if not str(language or "").lower().startswith("english"):
+            return {}
+        checks = []
+        for key, value in params.items():
+            if ProductDataCleaner._contains_non_latin_letters(str(value)):
+                checks.append({
+                    "field": f"product_param.{key}",
+                    "result": "fail",
+                    "evidence": str(value)[:120],
+                })
+        if ProductDataCleaner._contains_non_latin_letters(description):
+            checks.append({
+                "field": "product_description",
+                "result": "fail",
+                "evidence": description[:120],
+            })
+        if not checks:
+            return {}
+        checks.append({
+            "field": "output_language",
+            "result": "fail",
+            "evidence": "Cleaned product data must be English, but non-Latin letters remain.",
+        })
+        return {
+            "passed": False,
+            "issues": ["language_mismatch"],
+            "checks": checks,
+        }
+
+    @staticmethod
+    def _merge_review_failure(review: dict, failure: dict) -> dict:
+        merged = dict(review) if isinstance(review, dict) else {}
+        issues = list(merged.get("issues") or [])
+        for issue in failure.get("issues") or []:
+            if issue not in issues:
+                issues.append(issue)
+        merged["passed"] = False
+        merged["issues"] = issues
+        merged["checks"] = list(merged.get("checks") or []) + list(failure.get("checks") or [])
+        return merged
+
+    @staticmethod
+    def _contains_non_latin_letters(text: str) -> bool:
+        for char in text or "":
+            if not char.isalpha():
+                continue
+            if "LATIN" not in unicodedata.name(char, ""):
+                return True
+        return False
 
     @staticmethod
     def _fallback_product_data(raw_data: dict) -> dict:
