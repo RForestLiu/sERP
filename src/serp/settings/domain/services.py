@@ -87,6 +87,7 @@ DEFAULT_SETTINGS = {
             "old_price_formula": "sale_price_cny * original_price_multiplier",
             "defaults": {
                 "profit_rate": 0.3,
+                "min_profit_rate": 0.2,
                 "ozon_commission_rate": 0.18,
                 "acquiring_rate": 0.015,
                 "promotion_rate": 0,
@@ -112,6 +113,7 @@ DEFAULT_SETTINGS = {
             "old_price_formula": "sale_price_cny * original_price_multiplier",
             "defaults": {
                 "profit_rate": 0.3,
+                "min_profit_rate": 0.2,
                 "platform_commission_rate": 0.2,
                 "acquiring_rate": 0,
                 "promotion_rate": 0,
@@ -135,6 +137,7 @@ DEFAULT_SETTINGS = {
             "old_price_formula": "sale_price_cny * original_price_multiplier",
             "defaults": {
                 "profit_rate": 0.3,
+                "min_profit_rate": 0.2,
                 "platform_commission_rate": 0.15,
                 "acquiring_rate": 0,
                 "promotion_rate": 0,

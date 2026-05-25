@@ -116,3 +116,13 @@ def test_variant_row_context_ignores_validation_messages():
     assert "最低价|售价|原价|不能" in source
     assert "!isInvalidRowContextText(txt)" in source
     assert "!isInvalidRowContextText(rowText)" in source
+
+
+def test_pricing_formula_supports_minimum_price_profit_rate():
+    source = EXTENSION_FILE.read_text(encoding="utf-8")
+
+    assert "min_profit_rate: 0.2" in source
+    assert "min_price_cny" in source
+    assert "profit_rate: ctx.vars.min_profit_rate" in source
+    assert 'priceVarInputV2("min_profit_rate"' in source
+    assert 'return "min";' in source

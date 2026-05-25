@@ -729,6 +729,7 @@
       old_price_formula: "sale_price_cny * original_price_multiplier",
       defaults: {
         profit_rate: 0.3,
+        min_profit_rate: 0.2,
         ozon_commission_rate: platform === "ozon" ? 0.18 : 0,
         platform_commission_rate: platform === "ozon" ? 0.18 : 0.15,
         acquiring_rate: platform === "ozon" ? 0.015 : 0,
@@ -864,9 +865,10 @@
     }
     if (vars.ozon_commission_rate === undefined && vars.platform_commission_rate !== undefined) vars.ozon_commission_rate = vars.platform_commission_rate;
     if (vars.platform_commission_rate === undefined && vars.ozon_commission_rate !== undefined) vars.platform_commission_rate = vars.ozon_commission_rate;
-    ["profit_rate", "ozon_commission_rate", "platform_commission_rate", "acquiring_rate", "promotion_rate", "other_percent_fee_rate", "seller_logistics_cny", "ozon_fixed_fee_cny", "platform_fixed_fee_cny", "return_reserve_cny", "other_fixed_cost_cny", "original_price_multiplier", "stock"].forEach(function (k) {
+    ["profit_rate", "min_profit_rate", "ozon_commission_rate", "platform_commission_rate", "acquiring_rate", "promotion_rate", "other_percent_fee_rate", "seller_logistics_cny", "ozon_fixed_fee_cny", "platform_fixed_fee_cny", "return_reserve_cny", "other_fixed_cost_cny", "original_price_multiplier", "stock"].forEach(function (k) {
       vars[k] = safeNumberV2(vars[k], k === "stock" ? 10000 : 0);
     });
+    if (!vars.min_profit_rate) vars.min_profit_rate = 0.2;
     if (!vars.original_price_multiplier) vars.original_price_multiplier = 1.8;
     if (!vars.stock) vars.stock = 10000;
     return { vars: vars, sourceMoney: sourceMoney, sourceCny: sourceCny };
@@ -879,11 +881,16 @@
     var sale = safeEvalFormulaV2(formula.formula, ctx.vars);
     var saleRounded = roundPricingValueV2(sale, formula.rounding || "ceil");
     ctx.vars.sale_price_cny = saleRounded;
+    var minVars = Object.assign({}, ctx.vars, { profit_rate: ctx.vars.min_profit_rate });
+    var minPrice = safeEvalFormulaV2(formula.formula, minVars);
+    var minRounded = roundPricingValueV2(minPrice, formula.rounding || "ceil");
+    if (saleRounded > 0 && minRounded > saleRounded) minRounded = saleRounded;
+    ctx.vars.min_price_cny = minRounded;
     var oldPrice = safeEvalFormulaV2(formula.old_price_formula || "sale_price_cny * original_price_multiplier", ctx.vars);
     var oldRounded = roundPricingValueV2(oldPrice, formula.rounding || "ceil");
     if (saleRounded > 0 && oldRounded < saleRounded * 1.7) oldRounded = Math.ceil(saleRounded * 1.7);
     if (saleRounded > 0 && oldRounded > saleRounded * 2.0 && pricingTempVars.original_price_multiplier === undefined) oldRounded = Math.ceil(saleRounded * 1.8);
-    return { formula: formula, vars: ctx.vars, sale_price_cny: saleRounded, old_price_cny: oldRounded, stock: Math.round(ctx.vars.stock || 10000), cost_price_cny: ctx.vars.cost_price_cny, sourceMoney: ctx.sourceMoney, sourceCny: ctx.sourceCny };
+    return { formula: formula, vars: ctx.vars, sale_price_cny: saleRounded, min_price_cny: minRounded, old_price_cny: oldRounded, stock: Math.round(ctx.vars.stock || 10000), cost_price_cny: ctx.vars.cost_price_cny, sourceMoney: ctx.sourceMoney, sourceCny: ctx.sourceCny };
   }
 
   function priceAmountPctTextV2(amount, sale) {
@@ -909,7 +916,8 @@
       fixed: fixedFee,
       returnReserve: safeNumberV2(v.return_reserve_cny, 0),
       otherFixed: safeNumberV2(v.other_fixed_cost_cny, 0),
-      expectedProfit: sale * safeNumberV2(v.profit_rate, 0)
+      expectedProfit: sale * safeNumberV2(v.profit_rate, 0),
+      minExpectedProfit: safeNumberV2(pricing && pricing.min_price_cny, 0) * safeNumberV2(v.min_profit_rate, 0)
     };
   }
 
@@ -948,10 +956,12 @@
       '<div class="pi-price-row"><span>固定费用(Fixed)</span><strong data-price-summary="fixed">' + priceAmountPctTextV2(b.fixed + b.returnReserve + b.otherFixed, b.sale) + '</strong></div>',
       '<div class="pi-price-row is-key"><span>期望利润(Profit)</span><strong data-price-summary="profit">' + priceAmountPctTextV2(b.expectedProfit, b.sale) + '</strong></div>',
       '<div class="pi-price-row is-key"><span>售价(Sale CNY)</span><strong data-price-summary="sale">' + (pricing.sale_price_cny ? pricing.sale_price_cny + "¥ (100.0%)" : "--") + '</strong></div>',
+      '<div class="pi-price-row"><span>最低价(Min CNY)</span><strong data-price-summary="min">' + (pricing.min_price_cny ? pricing.min_price_cny + "¥" : "--") + '</strong></div>',
       '<div class="pi-price-row"><span>原价(Old CNY)</span><strong data-price-summary="old">' + (pricing.old_price_cny ? pricing.old_price_cny + "¥" : "--") + '</strong></div>',
       '<div class="pi-price-row"><span>库存(Stock)</span><strong data-price-summary="stock">' + pricing.stock + '</strong></div>',
       '<div class="pi-price-vars">' +
         priceVarInputV2("profit_rate", "利润率(Profit)", v.profit_rate, "0.01") +
+        priceVarInputV2("min_profit_rate", "最低价利润率(Min Profit)", v.min_profit_rate, "0.01") +
         priceVarInputV2("ozon_commission_rate", "佣金(Commission)", v.ozon_commission_rate, "0.001") +
         priceVarInputV2("acquiring_rate", "收单费(Acquiring)", v.acquiring_rate, "0.001") +
         priceVarInputV2("seller_logistics_cny", "物流费(Logistics)", v.seller_logistics_cny, "0.01") +
@@ -1067,6 +1077,7 @@
     var fixedEl = piPriceDetail.querySelector('[data-price-summary="fixed"]');
     var profitEl = piPriceDetail.querySelector('[data-price-summary="profit"]');
     var saleEl = piPriceDetail.querySelector('[data-price-summary="sale"]');
+    var minEl = piPriceDetail.querySelector('[data-price-summary="min"]');
     var oldEl = piPriceDetail.querySelector('[data-price-summary="old"]');
     var stockEl = piPriceDetail.querySelector('[data-price-summary="stock"]');
     if (costEl) costEl.textContent = priceAmountPctTextV2(b.cost, b.sale);
@@ -1077,6 +1088,7 @@
     if (fixedEl) fixedEl.textContent = priceAmountPctTextV2(b.fixed + b.returnReserve + b.otherFixed, b.sale);
     if (profitEl) profitEl.textContent = priceAmountPctTextV2(b.expectedProfit, b.sale);
     if (saleEl) saleEl.textContent = pricing.sale_price_cny ? pricing.sale_price_cny + "¥ (100.0%)" : "--";
+    if (minEl) minEl.textContent = pricing.min_price_cny ? pricing.min_price_cny + "¥" : "--";
     if (oldEl) oldEl.textContent = pricing.old_price_cny ? pricing.old_price_cny + "¥" : "--";
     if (stockEl) stockEl.textContent = pricing.stock || "--";
   }
@@ -4023,6 +4035,9 @@
       if (pricingRole === "sale") {
         if (pricing.sale_price_cny) value = String(pricing.sale_price_cny);
       }
+      if (pricingRole === "min") {
+        if (pricing.min_price_cny) value = String(pricing.min_price_cny);
+      }
       if (pricingRole === "old") {
         if (pricing.old_price_cny) value = String(pricing.old_price_cny);
       }
@@ -4049,6 +4064,7 @@
         label.indexOf("倍率") !== -1 || label.indexOf("multiplier") !== -1 ||
         label.indexOf("公式") !== -1 || label.indexOf("formula") !== -1) return "";
     if (label.indexOf("库存") !== -1 || label.indexOf("可售") !== -1 || label.indexOf("stock") !== -1 || label.indexOf("остат") !== -1) return "stock";
+    if (label.indexOf("最低价") !== -1 || label.indexOf("最低价格") !== -1 || label.indexOf("min price") !== -1 || label.indexOf("minimum price") !== -1 || label.indexOf("lowest price") !== -1 || label.indexOf("миним") !== -1) return "min";
     if (label.indexOf("原价") !== -1 || label.indexOf("划线价") !== -1 || label.indexOf("市场价") !== -1 || label.indexOf("old price") !== -1 || label.indexOf("old_price") !== -1 || label.indexOf("original price") !== -1 || label.indexOf("strike") !== -1 || label.indexOf("старая цена") !== -1) return "old";
     if (label.indexOf("售价") !== -1 || label.indexOf("销售价") !== -1 || label.indexOf("销售价格") !== -1 || label.indexOf("现价") !== -1 || label.indexOf("sale price") !== -1 || label.indexOf("price") !== -1 || label.indexOf("цена") !== -1) {
       return "sale";
@@ -4295,10 +4311,10 @@
       var keys = Object.keys(pricingMap);
 
       var pricing = computePricingV2(selectedProduct);
-      var canFillPrice = safeNumberV2(pricing.sale_price_cny, 0) > 0 && safeNumberV2(pricing.old_price_cny, 0) > 0;
+      var canFillPrice = safeNumberV2(pricing.sale_price_cny, 0) > 0 && safeNumberV2(pricing.min_price_cny, 0) > 0 && safeNumberV2(pricing.old_price_cny, 0) > 0;
       if (!canFillPrice) {
-        console.warn("[sERP] 价格计算为 0，跳过售价/原价回填。pricing=" + JSON.stringify({ sale: pricing.sale_price_cny, old: pricing.old_price_cny, stock: pricing.stock, vars: pricing.vars }));
-        showToast("价格计算为0，未更新售价/原价；请检查成本价、采集价或公式变量", "error");
+        console.warn("[sERP] 价格计算为 0，跳过售价/最低价/原价回填。pricing=" + JSON.stringify({ sale: pricing.sale_price_cny, min: pricing.min_price_cny, old: pricing.old_price_cny, stock: pricing.stock, vars: pricing.vars }));
+        showToast("价格计算为0，未更新售价/最低价/原价；请检查成本价、采集价或公式变量", "error");
       }
       var filled = 0;
       var filledRoles = {};
@@ -4306,7 +4322,7 @@
         var idx = parseInt(keys[i], 10);
         var entry = resolveFieldByIndex(idx);
         var mappedRole = pricingRoleFromText((entry && entry.label) || "");
-        if ((mappedRole === "sale" || mappedRole === "old") && !canFillPrice) continue;
+        if ((mappedRole === "sale" || mappedRole === "min" || mappedRole === "old") && !canFillPrice) continue;
         var ok = await fillFormField(idx, pricingMap[keys[i]]);
         if (ok) {
           filled++;
@@ -4317,9 +4333,9 @@
       var directTargets = collectDirectPricingTargets();
       for (var ti = 0; ti < directTargets.length; ti++) {
         var target = directTargets[ti];
-        if ((target.role === "sale" || target.role === "old") && !canFillPrice) continue;
+        if ((target.role === "sale" || target.role === "min" || target.role === "old") && !canFillPrice) continue;
         if (target.role === "stock") continue;
-        var directValue = target.role === "old" ? pricing.old_price_cny : (target.role === "stock" ? pricing.stock : pricing.sale_price_cny);
+        var directValue = target.role === "old" ? pricing.old_price_cny : (target.role === "min" ? pricing.min_price_cny : (target.role === "stock" ? pricing.stock : pricing.sale_price_cny));
         if (!directValue && directValue !== 0) continue;
         if (fillNativeInputDirect(target.el, directValue)) {
           filled++;
@@ -4334,7 +4350,7 @@
       }
       if (!filled) {
         console.warn("[sERP] 未找到价格字段。formFields=" + JSON.stringify(formFields.map(function (f) { return { index: f.index, label: f.label, tag: f.tag, type: f.type, controlKind: f.controlKind }; })));
-        showToast("未找到售价/原价/库存字段，已在控制台输出字段列表", "error");
+        showToast("未找到售价/最低价/原价/库存字段，已在控制台输出字段列表", "error");
         return;
       }
       if (piPriceDetail) piPriceDetail.innerHTML = buildPriceFormulaHtmlV2(selectedProduct);
@@ -4500,6 +4516,7 @@
       pricing_context: {
         formula_id: (pricingForFill.formula || {}).id || "",
         sale_price_cny: pricingForFill.sale_price_cny,
+        min_price_cny: pricingForFill.min_price_cny,
         old_price_cny: pricingForFill.old_price_cny,
         stock: pricingForFill.stock,
         variables: pricingForFill.vars
