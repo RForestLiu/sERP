@@ -13,6 +13,8 @@ def test_extension_collects_dianxiaomi_runtime_field_model():
     assert "function attachDxmRuntimeMetadata(fields)" in source
     assert "function dxmComparableLabelForField(field)" in source
     assert "fieldBaseLabel(field && field.label)" in source
+    assert "function isGenericDxmAttributeName(name)" in source
+    assert "if (isGenericDxmAttributeName(name)) return;" in source
     assert "dxmAttribute" in source
 
 

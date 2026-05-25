@@ -2757,6 +2757,13 @@
     return normalizeDxmFieldText(fieldBaseLabel(field && field.label));
   }
 
+  function isGenericDxmAttributeName(name) {
+    var text = normalizeDxmFieldText(name);
+    if (!text) return true;
+    if (text.length <= 2) return true;
+    return /^(材料|材质|material|тип|type|вид|属性)$/.test(text);
+  }
+
   function matchDxmAttributeForField(field, runtimeFields) {
     var label = dxmComparableLabelForField(field);
     if (!label || !runtimeFields || !runtimeFields.length) return null;
@@ -2768,6 +2775,7 @@
         if (!name) return;
         var score = 0;
         if (label === name) score = 100;
+        else if (isGenericDxmAttributeName(name)) return;
         else if (label.indexOf(name) !== -1) score = 80;
         else if (name.indexOf(label) !== -1 && label.length >= 2) score = 60;
         if (score > bestScore) {
