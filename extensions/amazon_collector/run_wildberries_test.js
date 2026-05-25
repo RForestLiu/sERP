@@ -15,7 +15,7 @@ const fs = require("fs");
   const iifeEnd = extCode.lastIndexOf("})();");
   if (mainIdx < 0 || iifeEnd < 0) throw new Error("Unable to locate content.js main block");
   extCode = extCode.substring(0, mainIdx) +
-    "  window.__serpTest = { buildPayload: buildPayload, collectAllVariants: collectAllVariants, injectUI: injectUI, extractor: X };\n" +
+    "  window.__serpTest = { buildPayload: buildPayload, collectAllVariants: collectAllVariants, continueWBTraversal: continueWBTraversal, injectUI: injectUI, extractor: X };\n" +
     extCode.substring(iifeEnd);
 
   const browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
@@ -66,6 +66,31 @@ const fs = require("fs");
     assert("all specs traversal state created", !!traversalState, JSON.stringify(traversalState));
     assert("all specs current variant has product details", firstVariant && firstVariant.product_details && firstVariant.product_details["цвет"] === "черный", JSON.stringify(firstVariant));
     assert("all specs current variant has product description", firstVariant && firstVariant.product_description && firstVariant.product_description.indexOf("Компактная сумка") !== -1, JSON.stringify(firstVariant));
+
+    const twoVariantBatch = await page.evaluate(async () => {
+      window.__serpSentPayload = null;
+      window.fetch = (_url, opts) => {
+        window.__serpSentPayload = JSON.parse(opts.body);
+        return Promise.resolve({ json: () => Promise.resolve({ status: "ok" }) });
+      };
+      const state = {
+        platform: "wildberries",
+        variantUrls: {
+          first: "https://www.wildberries.ru/catalog/156681979/detail.aspx",
+          second: "https://www.wildberries.ru/catalog/175655484/detail.aspx",
+        },
+        stack: [{ type: "color", value: "first" }, { type: "color", value: "second" }],
+        allVariants: [{ variantName: "first", url: "about:blank", price: "", images: ["first.webp"], variantInfo: { type: "color", value: "first" } }],
+        originalUrl: window.location.href.split("#")[0] + "#done",
+        total: 2,
+        nextIdx: 1,
+      };
+      window.__serpTest.continueWBTraversal(state);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      return window.__serpSentPayload;
+    });
+    assert("two variant traversal does not duplicate current variant", twoVariantBatch && twoVariantBatch.variantData && twoVariantBatch.variantData.length === 2, JSON.stringify(twoVariantBatch && twoVariantBatch.variantData));
+    assert("two variant traversal collects the pending second variant", twoVariantBatch && twoVariantBatch.variantData && twoVariantBatch.variantData.map((v) => v.variantName).join(",") === "first,second", JSON.stringify(twoVariantBatch && twoVariantBatch.variantData));
 
     if (failures.length) {
       console.error("Wildberries collect test failed:");

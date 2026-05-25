@@ -1572,7 +1572,7 @@
   function continueWBTraversal(state) {
     console.log("[sERP traversal] Continue " + state.nextIdx + "/" + state.total);
 
-    var variantName = state.stack[state.nextIdx - 1].value;
+    var variantName = state.stack[state.nextIdx].value;
 
     function tryCollect(attempt) {
       var drawerReady = X._ensureDrawerOpen();
@@ -1601,9 +1601,9 @@
         product_description: data.product_description || ""
       });
 
-      if (state.nextIdx < state.total) {
+      if (state.nextIdx + 1 < state.total) {
         state.nextIdx++;
-        var nextName = state.stack[state.nextIdx - 1].value;
+        var nextName = state.stack[state.nextIdx].value;
         var nextUrl = state.variantUrls[nextName];
         console.log("[sERP traversal] Next: idx " + state.nextIdx + "/" + state.total + " -> " + nextName);
         var setObj = {};
