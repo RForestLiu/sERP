@@ -2716,6 +2716,15 @@
     return "DXM #" + attr.attributeId + (kind ? " " + kind : "") + (name ? " " + name : "");
   }
 
+  function collectDxmCategoryContext() {
+    var category = dxmRuntimeFieldModelCache && dxmRuntimeFieldModelCache.category;
+    if (!category) return {};
+    return {
+      description_category_id: category.descriptionCategoryId || category.description_category_id || "",
+      type_id: category.typeId || category.type_id || ""
+    };
+  }
+
   function collectDxmRuntimeFieldModel() {
     if (dxmRuntimeFieldModelCache && Array.isArray(dxmRuntimeFieldModelCache.fields) && dxmRuntimeFieldModelCache.fields.length) {
       return dxmRuntimeFieldModelCache;
@@ -2741,6 +2750,7 @@
         showSizeTable: !!(attrsInfo && attrsInfo.showSizeTable),
         showRichJSON: !!(attrsInfo && attrsInfo.showRichJSON)
       },
+      category: {},
       fields: fields
     };
   }
@@ -4444,6 +4454,7 @@
 
     var body = {
       skc: selectedProduct.skc,
+      store_id: detectStoreId(),
       product_title: selectedProduct.title,
       product_data: selectedProduct.product_data || {},
       manual_data: normalizedManualForFill,
@@ -4454,7 +4465,8 @@
         stock: pricingForFill.stock,
         variables: pricingForFill.vars
       },
-      form_fields: llmFields
+      form_fields: llmFields,
+      category_context: collectDxmCategoryContext()
     };
     if (Object.keys(customPrompts).length > 0) {
       body.custom_prompts = customPrompts;

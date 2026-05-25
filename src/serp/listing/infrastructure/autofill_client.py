@@ -528,6 +528,17 @@ SKC: {skc}
                 )
                 if dxm_attr.get("name") or dxm_attr.get("nameCn"):
                     field_desc += f" | DXM名称: {dxm_attr.get('nameCn') or ''}/{dxm_attr.get('name') or ''}"
+            ozon_attr = f.get("ozonAttribute") or {}
+            if isinstance(ozon_attr, dict) and ozon_attr.get("id"):
+                field_desc += (
+                    f" | Ozon属性ID: {ozon_attr.get('id')}"
+                    f" | Ozon类型: {ozon_attr.get('type') or ''}"
+                    f" | Ozon字典ID: {ozon_attr.get('dictionary_id') or '0'}"
+                    f" | Ozon多值: {ozon_attr.get('is_collection')}"
+                    f" | Ozon必填: {ozon_attr.get('is_required')}"
+                )
+                if ozon_attr.get("name") or ozon_attr.get("name_cn"):
+                    field_desc += f" | Ozon名称: {ozon_attr.get('name_cn') or ''}/{ozon_attr.get('name') or ''}"
             if options:
                 option_texts: list[str] = []
                 for o in options[:30]:

@@ -635,6 +635,7 @@ class ListingApplicationService(ListingFacade):
         custom_prompts = data.get("custom_prompts", {})
         variant_list = data.get("variant_list", [])
         variant_row_summary = data.get("variant_row_summary", {})
+        store_id = data.get("store_id", "")
 
         if not form_fields:
             return {"error": "表单字段列表不能为空"}
@@ -643,6 +644,7 @@ class ListingApplicationService(ListingFacade):
             return {"error": "DEEPSEEK_API_KEY not configured"}
 
         try:
+            form_fields = self._enrich_dianxiaomi_fields_with_ozon_api_meta(store_id, data, form_fields)
             mappings = self._autofill_client.analyze_dianxiaomi(
                 skc=skc,
                 product_title=product_title,
@@ -662,6 +664,46 @@ class ListingApplicationService(ListingFacade):
             }
         except Exception as e:
             return {"error": str(e)}
+
+    def _enrich_dianxiaomi_fields_with_ozon_api_meta(self, store_id: str, data: dict, form_fields: list[dict]) -> list[dict]:
+        category_context = data.get("category_context") or {}
+        category_id = category_context.get("description_category_id") or category_context.get("descriptionCategoryId")
+        type_id = category_context.get("type_id") or category_context.get("typeId")
+        if not store_id or not category_id:
+            return form_fields
+        try:
+            category_id = int(category_id)
+            type_id = int(type_id) if type_id else None
+        except (TypeError, ValueError):
+            return form_fields
+        try:
+            result = self._ozon_category_facade.get_category_attributes(store_id, category_id, type_id)
+        except Exception as e:
+            logger.warning("[auto-fill] failed to load Ozon category attributes: %s", e)
+            return form_fields
+        attrs = result.get("attributes") or []
+        attr_by_id = {str(attr.get("id")): attr for attr in attrs if attr.get("id") is not None}
+        if not attr_by_id:
+            return form_fields
+        enriched_fields: list[dict] = []
+        for field in form_fields:
+            next_field = dict(field)
+            dxm_attr = next_field.get("dxmAttribute") or {}
+            attr_id = dxm_attr.get("attributeId") or dxm_attr.get("id")
+            ozon_attr = attr_by_id.get(str(attr_id))
+            if ozon_attr:
+                next_field["ozonAttribute"] = {
+                    "id": ozon_attr.get("id"),
+                    "name": ozon_attr.get("name", ""),
+                    "name_cn": ozon_attr.get("name_cn", ""),
+                    "type": ozon_attr.get("type", ""),
+                    "dictionary_id": ozon_attr.get("dictionary_id", 0),
+                    "is_required": ozon_attr.get("is_required", False),
+                    "is_collection": ozon_attr.get("is_collection", False),
+                    "max_value_count": ozon_attr.get("max_value_count", 1),
+                }
+            enriched_fields.append(next_field)
+        return enriched_fields
 
     def fill_ozon_fields(self, data: dict) -> dict:
         skc = data.get("skc", "")

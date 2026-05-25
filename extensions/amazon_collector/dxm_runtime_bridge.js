@@ -48,7 +48,9 @@
     var app = appEl && appEl.__vue_app__;
     var pinia = app && app.config && app.config.globalProperties && app.config.globalProperties.$pinia;
     var store = pinia && pinia._s && pinia._s.get && pinia._s.get("ozonProductAddStore");
-    var attrsInfo = store && store.$state && store.$state.attrsInfo;
+    var state = store && store.$state;
+    var attrsInfo = state && state.attrsInfo;
+    var dataState = state && state.dataState;
     var fields = [];
     ["attrsList", "mergeAttrsList", "skuList"].forEach(function (groupName) {
       var list = attrsInfo && Array.isArray(attrsInfo[groupName]) ? attrsInfo[groupName] : [];
@@ -64,6 +66,10 @@
         showQualification: !!(attrsInfo && attrsInfo.showQualification),
         showSizeTable: !!(attrsInfo && attrsInfo.showSizeTable),
         showRichJSON: !!(attrsInfo && attrsInfo.showRichJSON)
+      },
+      category: {
+        descriptionCategoryId: dataState && dataState.descriptionCategoryId,
+        typeId: dataState && dataState.typeId
       },
       fields: fields
     };

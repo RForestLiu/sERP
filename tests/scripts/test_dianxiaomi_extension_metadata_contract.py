@@ -78,6 +78,16 @@ def test_extension_bridges_page_context_for_dxm_runtime_model():
     assert "window.addEventListener(\"message\"" in source
     assert "dxm_runtime_bridge.js" in manifest
     assert "web_accessible_resources" in manifest
+    assert "descriptionCategoryId" in bridge
+    assert "typeId" in bridge
+
+
+def test_extension_sends_category_context_to_autofill_api():
+    source = EXTENSION_FILE.read_text(encoding="utf-8")
+
+    assert "function collectDxmCategoryContext()" in source
+    assert "store_id: detectStoreId()" in source
+    assert "category_context: collectDxmCategoryContext()" in source
 
 
 def test_extract_diagnostics_waits_for_dxm_runtime_cache():
