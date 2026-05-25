@@ -17,7 +17,7 @@
   if (/amazon\./.test(host)) PLATFORM = "amazon";
   else if (/1688\.com/.test(host)) PLATFORM = "1688";
   else if (/wildberries\./.test(host)) PLATFORM = "wildberries";
-  else if (/ozon\.ru/.test(host)) PLATFORM = "ozon";
+  else if (/ozon\.(ru|by|kz)/.test(host)) PLATFORM = "ozon";
 
   if (!PLATFORM) return;
 
@@ -854,7 +854,7 @@
   // ---------- Ozon (basic) ----------
   EXTRACTORS.ozon = {
     isProductPage: function () {
-      return /ozon\.ru\/product\//.test(href);
+      return /ozon\.(ru|by|kz)\/product\//.test(href);
     },
 
     extractTitle: function () {
