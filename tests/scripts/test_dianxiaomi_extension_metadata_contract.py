@@ -11,6 +11,8 @@ def test_extension_collects_dianxiaomi_runtime_field_model():
 
     assert "function collectDxmRuntimeFieldModel()" in source
     assert "function attachDxmRuntimeMetadata(fields)" in source
+    assert "function dxmComparableLabelForField(field)" in source
+    assert "fieldBaseLabel(field && field.label)" in source
     assert "dxmAttribute" in source
 
 

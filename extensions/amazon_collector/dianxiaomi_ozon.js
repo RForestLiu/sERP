@@ -2753,8 +2753,12 @@
       .toLowerCase();
   }
 
+  function dxmComparableLabelForField(field) {
+    return normalizeDxmFieldText(fieldBaseLabel(field && field.label));
+  }
+
   function matchDxmAttributeForField(field, runtimeFields) {
-    var label = normalizeDxmFieldText(field && field.label);
+    var label = dxmComparableLabelForField(field);
     if (!label || !runtimeFields || !runtimeFields.length) return null;
     var best = null;
     var bestScore = 0;
