@@ -15,6 +15,7 @@ def test_extension_collects_dianxiaomi_runtime_field_model():
     assert "fieldBaseLabel(field && field.label)" in source
     assert "function isGenericDxmAttributeName(name)" in source
     assert "if (isGenericDxmAttributeName(name)) return;" in source
+    assert "material|материал|тип|type|вид" in source
     assert "dxmAttribute" in source
 
 

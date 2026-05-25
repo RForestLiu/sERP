@@ -2761,7 +2761,7 @@
     var text = normalizeDxmFieldText(name);
     if (!text) return true;
     if (text.length <= 2) return true;
-    return /^(材料|材质|material|тип|type|вид|属性)$/.test(text);
+    return /^(材料|材质|material|материал|тип|type|вид|属性)$/.test(text);
   }
 
   function matchDxmAttributeForField(field, runtimeFields) {
