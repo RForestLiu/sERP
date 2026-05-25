@@ -38,6 +38,8 @@ def test_extract_panel_reports_dxm_metadata_match_count():
     assert "DXM属性匹配" in source
     assert "DXM字段模型" in source
     assert "dxmRuntimeFieldCount()" in source
+    assert "function dxmAttributeSummaryForField(field)" in source
+    assert "dxmAttributeSummaryForField(f)" in source
 
 
 def test_extract_button_is_visible_for_diagnostics():

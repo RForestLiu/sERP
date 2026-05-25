@@ -2708,6 +2708,14 @@
     return dxmRuntimeFieldCount() > 0;
   }
 
+  function dxmAttributeSummaryForField(field) {
+    var attr = field && field.dxmAttribute;
+    if (!attr || !attr.attributeId) return "";
+    var name = attr.nameCn || attr.name || "";
+    var kind = attr.dxmControlKind || "";
+    return "DXM #" + attr.attributeId + (kind ? " " + kind : "") + (name ? " " + name : "");
+  }
+
   function collectDxmRuntimeFieldModel() {
     if (dxmRuntimeFieldModelCache && Array.isArray(dxmRuntimeFieldModelCache.fields) && dxmRuntimeFieldModelCache.fields.length) {
       return dxmRuntimeFieldModelCache;
@@ -3795,7 +3803,9 @@
       var s = '<div class="ex-section"><div class="ex-section-title">' + title + ' (' + fields.length + ')</div>';
       fields.forEach(function (f) {
         var label = f.label || f.name || f.placeholder || "(无标签)";
-        s += '<div class="ex-item"><span class="ex-tag ' + tagClass + '">' + title.charAt(0) + '</span>' + label + '</div>';
+        var dxmSummary = dxmAttributeSummaryForField(f);
+        var suffix = dxmSummary ? ' <span style="color:#64748b;">' + escapeHtml(dxmSummary) + '</span>' : "";
+        s += '<div class="ex-item"><span class="ex-tag ' + tagClass + '">' + title.charAt(0) + '</span>' + escapeHtml(label) + suffix + '</div>';
       });
       s += '</div>';
       return s;
