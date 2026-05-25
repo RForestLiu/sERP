@@ -134,6 +134,18 @@ def enrich_products(products: dict[str, dict[str, Any]]) -> None:
 
 def iter_transactions(date_from: str, date_to: str) -> list[dict[str, Any]]:
     operations: list[dict[str, Any]] = []
+    start = dt.date.fromisoformat(date_from)
+    end = dt.date.fromisoformat(date_to)
+    current = start
+    while current <= end:
+        chunk_end = min(current + dt.timedelta(days=29), end)
+        operations.extend(iter_transaction_chunk(current.isoformat(), chunk_end.isoformat()))
+        current = chunk_end + dt.timedelta(days=1)
+    return operations
+
+
+def iter_transaction_chunk(date_from: str, date_to: str) -> list[dict[str, Any]]:
+    operations: list[dict[str, Any]] = []
     page = 1
     while True:
         payload = {
@@ -166,6 +178,17 @@ def split_amount(total: Decimal, count: int) -> Decimal:
     return total / Decimal(count)
 
 
+def item_quantity(item: dict[str, Any], accrual_each: Decimal) -> int:
+    quantity = as_int(item.get("quantity"))
+    if quantity:
+        return quantity
+    if accrual_each > 0:
+        return 1
+    if accrual_each < 0:
+        return -1
+    return 0
+
+
 def aggregate_transactions(operations: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     rows: dict[str, dict[str, Any]] = defaultdict(lambda: defaultdict(Decimal))
     for op in operations:
@@ -190,7 +213,7 @@ def aggregate_transactions(operations: list[dict[str, Any]]) -> dict[str, dict[s
             row["ozon_commission_rub"] = money(row.get("ozon_commission_rub")) + commission_each
             row["ozon_services_rub"] = money(row.get("ozon_services_rub")) + services_each
             row["net_settlement_rub"] = money(row.get("net_settlement_rub")) + amount_each
-            row["quantity"] = as_int(row.get("quantity")) + max(as_int(item.get("quantity")), 0)
+            row["quantity"] = as_int(row.get("quantity")) + item_quantity(item, accrual_each)
     return rows
 
 
@@ -225,41 +248,44 @@ def performance_campaign_ids(token: str) -> list[str]:
 def fetch_ad_spend(client_id: str, client_secret: str, date_from: str, date_to: str) -> tuple[dict[str, Decimal], str]:
     if not client_id or not client_secret:
         return {}, "Performance API credentials were not provided."
-    token = performance_token(client_id, client_secret)
-    campaign_ids = performance_campaign_ids(token)
-    if not campaign_ids:
-        return {}, "Performance API returned no campaigns."
+    try:
+        token = performance_token(client_id, client_secret)
+        campaign_ids = performance_campaign_ids(token)
+        if not campaign_ids:
+            return {}, "Performance API returned no campaigns."
 
-    # Ozon builds statistics asynchronously. This keeps the report resilient:
-    # if the endpoint shape changes, we still return Seller API numbers.
-    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json", "Accept": "application/json"}
-    spend_by_sku: dict[str, Decimal] = defaultdict(Decimal)
-    for i in range(0, len(campaign_ids), 10):
-        payload = {
-            "campaigns": campaign_ids[i : i + 10],
-            "dateFrom": date_from,
-            "dateTo": date_to,
-            "groupBy": "SKU",
-        }
-        response = requests.post(
-            f"{PERFORMANCE_BASE_URL}/api/client/statistics/json",
-            headers=headers,
-            json=payload,
-            timeout=60,
-        )
-        if response.status_code != 200:
-            return spend_by_sku, f"Performance statistics returned HTTP {response.status_code}: {response.text[:300]}"
-        data = response.json()
-        if data.get("UUID"):
-            data = download_performance_report(token, str(data["UUID"]))
-        records = normalize_ad_records(data)
-        for record in records:
-            sku = str(record.get("sku") or record.get("SKU") or record.get("offerId") or "").strip()
-            if not sku:
-                continue
-            spend = record.get("moneySpent") or record.get("expense") or record.get("cost") or record.get("spend")
-            spend_by_sku[sku] += money(spend)
-    return spend_by_sku, ""
+        # Ozon builds statistics asynchronously. This keeps the report resilient:
+        # if the endpoint shape changes, we still return Seller API numbers.
+        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json", "Accept": "application/json"}
+        spend_by_sku: dict[str, Decimal] = defaultdict(Decimal)
+        for i in range(0, len(campaign_ids), 10):
+            payload = {
+                "campaigns": campaign_ids[i : i + 10],
+                "dateFrom": date_from,
+                "dateTo": date_to,
+                "groupBy": "SKU",
+            }
+            response = requests.post(
+                f"{PERFORMANCE_BASE_URL}/api/client/statistics/json",
+                headers=headers,
+                json=payload,
+                timeout=60,
+            )
+            if response.status_code != 200:
+                return spend_by_sku, f"Performance statistics returned HTTP {response.status_code}: {response.text[:300]}"
+            data = response.json()
+            if data.get("UUID"):
+                data = download_performance_report(token, str(data["UUID"]))
+            records = normalize_ad_records(data)
+            for record in records:
+                sku = str(record.get("sku") or record.get("SKU") or record.get("offerId") or "").strip()
+                if not sku:
+                    continue
+                spend = record.get("moneySpent") or record.get("expense") or record.get("cost") or record.get("spend")
+                spend_by_sku[sku] += money(spend)
+        return spend_by_sku, ""
+    except Exception as exc:
+        return {}, f"Performance API failed: {exc}"
 
 
 def download_performance_report(token: str, uuid: str) -> Any:
