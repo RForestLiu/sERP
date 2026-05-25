@@ -34,3 +34,10 @@ def test_extract_panel_reports_dxm_metadata_match_count():
 
     assert "var dxmMatched" in source
     assert "DXM属性匹配" in source
+
+
+def test_extract_button_is_visible_for_diagnostics():
+    source = EXTENSION_FILE.read_text(encoding="utf-8")
+
+    assert 'id="serp-btn-extract"' in source
+    assert "#serp-toolbar #serp-btn-extract" not in source

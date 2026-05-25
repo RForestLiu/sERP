@@ -88,7 +88,7 @@
     "#serp-toolbar .serp-tb-btn .tb-icon{font-size:13px;line-height:1;}",
     "#serp-toolbar .serp-tb-btn .tb-label{font-size:12px;line-height:1;}",
     "#serp-toolbar .serp-tb-btn.has-product{border-color:#52c41a;background:#f6ffed;color:#389e0d;}",
-    "#serp-toolbar #serp-btn-extract,#serp-toolbar #serp-btn-images,#serp-toolbar #serp-btn-clear-form,#serp-toolbar #serp-btn-send-html{display:none;}",
+    "#serp-toolbar #serp-btn-images,#serp-toolbar #serp-btn-clear-form,#serp-toolbar #serp-btn-send-html{display:none;}",
     "#serp-toolbar .serp-panel-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-top:1px solid #edf0f3;background:#fbfcfd;}",
     "#serp-hint-toggle{font-size:11px;color:#475569;cursor:pointer;text-align:center;padding:4px 8px;border:1px solid #d1d5db;border-radius:5px;transition:all 0.2s;white-space:nowrap;background:#fff;line-height:1.2;}",
     "#serp-hint-toggle:hover{color:#2563eb;border-color:#93c5fd;background:#eff6ff;}",
