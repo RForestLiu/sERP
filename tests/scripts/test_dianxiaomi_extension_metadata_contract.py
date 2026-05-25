@@ -12,10 +12,12 @@ def test_extension_collects_dianxiaomi_runtime_field_model():
     assert "function collectDxmRuntimeFieldModel()" in source
     assert "function attachDxmRuntimeMetadata(fields)" in source
     assert "function dxmComparableLabelForField(field)" in source
+    assert "function dxmComparableLabelPartsForField(field)" in source
+    assert "labelParts.indexOf(name) !== -1" in source
     assert "fieldBaseLabel(field && field.label)" in source
     assert "function isGenericDxmAttributeName(name)" in source
     assert "if (isGenericDxmAttributeName(name)) return;" in source
-    assert "material|материал|тип|type|вид" in source
+    assert "material|\\u043C\\u0430\\u0442\\u0435\\u0440\\u0438\\u0430\\u043B" in source
     assert "dxmAttribute" in source
 
 

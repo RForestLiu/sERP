@@ -2758,24 +2758,38 @@
   function normalizeDxmFieldText(value) {
     return String(value || "")
       .replace(/\s+/g, " ")
-      .replace(/[锛堬紙()：:]/g, " ")
+      .replace(/[\uFF08\uFF09()\uFFFD:：]/g, " ")
       .trim()
       .toLowerCase();
+  }
+
+  function splitDxmComparableParts(value) {
+    return String(value || "")
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .split(/[\uFF08\uFF09()\uFFFD:：/|,，、]+/g)
+      .map(normalizeDxmFieldText)
+      .filter(function (part) { return part && part.length > 1; });
   }
 
   function dxmComparableLabelForField(field) {
     return normalizeDxmFieldText(fieldBaseLabel(field && field.label));
   }
 
+  function dxmComparableLabelPartsForField(field) {
+    return splitDxmComparableParts(fieldBaseLabel(field && field.label));
+  }
+
   function isGenericDxmAttributeName(name) {
     var text = normalizeDxmFieldText(name);
     if (!text) return true;
     if (text.length <= 2) return true;
-    return /^(材料|材质|material|материал|тип|type|вид|属性)$/.test(text);
+    return /^(\u6750\u6599|\u6750\u8D28|material|\u043C\u0430\u0442\u0435\u0440\u0438\u0430\u043B|\u0442\u0438\u043F|type|\u0432\u0438\u0434|\u5C5E\u6027)$/.test(text);
   }
 
   function matchDxmAttributeForField(field, runtimeFields) {
     var label = dxmComparableLabelForField(field);
+    var labelParts = dxmComparableLabelPartsForField(field);
     if (!label || !runtimeFields || !runtimeFields.length) return null;
     var best = null;
     var bestScore = 0;
@@ -2784,10 +2798,10 @@
       names.forEach(function (name) {
         if (!name) return;
         var score = 0;
-        if (label === name) score = 100;
+        if (label === name || labelParts.indexOf(name) !== -1) score = 100;
         else if (isGenericDxmAttributeName(name)) return;
         else if (label.indexOf(name) !== -1) score = 80;
-        else if (name.indexOf(label) !== -1 && label.length >= 2) score = 60;
+        else if (!isGenericDxmAttributeName(label) && name.indexOf(label) !== -1 && label.length >= 2) score = 60;
         if (score > bestScore) {
           best = meta;
           bestScore = score;
