@@ -517,6 +517,17 @@ SKC: {skc}
             field_desc = f"  [{idx}] 标签: {label or name or '(无标签)'}"
             if placeholder:
                 field_desc += f" | 占位: {placeholder}"
+            dxm_attr = f.get("dxmAttribute") or {}
+            if isinstance(dxm_attr, dict) and dxm_attr.get("attributeId"):
+                field_desc += (
+                    f" | DXM属性ID: {dxm_attr.get('attributeId')}"
+                    f" | DXM控件: {dxm_attr.get('dxmControlKind') or ''}"
+                    f" | 字典ID: {dxm_attr.get('dictionaryId') or '0'}"
+                    f" | 多值: {dxm_attr.get('collection')}"
+                    f" | 必填: {dxm_attr.get('required')}"
+                )
+                if dxm_attr.get("name") or dxm_attr.get("nameCn"):
+                    field_desc += f" | DXM名称: {dxm_attr.get('nameCn') or ''}/{dxm_attr.get('name') or ''}"
             if options:
                 option_texts: list[str] = []
                 for o in options[:30]:
