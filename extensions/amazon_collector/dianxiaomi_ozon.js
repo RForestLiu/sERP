@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.37";
+  var SERP_EXTENSION_VERSION = "3.2.39";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
