@@ -37,6 +37,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build Ozon SKU profit report.")
     parser.add_argument("--date-from", default=default_from.isoformat())
     parser.add_argument("--date-to", default=today.isoformat())
+    parser.add_argument("--cancel-date-from", default="")
+    parser.add_argument("--cancel-date-to", default="")
     parser.add_argument("--output", default="")
     parser.add_argument("--performance-client-id", default=os.getenv("OZON_PERFORMANCE_CLIENT_ID", ""))
     parser.add_argument("--performance-client-secret", default=os.getenv("OZON_PERFORMANCE_CLIENT_SECRET", ""))
@@ -142,6 +144,42 @@ def iter_transactions(date_from: str, date_to: str) -> list[dict[str, Any]]:
         operations.extend(iter_transaction_chunk(current.isoformat(), chunk_end.isoformat()))
         current = chunk_end + dt.timedelta(days=1)
     return operations
+
+
+def iter_cancelled_postings(date_from: str, date_to: str) -> list[dict[str, Any]]:
+    postings: list[dict[str, Any]] = []
+    offset = 0
+    while True:
+        payload = {
+            "filter": {
+                "since": f"{date_from}T00:00:00Z",
+                "to": f"{date_to}T23:59:59Z",
+                "status": "cancelled",
+            },
+            "limit": 1000,
+            "offset": offset,
+            "with": {"analytics_data": False, "financial_data": False},
+        }
+        data = seller_post("/v3/posting/fbs/list", payload)
+        result = data.get("result", data)
+        page_postings = result.get("postings", []) if isinstance(result, dict) else []
+        postings.extend(page_postings)
+        if len(page_postings) < 1000:
+            break
+        offset += len(page_postings)
+    return postings
+
+
+def cancellation_stats(postings: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    stats: dict[str, dict[str, Any]] = defaultdict(lambda: defaultdict(int))
+    for posting in postings:
+        for product in posting.get("products") or []:
+            sku = str(product.get("sku") or "").strip()
+            if not sku:
+                continue
+            quantity = as_int(product.get("quantity")) or 1
+            stats[sku]["cancel_quantity"] += quantity
+    return stats
 
 
 def iter_transaction_chunk(date_from: str, date_to: str) -> list[dict[str, Any]]:
@@ -422,8 +460,10 @@ SUMMARY_COLUMNS = [
     ("product_name", "产品名称"),
     ("sold_quantity", "销售数量"),
     ("return_quantity", "退货数量"),
+    ("cancel_quantity", "取消数量"),
     ("quantity", "净销售数量"),
     ("return_rate", "退货率"),
+    ("cancel_rate", "取消率"),
     ("operations_count", "交易笔数"),
     ("gross_sales_rub", "销售额(RUB)"),
     ("ozon_commission_rub", "Ozon佣金(RUB)"),
@@ -466,7 +506,7 @@ def write_summary_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         for row in rows:
             output_row = {}
             for key, label in SUMMARY_COLUMNS:
-                output_row[label] = percent_text(row.get(key)) if key == "return_rate" else row.get(key, "")
+                output_row[label] = percent_text(row.get(key)) if key in {"return_rate", "cancel_rate"} else row.get(key, "")
             writer.writerow(output_row)
 
 
@@ -496,6 +536,10 @@ def main() -> int:
             sku_to_offer[sku] = offer_id
 
     operations = iter_transactions(args.date_from, args.date_to)
+    cancel_date_from = args.cancel_date_from or args.date_from
+    cancel_date_to = args.cancel_date_to or args.date_to
+    cancelled_postings = iter_cancelled_postings(cancel_date_from, cancel_date_to)
+    cancelled_by_sku = cancellation_stats(cancelled_postings)
     rows_by_sku, detail_rows, unmatched = aggregate_transactions(operations)
     ad_spend_by_sku, ad_warning = fetch_ad_spend(
         args.performance_client_id.strip(),
@@ -515,9 +559,14 @@ def main() -> int:
         if product:
             row["offer_id"] = offer_id
             row["product_name"] = row.get("product_name") or product.get("name", "")
-        for field in ["sold_quantity", "return_quantity", "quantity", "operations_count"]:
+        cancel_quantity = as_int(cancelled_by_sku.get(str(sku), {}).get("cancel_quantity"))
+        row["cancel_quantity"] = cancel_quantity
+        sold_quantity = as_int(row.get("sold_quantity"))
+        row["cancel_rate"] = Decimal(cancel_quantity) / Decimal(sold_quantity + cancel_quantity) if sold_quantity or cancel_quantity else Decimal("0")
+        for field in ["sold_quantity", "return_quantity", "cancel_quantity", "quantity", "operations_count"]:
             row[field] = as_int(row.get(field))
         row["return_rate"] = money(row.get("return_rate"))
+        row["cancel_rate"] = money(row.get("cancel_rate"))
         row["ad_spend_rub"] = money(row.get("ad_spend_rub"))
         for field in ZERO_COST_FIELDS:
             row[field] = "0.00"
@@ -553,8 +602,11 @@ def main() -> int:
         "detail_output": str(detail_output),
         "date_from": args.date_from,
         "date_to": args.date_to,
+        "cancel_date_from": cancel_date_from,
+        "cancel_date_to": cancel_date_to,
         "product_count": len(products),
         "transaction_count": len(operations),
+        "cancelled_posting_count": len(cancelled_postings),
         "sku_rows": len(rows),
         "detail_rows": len(detail_rows),
         "unmatched_operations": as_int(unmatched.get("operations_count")),

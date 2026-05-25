@@ -1,7 +1,7 @@
 import csv
 from decimal import Decimal
 
-from scripts.ozon_sku_profit_report import aggregate_transactions, write_detail_csv, write_summary_csv
+from scripts.ozon_sku_profit_report import aggregate_transactions, cancellation_stats, write_detail_csv, write_summary_csv
 
 
 def test_report_assigns_order_level_fees_to_posting_sku(tmp_path):
@@ -56,3 +56,23 @@ def test_report_assigns_order_level_fees_to_posting_sku(tmp_path):
         detail_headers = next(reader)
     assert "费用/交易类型" in detail_headers
     assert "归属规则" in detail_headers
+
+
+def test_cancellation_stats_groups_cancelled_postings_by_sku():
+    postings = [
+        {
+            "posting_number": "0116357976-0115-1",
+            "status": "cancelled",
+            "products": [{"sku": 3289478411, "quantity": 1}],
+        },
+        {
+            "posting_number": "45077885-0071-1",
+            "status": "cancelled",
+            "products": [{"sku": 3289477696, "quantity": 2}],
+        },
+    ]
+
+    stats = cancellation_stats(postings)
+
+    assert stats["3289478411"]["cancel_quantity"] == 1
+    assert stats["3289477696"]["cancel_quantity"] == 2
