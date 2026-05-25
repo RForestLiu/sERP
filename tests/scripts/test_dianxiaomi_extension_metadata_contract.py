@@ -49,6 +49,14 @@ def test_extract_button_is_visible_for_diagnostics():
     assert "#serp-toolbar #serp-btn-extract" not in source
 
 
+def test_extract_panel_is_docked_to_workspace_right_side():
+    source = EXTENSION_FILE.read_text(encoding="utf-8")
+
+    assert "#serp-extract-panel{position:fixed;right:12px;" in source
+    assert 'extractPanel.style.right = "12px";' in source
+    assert 'extractPanel.style.left = "auto";' in source
+
+
 def test_extension_bridges_page_context_for_dxm_runtime_model():
     source = EXTENSION_FILE.read_text(encoding="utf-8")
     bridge = BRIDGE_FILE.read_text(encoding="utf-8")

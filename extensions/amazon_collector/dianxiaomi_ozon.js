@@ -240,7 +240,7 @@
     "#serp-results-panel .sr-item .sr-label{color:#666;min-width:60px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}",
     "#serp-results-panel .sr-item .sr-value{color:#333;word-break:break-all;flex:1;}",
     "/* ===== 提取字段面板 ===== */",
-    "#serp-extract-panel{position:fixed;left:8px;top:auto;z-index:999989;background:#fff;border-radius:10px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,0.12);font-family:\"Microsoft YaHei\",sans-serif;font-size:12px;max-width:400px;max-height:500px;overflow-y:auto;display:none;}",
+    "#serp-extract-panel{position:fixed;right:12px;left:auto;top:auto;z-index:999989;background:#fff;border-radius:10px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,0.12);font-family:\"Microsoft YaHei\",sans-serif;font-size:12px;width:min(520px,calc(100vw - 380px));max-width:520px;max-height:calc(100vh - 96px);overflow-y:auto;display:none;}",
     "#serp-extract-panel.visible{display:block;}",
     "#serp-extract-panel .ex-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0;}",
     "#serp-extract-panel .ex-header .ex-title{font-weight:600;font-size:13px;color:#333;}",
@@ -3825,7 +3825,8 @@
       top = productInfo.getBoundingClientRect().bottom + 8;
     }
     extractPanel.style.top = top + "px";
-    extractPanel.style.left = "8px";
+    extractPanel.style.left = "auto";
+    extractPanel.style.right = "12px";
     extractPanel.classList.add("visible");
 
     showToast("已提取 " + formFields.length + " 个字段", "info");
