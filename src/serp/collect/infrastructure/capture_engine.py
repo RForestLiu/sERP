@@ -56,12 +56,32 @@ def _sanitize_product_payload(data):
     return sanitized
 
 
+def _clean_product_payload(data, settings_facade):
+    sanitized = _sanitize_product_payload(data)
+    if not settings_facade:
+        description = "\n".join(
+            str(sanitized.get(k, "")).strip()
+            for k in ("about_item", "product_description", "description")
+            if str(sanitized.get(k, "")).strip()
+        )
+        return {
+            "product_data": {
+                "product_param": sanitized.get("product_details", {}) if isinstance(sanitized.get("product_details"), dict) else {},
+                "product_description": description,
+            },
+            "raw_product_data": sanitized,
+            "clean_audit": {"status": "skipped", "reason": "settings facade unavailable"},
+        }
+    from .product_data_cleaner import ProductDataCleaner
+    return ProductDataCleaner(settings_facade).clean(sanitized)
+
+
 class CaptureEngine:
     """捕获引擎 — 处理浏览器扩展回传的数据"""
 
     @staticmethod
     def amazon_capture(html: str, settings: dict, task_repo: CollectTaskRepository,
-                       event_bus: EventBus, data_root: str) -> dict:
+                       event_bus: EventBus, data_root: str, settings_facade=None) -> dict:
         """接收 Chrome 扩展从 Amazon 页面提取的产品数据"""
         data = settings
 
@@ -78,7 +98,7 @@ class CaptureEngine:
         images_dir = os.path.join(data_dir, "images")
         os.makedirs(images_dir, exist_ok=True)
 
-        sanitized = _sanitize_product_payload(data)
+        sanitized = _clean_product_payload(data, settings_facade)
         product_data_file = os.path.join(data_dir, "product_data.json")
         with open(product_data_file, "w", encoding="utf-8") as f:
             json.dump(sanitized, f, indent=2, ensure_ascii=False)
@@ -120,7 +140,7 @@ class CaptureEngine:
 
     @staticmethod
     def browser_capture(html: str, url: str, task_repo: CollectTaskRepository,
-                        event_bus: EventBus, data_root: str) -> dict:
+                        event_bus: EventBus, data_root: str, settings_facade=None) -> dict:
         """接收 Chrome 扩展从多平台提取的产品数据（支持批量变体）"""
         data = {}
         try:
@@ -147,7 +167,7 @@ class CaptureEngine:
         os.makedirs(images_dir, exist_ok=True)
 
         product_data_file = os.path.join(data_dir, "product_data.json")
-        sanitized = _sanitize_product_payload(data)
+        sanitized = _clean_product_payload(data, settings_facade)
         with open(product_data_file, "w", encoding="utf-8") as f:
             json.dump(sanitized, f, indent=2, ensure_ascii=False)
 

@@ -9,6 +9,7 @@ FEATURE_MODEL_KEYS = {
     "image_generation": "图片生成",
     "product_collect_image_classify": "采集图片分类",
     "ozon_category_match": "Ozon 品类匹配",
+    "product_data_clean": "Product data cleaning",
     "dianxiaomi_auto_fill": "店小秘自动填充",
     "ozon_attribute_fill": "Ozon 属性填充",
     "translation": "翻译/本地化",
@@ -44,6 +45,15 @@ DEFAULT_SETTINGS = {
             "enabled": True,
         },
         {
+            "id": "deepseek_v4_pro",
+            "name": "DeepSeek V4 Pro",
+            "provider": "deepseek",
+            "base_url": "https://api.deepseek.com/v1/chat/completions",
+            "api_key_env": "DEEPSEEK_API_KEY",
+            "model": "deepseek-v4-pro",
+            "enabled": True,
+        },
+        {
             "id": "gemini_image",
             "name": "Gemini Image",
             "provider": "gemini",
@@ -62,7 +72,9 @@ DEFAULT_SETTINGS = {
         "translation": "deepseek_v4_flash",
         "product_specs_extract": "deepseek_v4_flash",
         "product_specs_review": "deepseek_v4_flash",
+        "product_data_clean": "deepseek_v4_pro",
     },
+    "product_clean_language": "English",
     "pricing_formulas": [
         {
             "id": "ozon_rfbs_default",

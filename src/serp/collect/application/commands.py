@@ -229,6 +229,7 @@ class CollectApplicationService(CollectFacade):
             task_repo=self._task_repo,
             event_bus=self._event_bus,
             data_root=self._data_root,
+            settings_facade=self._settings_facade,
         )
 
     def capture_browser(self, html: str, url: str) -> dict:
@@ -242,6 +243,7 @@ class CollectApplicationService(CollectFacade):
             task_repo=self._task_repo,
             event_bus=self._event_bus,
             data_root=self._data_root,
+            settings_facade=self._settings_facade,
         )
 
     def capture_dxm(self, data: dict, store_id: str) -> dict:

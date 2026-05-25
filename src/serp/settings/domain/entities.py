@@ -132,6 +132,7 @@ class Settings(AggregateRoot):
     _models: list[ModelConfig] = field(default_factory=list, repr=False)
     _feature_models: dict[str, str] = field(default_factory=dict, repr=False)
     _pricing_formulas: list[PricingFormula] = field(default_factory=list, repr=False)
+    _product_clean_language: str = "English"
     _version: int = 1
 
     # ── 属性 ──
@@ -147,6 +148,10 @@ class Settings(AggregateRoot):
     @property
     def pricing_formulas(self) -> list[PricingFormula]:
         return list(self._pricing_formulas)
+
+    @property
+    def product_clean_language(self) -> str:
+        return self._product_clean_language
 
     @property
     def version(self) -> int:
@@ -190,6 +195,8 @@ class Settings(AggregateRoot):
             self._pricing_formulas = [
                 PricingFormula.from_dict(f) for f in data["pricing_formulas"] if isinstance(f, dict)
             ]
+        if "product_clean_language" in data:
+            self._product_clean_language = str(data.get("product_clean_language") or "English")
         if "version" in data:
             self._version = data["version"]
 
@@ -201,6 +208,8 @@ class Settings(AggregateRoot):
         for key, value in defaults.get("feature_models", {}).items():
             if key not in self._feature_models:
                 self._feature_models[key] = value
+        if not self._product_clean_language:
+            self._product_clean_language = defaults.get("product_clean_language", "English")
 
     # ── 序列化 ──
 
@@ -210,4 +219,5 @@ class Settings(AggregateRoot):
             "models": [m.to_dict() for m in self._models],
             "feature_models": dict(self._feature_models),
             "pricing_formulas": [f.to_dict() for f in self._pricing_formulas],
+            "product_clean_language": self._product_clean_language,
         }

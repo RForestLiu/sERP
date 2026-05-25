@@ -11,6 +11,7 @@ class SettingsViewDTO:
     models: list[dict] = field(default_factory=list)
     feature_models: dict[str, str] = field(default_factory=dict)
     pricing_formulas: list[dict] = field(default_factory=list)
+    product_clean_language: str = "English"
     env: dict[str, dict] = field(default_factory=dict)
     stores: list[dict] = field(default_factory=list)
     feature_model_keys: dict[str, str] = field(default_factory=dict)
@@ -51,5 +52,6 @@ class SettingsUpdateDTO:
     models: Optional[list[dict]] = None
     feature_models: Optional[dict[str, str]] = None
     pricing_formulas: Optional[list[dict]] = None
+    product_clean_language: Optional[str] = None
     stores: Optional[list[dict]] = None
     env: Optional[dict[str, str]] = None

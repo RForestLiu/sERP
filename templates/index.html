@@ -2890,6 +2890,10 @@
             const bindings = settingsState.settings.feature_models || {};
             const opts = modelOptions();
             bindingsEl.innerHTML = "";
+            const langRow = document.createElement("div");
+            langRow.className = "settings-binding-row";
+            langRow.innerHTML = `<div>采集产品数据清洗语言<div style="font-size:11px;color:#999;">product_clean_language</div></div><label>语言<input data-product-clean-language value="${_escHtml(settingsState.settings.product_clean_language || "English")}"></label>`;
+            bindingsEl.appendChild(langRow);
             Object.keys(features).forEach(key => {
                 const row = document.createElement("div");
                 row.className = "settings-binding-row";
@@ -2982,6 +2986,15 @@
             const res = await fetch("/api/settings");
             if (!res.ok) { showMsg("设置加载失败", true); return; }
             settingsState = await res.json();
+            if (!settingsState.settings) {
+                settingsState.settings = {
+                    models: settingsState.models || [],
+                    feature_models: settingsState.feature_models || {},
+                    pricing_formulas: settingsState.pricing_formulas || [],
+                    product_clean_language: settingsState.product_clean_language || "English"
+                };
+                settingsState.features = settingsState.feature_model_keys || {};
+            }
             settingsLoaded = true;
             renderSettings();
         }
@@ -3002,6 +3015,8 @@
             });
             const featureModels = {};
             document.querySelectorAll("[data-feature]").forEach(sel => { featureModels[sel.dataset.feature] = sel.value; });
+            const cleanLanguageEl = document.querySelector("[data-product-clean-language]");
+            const productCleanLanguage = cleanLanguageEl ? cleanLanguageEl.value.trim() : "English";
             const stores = [];
             document.querySelectorAll("#settings-stores-list .settings-card").forEach(card => {
                 const item = {};
@@ -3026,7 +3041,7 @@
                 item.currency = "CNY";
                 pricingFormulas.push(item);
             });
-            return { settings: { models: models, feature_models: featureModels, pricing_formulas: pricingFormulas }, stores: stores, env: envUpdates };
+            return { settings: { models: models, feature_models: featureModels, pricing_formulas: pricingFormulas, product_clean_language: productCleanLanguage || "English" }, stores: stores, env: envUpdates };
         }
 
         document.querySelectorAll(".settings-tab").forEach(btn => {

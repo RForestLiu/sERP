@@ -55,6 +55,7 @@ class SettingsApplicationService(SettingsFacade):
             models=[m.to_dict() for m in settings.models],
             feature_models=settings.feature_models,
             pricing_formulas=[f.to_dict() for f in settings.pricing_formulas],
+            product_clean_language=settings.product_clean_language,
             env={v.key: {"value": v.masked, "configured": v.configured} for v in env_vars},
             stores=[s.to_view() for s in stores],
             feature_model_keys=FEATURE_MODEL_KEYS,
@@ -81,7 +82,11 @@ class SettingsApplicationService(SettingsFacade):
             }
 
         return SettingsExportDTO(
-            settings={"models": models_data, "feature_models": settings.feature_models},
+            settings={
+                "models": models_data,
+                "feature_models": settings.feature_models,
+                "product_clean_language": settings.product_clean_language,
+            },
             stores=[s.to_dict() for s in stores],
             env=env_status,
             meta={
