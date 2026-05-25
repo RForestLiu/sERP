@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Сумка через плечо маленькая Simple Wallets 156681979 купить за 1383 руб.</title>
+</head>
+<body>
+  <nav>
+    <span itemprop="name">Главная</span>
+    <span itemprop="name">Женщинам</span>
+    <span itemprop="name">Сумки</span>
+    <span itemprop="name">Simple Wallets</span>
+  </nav>
+
+  <h1>4,8</h1>
+  <button class="btnDetailText--nrkiv" type="button">Характеристики и описание</button>
+
+  <script>
+    document.querySelector("button").addEventListener("click", function () {
+      if (document.querySelector(".mo-drawer__paper")) return;
+      var drawer = document.createElement("section");
+      drawer.className = "mo-drawer__paper";
+      drawer.innerHTML = [
+        '<div data-testid="product-page-description">Компактная сумка через плечо для телефона и документов.</div>',
+        '<section data-testid="product_additional_information">',
+        '  <h2>Характеристики</h2>',
+        '  <dl>',
+        '    <div><dt>Цвет</dt><dd>черный</dd></div>',
+        '    <div><dt>Материал</dt><dd>экокожа</dd></div>',
+        '    <div><dt>Высота предмета</dt><dd>21 см</dd></div>',
+        '    <div><dt>Ширина предмета</dt><dd>17 см</dd></div>',
+        '  </dl>',
+        '</section>'
+      ].join("");
+      document.body.appendChild(drawer);
+    });
+  </script>
+</body>
+</html>

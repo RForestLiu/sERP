@@ -811,17 +811,30 @@
     extractProductDetails: function () {
       var result = {};
       // 弹窗打开后优先从弹窗内读（字段更全），否则读主页面
+      function addPair(rawKey, rawVal) {
+        var key = String(rawKey || "").replace(/\s+/g, "_").replace(/[^\w\u0400-\u04FF]+/g, "").toLowerCase();
+        var val = String(rawVal || "").replace(/\s+/g, " ").trim();
+        if (key && val && !result[key]) result[key] = val;
+      }
       var section = $(".mo-drawer__paper [data-testid='product_additional_information']") || $("[data-testid='product_additional_information']");
       if (!section) return result;
       var rows = $$("tr", section);
       rows.forEach(function (row) {
         var th = $("th", row);
         var td = $("td", row);
-        if (th && td) {
-          var key = text(th).replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_а-яё]/gi, "").toLowerCase();
-          var val = text(td);
-          if (key && val && !result[key]) result[key] = val;
-        }
+        if (th && td) addPair(text(th), text(td));
+      });
+      $$("dl", section).forEach(function (dl) {
+        $$("dt", dl).forEach(function (dt) {
+          var dd = dt.nextElementSibling;
+          while (dd && dd.tagName && dd.tagName.toLowerCase() !== "dd") dd = dd.nextElementSibling;
+          if (dd) addPair(text(dt), text(dd));
+        });
+      });
+      $$("li, [class*='product-params'] div, [class*='productParam'] div", section).forEach(function (row) {
+        if (row.querySelector("tr, dl, dt, dd")) return;
+        var cells = Array.from(row.children || []).map(function (el) { return cleanText(el); }).filter(Boolean);
+        if (cells.length >= 2) addPair(cells[0], cells[cells.length - 1]);
       });
       return result;
     },
