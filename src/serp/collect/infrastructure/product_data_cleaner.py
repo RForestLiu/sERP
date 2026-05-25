@@ -51,6 +51,12 @@ class ProductDataCleaner:
                 "clean_audit": audit,
             }
 
+    def availability(self) -> tuple[bool, str, dict]:
+        config = self._resolve_config()
+        if not config.get("api_key"):
+            return False, "DEEPSEEK_API_KEY not configured", config
+        return True, "", config
+
     def _resolve_config(self) -> dict:
         config = {
             "base_url": os.getenv("DEEPSEEK_API_URL", "https://api.deepseek.com/v1/chat/completions"),

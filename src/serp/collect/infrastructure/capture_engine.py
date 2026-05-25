@@ -56,24 +56,38 @@ def _sanitize_product_payload(data):
     return sanitized
 
 
-def _clean_product_payload(data, settings_facade):
+def _build_product_payload(data):
     sanitized = _sanitize_product_payload(data)
-    if not settings_facade:
-        description = "\n".join(
-            str(sanitized.get(k, "")).strip()
-            for k in ("about_item", "product_description", "description")
-            if str(sanitized.get(k, "")).strip()
-        )
-        return {
-            "product_data": {
-                "product_param": sanitized.get("product_details", {}) if isinstance(sanitized.get("product_details"), dict) else {},
-                "product_description": description,
-            },
+    return {
+        "product_data": {
+            "cleaned_product_data": None,
+            "images_mapping": {},
             "raw_product_data": sanitized,
-            "clean_audit": {"status": "skipped", "reason": "settings facade unavailable"},
-        }
-    from .product_data_cleaner import ProductDataCleaner
-    return ProductDataCleaner(settings_facade).clean(sanitized)
+        },
+        "clean_status": {
+            "status": "not_cleaned",
+            "message": "未清洗",
+            "model": "deepseek-v4-pro",
+            "language": "English",
+        },
+        "clean_audit": None,
+    }
+
+
+def _image_bytes_to_jpg(content: bytes) -> bytes:
+    from io import BytesIO
+    from PIL import Image
+
+    img = Image.open(BytesIO(content))
+    if img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info):
+        background = Image.new("RGB", img.size, (255, 255, 255))
+        background.paste(img.convert("RGBA"), mask=img.convert("RGBA").split()[-1])
+        img = background
+    else:
+        img = img.convert("RGB")
+    out = BytesIO()
+    img.save(out, format="JPEG", quality=92, optimize=True)
+    return out.getvalue()
 
 
 class CaptureEngine:
@@ -98,7 +112,7 @@ class CaptureEngine:
         images_dir = os.path.join(data_dir, "images")
         os.makedirs(images_dir, exist_ok=True)
 
-        sanitized = _clean_product_payload(data, settings_facade)
+        sanitized = _build_product_payload(data)
         product_data_file = os.path.join(data_dir, "product_data.json")
         with open(product_data_file, "w", encoding="utf-8") as f:
             json.dump(sanitized, f, indent=2, ensure_ascii=False)
@@ -167,7 +181,7 @@ class CaptureEngine:
         os.makedirs(images_dir, exist_ok=True)
 
         product_data_file = os.path.join(data_dir, "product_data.json")
-        sanitized = _clean_product_payload(data, settings_facade)
+        sanitized = _build_product_payload(data)
         with open(product_data_file, "w", encoding="utf-8") as f:
             json.dump(sanitized, f, indent=2, ensure_ascii=False)
 
@@ -305,13 +319,10 @@ class CaptureEngine:
             try:
                 resp = session.get(img_url, timeout=30)
                 if resp.status_code == 200:
-                    ext = os.path.splitext(img_url.split("?")[0])[1] or ".jpg"
-                    if ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"):
-                        ext = ".jpg"
-                    filename = f"{idx+1:02d}{ext}"
+                    filename = f"{idx+1:02d}.jpg"
                     filepath = os.path.join(images_dir, filename)
                     with open(filepath, "wb") as f:
-                        f.write(resp.content)
+                        f.write(_image_bytes_to_jpg(resp.content))
                     images_mapping.append({"index": idx, "url": img_url, "file": filename})
                     downloaded += 1
                 else:
@@ -353,13 +364,10 @@ class CaptureEngine:
             try:
                 resp = session.get(url, timeout=30)
                 if resp.status_code == 200:
-                    ext = os.path.splitext(url.split("?")[0])[1] or ".jpg"
-                    if ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"):
-                        ext = ".jpg"
-                    fname = f"{idx+1:02d}{ext}"
+                    fname = f"{idx+1:02d}.jpg"
                     fpath = os.path.join(dest_dir, fname)
                     with open(fpath, "wb") as f:
-                        f.write(resp.content)
+                        f.write(_image_bytes_to_jpg(resp.content))
                     return True, fname
             except Exception:
                 pass

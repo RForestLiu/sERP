@@ -34,6 +34,16 @@ class CollectFacade(Facade, ABC):
         ...
 
     @abstractmethod
+    def clean_product_data(self, task_id: str, force: bool = False) -> dict:
+        """Start LLM cleaning for a collected product."""
+        ...
+
+    @abstractmethod
+    def cancel_product_clean(self, task_id: str) -> dict:
+        """Cancel an in-progress product data cleaning job."""
+        ...
+
+    @abstractmethod
     def delete_task(self, task_id: str):
         """删除采集任务及其数据"""
         ...

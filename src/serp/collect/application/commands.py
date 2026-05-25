@@ -7,6 +7,7 @@ import asyncio
 import os
 import json
 import re
+from datetime import datetime
 
 from src.serp.shared import EventBus
 
@@ -40,6 +41,7 @@ class CollectApplicationService(CollectFacade):
         self._settings_facade = settings_facade
         self._event_bus = event_bus
         self._data_root = data_root
+        self._clean_cancel_flags = {}
 
     # ==================== 任务管理 ====================
 
@@ -94,6 +96,67 @@ class CollectApplicationService(CollectFacade):
 
         return self._build_task_result(task)
 
+    def clean_product_data(self, task_id: str, force: bool = False) -> dict:
+        task = self._task_repo.find_by_id(task_id)
+        if not task:
+            return {"error": "任务不存在"}
+        if not task.is_completed:
+            return {"error": "任务尚未完成", "status": task.status}
+
+        package = self._load_collect_product_package(task)
+        status = package.get("clean_status", {})
+        if status.get("status") == "cleaning":
+            return {"status": "cleaning", "message": "清洗正在进行中"}
+        if package.get("product_data", {}).get("cleaned_product_data") and not force:
+            return {"status": "cleaned", "message": "已清洗，如需重洗请使用 force=true"}
+
+        from ..infrastructure.product_data_cleaner import ProductDataCleaner
+        cleaner = ProductDataCleaner(self._settings_facade)
+        available, reason, config = cleaner.availability()
+        if not available:
+            package["clean_status"] = {
+                "status": "unavailable",
+                "message": reason,
+                "model": config.get("model", "deepseek-v4-pro"),
+                "language": cleaner._resolve_language(),
+                "updated_at": datetime.now().isoformat(),
+            }
+            self._save_collect_product_package(task, package)
+            return package["clean_status"]
+
+        self._clean_cancel_flags[task_id] = False
+        package["clean_status"] = {
+            "status": "cleaning",
+            "message": "清洗中",
+            "model": config.get("model", "deepseek-v4-pro"),
+            "language": cleaner._resolve_language(),
+            "updated_at": datetime.now().isoformat(),
+        }
+        self._save_collect_product_package(task, package)
+
+        thread = threading.Thread(
+            target=self._run_product_clean,
+            args=(task_id,),
+            daemon=True,
+        )
+        thread.start()
+        return package["clean_status"]
+
+    def cancel_product_clean(self, task_id: str) -> dict:
+        task = self._task_repo.find_by_id(task_id)
+        if not task:
+            return {"error": "任务不存在"}
+        self._clean_cancel_flags[task_id] = True
+        package = self._load_collect_product_package(task)
+        package["clean_status"] = {
+            **(package.get("clean_status") or {}),
+            "status": "cancelled",
+            "message": "已中断",
+            "updated_at": datetime.now().isoformat(),
+        }
+        self._save_collect_product_package(task, package)
+        return package["clean_status"]
+
     def delete_task(self, task_id: str):
         task = self._task_repo.find_by_id(task_id)
         if not task:
@@ -142,7 +205,10 @@ class CollectApplicationService(CollectFacade):
 
         result = task.result
         title = result.get("title", "未命名产品")
-        product_data = self._load_json_file(result.get("product_data", ""))
+        product_data = self._normalize_collect_product_package(
+            self._load_json_file(result.get("product_data", "")),
+            self._load_json_file(result.get("images_mapping")),
+        )
 
         # 生成 SKC
         category_cn = CategorizationService.guess_category(title)
@@ -314,13 +380,112 @@ class CollectApplicationService(CollectFacade):
         if task:
             task.update_progress(status, progress, message)
 
+    def _run_product_clean(self, task_id: str):
+        task = self._task_repo.find_by_id(task_id)
+        if not task:
+            return
+        package = self._load_collect_product_package(task)
+        raw_data = (package.get("product_data") or {}).get("raw_product_data") or {}
+        if self._clean_cancel_flags.get(task_id):
+            return
+
+        from ..infrastructure.product_data_cleaner import ProductDataCleaner
+        cleaned = ProductDataCleaner(self._settings_facade).clean(raw_data)
+        package = self._load_collect_product_package(task)
+
+        if self._clean_cancel_flags.get(task_id):
+            package["clean_status"] = {
+                **(package.get("clean_status") or {}),
+                "status": "cancelled",
+                "message": "已中断",
+                "updated_at": datetime.now().isoformat(),
+            }
+            self._save_collect_product_package(task, package)
+            return
+
+        audit = cleaned.get("clean_audit", {})
+        if audit.get("status") == "ok":
+            package.setdefault("product_data", {})["cleaned_product_data"] = cleaned.get("product_data", {})
+            package["clean_audit"] = audit
+            package["clean_status"] = {
+                "status": "cleaned",
+                "message": "清洗完成",
+                "model": audit.get("model", ""),
+                "language": audit.get("language", ""),
+                "updated_at": datetime.now().isoformat(),
+            }
+        else:
+            package["clean_audit"] = audit
+            package["clean_status"] = {
+                "status": "failed",
+                "message": audit.get("error") or "清洗失败",
+                "model": audit.get("model", ""),
+                "language": audit.get("language", ""),
+                "updated_at": datetime.now().isoformat(),
+            }
+        self._save_collect_product_package(task, package)
+        self._clean_cancel_flags.pop(task_id, None)
+
+    def _load_collect_product_package(self, task: CollectTask) -> dict:
+        result = task.result
+        package = self._load_json_file(result.get("product_data", ""))
+        images_mapping = self._load_json_file(result.get("images_mapping"))
+        return self._normalize_collect_product_package(package, images_mapping)
+
+    def _save_collect_product_package(self, task: CollectTask, package: dict):
+        path = task.result.get("product_data", "")
+        if not path:
+            return
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(package, f, indent=2, ensure_ascii=False)
+
+    def _normalize_collect_product_package(self, package: dict, images_mapping=None) -> dict:
+        if not isinstance(package, dict):
+            package = {}
+        if (
+            isinstance(package.get("product_data"), dict)
+            and "raw_product_data" in package["product_data"]
+        ):
+            normalized = package
+        else:
+            normalized = {
+                "product_data": {
+                    "cleaned_product_data": package.get("product_data") if package.get("product_data") else None,
+                    "images_mapping": {},
+                    "raw_product_data": package.get("raw_product_data") or package,
+                },
+                "clean_status": package.get("clean_status") or {
+                    "status": "not_cleaned",
+                    "message": "未清洗",
+                    "model": "deepseek-v4-pro",
+                    "language": "English",
+                },
+                "clean_audit": package.get("clean_audit"),
+            }
+        normalized.setdefault("product_data", {})
+        normalized["product_data"].setdefault("cleaned_product_data", None)
+        normalized["product_data"].setdefault("raw_product_data", {})
+        normalized["product_data"]["images_mapping"] = images_mapping or normalized["product_data"].get("images_mapping") or {}
+        normalized.setdefault("clean_status", {
+            "status": "not_cleaned",
+            "message": "未清洗",
+            "model": "deepseek-v4-pro",
+            "language": "English",
+        })
+        normalized.setdefault("clean_audit", None)
+        return normalized
+
     def _build_task_result(self, task: CollectTask) -> dict:
         """构建完整的任务结果（含产品数据、图片映射、缩略图 URL）"""
         result = task.result
         base_url = f"/collect_images/{task.id}"
 
-        product_data = self._load_json_file(result.get("product_data", ""))
         images_mapping = self._load_json_file(result.get("images_mapping"))
+        product_data = self._normalize_collect_product_package(
+            self._load_json_file(result.get("product_data", "")),
+            images_mapping,
+        )
+        self._save_collect_product_package(task, product_data)
 
         thumbnail_urls = []
         variant_groups = {}

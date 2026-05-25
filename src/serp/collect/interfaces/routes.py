@@ -103,6 +103,21 @@ def create_collect_blueprint(facade: CollectFacade, data_root: str = "") -> Blue
             return jsonify(result), 400 if "status" in result else 404
         return jsonify(result)
 
+    @bp.route("/<task_id>/clean_product_data", methods=["POST"])
+    def clean_product_data(task_id):
+        data = request.get_json(silent=True) or {}
+        result = facade.clean_product_data(task_id, force=bool(data.get("force")))
+        if "error" in result:
+            return jsonify(result), 400
+        return jsonify(result)
+
+    @bp.route("/<task_id>/clean_product_data/cancel", methods=["POST"])
+    def cancel_product_clean(task_id):
+        result = facade.cancel_product_clean(task_id)
+        if "error" in result:
+            return jsonify(result), 400
+        return jsonify(result)
+
     @bp.route("/<task_id>/open_folder", methods=["POST"])
     def open_folder(task_id):
         folder = os.path.join(data_root, f"collect_{task_id}")
