@@ -3807,6 +3807,12 @@
     showToast("已清空 " + cleared + " 个字段", "info");
   }
 
+  function dxmAttributeIdForField(field) {
+    var attr = field && field.dxmAttribute;
+    if (!attr) return "";
+    return String(attr.attributeId || attr.attributeIdStr || attr.id || "").trim();
+  }
+
   function precomputeDeterministicValues(formFields, product, manualData) {
     var deterministic = {};  // fieldIndex -> value
     var productData = (product && product.product_data) || product || {};
@@ -3816,8 +3822,28 @@
 
     formFields.forEach(function(f) {
       var label = (f.label || "").toLowerCase();
+      var attrId = dxmAttributeIdForField(f);
       var value = null;
       var dims = parseSizeSpecCm(effectiveManual.effective_size_spec);
+
+      if (attrId === "4383" && effectiveManual.effective_weight_g) {
+        value = String(effectiveManual.effective_weight_g).trim();
+      }
+      if (attrId === "4383" && value === null && pd.weight) {
+        var attrWeight = parseFloat(pd.weight);
+        if (!isNaN(attrWeight)) {
+          var attrWeightUnit = (pd.weight_unit || "").toLowerCase();
+          if (attrWeightUnit.indexOf("oz") !== -1) value = String(Math.round(attrWeight * 28.35));
+          else if (attrWeightUnit.indexOf("lb") !== -1) value = String(Math.round(attrWeight * 453.6));
+          else value = String(attrWeight);
+        }
+      }
+      if (attrId === "6573" && dims.length) value = dims[0];
+      if (attrId === "6573" && value === null && pd.length) value = _convertDimension(pd.length, pd.dimension_unit);
+      if (attrId === "5355" && dims.length > 1) value = dims[1];
+      if (attrId === "5355" && value === null && pd.width) value = _convertDimension(pd.width, pd.dimension_unit);
+      if (attrId === "5299" && dims.length > 2) value = dims[2];
+      if (attrId === "5299" && value === null && pd.height) value = _convertDimension(pd.height, pd.dimension_unit);
 
       // Weight with unit conversion
       if (label.indexOf("重量") !== -1 || label.indexOf("вес") !== -1 || label.indexOf("weight") !== -1) {
