@@ -99,3 +99,11 @@ def test_extract_diagnostics_waits_for_dxm_runtime_cache():
     assert "await waitForDxmRuntimeFieldModel" in source
     assert "function dxmRuntimeFieldCount()" in source
     assert "installDxmRuntimeBridge();" in source
+
+
+def test_auto_fill_waits_for_dynamic_variant_fields_before_llm_request():
+    source = EXTENSION_FILE.read_text(encoding="utf-8")
+
+    assert "async function waitForStableFormFields(formFields, timeoutMs)" in source
+    assert "formFields = await waitForStableFormFields(formFields, 3500);" in source
+    assert "markAutoFill(\"recollect-after-variants\")" in source

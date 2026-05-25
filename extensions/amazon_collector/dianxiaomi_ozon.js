@@ -2827,6 +2827,25 @@
     return fields;
   }
 
+  async function waitForStableFormFields(formFields, timeoutMs) {
+    var deadline = Date.now() + (timeoutMs || 2500);
+    var bestFields = formFields || [];
+    var lastCount = bestFields.length;
+    var stableTicks = 0;
+    while (Date.now() < deadline) {
+      await sleep(250);
+      var nextFields = collectFormFields();
+      if (nextFields.length >= bestFields.length) bestFields = nextFields;
+      if (nextFields.length === lastCount) stableTicks++;
+      else {
+        lastCount = nextFields.length;
+        stableTicks = 0;
+      }
+      if (stableTicks >= 2 && Date.now() + 250 < deadline) break;
+    }
+    return bestFields;
+  }
+
   function collectFormFields() {
     var fields = [];
     var seenSelectors = {};
@@ -4449,8 +4468,8 @@
       var ensured = await ensureVariantRowsForProduct(variantValues);
       markAutoFill("ensure-variant-rows");
       if (ensured) {
-        // Re-collect fields since new DOM elements were added
-        formFields = collectFormFields();
+        // Re-collect after Dianxiaomi finishes rendering dependent variant fields.
+        formFields = await waitForStableFormFields(formFields, 3500);
         llmFields = formFields.map(_fieldForLLM);
         markAutoFill("recollect-after-variants");
       } else {
