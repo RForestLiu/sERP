@@ -50,5 +50,11 @@
       "js": ["dianxiaomi_ozon.js"],
       "run_at": "document_idle"
     }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["dxm_runtime_bridge.js"],
+      "matches": ["*://*.dianxiaomi.com/*"]
+    }
   ]
 }

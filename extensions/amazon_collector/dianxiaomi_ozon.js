@@ -74,6 +74,8 @@
   var pricingTempVars = {};
   var pricingApplyRunning = false;
   var fillAllVariants = true;
+  var dxmRuntimeFieldModelCache = null;
+  var dxmRuntimeBridgeInstalled = false;
 
   // ==================== CSS 注入 ====================
   var style = document.createElement("style");
@@ -2663,7 +2665,36 @@
     };
   }
 
+  function installDxmRuntimeBridge() {
+    if (dxmRuntimeBridgeInstalled) {
+      window.postMessage({ type: "SERP_DXM_RUNTIME_REQUEST" }, "*");
+      return;
+    }
+    dxmRuntimeBridgeInstalled = true;
+    window.addEventListener("message", function (event) {
+      if (event.source !== window) return;
+      var data = event.data || {};
+      if (data.type !== "SERP_DXM_RUNTIME_FIELD_MODEL") return;
+      if (data.model && Array.isArray(data.model.fields)) {
+        dxmRuntimeFieldModelCache = data.model;
+        console.log("[sERP] dxm runtime bridge fields=" + data.model.fields.length);
+      }
+    });
+    try {
+      var script = document.createElement("script");
+      script.src = chrome.runtime.getURL("dxm_runtime_bridge.js");
+      script.onload = function () { script.remove(); };
+      (document.head || document.documentElement).appendChild(script);
+    } catch (e) {
+      console.warn("[sERP] dxm runtime bridge install failed", e);
+    }
+    window.postMessage({ type: "SERP_DXM_RUNTIME_REQUEST" }, "*");
+  }
+
   function collectDxmRuntimeFieldModel() {
+    if (dxmRuntimeFieldModelCache && Array.isArray(dxmRuntimeFieldModelCache.fields) && dxmRuntimeFieldModelCache.fields.length) {
+      return dxmRuntimeFieldModelCache;
+    }
     var appEl = document.querySelector("#app") || document.querySelector("[data-v-app]") || document.body.firstElementChild;
     var app = appEl && appEl.__vue_app__;
     var pinia = app && app.config && app.config.globalProperties && app.config.globalProperties.$pinia;
@@ -2720,6 +2751,7 @@
   }
 
   function attachDxmRuntimeMetadata(fields) {
+    installDxmRuntimeBridge();
     var model = collectDxmRuntimeFieldModel();
     var runtimeFields = model.fields || [];
     var matched = 0;

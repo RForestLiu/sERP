@@ -2,6 +2,8 @@ from pathlib import Path
 
 
 EXTENSION_FILE = Path(__file__).resolve().parents[2] / "extensions" / "amazon_collector" / "dianxiaomi_ozon.js"
+BRIDGE_FILE = Path(__file__).resolve().parents[2] / "extensions" / "amazon_collector" / "dxm_runtime_bridge.js"
+MANIFEST_FILE = Path(__file__).resolve().parents[2] / "extensions" / "amazon_collector" / "manifest.json"
 
 
 def test_extension_collects_dianxiaomi_runtime_field_model():
@@ -41,3 +43,18 @@ def test_extract_button_is_visible_for_diagnostics():
 
     assert 'id="serp-btn-extract"' in source
     assert "#serp-toolbar #serp-btn-extract" not in source
+
+
+def test_extension_bridges_page_context_for_dxm_runtime_model():
+    source = EXTENSION_FILE.read_text(encoding="utf-8")
+    bridge = BRIDGE_FILE.read_text(encoding="utf-8")
+    manifest = MANIFEST_FILE.read_text(encoding="utf-8")
+
+    assert "function installDxmRuntimeBridge()" in source
+    assert 'chrome.runtime.getURL("dxm_runtime_bridge.js")' in source
+    assert "SERP_DXM_RUNTIME_FIELD_MODEL" in source
+    assert "SERP_DXM_RUNTIME_FIELD_MODEL" in bridge
+    assert "window.postMessage" in bridge
+    assert "window.addEventListener(\"message\"" in source
+    assert "dxm_runtime_bridge.js" in manifest
+    assert "web_accessible_resources" in manifest
