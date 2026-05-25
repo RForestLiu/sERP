@@ -107,3 +107,12 @@ def test_auto_fill_waits_for_dynamic_variant_fields_before_llm_request():
     assert "async function waitForStableFormFields(formFields, timeoutMs)" in source
     assert "formFields = await waitForStableFormFields(formFields, 3500);" in source
     assert "markAutoFill(\"recollect-after-variants\")" in source
+
+
+def test_variant_row_context_ignores_validation_messages():
+    source = EXTENSION_FILE.read_text(encoding="utf-8")
+
+    assert "function isInvalidRowContextText(txt)" in source
+    assert "最低价|售价|原价|不能" in source
+    assert "!isInvalidRowContextText(txt)" in source
+    assert "!isInvalidRowContextText(rowText)" in source

@@ -2213,12 +2213,18 @@
     var row = el.closest(".ant-table-row, tr[class*=\"ant-table\"], .skuData-body tr, table.myj-table tbody tr, tr");
     if (!row) return null;
 
+    function isInvalidRowContextText(txt) {
+      var s = String(txt || "").replace(/\s+/g, " ").trim().toLowerCase();
+      if (!s) return true;
+      return /最低价|售价|原价|不能|不得|必须|必填|错误|失败|校验|提示|warning|error|required|invalid|must|price/i.test(s);
+    }
+
     // Strategy 1: Look for variant name column — short text cell, often the 1st or 2nd column
     var cells = row.querySelectorAll("td");
     for (var i = 0; i < Math.min(cells.length, 4); i++) {
       var txt = (cells[i].textContent || "").replace(/[\s​]+/g, " ").trim();
       // Variant name is typically short (1-40 chars), non-numeric, and not a button cluster
-      if (txt && txt.length >= 1 && txt.length <= 40 && !/^\d/.test(txt) && !/^(复制|删除|移除|操作)/.test(txt)) {
+      if (txt && txt.length >= 1 && txt.length <= 40 && !/^\d/.test(txt) && !/^(复制|删除|移除|操作)/.test(txt) && !isInvalidRowContextText(txt)) {
         return txt;
       }
     }
@@ -2227,19 +2233,19 @@
     var antSelects = row.querySelectorAll(".ant-select-selection-item");
     for (var j = 0; j < antSelects.length; j++) {
       var stxt = (antSelects[j].textContent || "").trim();
-      if (stxt && stxt.length < 40 && !/^(请选择|Выбрать)/i.test(stxt)) return stxt;
+      if (stxt && stxt.length < 40 && !/^(请选择|Выбрать)/i.test(stxt) && !isInvalidRowContextText(stxt)) return stxt;
     }
 
     // Strategy 3: first-child fallback with generous length limit
     var nameCell = row.querySelector("td:first-child, th:first-child");
     if (nameCell) {
       var ftxt = (nameCell.textContent || "").replace(/[\s​]+/g, " ").trim();
-      if (ftxt && ftxt.length < 60) return ftxt;
+      if (ftxt && ftxt.length < 60 && !isInvalidRowContextText(ftxt)) return ftxt;
     }
 
     // Strategy 4: row text (compact)
     var rowText = (row.textContent || "").replace(/[\s​]+/g, " ").trim();
-    if (rowText && rowText.length < 80) return rowText;
+    if (rowText && rowText.length < 80 && !isInvalidRowContextText(rowText)) return rowText;
     return null;
   }
 
