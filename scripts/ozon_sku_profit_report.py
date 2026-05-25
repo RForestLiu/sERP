@@ -189,19 +189,70 @@ def item_quantity(item: dict[str, Any], accrual_each: Decimal) -> int:
     return 0
 
 
-def aggregate_transactions(operations: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+def posting_items_map(operations: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    posting_items: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    seen: set[tuple[str, str]] = set()
+    for op in operations:
+        posting_number = str(op.get("posting", {}).get("posting_number") or "").strip()
+        if not posting_number:
+            continue
+        for item in op.get("items") or []:
+            sku = str(item.get("sku") or "").strip()
+            if not sku:
+                continue
+            key = (posting_number, sku)
+            if key in seen:
+                continue
+            posting_items[posting_number].append(item)
+            seen.add(key)
+    return posting_items
+
+
+def aggregate_transactions(
+    operations: list[dict[str, Any]],
+) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
     rows: dict[str, dict[str, Any]] = defaultdict(lambda: defaultdict(Decimal))
+    detail_rows: list[dict[str, Any]] = []
+    unmatched: dict[str, Any] = defaultdict(Decimal)
+    posting_items = posting_items_map(operations)
     for op in operations:
         items = op.get("items") or []
+        posting_number = str(op.get("posting", {}).get("posting_number") or "").strip()
+        allocation_rule = "交易自带SKU"
         if not items:
-            key = str(op.get("posting", {}).get("posting_number") or "UNKNOWN")
-            items = [{"sku": key, "name": ""}]
+            items = posting_items.get(posting_number, [])
+            allocation_rule = "按订单号归属SKU" if items else "未匹配SKU，按服务/订单级费用保留"
         item_count = max(len(items), 1)
         amount_each = split_amount(money(op.get("amount")), item_count)
         accrual_each = split_amount(money(op.get("accruals_for_sale")), item_count)
         commission_each = split_amount(money(op.get("sale_commission")), item_count)
         services_total = sum((money(s.get("price")) for s in op.get("services", [])), Decimal("0"))
         services_each = split_amount(services_total, item_count)
+        order_level_fee_each = Decimal("0")
+        if not op.get("items") and not money(op.get("accruals_for_sale")) and not money(op.get("sale_commission")):
+            order_level_fee_each = amount_each
+
+        if not items:
+            unmatched["operations_count"] = as_int(unmatched.get("operations_count")) + 1
+            unmatched["net_settlement_rub"] = money(unmatched.get("net_settlement_rub")) + money(op.get("amount"))
+            detail_rows.append(
+                {
+                    "operation_date": op.get("operation_date", ""),
+                    "posting_number": posting_number,
+                    "ozon_sku": "",
+                    "offer_id": "",
+                    "product_name": "",
+                    "operation_type": op.get("operation_type", ""),
+                    "operation_type_name": op.get("operation_type_name", ""),
+                    "transaction_group": op.get("type", ""),
+                    "gross_sales_rub": decimal_text(op.get("accruals_for_sale")),
+                    "commission_rub": decimal_text(op.get("sale_commission")),
+                    "service_fee_rub": decimal_text(order_level_fee_each or services_total),
+                    "net_settlement_rub": decimal_text(op.get("amount")),
+                    "allocation_rule": allocation_rule,
+                }
+            )
+            continue
 
         for item in items:
             key = str(item.get("sku") or item.get("offer_id") or item.get("name") or "UNKNOWN").strip()
@@ -211,10 +262,34 @@ def aggregate_transactions(operations: list[dict[str, Any]]) -> dict[str, dict[s
             row["operations_count"] = as_int(row.get("operations_count")) + 1
             row["gross_sales_rub"] = money(row.get("gross_sales_rub")) + accrual_each
             row["ozon_commission_rub"] = money(row.get("ozon_commission_rub")) + commission_each
-            row["ozon_services_rub"] = money(row.get("ozon_services_rub")) + services_each
+            row["ozon_services_rub"] = money(row.get("ozon_services_rub")) + services_each + order_level_fee_each
             row["net_settlement_rub"] = money(row.get("net_settlement_rub")) + amount_each
             row["quantity"] = as_int(row.get("quantity")) + item_quantity(item, accrual_each)
-    return rows
+            if accrual_each > 0:
+                row["sold_quantity"] = as_int(row.get("sold_quantity")) + item_quantity(item, accrual_each)
+            elif accrual_each < 0:
+                row["return_quantity"] = as_int(row.get("return_quantity")) + abs(item_quantity(item, accrual_each))
+            sold_quantity = as_int(row.get("sold_quantity"))
+            return_quantity = as_int(row.get("return_quantity"))
+            row["return_rate"] = Decimal(return_quantity) / Decimal(sold_quantity) if sold_quantity else Decimal("0")
+            detail_rows.append(
+                {
+                    "operation_date": op.get("operation_date", ""),
+                    "posting_number": posting_number,
+                    "ozon_sku": key,
+                    "offer_id": item.get("offer_id", ""),
+                    "product_name": item.get("name", ""),
+                    "operation_type": op.get("operation_type", ""),
+                    "operation_type_name": op.get("operation_type_name", ""),
+                    "transaction_group": op.get("type", ""),
+                    "gross_sales_rub": decimal_text(accrual_each),
+                    "commission_rub": decimal_text(commission_each),
+                    "service_fee_rub": decimal_text(services_each + order_level_fee_each),
+                    "net_settlement_rub": decimal_text(amount_each),
+                    "allocation_rule": allocation_rule,
+                }
+            )
+    return rows, detail_rows, unmatched
 
 
 def performance_token(client_id: str, client_secret: str) -> str:
@@ -336,28 +411,76 @@ def decimal_text(value: Any) -> str:
     return format(number, "f")
 
 
-def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
+def percent_text(value: Any) -> str:
+    number = (money(value) * Decimal("100")).quantize(Decimal("0.01"))
+    return f"{number}%"
+
+
+SUMMARY_COLUMNS = [
+    ("ozon_sku", "Ozon SKU"),
+    ("offer_id", "Offer ID"),
+    ("product_name", "产品名称"),
+    ("sold_quantity", "销售数量"),
+    ("return_quantity", "退货数量"),
+    ("quantity", "净销售数量"),
+    ("return_rate", "退货率"),
+    ("operations_count", "交易笔数"),
+    ("gross_sales_rub", "销售额(RUB)"),
+    ("ozon_commission_rub", "Ozon佣金(RUB)"),
+    ("ozon_services_rub", "Ozon服务/订单级费用(RUB)"),
+    ("ad_spend_rub", "广告费(RUB)"),
+    ("net_settlement_rub", "Ozon结算净额(RUB)"),
+    ("purchase_cost_cny", "采购成本(CNY)"),
+    ("first_leg_cost_cny", "头程(CNY)"),
+    ("packaging_cost_cny", "包装(CNY)"),
+    ("customs_cost_cny", "关税(CNY)"),
+    ("labor_cost_cny", "人工(CNY)"),
+    ("fx_cost_cny", "汇损/换汇费(CNY)"),
+    ("total_manual_cost_cny", "自有成本合计(CNY)"),
+    ("estimated_profit_before_manual_cost_rub", "未扣自有成本利润(RUB)"),
+]
+
+
+DETAIL_COLUMNS = [
+    ("operation_date", "交易日期"),
+    ("posting_number", "订单号"),
+    ("ozon_sku", "Ozon SKU"),
+    ("offer_id", "Offer ID"),
+    ("product_name", "产品名称"),
+    ("operation_type", "费用/交易类型"),
+    ("operation_type_name", "费用/交易名称"),
+    ("transaction_group", "交易分组"),
+    ("gross_sales_rub", "销售额(RUB)"),
+    ("commission_rub", "佣金(RUB)"),
+    ("service_fee_rub", "服务/订单级费用(RUB)"),
+    ("net_settlement_rub", "结算金额(RUB)"),
+    ("allocation_rule", "归属规则"),
+]
+
+
+def write_summary_csv(path: Path, rows: list[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = [
-        "ozon_sku",
-        "offer_id",
-        "product_name",
-        "quantity",
-        "operations_count",
-        "gross_sales_rub",
-        "ozon_commission_rub",
-        "ozon_services_rub",
-        "ad_spend_rub",
-        "net_settlement_rub",
-        *ZERO_COST_FIELDS,
-        "total_manual_cost_cny",
-        "estimated_profit_before_manual_cost_rub",
-    ]
     with path.open("w", encoding="utf-8-sig", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer = csv.DictWriter(f, fieldnames=[label for _, label in SUMMARY_COLUMNS])
         writer.writeheader()
         for row in rows:
-            writer.writerow({name: row.get(name, "") for name in fieldnames})
+            output_row = {}
+            for key, label in SUMMARY_COLUMNS:
+                output_row[label] = percent_text(row.get(key)) if key == "return_rate" else row.get(key, "")
+            writer.writerow(output_row)
+
+
+def write_detail_csv(path: Path, rows: list[dict[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8-sig", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=[label for _, label in DETAIL_COLUMNS])
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({label: row.get(key, "") for key, label in DETAIL_COLUMNS})
+
+
+def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
+    write_summary_csv(path, rows)
 
 
 def main() -> int:
@@ -373,7 +496,7 @@ def main() -> int:
             sku_to_offer[sku] = offer_id
 
     operations = iter_transactions(args.date_from, args.date_to)
-    rows_by_sku = aggregate_transactions(operations)
+    rows_by_sku, detail_rows, unmatched = aggregate_transactions(operations)
     ad_spend_by_sku, ad_warning = fetch_ad_spend(
         args.performance_client_id.strip(),
         args.performance_client_secret.strip(),
@@ -392,6 +515,9 @@ def main() -> int:
         if product:
             row["offer_id"] = offer_id
             row["product_name"] = row.get("product_name") or product.get("name", "")
+        for field in ["sold_quantity", "return_quantity", "quantity", "operations_count"]:
+            row[field] = as_int(row.get(field))
+        row["return_rate"] = money(row.get("return_rate"))
         row["ad_spend_rub"] = money(row.get("ad_spend_rub"))
         for field in ZERO_COST_FIELDS:
             row[field] = "0.00"
@@ -408,16 +534,31 @@ def main() -> int:
             row[field] = decimal_text(row.get(field))
         rows.append(dict(row))
 
+    for detail in detail_rows:
+        sku = str(detail.get("ozon_sku") or "")
+        offer_id = sku_to_offer.get(sku, "")
+        product = products.get(offer_id, {})
+        if offer_id:
+            detail["offer_id"] = offer_id
+        if product and not detail.get("product_name"):
+            detail["product_name"] = product.get("name", "")
+
     rows.sort(key=lambda r: money(r.get("gross_sales_rub")), reverse=True)
-    write_csv(output, rows)
+    detail_output = output.with_name(f"{output.stem}_费用明细{output.suffix}")
+    write_summary_csv(output, rows)
+    write_detail_csv(detail_output, detail_rows)
 
     summary = {
         "output": str(output),
+        "detail_output": str(detail_output),
         "date_from": args.date_from,
         "date_to": args.date_to,
         "product_count": len(products),
         "transaction_count": len(operations),
         "sku_rows": len(rows),
+        "detail_rows": len(detail_rows),
+        "unmatched_operations": as_int(unmatched.get("operations_count")),
+        "unmatched_net_settlement_rub": decimal_text(unmatched.get("net_settlement_rub")),
         "ad_warning": ad_warning,
     }
     print(json.dumps(summary, ensure_ascii=False, indent=2))
