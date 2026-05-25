@@ -3,6 +3,7 @@ import json
 import logging
 import os
 from datetime import datetime
+from typing import Optional
 
 import requests
 
@@ -94,21 +95,28 @@ class ProductDataCleaner:
             "Return exactly two first-level fields: product_param and product_description. "
             "product_param must contain only objective facts as flat snake_case key-value pairs, "
             "for example product_length, product_width, product_height, product_weight, material, color. "
-            "Each product_param item must include value and evidence. "
+            "Return product_param as an array of key, value, evidence objects. "
             "product_description is for subjective or marketing copy such as Amazon About this item "
             "or Wildberries Description."
         )
         user_prompt = json.dumps({
             "output_language": language,
             "return_schema": {
-                "product_param": {
-                    "snake_case_field_name": {"value": "field value with unit", "evidence": "source field or exact text"}
-                },
+                "product_param": [
+                    {"key": "snake_case_field_name", "value": "field value with unit", "evidence": "source field or exact text"}
+                ],
                 "product_description": {"summary": "cleaned description", "evidence": ["source field or exact text"]},
             },
             "raw_product_data": raw_data,
         }, ensure_ascii=False)
-        return self._call_llm(config, system_prompt, user_prompt, 1200)
+        return self._call_llm(
+            config,
+            system_prompt,
+            user_prompt,
+            1200,
+            tool=self._clean_tool_schema(),
+            tool_name="clean_product_data",
+        )
 
     def _call_review_llm(self, config: dict, language: str, raw_data: dict,
                          params: dict, description: str, evidence: dict) -> dict:
@@ -129,9 +137,24 @@ class ProductDataCleaner:
                 "checks": [{"field": "", "result": "pass/fail", "evidence": ""}],
             },
         }, ensure_ascii=False)
-        return self._call_llm(config, system_prompt, user_prompt, 800)
+        return self._call_llm(
+            config,
+            system_prompt,
+            user_prompt,
+            800,
+            tool=self._audit_tool_schema(),
+            tool_name="audit_product_data",
+        )
 
-    def _call_llm(self, config: dict, system_prompt: str, user_prompt: str, max_tokens: int) -> dict:
+    def _call_llm(
+        self,
+        config: dict,
+        system_prompt: str,
+        user_prompt: str,
+        max_tokens: int,
+        tool: Optional[dict] = None,
+        tool_name: str = "",
+    ) -> dict:
         if not config.get("api_key"):
             raise ValueError("DEEPSEEK_API_KEY not configured")
         payload = {
@@ -142,28 +165,138 @@ class ProductDataCleaner:
             ],
             "temperature": 0.1,
             "max_tokens": max_tokens,
-            "response_format": {"type": "json_object"},
         }
-        if "v4-pro" in str(config["model"]).lower():
-            payload["enable_thinking"] = False
+        tools = [tool] if tool else []
+        if tool:
+            payload["tools"] = tools
+            payload["tool_choice"] = {"type": "function", "function": {"name": tool_name}}
+            if "v4-pro" in str(config["model"]).lower():
+                payload["thinking"] = {"type": "disabled"}
+        else:
+            payload["response_format"] = {"type": "json_object"}
+            if "v4-pro" in str(config["model"]).lower():
+                payload["enable_thinking"] = False
         resp = requests.post(
-            config["base_url"],
+            self._request_url(config["base_url"], tools),
             headers={"Authorization": f"Bearer {config['api_key']}", "Content-Type": "application/json"},
             json=payload,
             timeout=90,
         )
         if resp.status_code != 200:
             raise RuntimeError(f"LLM request failed: HTTP {resp.status_code}: {resp.text[:300]}")
-        content = resp.json().get("choices", [{}])[0].get("message", {}).get("content", "")
-        return json.loads(content.strip())
+        message = resp.json().get("choices", [{}])[0].get("message", {})
+        arguments = self._tool_arguments(message)
+        if arguments:
+            return json.loads(arguments)
+        content = str(message.get("content", "") or "").strip()
+        if not content:
+            raise ValueError("LLM returned empty structured output")
+        return json.loads(content)
+
+    @staticmethod
+    def _request_url(base_url: str, tools: list[dict]) -> str:
+        has_strict_tool = any((t.get("function") or {}).get("strict") is True for t in tools)
+        if has_strict_tool and base_url == "https://api.deepseek.com/v1/chat/completions":
+            return "https://api.deepseek.com/beta/chat/completions"
+        return base_url
+
+    @staticmethod
+    def _tool_arguments(message: dict) -> str:
+        tool_calls = message.get("tool_calls") or []
+        if not tool_calls:
+            return ""
+        function = tool_calls[0].get("function") or {}
+        arguments = function.get("arguments")
+        if isinstance(arguments, str):
+            return arguments.strip()
+        if isinstance(arguments, dict):
+            return json.dumps(arguments, ensure_ascii=False)
+        return ""
+
+    @staticmethod
+    def _clean_tool_schema() -> dict:
+        return {
+            "type": "function",
+            "function": {
+                "name": "clean_product_data",
+                "description": "Return cleaned ecommerce product data with evidence.",
+                "strict": True,
+                "parameters": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        "product_param": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "additionalProperties": False,
+                                "properties": {
+                                    "key": {"type": "string"},
+                                    "value": {"type": "string"},
+                                    "evidence": {"type": "string"},
+                                },
+                                "required": ["key", "value", "evidence"],
+                            },
+                        },
+                        "product_description": {
+                            "type": "object",
+                            "additionalProperties": False,
+                            "properties": {
+                                "summary": {"type": "string"},
+                                "evidence": {"type": "array", "items": {"type": "string"}},
+                            },
+                            "required": ["summary", "evidence"],
+                        },
+                    },
+                    "required": ["product_param", "product_description"],
+                },
+            },
+        }
+
+    @staticmethod
+    def _audit_tool_schema() -> dict:
+        return {
+            "type": "function",
+            "function": {
+                "name": "audit_product_data",
+                "description": "Audit cleaned product data against raw source evidence.",
+                "strict": True,
+                "parameters": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        "passed": {"type": "boolean"},
+                        "issues": {"type": "array", "items": {"type": "string"}},
+                        "checks": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "additionalProperties": False,
+                                "properties": {
+                                    "field": {"type": "string"},
+                                    "result": {"type": "string", "enum": ["pass", "fail"]},
+                                    "evidence": {"type": "string"},
+                                },
+                                "required": ["field", "result", "evidence"],
+                            },
+                        },
+                    },
+                    "required": ["passed", "issues", "checks"],
+                },
+            },
+        }
 
     @staticmethod
     def _normalize_params(raw_params) -> tuple[dict, dict]:
         params = {}
         evidence = {}
-        if not isinstance(raw_params, dict):
+        if isinstance(raw_params, list):
+            items = ((item.get("key", ""), item) for item in raw_params if isinstance(item, dict))
+        elif isinstance(raw_params, dict):
+            items = raw_params.items()
+        else:
             return params, evidence
-        for key, item in raw_params.items():
+        for key, item in items:
             name = str(key).strip()
             if not name:
                 continue
