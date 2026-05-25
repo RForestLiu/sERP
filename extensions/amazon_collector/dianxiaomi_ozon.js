@@ -2691,6 +2691,23 @@
     window.postMessage({ type: "SERP_DXM_RUNTIME_REQUEST" }, "*");
   }
 
+  function dxmRuntimeFieldCount() {
+    return dxmRuntimeFieldModelCache && Array.isArray(dxmRuntimeFieldModelCache.fields)
+      ? dxmRuntimeFieldModelCache.fields.length
+      : 0;
+  }
+
+  async function waitForDxmRuntimeFieldModel(timeoutMs) {
+    installDxmRuntimeBridge();
+    var deadline = Date.now() + (timeoutMs || 1800);
+    while (Date.now() < deadline) {
+      if (dxmRuntimeFieldCount() > 0) return true;
+      window.postMessage({ type: "SERP_DXM_RUNTIME_REQUEST" }, "*");
+      await sleep(150);
+    }
+    return dxmRuntimeFieldCount() > 0;
+  }
+
   function collectDxmRuntimeFieldModel() {
     if (dxmRuntimeFieldModelCache && Array.isArray(dxmRuntimeFieldModelCache.fields) && dxmRuntimeFieldModelCache.fields.length) {
       return dxmRuntimeFieldModelCache;
@@ -3735,8 +3752,9 @@
     });
   }
 
-  function doExtractFields() {
+  async function doExtractFields() {
     resultsPanel.classList.remove("visible");
+    await waitForDxmRuntimeFieldModel(1800);
     var formFields = collectFormFields();
     if (!formFields.length) { showToast("未找到可填充的表单字段", "error"); return; }
 
@@ -3767,7 +3785,7 @@
       '<br><span style="color:#667085;font-size:12px;">控件类型：' + kindParts.join(' / ') + '</span>';
 
     // 详情列表
-    summary.innerHTML += '<br><span style="color:#475569;font-size:12px;">DXM属性匹配 ' + dxmMatched + '/' + formFields.length + '</span>';
+    summary.innerHTML += '<br><span style="color:#475569;font-size:12px;">DXM属性匹配 ' + dxmMatched + '/' + formFields.length + '，DXM字段模型 ' + dxmRuntimeFieldCount() + '</span>';
 
     var sections = document.getElementById("serp-extract-sections");
     var html = "";

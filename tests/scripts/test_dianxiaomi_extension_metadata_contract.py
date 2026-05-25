@@ -36,6 +36,8 @@ def test_extract_panel_reports_dxm_metadata_match_count():
 
     assert "var dxmMatched" in source
     assert "DXM属性匹配" in source
+    assert "DXM字段模型" in source
+    assert "dxmRuntimeFieldCount()" in source
 
 
 def test_extract_button_is_visible_for_diagnostics():
@@ -58,3 +60,12 @@ def test_extension_bridges_page_context_for_dxm_runtime_model():
     assert "window.addEventListener(\"message\"" in source
     assert "dxm_runtime_bridge.js" in manifest
     assert "web_accessible_resources" in manifest
+
+
+def test_extract_diagnostics_waits_for_dxm_runtime_cache():
+    source = EXTENSION_FILE.read_text(encoding="utf-8")
+
+    assert "async function doExtractFields()" in source
+    assert "await waitForDxmRuntimeFieldModel" in source
+    assert "function dxmRuntimeFieldCount()" in source
+    assert "installDxmRuntimeBridge();" in source
