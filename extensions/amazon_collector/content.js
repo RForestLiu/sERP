@@ -616,8 +616,9 @@
         var pid = m[1], size = m[2], num = parseInt(m[3]);
         if (currentPid && pid !== currentPid) continue;
         if (!byPid[pid]) {
-          byPid[pid] = { base: m[0].substring(0, m[0].lastIndexOf("/images/")), maxNum: 0, hasBig: false };
+          byPid[pid] = { base: m[0].substring(0, m[0].lastIndexOf("/images/")), nums: {}, maxNum: 0, hasBig: false };
         }
+        byPid[pid].nums[num] = true;
         byPid[pid].maxNum = Math.max(byPid[pid].maxNum, num);
         if (size === "big") byPid[pid].hasBig = true;
       }
@@ -631,7 +632,9 @@
       if (mainPid) {
         var images = [];
         var base = byPid[mainPid].base;
-        for (var n = 1; n <= byPid[mainPid].maxNum; n++) {
+        var nums = Object.keys(byPid[mainPid].nums).map(function (n) { return parseInt(n, 10); }).sort(function (a, b) { return a - b; });
+        for (var i = 0; i < nums.length; i++) {
+          var n = nums[i];
           images.push(base + "/images/big/" + n + ".webp");
         }
         return images;
@@ -644,21 +647,38 @@
       var v = {};
       var colors = [];
       var urls = {};
-      var seen = {};
+      var seenNames = {};
+      var seenUrls = {};
 
-      var links = $$("a[data-nm-id]");
-      links.forEach(function (a) {
+      function isColorWord(word) {
+        return /^(черный|чёрный|белый|красный|синий|голубой|серый|зеленый|зелёный|желтый|жёлтый|розовый|фуксия|бежевый|коричневый|фиолетовый|оранжевый|бордовый|золотой|серебряный|молочный|хаки)$/i.test(word || "");
+      }
+
+      function variantNameFromLink(a) {
         var img = $("img", a);
         var alt = img ? attr(img, "alt") : "";
-        if (!alt) return;
-        // alt 格式: "Кошелек маленький серый из экозамши"
-        // 提取颜色词: 去掉 "из <material>" 后缀，取最后一个词
-        var name = alt.replace(/\s+из\s+\S+$/i, "").split(/\s+/).pop();
-        if (name && !seen[name]) {
-          seen[name] = true;
-          colors.push(name);
-          urls[name] = a.href;
-        }
+        var words = alt.replace(/\s+из\s+\S+$/i, "").replace(/[^\w\u0400-\u04FF\s-]+/g, " ").trim().split(/\s+/);
+        var last = words.length ? words[words.length - 1].toLowerCase() : "";
+        return isColorWord(last) ? last : attr(a, "data-nm-id");
+      }
+
+      var colorRoot = $(".product-colors-container") || $("[class*='sizesAndColors']") || $("[data-testid='cardtype:colors']") || document;
+      var links = $$("a[data-nm-id]", colorRoot);
+      links.sort(function (a, b) {
+        var aa = a.closest("[class*='activeColor']") ? 0 : 1;
+        var bb = b.closest("[class*='activeColor']") ? 0 : 1;
+        return aa - bb;
+      });
+      links.forEach(function (a) {
+        var href = a.href || "";
+        if (!href || seenUrls[href]) return;
+        seenUrls[href] = true;
+        var baseName = variantNameFromLink(a);
+        if (!baseName) return;
+        var uniqueName = seenNames[baseName] ? baseName + "_" + attr(a, "data-nm-id") : baseName;
+        seenNames[baseName] = true;
+        colors.push(uniqueName);
+        urls[uniqueName] = href;
       });
 
       if (colors.length) v.colors = colors;
@@ -1308,7 +1328,8 @@
       var m;
       while ((m = re.exec(html)) !== null) {
         var pid = m[1], size = m[2], num = parseInt(m[3]);
-        if (!byPid[pid]) byPid[pid] = { base: m[0].substring(0, m[0].lastIndexOf("/images/")), maxNum: 0, hasBig: false };
+        if (!byPid[pid]) byPid[pid] = { base: m[0].substring(0, m[0].lastIndexOf("/images/")), nums: {}, maxNum: 0, hasBig: false };
+        byPid[pid].nums[num] = true;
         byPid[pid].maxNum = Math.max(byPid[pid].maxNum, num);
         if (size === "big") byPid[pid].hasBig = true;
       }
@@ -1325,7 +1346,9 @@
       var images = [];
       if (mainPid) {
         var base = byPid[mainPid].base;
-        for (var n = 1; n <= byPid[mainPid].maxNum; n++) {
+        var nums = Object.keys(byPid[mainPid].nums).map(function (n) { return parseInt(n, 10); }).sort(function (a, b) { return a - b; });
+        for (var i = 0; i < nums.length; i++) {
+          var n = nums[i];
           images.push(base + "/images/big/" + n + ".webp");
         }
       }

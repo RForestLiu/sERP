@@ -50,6 +50,10 @@ const fs = require("fs");
     assert("material spec collected", payload.product_details["материал"] === "экокожа", JSON.stringify(payload.product_details));
     assert("height spec collected", payload.product_details["высота_предмета"] === "21 см", JSON.stringify(payload.product_details));
     assert("width spec collected", payload.product_details["ширина_предмета"] === "17 см", JSON.stringify(payload.product_details));
+    assert("current product images only use current nm-id", payload.images.length === 2 && payload.images.every((url) => url.includes("/156681979/images/big/")) && payload.images.indexOf("https://basket-12.wbbasket.ru/vol1566/part156681/156681979/images/big/2.webp") === -1, JSON.stringify(payload.images));
+    assert("all color links are kept as separate variants", payload.variants.colors.length === 8, JSON.stringify(payload.variants));
+    assert("variant labels do not use material as color", payload.variants.colors.indexOf("кожа") === -1, JSON.stringify(payload.variants));
+    assert("duplicate color variants get unique labels", payload.variants.colors.indexOf("черный") !== -1 && payload.variants.colors.indexOf("черный_175655484") !== -1, JSON.stringify(payload.variants));
 
     const traversalState = await page.evaluate(async () => {
       window.__serpTest.injectUI();
