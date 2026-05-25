@@ -240,7 +240,7 @@
     "#serp-results-panel .sr-item .sr-label{color:#666;min-width:60px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}",
     "#serp-results-panel .sr-item .sr-value{color:#333;word-break:break-all;flex:1;}",
     "/* ===== 提取字段面板 ===== */",
-    "#serp-extract-panel{position:fixed;right:12px;left:auto;top:auto;z-index:999989;background:#fff;border-radius:10px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,0.12);font-family:\"Microsoft YaHei\",sans-serif;font-size:12px;width:min(520px,calc(100vw - 380px));max-width:520px;max-height:calc(100vh - 96px);overflow-y:auto;display:none;}",
+    "#serp-extract-panel{position:fixed;left:360px;right:12px;top:86px;z-index:999989;background:#fff;border-radius:10px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,0.12);font-family:\"Microsoft YaHei\",sans-serif;font-size:12px;width:auto;max-width:none;max-height:calc(100vh - 110px);overflow-y:auto;display:none;}",
     "#serp-extract-panel.visible{display:block;}",
     "#serp-extract-panel .ex-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0;}",
     "#serp-extract-panel .ex-header .ex-title{font-weight:600;font-size:13px;color:#333;}",
@@ -250,7 +250,7 @@
     "#serp-extract-panel .ex-summary .ex-count{font-weight:600;}",
     "#serp-extract-panel .ex-section{margin-bottom:8px;}",
     "#serp-extract-panel .ex-section-title{font-size:11px;font-weight:600;color:#555;margin-bottom:3px;padding:2px 6px;background:#f5f5f5;border-radius:3px;}",
-    "#serp-extract-panel .ex-item{font-size:11px;color:#333;padding:2px 8px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}",
+    "#serp-extract-panel .ex-item{font-size:11px;color:#333;padding:2px 8px;line-height:1.5;white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word;}",
     "#serp-extract-panel .ex-item .ex-tag{display:inline-block;font-size:9px;padding:0 4px;border-radius:2px;margin-right:4px;flex-shrink:0;line-height:1.5;}",
     "#serp-extract-panel .ex-tag.txt{background:#e6f7ff;color:#1890ff;}",
     "#serp-extract-panel .ex-tag.sel{background:#f6ffed;color:#52c41a;}",
@@ -3819,13 +3819,8 @@
     sections.innerHTML = html;
 
     // 定位面板
-    var tbRect = toolbar.getBoundingClientRect();
-    var top = tbRect.bottom + 8;
-    if (productInfo.classList.contains("visible")) {
-      top = productInfo.getBoundingClientRect().bottom + 8;
-    }
-    extractPanel.style.top = top + "px";
-    extractPanel.style.left = "auto";
+    extractPanel.style.top = "86px";
+    extractPanel.style.left = "360px";
     extractPanel.style.right = "12px";
     extractPanel.classList.add("visible");
 

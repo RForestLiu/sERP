@@ -52,9 +52,12 @@ def test_extract_button_is_visible_for_diagnostics():
 def test_extract_panel_is_docked_to_workspace_right_side():
     source = EXTENSION_FILE.read_text(encoding="utf-8")
 
-    assert "#serp-extract-panel{position:fixed;right:12px;" in source
+    assert "#serp-extract-panel{position:fixed;left:360px;right:12px;top:86px;" in source
+    assert "width:auto;max-width:none;" in source
+    assert "white-space:normal;overflow:visible;text-overflow:clip;" in source
     assert 'extractPanel.style.right = "12px";' in source
-    assert 'extractPanel.style.left = "auto";' in source
+    assert 'extractPanel.style.left = "360px";' in source
+    assert 'extractPanel.style.top = "86px";' in source
 
 
 def test_extension_bridges_page_context_for_dxm_runtime_model():
