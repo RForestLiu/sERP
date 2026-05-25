@@ -7,7 +7,8 @@ import asyncio
 import os
 import json
 import re
-from datetime import datetime
+import time
+from datetime import datetime, timedelta
 
 from src.serp.shared import EventBus
 
@@ -125,12 +126,14 @@ class CollectApplicationService(CollectFacade):
             return package["clean_status"]
 
         self._clean_cancel_flags[task_id] = False
+        estimate = self._estimate_clean_duration()
         package.setdefault("product_data", {})["cleaned_product_data"] = None
         package["clean_status"] = {
             "status": "cleaning",
             "message": "清洗中",
             "model": config.get("model", "deepseek-v4-pro"),
             "language": cleaner._resolve_language(),
+            **(estimate or {}),
             "updated_at": datetime.now().isoformat(),
         }
         self._save_collect_product_package(task, package)
@@ -382,6 +385,7 @@ class CollectApplicationService(CollectFacade):
             task.update_progress(status, progress, message)
 
     def _run_product_clean(self, task_id: str):
+        started_at = time.monotonic()
         task = self._task_repo.find_by_id(task_id)
         if not task:
             return
@@ -406,6 +410,8 @@ class CollectApplicationService(CollectFacade):
 
         audit = cleaned.get("clean_audit", {})
         if audit.get("status") == "ok":
+            duration_seconds = int(round(time.monotonic() - started_at))
+            self._record_clean_duration(duration_seconds)
             package.setdefault("product_data", {})["cleaned_product_data"] = cleaned.get("product_data", {})
             package["clean_audit"] = audit
             package["clean_status"] = {
@@ -413,9 +419,13 @@ class CollectApplicationService(CollectFacade):
                 "message": "清洗完成",
                 "model": audit.get("model", ""),
                 "language": audit.get("language", ""),
+                "duration_seconds": duration_seconds,
+                "duration_text": self._format_duration(duration_seconds),
                 "updated_at": datetime.now().isoformat(),
             }
         else:
+            duration_seconds = int(round(time.monotonic() - started_at))
+            self._record_clean_duration(duration_seconds)
             package.setdefault("product_data", {})["cleaned_product_data"] = None
             package["clean_audit"] = audit
             package["clean_status"] = {
@@ -423,10 +433,75 @@ class CollectApplicationService(CollectFacade):
                 "message": audit.get("error") or "清洗失败",
                 "model": audit.get("model", ""),
                 "language": audit.get("language", ""),
+                "duration_seconds": duration_seconds,
+                "duration_text": self._format_duration(duration_seconds),
                 "updated_at": datetime.now().isoformat(),
             }
         self._save_collect_product_package(task, package)
         self._clean_cancel_flags.pop(task_id, None)
+
+    def _clean_metrics_path(self) -> str:
+        return os.path.join(self._data_root, "collect_clean_metrics.json")
+
+    def _load_clean_durations(self) -> list[float]:
+        metrics = self._load_json_file(self._clean_metrics_path())
+        records = metrics.get("durations", []) if isinstance(metrics, dict) else []
+        values = []
+        for record in records[-30:]:
+            value = record.get("duration_seconds") if isinstance(record, dict) else record
+            try:
+                seconds = float(value)
+            except (TypeError, ValueError):
+                continue
+            if seconds >= 0:
+                values.append(seconds)
+        return values
+
+    def _record_clean_duration(self, duration_seconds: float):
+        path = self._clean_metrics_path()
+        metrics = self._load_json_file(path)
+        if not isinstance(metrics, dict):
+            metrics = {}
+        records = metrics.get("durations", [])
+        if not isinstance(records, list):
+            records = []
+        records.append({
+            "duration_seconds": round(float(duration_seconds), 3),
+            "completed_at": datetime.now().isoformat(),
+        })
+        metrics["durations"] = records[-30:]
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(metrics, f, indent=2, ensure_ascii=False)
+
+    def _estimate_clean_duration(self) -> dict | None:
+        durations = self._load_clean_durations()
+        if not durations:
+            return None
+        alpha = 2 / (len(durations) + 1)
+        estimate = durations[0]
+        for seconds in durations[1:]:
+            estimate = alpha * seconds + (1 - alpha) * estimate
+        estimated_seconds = max(1, int(round(estimate)))
+        return {
+            "estimated_seconds": estimated_seconds,
+            "estimated_text": f"预计约 {self._format_duration(estimated_seconds)}",
+            "estimated_finish_at": (datetime.now() + timedelta(seconds=estimated_seconds)).isoformat(),
+            "estimated_sample_count": len(durations),
+            "sample_count": len(durations),
+            "estimated_method": "ema_last_30",
+            "method": "ema_last_30",
+        }
+
+    @staticmethod
+    def _format_duration(seconds: float) -> str:
+        total = max(0, int(round(seconds)))
+        minutes, sec = divmod(total, 60)
+        hours, minutes = divmod(minutes, 60)
+        if hours:
+            return f"{hours}小时{minutes}分{sec}秒"
+        if minutes:
+            return f"{minutes}分{sec}秒"
+        return f"{sec}秒"
 
     def _load_collect_product_package(self, task: CollectTask) -> dict:
         result = task.result

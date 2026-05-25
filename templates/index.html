@@ -3297,10 +3297,12 @@
             const cleaned = !!inner.cleaned_product_data;
             const canStart = status.status !== "cleaning";
             const canCancel = status.status === "cleaning";
+            const estimateText = status.status === "cleaning" && status.estimated_text ? ` · ${status.estimated_text}` : "";
+            const durationText = status.duration_text ? ` · 用时 ${status.duration_text}` : "";
             dataModalContent.innerHTML = `
                 <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;white-space:normal;">
                     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;">
-                        <div><strong>清洗状态：</strong>${_escHtml(cleanStatusText(status.status))}<span style="color:#777;margin-left:8px;">${_escHtml(status.message || "")}</span></div>
+                        <div><strong>清洗状态：</strong>${_escHtml(cleanStatusText(status.status))}<span style="color:#777;margin-left:8px;">${_escHtml((status.message || "") + estimateText + durationText)}</span></div>
                         <div style="display:flex;gap:8px;">
                             <button class="btn" onclick="cleanCollectProductData('${taskId}', ${cleaned ? "true" : "false"})" ${canStart ? "" : "disabled"}>${cleaned ? "重新清洗" : "开始清洗"}</button>
                             <button class="btn" onclick="cancelCollectProductClean('${taskId}')" ${canCancel ? "" : "disabled"}>中断清洗</button>

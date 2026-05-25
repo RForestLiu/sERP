@@ -94,6 +94,37 @@ def test_clean_offline_marks_unavailable_without_cleaned_data(monkeypatch, tmp_p
     assert result["product_data"]["product_data"]["raw_product_data"]["title"] == "Wallet"
 
 
+def test_clean_duration_estimate_uses_recent_ema(tmp_path):
+    service, _task = make_service(tmp_path)
+    for seconds in [10, 20, 30]:
+        service._record_clean_duration(seconds)
+
+    estimate = service._estimate_clean_duration()
+
+    assert estimate["sample_count"] == 3
+    assert estimate["method"] == "ema_last_30"
+    assert estimate["estimated_seconds"] == 22
+    assert estimate["estimated_text"] == "预计约 22秒"
+
+
+def test_clean_duration_history_keeps_latest_30(tmp_path):
+    service, _task = make_service(tmp_path)
+    for seconds in range(35):
+        service._record_clean_duration(seconds)
+
+    durations = service._load_clean_durations()
+
+    assert len(durations) == 30
+    assert durations[0] == 5
+    assert durations[-1] == 34
+
+
+def test_clean_duration_estimate_is_absent_without_history(tmp_path):
+    service, _task = make_service(tmp_path)
+
+    assert service._estimate_clean_duration() is None
+
+
 def test_image_bytes_convert_to_jpg():
     from PIL import Image
 
