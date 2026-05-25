@@ -2624,6 +2624,116 @@
     return labels[kind] || kind || "未知控件";
   }
 
+  function inferDxmControlKindFromMeta(attr) {
+    if (!attr) return "unknown";
+    var dictionaryId = String(attr.dictionaryId || attr.dictionaryIdStr || "0");
+    var isDictionary = dictionaryId !== "" && dictionaryId !== "0" && dictionaryId !== "null" && dictionaryId !== "undefined";
+    var maxValueCount = attr.maxValueCount;
+    var isCollection = !!attr.collection || (maxValueCount !== undefined && maxValueCount !== null && String(maxValueCount) !== "0" && String(maxValueCount) !== "1");
+    var isRemote = !!attr._remoteSearch || !!attr._searchFlag;
+    var valueType = String(attr.type || "").toLowerCase();
+    if (isDictionary && isCollection && isRemote) return "dictionary-multiple-remote";
+    if (isDictionary && isCollection) return "dictionary-multiple";
+    if (isDictionary && isRemote) return "dictionary-single-remote";
+    if (isDictionary) return "dictionary-single";
+    if (valueType === "decimal" || valueType === "integer" || valueType === "number" || valueType === "double") return "number-input";
+    return "text-input";
+  }
+
+  function compactDxmAttrMeta(attr, sourceGroup) {
+    if (!attr) return null;
+    return {
+      sourceGroup: sourceGroup,
+      id: String(attr.id || ""),
+      attributeId: String(attr.attributeId || attr.attributeIdStr || ""),
+      name: attr.name || "",
+      nameCn: attr.nameCn || "",
+      type: attr.type || "",
+      collection: attr.collection,
+      required: attr.required,
+      dictionaryId: String(attr.dictionaryId || attr.dictionaryIdStr || "0"),
+      propertyType: attr.propertyType,
+      optionsNum: attr.optionsNum,
+      maxValueCount: attr.maxValueCount,
+      _inputType: attr._inputType,
+      _compType: attr._compType,
+      _searchFlag: attr._searchFlag,
+      _remoteSearch: attr._remoteSearch,
+      dxmControlKind: inferDxmControlKindFromMeta(attr)
+    };
+  }
+
+  function collectDxmRuntimeFieldModel() {
+    var appEl = document.querySelector("#app") || document.querySelector("[data-v-app]") || document.body.firstElementChild;
+    var app = appEl && appEl.__vue_app__;
+    var pinia = app && app.config && app.config.globalProperties && app.config.globalProperties.$pinia;
+    var store = pinia && pinia._s && pinia._s.get && pinia._s.get("ozonProductAddStore");
+    var attrsInfo = store && store.$state && store.$state.attrsInfo;
+    var fields = [];
+    ["attrsList", "mergeAttrsList", "skuList"].forEach(function (groupName) {
+      var list = attrsInfo && Array.isArray(attrsInfo[groupName]) ? attrsInfo[groupName] : [];
+      list.forEach(function (attr) {
+        var meta = compactDxmAttrMeta(attr, groupName);
+        if (meta && meta.attributeId) fields.push(meta);
+      });
+    });
+    return {
+      flags: {
+        showProductVideo: !!(attrsInfo && attrsInfo.showProductVideo),
+        showDesc: !!(attrsInfo && attrsInfo.showDesc),
+        showQualification: !!(attrsInfo && attrsInfo.showQualification),
+        showSizeTable: !!(attrsInfo && attrsInfo.showSizeTable),
+        showRichJSON: !!(attrsInfo && attrsInfo.showRichJSON)
+      },
+      fields: fields
+    };
+  }
+
+  function normalizeDxmFieldText(value) {
+    return String(value || "")
+      .replace(/\s+/g, " ")
+      .replace(/[锛堬紙()：:]/g, " ")
+      .trim()
+      .toLowerCase();
+  }
+
+  function matchDxmAttributeForField(field, runtimeFields) {
+    var label = normalizeDxmFieldText(field && field.label);
+    if (!label || !runtimeFields || !runtimeFields.length) return null;
+    var best = null;
+    var bestScore = 0;
+    runtimeFields.forEach(function (meta) {
+      var names = [meta.nameCn, meta.name].map(normalizeDxmFieldText).filter(Boolean);
+      names.forEach(function (name) {
+        if (!name) return;
+        var score = 0;
+        if (label === name) score = 100;
+        else if (label.indexOf(name) !== -1) score = 80;
+        else if (name.indexOf(label) !== -1 && label.length >= 2) score = 60;
+        if (score > bestScore) {
+          best = meta;
+          bestScore = score;
+        }
+      });
+    });
+    return bestScore >= 60 ? best : null;
+  }
+
+  function attachDxmRuntimeMetadata(fields) {
+    var model = collectDxmRuntimeFieldModel();
+    var runtimeFields = model.fields || [];
+    var matched = 0;
+    fields.forEach(function (field) {
+      var meta = matchDxmAttributeForField(field, runtimeFields);
+      if (!meta) return;
+      field.dxmAttribute = meta;
+      field.dxmControlKind = meta.dxmControlKind;
+      matched++;
+    });
+    console.log("[sERP] dxm runtime metadata: fields=" + runtimeFields.length + " matched=" + matched);
+    return fields;
+  }
+
   function collectFormFields() {
     var fields = [];
     var seenSelectors = {};
@@ -2828,6 +2938,7 @@
     fields.forEach(function (f) {
       f.controlKind = dxmControlKindFromField(f);
     });
+    attachDxmRuntimeMetadata(fields);
 
     // ===== 构建索引和字段映射表 =====
     _buildFieldMap(fields);
@@ -4180,6 +4291,26 @@
       if (f.showSearch !== undefined) clean.showSearch = !!f.showSearch;
       if (f.placeholder) clean.placeholder = f.placeholder;
       if (f.name) clean.name = f.name;
+      if (f.dxmAttribute) {
+        clean.dxmAttribute = {
+          sourceGroup: f.dxmAttribute.sourceGroup,
+          attributeId: f.dxmAttribute.attributeId,
+          name: f.dxmAttribute.name,
+          nameCn: f.dxmAttribute.nameCn,
+          type: f.dxmAttribute.type,
+          collection: f.dxmAttribute.collection,
+          required: f.dxmAttribute.required,
+          dictionaryId: f.dxmAttribute.dictionaryId,
+          propertyType: f.dxmAttribute.propertyType,
+          optionsNum: f.dxmAttribute.optionsNum,
+          maxValueCount: f.dxmAttribute.maxValueCount,
+          _inputType: f.dxmAttribute._inputType,
+          _compType: f.dxmAttribute._compType,
+          _searchFlag: f.dxmAttribute._searchFlag,
+          _remoteSearch: f.dxmAttribute._remoteSearch,
+          dxmControlKind: f.dxmAttribute.dxmControlKind
+        };
+      }
       if (f.options) {
         clean.options = f.options.map(function (o) {
           if (typeof o === "string") return { text: o, value: o };
