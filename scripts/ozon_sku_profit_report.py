@@ -173,12 +173,14 @@ def iter_cancelled_postings(date_from: str, date_to: str) -> list[dict[str, Any]
 def cancellation_stats(postings: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     stats: dict[str, dict[str, Any]] = defaultdict(lambda: defaultdict(int))
     for posting in postings:
+        cancelled_after_ship = bool((posting.get("cancellation") or {}).get("cancelled_after_ship"))
+        metric = "undelivered_quantity" if cancelled_after_ship else "pre_ship_cancel_quantity"
         for product in posting.get("products") or []:
             sku = str(product.get("sku") or "").strip()
             if not sku:
                 continue
             quantity = as_int(product.get("quantity")) or 1
-            stats[sku]["cancel_quantity"] += quantity
+            stats[sku][metric] += quantity
     return stats
 
 
@@ -460,10 +462,12 @@ SUMMARY_COLUMNS = [
     ("product_name", "产品名称"),
     ("sold_quantity", "销售数量"),
     ("return_quantity", "退货数量"),
-    ("cancel_quantity", "取消数量"),
+    ("pre_ship_cancel_quantity", "未发货取消数量"),
+    ("undelivered_quantity", "未签收/拒收数量"),
     ("quantity", "净销售数量"),
     ("return_rate", "退货率"),
-    ("cancel_rate", "取消率"),
+    ("pre_ship_cancel_rate", "未发货取消率"),
+    ("undelivered_rate", "未签收/拒收率"),
     ("operations_count", "交易笔数"),
     ("gross_sales_rub", "销售额(RUB)"),
     ("ozon_commission_rub", "Ozon佣金(RUB)"),
@@ -506,7 +510,11 @@ def write_summary_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         for row in rows:
             output_row = {}
             for key, label in SUMMARY_COLUMNS:
-                output_row[label] = percent_text(row.get(key)) if key in {"return_rate", "cancel_rate"} else row.get(key, "")
+                output_row[label] = (
+                    percent_text(row.get(key))
+                    if key in {"return_rate", "pre_ship_cancel_rate", "undelivered_rate"}
+                    else row.get(key, "")
+                )
             writer.writerow(output_row)
 
 
@@ -559,14 +567,33 @@ def main() -> int:
         if product:
             row["offer_id"] = offer_id
             row["product_name"] = row.get("product_name") or product.get("name", "")
-        cancel_quantity = as_int(cancelled_by_sku.get(str(sku), {}).get("cancel_quantity"))
-        row["cancel_quantity"] = cancel_quantity
+        pre_ship_cancel_quantity = as_int(cancelled_by_sku.get(str(sku), {}).get("pre_ship_cancel_quantity"))
+        undelivered_quantity = as_int(cancelled_by_sku.get(str(sku), {}).get("undelivered_quantity"))
+        row["pre_ship_cancel_quantity"] = pre_ship_cancel_quantity
+        row["undelivered_quantity"] = undelivered_quantity
         sold_quantity = as_int(row.get("sold_quantity"))
-        row["cancel_rate"] = Decimal(cancel_quantity) / Decimal(sold_quantity + cancel_quantity) if sold_quantity or cancel_quantity else Decimal("0")
-        for field in ["sold_quantity", "return_quantity", "cancel_quantity", "quantity", "operations_count"]:
+        row["pre_ship_cancel_rate"] = (
+            Decimal(pre_ship_cancel_quantity) / Decimal(sold_quantity + pre_ship_cancel_quantity)
+            if sold_quantity or pre_ship_cancel_quantity
+            else Decimal("0")
+        )
+        row["undelivered_rate"] = (
+            Decimal(undelivered_quantity) / Decimal(sold_quantity + undelivered_quantity)
+            if sold_quantity or undelivered_quantity
+            else Decimal("0")
+        )
+        for field in [
+            "sold_quantity",
+            "return_quantity",
+            "pre_ship_cancel_quantity",
+            "undelivered_quantity",
+            "quantity",
+            "operations_count",
+        ]:
             row[field] = as_int(row.get(field))
         row["return_rate"] = money(row.get("return_rate"))
-        row["cancel_rate"] = money(row.get("cancel_rate"))
+        row["pre_ship_cancel_rate"] = money(row.get("pre_ship_cancel_rate"))
+        row["undelivered_rate"] = money(row.get("undelivered_rate"))
         row["ad_spend_rub"] = money(row.get("ad_spend_rub"))
         for field in ZERO_COST_FIELDS:
             row[field] = "0.00"

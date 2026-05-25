@@ -63,16 +63,20 @@ def test_cancellation_stats_groups_cancelled_postings_by_sku():
         {
             "posting_number": "0116357976-0115-1",
             "status": "cancelled",
+            "cancellation": {"cancelled_after_ship": False},
             "products": [{"sku": 3289478411, "quantity": 1}],
         },
         {
             "posting_number": "45077885-0071-1",
             "status": "cancelled",
+            "cancellation": {"cancelled_after_ship": True},
             "products": [{"sku": 3289477696, "quantity": 2}],
         },
     ]
 
     stats = cancellation_stats(postings)
 
-    assert stats["3289478411"]["cancel_quantity"] == 1
-    assert stats["3289477696"]["cancel_quantity"] == 2
+    assert stats["3289478411"]["pre_ship_cancel_quantity"] == 1
+    assert stats["3289478411"]["undelivered_quantity"] == 0
+    assert stats["3289477696"]["pre_ship_cancel_quantity"] == 0
+    assert stats["3289477696"]["undelivered_quantity"] == 2
