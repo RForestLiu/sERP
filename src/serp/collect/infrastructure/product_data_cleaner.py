@@ -29,24 +29,42 @@ class ProductDataCleaner:
         }
 
         try:
-            cleaned = self._call_clean_llm(config, language, raw_copy)
-            params, evidence = self._normalize_params(cleaned.get("product_param", {}))
-            description = self._normalize_description(cleaned.get("product_description", {}))
-            audit["evidence"] = evidence
-            review = self._call_review_llm(config, language, raw_copy, params, description, evidence)
-            language_review = self._review_output_language(language, params, description)
-            if language_review:
-                review = self._merge_review_failure(review, language_review)
-            audit["review"] = review
-            audit["status"] = "ok" if review.get("passed") is True else "review_failed"
-            return {
-                "product_data": {
-                    "product_param": params,
-                    "product_description": description,
-                },
-                "raw_product_data": raw_copy,
-                "clean_audit": audit,
-            }
+            retry_reason = {}
+            for attempt in range(2):
+                cleaned = self._call_clean_llm(config, language, raw_copy, retry_reason)
+                params, evidence = self._normalize_params(cleaned.get("product_param", {}))
+                description = self._normalize_description(cleaned.get("product_description", {}))
+                audit["evidence"] = evidence
+                review = self._call_review_llm(config, language, raw_copy, params, description, evidence)
+                language_review = self._review_output_language(language, params, description)
+                if language_review:
+                    review = self._merge_review_failure(review, language_review)
+                audit["review"] = review
+                audit["status"] = "ok" if review.get("passed") is True else "review_failed"
+                if review.get("passed") is True:
+                    return {
+                        "product_data": {
+                            "product_param": params,
+                            "product_description": description,
+                        },
+                        "raw_product_data": raw_copy,
+                        "clean_audit": audit,
+                    }
+                if attempt == 0 and "language_mismatch" in (review.get("issues") or []):
+                    retry_reason = {
+                        "reason": "language_mismatch",
+                        "instruction": f"Translate every cleaned value into {language}. Do not copy source-language words into product_param values or product_description.",
+                        "failed_checks": review.get("checks", [])[-8:],
+                    }
+                    continue
+                return {
+                    "product_data": {
+                        "product_param": params,
+                        "product_description": description,
+                    },
+                    "raw_product_data": raw_copy,
+                    "clean_audit": audit,
+                }
         except Exception as exc:
             logger.warning("[collect] product data clean failed: %s", exc)
             audit["error"] = str(exc)
@@ -93,13 +111,15 @@ class ProductDataCleaner:
             pass
         return "English"
 
-    def _call_clean_llm(self, config: dict, language: str, raw_data: dict) -> dict:
+    def _call_clean_llm(self, config: dict, language: str, raw_data: dict, retry_reason: dict | None = None) -> dict:
         system_prompt = (
             "You are an ecommerce product data cleaning assistant. Output JSON only. "
             "Return exactly two first-level fields: product_param and product_description. "
             "product_param must contain only objective facts as flat snake_case key-value pairs, "
             "for example product_length, product_width, product_height, product_weight, material, color. "
             "Return product_param as an array of key, value, evidence objects. "
+            "Translate all cleaned field values and description text into the requested output_language. "
+            "Keep evidence as source references or exact source text; evidence may remain in the source language. "
             "product_description is for subjective or marketing copy such as Amazon About this item "
             "or Wildberries Description."
         )
@@ -113,6 +133,18 @@ class ProductDataCleaner:
             },
             "raw_product_data": raw_data,
         }, ensure_ascii=False)
+        if retry_reason:
+            user_prompt = json.dumps({
+                "previous_attempt_failed": retry_reason,
+                "output_language": language,
+                "raw_product_data": raw_data,
+                "return_schema": {
+                    "product_param": [
+                        {"key": "snake_case_field_name", "value": f"translated {language} value with unit", "evidence": "source field or exact text"}
+                    ],
+                    "product_description": {"summary": f"translated {language} description", "evidence": ["source field or exact text"]},
+                },
+            }, ensure_ascii=False)
         return self._call_llm(
             config,
             system_prompt,

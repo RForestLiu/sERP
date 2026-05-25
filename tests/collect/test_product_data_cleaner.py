@@ -28,7 +28,8 @@ def test_cleaner_preserves_raw_and_splits_parameters_descriptions(monkeypatch):
 
     def fake_post(_url, headers, json, timeout):
         calls.append(json)
-        if len(calls) == 1:
+        tool_name = json["tool_choice"]["function"]["name"]
+        if tool_name == "clean_product_data":
             content = {
                 "product_param": [
                     {"key": "product_weight", "value": "200g", "evidence": "product_details.weight"},
@@ -157,7 +158,7 @@ def test_cleaner_local_audit_rejects_non_english_output(monkeypatch):
 
     def fake_post(_url, headers, json, timeout):
         calls.append(json)
-        if len(calls) == 1:
+        if json["tool_choice"]["function"]["name"] == "clean_product_data":
             content = {
                 "product_param": [
                     {"key": "color", "value": "красный", "evidence": "product_details.color"},
@@ -197,6 +198,62 @@ def test_cleaner_local_audit_rejects_non_english_output(monkeypatch):
     assert cleaned["clean_audit"]["review"]["passed"] is False
     assert "language_mismatch" in cleaned["clean_audit"]["review"]["issues"]
     assert cleaned["clean_audit"]["review"]["checks"][-1]["field"] == "output_language"
+
+
+def test_cleaner_retries_once_after_language_mismatch(monkeypatch):
+    clean_calls = 0
+    user_prompts = []
+
+    def fake_post(_url, headers, json, timeout):
+        nonlocal clean_calls
+        tool_name = json["tool_choice"]["function"]["name"]
+        user_prompts.append(json["messages"][1]["content"])
+        if tool_name == "clean_product_data":
+            clean_calls += 1
+            if clean_calls == 1:
+                content = {
+                    "product_param": [
+                        {"key": "color", "value": "泻褉邪褋薪褘泄", "evidence": "product_details.color"},
+                    ],
+                    "product_description": {"summary": "袣芯褕械谢械泻.", "evidence": ["product_description"]},
+                }
+            else:
+                content = {
+                    "product_param": [
+                        {"key": "color", "value": "red", "evidence": "product_details.color"},
+                    ],
+                    "product_description": {"summary": "Women's leather wallet.", "evidence": ["product_description"]},
+                }
+        else:
+            content = {"passed": True, "issues": [], "checks": []}
+        return type("Resp", (), {
+            "status_code": 200,
+            "text": "ok",
+            "json": lambda self: {
+                "choices": [{
+                    "message": {
+                        "tool_calls": [{
+                            "function": {"arguments": json_module.dumps(content, ensure_ascii=False)},
+                        }],
+                    },
+                }],
+            },
+        })()
+
+    json_module = json
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
+    monkeypatch.setattr("src.serp.collect.infrastructure.product_data_cleaner.requests.post", fake_post)
+
+    cleaned = ProductDataCleaner(FakeSettings()).clean({
+        "product_details": {"color": "泻褉邪褋薪褘泄"},
+        "product_description": "袣芯褕械谢械泻.",
+    })
+
+    assert cleaned["clean_audit"]["status"] == "ok"
+    assert cleaned["product_data"]["product_param"] == {"color": "red"}
+    assert cleaned["product_data"]["product_description"] == "Women's leather wallet."
+    assert clean_calls == 2
+    assert "previous_attempt_failed" in user_prompts[2]
 
 
 def test_cleaner_falls_back_when_llm_is_not_configured(monkeypatch):
