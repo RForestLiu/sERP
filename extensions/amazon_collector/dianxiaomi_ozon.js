@@ -3710,9 +3710,11 @@
 
     // 分类统计
     var txtFields = [], selFields = [], cbFields = [], rdFields = [], kindStats = {};
+    var dxmMatched = 0;
     formFields.forEach(function (f) {
       var kind = f.controlKind || dxmControlKindFromField(f);
       kindStats[kind] = (kindStats[kind] || 0) + 1;
+      if (f.dxmAttribute && f.dxmAttribute.attributeId) dxmMatched++;
       if (f.tag === "checkbox-group") cbFields.push(f);
       else if (f.tag === "radio-group") rdFields.push(f);
       else if (f.tag === "select") selFields.push(f);
@@ -3733,6 +3735,8 @@
       '<br><span style="color:#667085;font-size:12px;">控件类型：' + kindParts.join(' / ') + '</span>';
 
     // 详情列表
+    summary.innerHTML += '<br><span style="color:#475569;font-size:12px;">DXM属性匹配 ' + dxmMatched + '/' + formFields.length + '</span>';
+
     var sections = document.getElementById("serp-extract-sections");
     var html = "";
 

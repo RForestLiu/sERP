@@ -27,3 +27,10 @@ def test_extension_uses_dxm_attribute_ids_for_deterministic_prefill():
     assert "var attrId = dxmAttributeIdForField(f);" in source
     for attr_id in ("4383", "5299", "5355", "6573"):
         assert f'attrId === "{attr_id}"' in source
+
+
+def test_extract_panel_reports_dxm_metadata_match_count():
+    source = EXTENSION_FILE.read_text(encoding="utf-8")
+
+    assert "var dxmMatched" in source
+    assert "DXM属性匹配" in source
