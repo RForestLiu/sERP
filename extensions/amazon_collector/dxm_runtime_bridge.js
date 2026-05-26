@@ -32,6 +32,9 @@
       collection: attr.collection,
       required: attr.required,
       dictionaryId: String(attr.dictionaryId || attr.dictionaryIdStr || "0"),
+      categoryId: attr.categoryId || "",
+      descriptionCategoryId: attr.descriptionCategoryId || attr.description_category_id || "",
+      typeId: attr.typeId || attr.type_id || "",
       propertyType: attr.propertyType,
       optionsNum: attr.optionsNum,
       maxValueCount: attr.maxValueCount,
@@ -59,6 +62,9 @@
         if (meta && meta.attributeId) fields.push(meta);
       });
     });
+    var fieldCategory = fields.find(function (field) {
+      return field.descriptionCategoryId || field.typeId;
+    }) || {};
     return {
       flags: {
         showProductVideo: !!(attrsInfo && attrsInfo.showProductVideo),
@@ -68,8 +74,8 @@
         showRichJSON: !!(attrsInfo && attrsInfo.showRichJSON)
       },
       category: {
-        descriptionCategoryId: dataState && dataState.descriptionCategoryId,
-        typeId: dataState && dataState.typeId
+        descriptionCategoryId: (dataState && dataState.descriptionCategoryId) || fieldCategory.descriptionCategoryId || "",
+        typeId: (dataState && dataState.typeId) || fieldCategory.typeId || ""
       },
       fields: fields
     };

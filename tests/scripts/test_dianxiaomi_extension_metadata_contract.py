@@ -25,7 +25,7 @@ def test_extension_sends_dxm_attribute_metadata_to_llm():
     source = EXTENSION_FILE.read_text(encoding="utf-8")
 
     assert "clean.dxmAttribute" in source
-    for key in ("attributeId", "dictionaryId", "collection", "required", "dxmControlKind"):
+    for key in ("attributeId", "dictionaryId", "collection", "required", "dxmControlKind", "descriptionCategoryId", "typeId"):
         assert key in source
 
 
@@ -82,6 +82,8 @@ def test_extension_bridges_page_context_for_dxm_runtime_model():
     assert "web_accessible_resources" in manifest
     assert "descriptionCategoryId" in bridge
     assert "typeId" in bridge
+    assert "fieldCategory.descriptionCategoryId" in bridge
+    assert "fieldCategory.typeId" in bridge
 
 
 def test_extension_sends_category_context_to_autofill_api():
@@ -90,6 +92,8 @@ def test_extension_sends_category_context_to_autofill_api():
     assert "function collectDxmCategoryContext()" in source
     assert "store_id: detectStoreId()" in source
     assert "category_context: collectDxmCategoryContext()" in source
+    assert "fieldCategory.descriptionCategoryId" in source
+    assert "fieldCategory.typeId" in source
 
 
 def test_extract_diagnostics_waits_for_dxm_runtime_cache():

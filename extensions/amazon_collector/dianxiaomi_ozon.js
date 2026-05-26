@@ -2718,6 +2718,9 @@
       collection: attr.collection,
       required: attr.required,
       dictionaryId: String(attr.dictionaryId || attr.dictionaryIdStr || "0"),
+      categoryId: attr.categoryId || "",
+      descriptionCategoryId: attr.descriptionCategoryId || attr.description_category_id || "",
+      typeId: attr.typeId || attr.type_id || "",
       propertyType: attr.propertyType,
       optionsNum: attr.optionsNum,
       maxValueCount: attr.maxValueCount,
@@ -2806,6 +2809,9 @@
         if (meta && meta.attributeId) fields.push(meta);
       });
     });
+    var fieldCategory = fields.find(function (field) {
+      return field.descriptionCategoryId || field.typeId;
+    }) || {};
     return {
       flags: {
         showProductVideo: !!(attrsInfo && attrsInfo.showProductVideo),
@@ -2814,7 +2820,10 @@
         showSizeTable: !!(attrsInfo && attrsInfo.showSizeTable),
         showRichJSON: !!(attrsInfo && attrsInfo.showRichJSON)
       },
-      category: {},
+      category: {
+        descriptionCategoryId: fieldCategory.descriptionCategoryId || "",
+        typeId: fieldCategory.typeId || ""
+      },
       fields: fields
     };
   }
@@ -4551,6 +4560,8 @@
           collection: f.dxmAttribute.collection,
           required: f.dxmAttribute.required,
           dictionaryId: f.dxmAttribute.dictionaryId,
+          descriptionCategoryId: f.dxmAttribute.descriptionCategoryId,
+          typeId: f.dxmAttribute.typeId,
           propertyType: f.dxmAttribute.propertyType,
           optionsNum: f.dxmAttribute.optionsNum,
           maxValueCount: f.dxmAttribute.maxValueCount,
