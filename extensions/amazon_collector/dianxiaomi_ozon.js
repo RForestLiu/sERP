@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.40";
+  var SERP_EXTENSION_VERSION = "3.2.41";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -3439,10 +3439,14 @@
   function fillDxmDictionaryField(entry, value) {
     var attr = entry && entry.dxmAttribute;
     if (!attr || !attr.dictionaryId || String(attr.dictionaryId) === "0") return false;
+    entry._lastFillError = "";
     var options = Array.isArray(attr.options) ? attr.options : [];
     var mapping = entry._mapping || {};
     var matched = matchDxmOption(options, value, mapping);
     if (!matched) {
+      entry._lastFillError = options.length
+        ? "DXM候选不包含该值：" + String(value || "")
+        : "DXM候选未加载：" + String(value || "");
       console.warn("[sERP] DXM runtime option not loaded label=" + (entry.label || "?") + " value=" + value);
       return false;
     }
@@ -3816,6 +3820,10 @@
       if (entry.renderMode === "AntSelect") {
         if (isDxmDictionaryField) {
           if (fillDxmDictionaryField(entry, value)) return true;
+          return false;
+        }
+        if (entry.section === "product_attributes") {
+          entry._lastFillError = "产品属性下拉缺少DXM候选，已跳过点击兜底";
           return false;
         }
         return await fillAntSelect(el, value, entry.label);
@@ -4927,6 +4935,8 @@
             errorMsg = "DOM 断连：元素已从页面卸载";
           } else if (!preEntry.el || !preEntry.el.isConnected) {
             errorMsg = "DOM 断连：元素引用失效";
+          } else if (preEntry._lastFillError) {
+            errorMsg = preEntry._lastFillError;
           } else {
             errorMsg = "值不匹配：\"" + String(m.value) + "\" 未命中任何选项";
           }
