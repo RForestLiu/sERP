@@ -395,8 +395,6 @@
       /* ===== 平台提示词 ===== */
       '<div class="hint-section" id="hint-section-platform">' +
         '<div class="hint-section-header">📋 平台提示词 <span class="hs-ctx">(当前: <span id="hint-ctx-platform">--</span>)</span></div>' +
-        '<div class="hint-label">产品属性/产品信息</div>' +
-        '<textarea class="serp-hint-input" id="serp-hint-product-fields" placeholder="产品属性、产品信息填充提示..."></textarea>' +
         '<div class="hint-label">产品标题</div>' +
         '<textarea class="serp-hint-input" id="serp-hint-title" placeholder="标题填充提示..."></textarea>' +
         '<div class="hint-label">产品描述</div>' +
@@ -405,8 +403,6 @@
         '<textarea class="serp-hint-input" id="serp-hint-json" placeholder="JSON属性填充提示..."></textarea>' +
         '<div class="hint-label">主题标签</div>' +
         '<textarea class="serp-hint-input" id="serp-hint-hashtag" placeholder="主题标签填充提示..."></textarea>' +
-        '<div class="hint-label">变种属性</div>' +
-        '<textarea class="serp-hint-input" id="serp-hint-variant" placeholder="变种属性、SKU、价格、库存、尺寸重量填充提示..."></textarea>' +
         '<div class="hint-label">平台专属提示</div>' +
         '<textarea class="serp-hint-input" id="serp-hint-platform-prompt" placeholder="当前平台的额外填充指引..."></textarea>' +
         '<div class="hint-save-row"><button class="hint-save-btn" data-level="platform">💾 保存</button></div>' +
@@ -423,6 +419,10 @@
         '<div class="hint-section-header">📋 品类提示词 <span class="hs-ctx">(当前: <span id="hint-ctx-category">--</span>)</span></div>' +
         '<div class="hint-label">品类专属提示</div>' +
         '<textarea class="serp-hint-input" id="serp-hint-category-prompt" placeholder="此品类的额外填充指引..."></textarea>' +
+        '<div class="hint-label">产品属性/产品信息</div>' +
+        '<textarea class="serp-hint-input" id="serp-hint-product-fields" placeholder="此品类的产品属性、产品信息填充提示..."></textarea>' +
+        '<div class="hint-label">变种属性</div>' +
+        '<textarea class="serp-hint-input" id="serp-hint-variant" placeholder="此品类的变种属性、SKU、价格、库存、尺寸重量填充提示..."></textarea>' +
         '<div class="hint-save-row"><button class="hint-save-btn" data-level="category">💾 保存</button></div>' +
       '</div>' +
     '</div>';
@@ -529,23 +529,23 @@
     if (!keys.length) return;
 
     chrome.storage.local.get(keys, function (data) {
+      var legacyProductFields = "";
+      var legacyVariant = "";
       // 平台提示词
       if (platform && data["serp_hint_platform_" + platform]) {
         var pd = data["serp_hint_platform_" + platform];
-        hintProductFields.value = pd.product_fields || "";
+        legacyProductFields = pd.product_fields || "";
+        legacyVariant = pd.variant || "";
         hintTitle.value = pd.title || "";
         hintDesc.value = pd.description || "";
         hintJson.value = pd.json_text || "";
         hintHashtag.value = pd.hashtag || "";
-        hintVariant.value = pd.variant || "";
         hintPlatformPrompt.value = pd.platform_prompt || "";
       } else {
-        hintProductFields.value = "";
         hintTitle.value = "";
         hintDesc.value = "";
         hintJson.value = "";
         hintHashtag.value = "";
-        hintVariant.value = "";
         hintPlatformPrompt.value = "";
       }
       // 店铺提示词
@@ -559,8 +559,12 @@
       if (storeId && category && data["serp_hint_category_" + storeId + "_" + category]) {
         var cd = data["serp_hint_category_" + storeId + "_" + category];
         hintCategoryPrompt.value = cd.prompt || "";
+        hintProductFields.value = cd.product_fields || legacyProductFields || "";
+        hintVariant.value = cd.variant || legacyVariant || "";
       } else {
         hintCategoryPrompt.value = "";
+        hintProductFields.value = legacyProductFields || "";
+        hintVariant.value = legacyVariant || "";
       }
     });
   }
@@ -576,12 +580,10 @@
       if (!platform) { showToast("未识别当前平台，无法保存", "error"); return; }
       key = "serp_hint_platform_" + platform;
       kv[key] = {
-        product_fields: hintProductFields.value,
         title: hintTitle.value,
         description: hintDesc.value,
         json_text: hintJson.value,
         hashtag: hintHashtag.value,
-        variant: hintVariant.value,
         platform_prompt: hintPlatformPrompt.value
       };
     } else if (level === "store") {
@@ -591,7 +593,11 @@
     } else if (level === "category") {
       if (!storeId || !category) { showToast("请先选择店铺和品类后再保存", "error"); return; }
       key = "serp_hint_category_" + storeId + "_" + category;
-      kv[key] = { prompt: hintCategoryPrompt.value };
+      kv[key] = {
+        prompt: hintCategoryPrompt.value,
+        product_fields: hintProductFields.value,
+        variant: hintVariant.value
+      };
     }
 
     chrome.storage.local.set(kv, function () {
@@ -3692,14 +3698,16 @@
     return new Promise(function (resolve) {
       chrome.storage.local.get(keys, function (data) {
         var prompts = {};
+        var legacyProductFields = "";
+        var legacyVariant = "";
         if (platform && data["serp_hint_platform_" + platform]) {
           var pd = data["serp_hint_platform_" + platform];
-          if (pd.product_fields) prompts.product_fields = pd.product_fields;
+          legacyProductFields = pd.product_fields || "";
+          legacyVariant = pd.variant || "";
           if (pd.title) prompts.title = pd.title;
           if (pd.description) prompts.description = pd.description;
           if (pd.json_text) prompts.json_text = pd.json_text;
           if (pd.hashtag) prompts.hashtag = pd.hashtag;
-          if (pd.variant) prompts.variant = pd.variant;
           if (pd.platform_prompt) prompts.platform = pd.platform_prompt;
         }
         if (storeId && data["serp_hint_store_" + storeId]) {
@@ -3709,7 +3717,11 @@
         if (storeId && category && data["serp_hint_category_" + storeId + "_" + category]) {
           var cd = data["serp_hint_category_" + storeId + "_" + category];
           if (cd.prompt) prompts.category = cd.prompt;
+          if (cd.product_fields) prompts.product_fields = cd.product_fields;
+          if (cd.variant) prompts.variant = cd.variant;
         }
+        if (!prompts.product_fields && legacyProductFields) prompts.product_fields = legacyProductFields;
+        if (!prompts.variant && legacyVariant) prompts.variant = legacyVariant;
         console.log("[sERP] collectCustomPrompts: resolved keys=" + keys.join(",") + " prompts=" + JSON.stringify(Object.keys(prompts)));
         resolve(prompts);
       });
