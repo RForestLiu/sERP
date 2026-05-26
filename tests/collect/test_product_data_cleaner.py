@@ -23,6 +23,20 @@ class FakeSettings:
         return type("View", (), {"settings": {"product_clean_language": self.language}})()
 
 
+class LaoZhangCleanSettings(FakeSettings):
+    def get_feature_model(self, feature_key):
+        assert feature_key == "product_data_clean"
+        return "laozhang_gpt_5_4_mini"
+
+    def get_models(self):
+        return [{
+            "id": "laozhang_gpt_5_4_mini",
+            "base_url": "https://api.laozhang.ai/v1/chat/completions",
+            "api_key_env": "API_KEY",
+            "model": "gpt-5.4-mini",
+        }]
+
+
 def test_cleaner_preserves_raw_and_splits_parameters_descriptions(monkeypatch):
     calls = []
 
@@ -92,6 +106,47 @@ def test_cleaner_preserves_raw_and_splits_parameters_descriptions(monkeypatch):
     assert calls[0]["tools"][0]["function"]["strict"] is True
     assert calls[0]["tool_choice"]["function"]["name"] == "clean_product_data"
     assert calls[0]["thinking"] == {"type": "disabled"}
+
+
+def test_cleaner_can_use_laozhang_openai_compatible_model(monkeypatch):
+    captured = {}
+
+    def fake_post(url, headers, json, timeout):
+        captured.setdefault("urls", []).append(url)
+        captured["authorization"] = headers["Authorization"]
+        captured.setdefault("models", []).append(json["model"])
+        content = {
+            "product_param": [],
+            "product_description": {"summary": "", "evidence": []},
+        }
+        if json["tool_choice"]["function"]["name"] == "audit_product_data":
+            content = {"passed": True, "issues": [], "checks": []}
+        return type("Resp", (), {
+            "status_code": 200,
+            "text": "ok",
+            "json": lambda self: {
+                "choices": [{
+                    "message": {
+                        "tool_calls": [{
+                            "function": {"arguments": json_module.dumps(content, ensure_ascii=False)},
+                        }],
+                    },
+                }],
+            },
+        })()
+
+    json_module = json
+    monkeypatch.setenv("API_KEY", "sk-laozhang")
+    monkeypatch.setattr("src.serp.collect.infrastructure.product_data_cleaner.requests.post", fake_post)
+
+    ProductDataCleaner(LaoZhangCleanSettings()).clean({"title": "Wallet"})
+
+    assert captured["urls"] == [
+        "https://api.laozhang.ai/v1/chat/completions",
+        "https://api.laozhang.ai/v1/chat/completions",
+    ]
+    assert captured["models"] == ["gpt-5.4-mini", "gpt-5.4-mini"]
+    assert captured["authorization"] == "Bearer sk-laozhang"
 
 
 def test_cleaner_routes_strict_tools_to_deepseek_beta(monkeypatch):

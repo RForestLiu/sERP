@@ -62,6 +62,15 @@ DEFAULT_SETTINGS = {
             "model": "gemini-3.1-flash-image-preview",
             "enabled": True,
         },
+        {
+            "id": "laozhang_gpt_5_4_mini",
+            "name": "LaoZhang GPT-5.4 Mini",
+            "provider": "laozhang",
+            "base_url": "https://api.laozhang.ai/v1/chat/completions",
+            "api_key_env": "API_KEY",
+            "model": "gpt-5.4-mini",
+            "enabled": True,
+        },
     ],
     "feature_models": {
         "image_generation": "gemini_image",
@@ -72,7 +81,7 @@ DEFAULT_SETTINGS = {
         "translation": "deepseek_v4_flash",
         "product_specs_extract": "deepseek_v4_flash",
         "product_specs_review": "deepseek_v4_flash",
-        "product_data_clean": "deepseek_v4_pro",
+        "product_data_clean": "laozhang_gpt_5_4_mini",
     },
     "product_clean_language": "English",
     "pricing_formulas": [

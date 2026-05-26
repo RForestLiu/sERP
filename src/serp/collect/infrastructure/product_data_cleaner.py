@@ -77,13 +77,14 @@ class ProductDataCleaner:
     def availability(self) -> tuple[bool, str, dict]:
         config = self._resolve_config()
         if not config.get("api_key"):
-            return False, "DEEPSEEK_API_KEY not configured", config
+            return False, f"{config.get('api_key_env') or 'API key'} not configured", config
         return True, "", config
 
     def _resolve_config(self) -> dict:
         config = {
             "base_url": os.getenv("DEEPSEEK_API_URL", "https://api.deepseek.com/v1/chat/completions"),
             "api_key": os.getenv("DEEPSEEK_API_KEY", ""),
+            "api_key_env": "DEEPSEEK_API_KEY",
             "model": os.getenv("DEEPSEEK_PRODUCT_CLEAN_MODEL", "deepseek-v4-pro"),
         }
         try:
@@ -94,6 +95,7 @@ class ProductDataCleaner:
                 config["base_url"] = selected.get("base_url") or config["base_url"]
                 config["model"] = selected.get("model") or config["model"]
                 api_key_env = selected.get("api_key_env") or "DEEPSEEK_API_KEY"
+                config["api_key_env"] = api_key_env
                 config["api_key"] = os.getenv(api_key_env, config["api_key"])
         except Exception as exc:
             logger.warning("[collect] settings model resolve failed: %s", exc)
@@ -192,7 +194,7 @@ class ProductDataCleaner:
         tool_name: str = "",
     ) -> dict:
         if not config.get("api_key"):
-            raise ValueError("DEEPSEEK_API_KEY not configured")
+            raise ValueError(f"{config.get('api_key_env') or 'API key'} not configured")
         payload = {
             "model": config["model"],
             "messages": [
