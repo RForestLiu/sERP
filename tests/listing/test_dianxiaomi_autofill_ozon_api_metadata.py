@@ -49,25 +49,7 @@ class FakeCategoryFacade:
 
     def get_category_attributes(self, store_id, category_id, type_id=None):
         self.calls.append((store_id, category_id, type_id))
-        return {
-            "success": True,
-            "attributes": [
-                {
-                    "id": 4389,
-                    "name": "Страна-изготовитель",
-                    "name_cn": "原产国",
-                    "type": "dictionary",
-                    "dictionary_id": 971082156,
-                    "is_required": True,
-                    "is_collection": False,
-                    "max_value_count": 1,
-                    "dictionary_values": [
-                        {"id": 970674898, "value": "Китай", "value_cn": "中国"},
-                        {"id": 970674899, "value": "Россия", "value_cn": "俄罗斯"},
-                    ],
-                }
-            ],
-        }
+        return {"success": True, "attributes": [{"id": 4389}]}
 
 
 def make_service(autofill, category_facade):
@@ -83,7 +65,7 @@ def make_service(autofill, category_facade):
     )
 
 
-def test_dianxiaomi_autofill_enriches_fields_with_current_ozon_api_attributes():
+def test_dianxiaomi_autofill_uses_dxm_runtime_without_ozon_api_enrichment():
     autofill = CapturingAutoFill()
     category_facade = FakeCategoryFacade()
     service = make_service(autofill, category_facade)
@@ -96,18 +78,13 @@ def test_dianxiaomi_autofill_enriches_fields_with_current_ozon_api_attributes():
         },
         "form_fields": [{
             "index": 1,
-            "label": "原产国",
+            "label": "Country of origin",
             "dxmAttribute": {"attributeId": "4389"},
         }],
     })
 
     assert result["success"] is True
-    assert category_facade.calls == [("ozon_anling", 17027904, 93338)]
+    assert category_facade.calls == []
     field = autofill.form_fields[0]
-    assert field["ozonAttribute"]["id"] == 4389
-    assert field["ozonAttribute"]["name_cn"] == "原产国"
-    assert field["ozonAttribute"]["dictionary_id"] == 971082156
-    assert field["ozonAttribute"]["dictionary_values"] == [
-        {"id": 970674898, "value": "Китай", "value_cn": "中国"},
-        {"id": 970674899, "value": "Россия", "value_cn": "俄罗斯"},
-    ]
+    assert "ozonAttribute" not in field
+    assert field["dxmAttribute"]["attributeId"] == "4389"

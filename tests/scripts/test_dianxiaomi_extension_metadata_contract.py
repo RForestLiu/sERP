@@ -29,6 +29,31 @@ def test_extension_sends_dxm_attribute_metadata_to_llm():
         assert key in source
 
 
+def test_extension_sends_dxm_runtime_options_to_llm():
+    source = EXTENSION_FILE.read_text(encoding="utf-8")
+    bridge = BRIDGE_FILE.read_text(encoding="utf-8")
+
+    assert "function compactDxmOptions" in source
+    assert "function compactDxmOptions" in bridge
+    assert "_allOptions" in source
+    assert "_options" in source
+    assert "options: compactDxmOptions(attr)" in source
+    assert "options: compactDxmOptions(attr)" in bridge
+    assert "valueCn" in source
+    assert "valueEn" in source
+
+
+def test_extension_uses_dxm_dictionary_runtime_fill_path():
+    source = EXTENSION_FILE.read_text(encoding="utf-8")
+
+    assert "function fillDxmDictionaryField" in source
+    assert "entry.dxmAttribute" in source
+    assert "dxmAttribute: f.dxmAttribute || null" in source
+    assert "dictionary_value_id" in source
+    assert "fillDxmDictionaryField(entry, value)" in source
+    assert "return await fillAntSelect(el, value, entry.label)" in source
+
+
 def test_extension_uses_dxm_attribute_ids_for_deterministic_prefill():
     source = EXTENSION_FILE.read_text(encoding="utf-8")
 

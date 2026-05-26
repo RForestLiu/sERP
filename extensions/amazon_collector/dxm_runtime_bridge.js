@@ -20,6 +20,39 @@
     return "text-input";
   }
 
+  function compactDxmOptions(attr) {
+    function parseOptions(value) {
+      if (Array.isArray(value)) return value;
+      if (typeof value === "string" && value.trim()) {
+        try {
+          var parsed = JSON.parse(value);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+          return [];
+        }
+      }
+      return [];
+    }
+    var source = parseOptions(attr && attr._allOptions);
+    if (!source.length) source = parseOptions(attr && attr._options);
+    if (!source.length) source = parseOptions(attr && attr.options);
+    var seen = {};
+    return source.map(function (item) {
+      if (!item || typeof item !== "object") return null;
+      var id = item.idStr || item.id || item.valueId || item.dictionary_value_id || "";
+      var value = item.value || item.label || item.text || item.name || "";
+      var key = String(id || value).trim();
+      if (!key || seen[key]) return null;
+      seen[key] = true;
+      return {
+        id: String(id || ""),
+        value: String(value || ""),
+        valueCn: String(item.valueCn || item.value_cn || item.textCn || ""),
+        valueEn: String(item.valueEn || item.value_en || item.textEn || "")
+      };
+    }).filter(Boolean).slice(0, 300);
+  }
+
   function compactAttr(attr, sourceGroup) {
     if (!attr) return null;
     return {
@@ -42,7 +75,8 @@
       _compType: attr._compType,
       _searchFlag: attr._searchFlag,
       _remoteSearch: attr._remoteSearch,
-      dxmControlKind: inferControlKind(attr)
+      dxmControlKind: inferControlKind(attr),
+      options: compactDxmOptions(attr)
     };
   }
 

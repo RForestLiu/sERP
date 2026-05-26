@@ -1,18 +1,22 @@
+import json
+
+import requests
+
 from src.serp.listing.infrastructure.autofill_client import DeepSeekAutoFillClient
 
 
 def test_form_field_summary_includes_dianxiaomi_runtime_metadata():
     fields = [{
         "index": 7,
-        "label": "材料",
+        "label": "Material",
         "tag": "select",
         "type": "select",
         "controlKind": "ant-select-search",
         "dxmAttribute": {
             "sourceGroup": "attrsList",
             "attributeId": "5309",
-            "name": "Материал",
-            "nameCn": "材料",
+            "name": "Material",
+            "nameCn": "Material",
             "type": "String",
             "collection": 1,
             "required": 1,
@@ -25,60 +29,76 @@ def test_form_field_summary_includes_dianxiaomi_runtime_metadata():
 
     summary, _, _ = DeepSeekAutoFillClient._build_form_fields_summary(fields)
 
-    assert "DXM属性ID: 5309" in summary
-    assert "DXM控件: dictionary-multiple-remote" in summary
-    assert "字典ID: 321" in summary
-    assert "多值: 1" in summary
+    assert "DXM" in summary
+    assert "5309" in summary
+    assert "dictionary-multiple-remote" in summary
+    assert "321" in summary
 
 
-def test_form_field_summary_includes_ozon_api_attribute_metadata():
+def test_form_field_summary_includes_dxm_dictionary_options():
     fields = [{
         "index": 4,
-        "label": "原产国",
-        "tag": "checkbox-group",
-        "type": "checkbox",
-        "ozonAttribute": {
-            "id": 4389,
-            "name": "Страна-изготовитель",
-            "name_cn": "原产国",
-            "type": "dictionary",
-            "dictionary_id": 971082156,
-            "is_required": True,
-            "is_collection": False,
-            "max_value_count": 1,
-        },
-    }]
-
-    summary, _, _ = DeepSeekAutoFillClient._build_form_fields_summary(fields)
-
-    assert "Ozon属性ID: 4389" in summary
-    assert "Ozon类型: dictionary" in summary
-    assert "Ozon字典ID: 971082156" in summary
-    assert "Ozon名称: 原产国/Страна-изготовитель" in summary
-
-
-def test_form_field_summary_includes_ozon_dictionary_values():
-    fields = [{
-        "index": 4,
-        "label": "原产国",
+        "label": "Country of origin",
         "tag": "select",
         "type": "select",
-        "ozonAttribute": {
-            "id": 4389,
-            "name": "Страна-изготовитель",
-            "name_cn": "原产国",
-            "type": "dictionary",
-            "dictionary_id": 971082156,
-            "dictionary_values": [
-                {"id": 970674898, "value": "Китай", "value_cn": "中国"},
-                {"id": 970674899, "value": "Россия", "value_cn": "俄罗斯"},
+        "dxmAttribute": {
+            "attributeId": "4389",
+            "name": "Strana-izgotovitel",
+            "nameCn": "Country of origin",
+            "dictionaryId": "1935",
+            "dxmControlKind": "dictionary-single",
+            "options": [
+                {"id": "90296", "value": "Kitay", "valueCn": "China", "valueEn": "China"},
+                {"id": "90295", "value": "Rossiya", "valueCn": "Russia", "valueEn": "Russia"},
             ],
         },
     }]
 
     summary, _, _ = DeepSeekAutoFillClient._build_form_fields_summary(fields)
 
-    assert "Ozon官方候选" in summary
-    assert "中国(Китай)" in summary
-    assert "俄罗斯(Россия)" in summary
-    assert "字典字段只能返回 Ozon官方候选之一" in summary
+    assert "DXM" in summary
+    assert "90296" in summary
+    assert "China(Kitay)" in summary
+    assert "dictionary_value_id" in summary
+
+
+def test_api_call_preserves_dictionary_id_and_evidence(monkeypatch):
+    client = DeepSeekAutoFillClient(api_key="key", base_url="https://example.test/v1")
+
+    class FakeResponse:
+        status_code = 200
+        text = ""
+
+        def json(self):
+            return {
+                "choices": [{
+                    "message": {
+                        "content": json.dumps({
+                            "mappings": [{
+                                "index": 4,
+                                "value": "Kitay",
+                                "dictionary_value_id": "90296",
+                                "evidence": "origin country from product data",
+                                "reason": "country field",
+                                "confidence": 0.91,
+                                "needs_review": False,
+                            }]
+                        })
+                    }
+                }]
+            }
+
+    monkeypatch.setattr(requests, "post", lambda *args, **kwargs: FakeResponse())
+
+    mappings = client._api_call("system", "user")
+
+    assert mappings == [{
+        "index": 4,
+        "label": "",
+        "value": "Kitay",
+        "dictionary_value_id": "90296",
+        "evidence": "origin country from product data",
+        "reason": "country field",
+        "confidence": 0.91,
+        "needs_review": False,
+    }]

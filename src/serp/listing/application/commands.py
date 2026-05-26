@@ -644,7 +644,6 @@ class ListingApplicationService(ListingFacade):
             return {"error": "DEEPSEEK_API_KEY not configured"}
 
         try:
-            form_fields = self._enrich_dianxiaomi_fields_with_ozon_api_meta(store_id, data, form_fields)
             mappings = self._autofill_client.analyze_dianxiaomi(
                 skc=skc,
                 product_title=product_title,

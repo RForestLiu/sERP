@@ -535,8 +535,16 @@ SKC: {skc}
             mappings = parsed.get("mappings", [])
             if not isinstance(mappings, list):
                 return self._retry(sys_prompt, usr_prompt, label, model)
-            return [{"index": m.get("index"), "label": m.get("label", ""), "value": str(m.get("value", ""))}
-                    for m in mappings if isinstance(m, dict) and m.get("value")]
+            cleaned_mappings = []
+            for m in mappings:
+                if not isinstance(m, dict) or not m.get("value"):
+                    continue
+                item = {"index": m.get("index"), "label": m.get("label", ""), "value": str(m.get("value", ""))}
+                for key in ("dictionary_value_id", "evidence", "reason", "confidence", "needs_review"):
+                    if key in m:
+                        item[key] = m.get(key)
+                cleaned_mappings.append(item)
+            return cleaned_mappings
         except _json.JSONDecodeError:
             logger.warning("[auto-fill/%s] JSON 解析失败", label)
             return self._retry(sys_prompt, usr_prompt, label, model)
@@ -547,7 +555,7 @@ SKC: {skc}
     def _retry(self, sys_prompt: str, usr_prompt: str, label: str, model: str) -> list[dict]:
         if "retry" in label:
             return []
-        retry_user = usr_prompt + "\n\n上一次返回不是合法 JSON 或 mappings 不是数组。请只返回 JSON：{\"mappings\":[{\"index\":0,\"value\":\"...\"}]}"
+        retry_user = usr_prompt + "\n\n上一次返回不是合法 JSON 或 mappings 不是数组。请只返回 JSON：{\"mappings\":[{\"index\":0,\"value\":\"...\",\"evidence\":\"...\"}]}"
         return self._api_call(sys_prompt, retry_user, label + ":retry", model)
 
     def _api_call_attr(self, sys_prompt: str, usr_prompt: str, label: str = "fill") -> list[dict]:
@@ -697,6 +705,27 @@ SKC: {skc}
                 )
                 if dxm_attr.get("name") or dxm_attr.get("nameCn"):
                     field_desc += f" | DXM名称: {dxm_attr.get('nameCn') or ''}/{dxm_attr.get('name') or ''}"
+                dxm_options = dxm_attr.get("options") or []
+                if isinstance(dxm_options, list) and dxm_options:
+                    value_texts: list[str] = []
+                    for value_item in dxm_options[:100]:
+                        if isinstance(value_item, dict):
+                            value_id = str(value_item.get("id") or value_item.get("dictionary_value_id") or "").strip()
+                            value = str(value_item.get("value") or value_item.get("text") or "").strip()
+                            value_cn = str(value_item.get("valueCn") or value_item.get("value_cn") or value_item.get("text_cn") or "").strip()
+                            text = f"{value_cn}({value})" if value_cn and value else (value or value_cn)
+                            if value_id and text:
+                                text = f"{value_id}:{text}"
+                            if text:
+                                value_texts.append(text)
+                        else:
+                            value_texts.append(str(value_item).strip())
+                    if value_texts:
+                        field_desc += (
+                            " | DXM候选: "
+                            + ", ".join(value_texts)
+                            + " | 字典字段优先返回 dictionary_value_id，value 必须来自 DXM 候选"
+                        )
             ozon_attr = f.get("ozonAttribute") or {}
             if isinstance(ozon_attr, dict) and ozon_attr.get("id"):
                 field_desc += (
@@ -877,7 +906,7 @@ SKC: {skc}
 - 优先使用 manual_data.effective_weight_g / effective_size_spec
 
 请严格按照以下 JSON 格式返回：
-{"mappings": [{"index": <序号>, "value": "..."}, ...]}
+{"mappings": [{"index": <序号>, "value": "...", "evidence": "依据的产品数据或判断理由", "dictionary_value_id": "字典候选ID，可选"}, ...]}
 
 ## Hard validation contract
 - Fields whose label/tag/type contains JSON, rich, showcase, 富文本, raShowcase, or json-editor are JSON rich-text fields. Fill them with valid JSON only.
