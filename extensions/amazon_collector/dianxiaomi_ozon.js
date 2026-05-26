@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.39";
+  var SERP_EXTENSION_VERSION = "3.2.40";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -3503,6 +3503,7 @@
       var tag = el.tagName.toLowerCase();
       var isCheckboxGroup = (entry.tag === "checkbox-group" && entry.els && entry.els.length > 1);
       var isRadioGroup = (entry.tag === "radio-group" && entry.els && entry.els.length > 1);
+      var isDxmDictionaryField = entry.dxmAttribute && entry.dxmAttribute.dictionaryId && String(entry.dxmAttribute.dictionaryId) !== "0";
 
       function trigger(el, eventName) {
         el.dispatchEvent(new Event(eventName, { bubbles: true }));
@@ -3672,6 +3673,10 @@
 
       // ===== checkbox 组填充 =====
       if (isCheckboxGroup) {
+        if (isDxmDictionaryField) {
+          if (fillDxmDictionaryField(entry, value)) return true;
+          return false;
+        }
         var vals = value.split(/[,，、/|]/).map(function (s) { return norm(s); }).filter(function (s) { return s.length > 0; });
         if (vals.length === 0) vals = [norm(value)];
         var anyChecked = false;
@@ -3730,6 +3735,10 @@
 
       // ===== radio 组填充 =====
       if (isRadioGroup) {
+        if (isDxmDictionaryField) {
+          if (fillDxmDictionaryField(entry, value)) return true;
+          return false;
+        }
         var vNormRd = norm(value);
         var anySelected = false;
 
@@ -3805,7 +3814,7 @@
 
       // AntSelect 填充（renderMode 存储在 _buildFieldMap 中）
       if (entry.renderMode === "AntSelect") {
-        if (entry.dxmAttribute && entry.dxmAttribute.dictionaryId && String(entry.dxmAttribute.dictionaryId) !== "0") {
+        if (isDxmDictionaryField) {
           if (fillDxmDictionaryField(entry, value)) return true;
           return false;
         }

@@ -4,6 +4,7 @@ from pathlib import Path
 EXTENSION_FILE = Path(__file__).resolve().parents[2] / "extensions" / "amazon_collector" / "dianxiaomi_ozon.js"
 BRIDGE_FILE = Path(__file__).resolve().parents[2] / "extensions" / "amazon_collector" / "dxm_runtime_bridge.js"
 MANIFEST_FILE = Path(__file__).resolve().parents[2] / "extensions" / "amazon_collector" / "manifest.json"
+EXPECTED_EXTENSION_VERSION = "3.2.40"
 
 
 def test_extension_collects_dianxiaomi_runtime_field_model():
@@ -67,6 +68,25 @@ def test_extension_does_not_fallback_to_clicking_dxm_dictionary_selects():
     assert "return false;" in dictionary_branch
     assert "if (fillDxmDictionaryField(entry, value)) return true;\n          return false;" in dictionary_branch
     assert dictionary_branch.index("return false;") < dictionary_branch.index("return await fillAntSelect(el, value, entry.label);")
+
+
+def test_extension_does_not_click_dxm_dictionary_checkbox_groups():
+    source = EXTENSION_FILE.read_text(encoding="utf-8")
+
+    checkbox_branch = source.split("// ===== checkbox", 1)[1].split("// ===== radio", 1)[0]
+
+    assert "isDxmDictionaryField" in source
+    assert "fillDxmDictionaryField(entry, value)" in checkbox_branch
+    assert "if (fillDxmDictionaryField(entry, value)) return true;\n          return false;" in checkbox_branch
+    assert checkbox_branch.index("return false;") < checkbox_branch.index("fillSearchableCheckboxGroup(entry, value)")
+
+
+def test_extension_version_is_bumped():
+    source = EXTENSION_FILE.read_text(encoding="utf-8")
+    manifest = MANIFEST_FILE.read_text(encoding="utf-8")
+
+    assert f'var SERP_EXTENSION_VERSION = "{EXPECTED_EXTENSION_VERSION}";' in source
+    assert f'"version": "{EXPECTED_EXTENSION_VERSION}"' in manifest
 
 
 def test_extension_uses_dxm_attribute_ids_for_deterministic_prefill():
