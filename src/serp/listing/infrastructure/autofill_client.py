@@ -122,17 +122,29 @@ class DeepSeekAutoFillClient:
 
         product_text = "\n".join(t for t in product_texts if t)
 
-        # 表单字段摘要
         full_product_data_text = _json.dumps(product_data, ensure_ascii=False, indent=2)
-        fields_text, field_by_index, valid_field_indices = self._build_form_fields_summary(form_fields)
 
-        # System prompt
         system_prompt = self._dianxiaomi_system_prompt(custom_prompts)
-
-        # 变体行映射
         variant_summary_block = self._build_variant_summary_block(variant_row_summary)
 
-        user_prompt = f"""## 产品信息
+        def _call(label: str, sys_prompt: str, usr_prompt: str) -> list[dict]:
+            return self._api_call(sys_prompt, usr_prompt, label=label)
+
+        def _build_group_user_prompt(group_key: str, group_label: str, fields: list[dict]) -> str:
+            fields_text, _, _ = self._build_form_fields_summary(fields)
+            group_instruction = self._dianxiaomi_group_instruction(group_key)
+            custom_prompt = self._custom_prompt_for_group(custom_prompts, group_key)
+            if not custom_prompt and group_key == "product_fields":
+                custom_prompt = self._build_default_product_fields_prompt(fields)
+            if custom_prompt:
+                group_instruction += "\n\n### 用户自定义分组提示\n" + custom_prompt
+            return f"""## 填充组
+{group_label}
+
+### 本组规则
+{group_instruction}
+
+## 产品信息
 SKC: {skc}
 标题: {product_title}
 
@@ -144,45 +156,38 @@ SKC: {skc}
 ### 人工登记数据
 {_json.dumps(manual_data, ensure_ascii=False, indent=2)}
 {variant_summary_block}
-### 表单字段列表（共 {len(form_fields)} 个字段）
+### 本组表单字段列表（共 {len(fields)} 个字段）
 {fields_text}
 
-请分析以上表单字段，为每个字段提供填充值。"""
-
-        # 双批次并行
-        important_fields, regular_fields = self._split_important_fields(form_fields)
-
-        def _call(label: str, sys_prompt: str, usr_prompt: str) -> list[dict]:
-            return self._api_call(sys_prompt, usr_prompt, label=label)
-
-        def _build_regular_system_prompt() -> str:
-            return """你是电商产品表单填充助手，负责填充常规属性字段。
-
-## 规则
-1. select/checkbox-group/radio-group：从可选值中精确选取
-2. 材质/颜色：根据产品数据填充
-3. 重量/尺寸：填纯数字不含单位，优先用人工登记数据
-4. 不确定的字段留空，不编造
-
-返回 JSON: {"mappings": [{"index": <序号>, "value": "填充值"}, ...]}"""
+只分析并返回本组字段。不要返回不在本组字段列表中的 index。"""
 
         all_mappings: list[dict] = []
         try:
-            if important_fields and regular_fields:
-                with ThreadPoolExecutor(max_workers=2) as executor:
-                    future_imp = executor.submit(_call, "important", system_prompt, user_prompt)
-                    future_reg = executor.submit(_call, "regular", _build_regular_system_prompt(), user_prompt)
-                    try:
-                        all_mappings.extend(future_imp.result(timeout=150))
-                    except Exception as e:
-                        logger.warning("[auto-fill] important batch failed: %s", e)
-                    try:
-                        all_mappings.extend(future_reg.result(timeout=150))
-                    except Exception as e:
-                        logger.warning("[auto-fill] regular batch failed: %s", e)
-
-            if not all_mappings:
-                all_mappings = _call("unified", system_prompt, user_prompt)
+            groups = self._group_dianxiaomi_fields(form_fields)
+            jobs = [
+                (group_key, group_label, fields)
+                for group_key, group_label, fields in groups
+                if fields
+            ]
+            if jobs:
+                with ThreadPoolExecutor(max_workers=min(6, len(jobs))) as executor:
+                    futures = [
+                        (
+                            group_key,
+                            executor.submit(
+                                _call,
+                                group_key,
+                                system_prompt,
+                                _build_group_user_prompt(group_key, group_label, fields),
+                            ),
+                        )
+                        for group_key, group_label, fields in jobs
+                    ]
+                    for group_key, future in futures:
+                        try:
+                            all_mappings.extend(future.result(timeout=150))
+                        except Exception as e:
+                            logger.warning("[auto-fill] %s batch failed: %s", group_key, e)
         except Exception:
             return []
 
@@ -196,6 +201,160 @@ SKC: {skc}
             seen.add(idx)
             deduped.append(m)
         return deduped
+
+    @classmethod
+    def _group_dianxiaomi_fields(cls, form_fields: list[dict]) -> list[tuple[str, str, list[dict]]]:
+        groups: dict[str, list[dict]] = {
+            "product_fields": [],
+            "hashtag": [],
+            "title": [],
+            "description": [],
+            "json_text": [],
+            "variant": [],
+        }
+        for field in form_fields:
+            groups[cls._dianxiaomi_field_group(field)].append(field)
+        return [
+            ("product_fields", "产品属性 + 产品信息（不含标题、主题标签、描述、JSON富文本、变种）", groups["product_fields"]),
+            ("hashtag", "#主题标签 (#Хештеги)", groups["hashtag"]),
+            ("title", "产品标题", groups["title"]),
+            ("description", "产品描述", groups["description"]),
+            ("json_text", "JSON富文本", groups["json_text"]),
+            ("variant", "变种属性 / 变种信息", groups["variant"]),
+        ]
+
+    @classmethod
+    def _dianxiaomi_field_group(cls, field: dict) -> str:
+        label = cls._field_text(field)
+        if cls._is_variant_field(label, field):
+            return "variant"
+        if cls._is_json_rich_field(label, field):
+            return "json_text"
+        if cls._is_hashtag_field(label):
+            return "hashtag"
+        if cls._is_title_field(label):
+            return "title"
+        if cls._is_description_field(label):
+            return "description"
+        return "product_fields"
+
+    @staticmethod
+    def _field_text(field: dict) -> str:
+        parts = [
+            field.get("label", ""),
+            field.get("placeholder", ""),
+            field.get("name", ""),
+            field.get("type", ""),
+            field.get("tag", ""),
+            field.get("controlKind", ""),
+        ]
+        dxm_attr = field.get("dxmAttribute") or {}
+        if isinstance(dxm_attr, dict):
+            parts.extend([
+                dxm_attr.get("name", ""),
+                dxm_attr.get("nameCn", ""),
+                dxm_attr.get("dxmControlKind", ""),
+                dxm_attr.get("sourceGroup", ""),
+            ])
+        return " ".join(str(p or "") for p in parts).lower()
+
+    @staticmethod
+    def _is_hashtag_field(text: str) -> bool:
+        return any(token in text for token in ["#主题标签", "#хештеги", "hashtag", "хэштег", "хештеги"])
+
+    @staticmethod
+    def _is_title_field(text: str) -> bool:
+        return any(token in text for token in ["产品标题", "product title"]) or (
+            "title" in text and "subtitle" not in text
+        )
+
+    @staticmethod
+    def _is_description_field(text: str) -> bool:
+        return any(token in text for token in ["产品描述", "description", "описание", "аннотация"])
+
+    @staticmethod
+    def _is_json_rich_field(text: str, field: dict) -> bool:
+        ftype = str(field.get("type", "") or "").lower()
+        tag = str(field.get("tag", "") or "").lower()
+        return (
+            "json" in text
+            or "rich" in text
+            or "showcase" in text
+            or "富文本" in text
+            or "json" in ftype
+            or "json" in tag
+        )
+
+    @staticmethod
+    def _is_variant_field(text: str, field: dict) -> bool:
+        dxm_attr = field.get("dxmAttribute") or {}
+        source_group = str(dxm_attr.get("sourceGroup", "") if isinstance(dxm_attr, dict) else "").lower()
+        if any(token in source_group for token in ["variant", "sku"]):
+            return True
+        if re.search(r"\[[^\]]+\]", str(field.get("label", "") or "")):
+            return True
+        return any(token in text for token in [
+            "sku", "售价", "原价", "最低价", "库存", "profit", "commission", "acquiring", "logistics",
+            "old x", "尺寸 mm", "重量 g", "price", "stock", "variant", "变种", "вариант",
+        ])
+
+    @staticmethod
+    def _dianxiaomi_group_instruction(group_key: str) -> str:
+        instructions = {
+            "product_fields": (
+                "Fill product attributes and product information fields only. "
+                "Do not fill #主题标签, 产品标题, 产品描述, JSON富文本, or variant/SKU row fields in this group. "
+                "For dictionary, checkbox, radio, or select controls, choose only from provided options."
+            ),
+            "hashtag": "Generate only #主题标签 (#Хештеги). Use # prefix, space-separated tags, no title or description prose.",
+            "title": "Generate only product title fields. Do not include brand names. Use concise Russian marketplace title text.",
+            "description": "Generate only normal product description prose. Do not return JSON rich text here.",
+            "json_text": "Generate only valid JSON rich-text content. Do not return prose outside JSON.",
+            "variant": (
+                "Fill only variant attributes and variant row fields such as SKU, price, old price, minimum price, stock, dimensions, and weight. "
+                "Use variant_list and variant_row_summary to match each row."
+            ),
+        }
+        return instructions.get(group_key, "")
+
+    @staticmethod
+    def _custom_prompt_for_group(custom_prompts: dict, group_key: str) -> str:
+        if not isinstance(custom_prompts, dict):
+            return ""
+        key_aliases = {
+            "product_fields": ["product_fields", "attributes", "product_info"],
+            "json_text": ["json_text", "json_rich"],
+            "variant": ["variant", "variant_fields"],
+        }
+        parts: list[str] = []
+        for key in key_aliases.get(group_key, [group_key]):
+            value = custom_prompts.get(key)
+            if value:
+                parts.append(str(value))
+        for key in ("platform", "store", "category"):
+            if custom_prompts.get(key):
+                parts.append(f"{key}: {custom_prompts[key]}")
+        return "\n\n".join(parts)
+
+    @classmethod
+    def _build_default_product_fields_prompt(cls, fields: list[dict]) -> str:
+        lines: list[str] = []
+        seen: set[str] = set()
+        for field in fields:
+            label = cls._clean_field_label(field.get("label") or field.get("name") or "")
+            if not label or label in seen:
+                continue
+            seen.add(label)
+            lines.append(f"{label}:")
+        return "\n".join(lines)
+
+    @staticmethod
+    def _clean_field_label(label: str) -> str:
+        value = str(label or "").strip()
+        value = re.sub(r"\s*\(可选值:.*$", "", value)
+        value = re.sub(r"\s*\|.*$", "", value)
+        value = re.sub(r"\s+", " ", value).strip()
+        return value
 
     # ── Ozon 属性填充 ──
 
@@ -343,7 +502,7 @@ SKC: {skc}
 
         try:
             resp = requests.post(
-                self._base_url,
+                self._chat_completion_url(),
                 headers={
                     "Authorization": f"Bearer {self._api_key}",
                     "Content-Type": "application/json",
@@ -414,7 +573,7 @@ SKC: {skc}
 
         try:
             resp = requests.post(
-                self._base_url,
+                self._chat_completion_url(),
                 headers={
                     "Authorization": f"Bearer {self._api_key}",
                     "Content-Type": "application/json",
@@ -473,6 +632,16 @@ SKC: {skc}
         except Exception as e:
             logger.error("[自动填充/%s] 异常: %s", label, e)
             return []
+
+    @staticmethod
+    def _normalize_chat_completion_url(base_url: str) -> str:
+        value = str(base_url or "").rstrip("/")
+        if value.endswith("/v1"):
+            return value + "/chat/completions"
+        return value
+
+    def _chat_completion_url(self) -> str:
+        return self._normalize_chat_completion_url(self._base_url)
 
     @staticmethod
     def _build_unit_hints(product_details: dict, attrs: dict) -> list[str]:
@@ -699,8 +868,9 @@ SKC: {skc}
         if custom_prompts:
             parts = []
             for key, label in [
-                ("title", "产品标题"), ("description", "产品描述"), ("json_text", "JSON文本"),
-                ("hashtag", "主题标签"), ("platform", "平台"), ("store", "店铺"), ("category", "品类"),
+                ("product_fields", "产品属性/产品信息"), ("title", "产品标题"), ("description", "产品描述"),
+                ("json_text", "JSON富文本"), ("hashtag", "主题标签"), ("variant", "变种属性"),
+                ("platform", "平台"), ("store", "店铺"), ("category", "品类"),
             ]:
                 if custom_prompts.get(key):
                     parts.append(f"### {label}填充提示\n{custom_prompts[key]}")
