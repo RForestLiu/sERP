@@ -3386,10 +3386,14 @@
   }
 
   function findDxmStore() {
+    return findDxmStoreById("ozonProductAddStore");
+  }
+
+  function findDxmStoreById(storeId) {
     var appEl = document.querySelector("#app") || document.querySelector("[data-v-app]") || document.body.firstElementChild;
     var app = appEl && appEl.__vue_app__;
     var pinia = app && app.config && app.config.globalProperties && app.config.globalProperties.$pinia;
-    return pinia && pinia._s && pinia._s.get && pinia._s.get("ozonProductAddStore");
+    return pinia && pinia._s && pinia._s.get && pinia._s.get(storeId);
   }
 
   function normalizeDxmOptionText(value) {
@@ -3452,21 +3456,34 @@
     var isCollection = !!attr.collection || (attr.maxValueCount !== undefined && attr.maxValueCount !== null && String(attr.maxValueCount) !== "0" && String(attr.maxValueCount) !== "1");
     var values = isCollection ? [selectedValue] : [selectedValue];
 
-    var store = findDxmStore();
-    var attrsInfo = store && store.$state && store.$state.attrsInfo;
     var group = attr.sourceGroup || "attrsList";
-    var list = attrsInfo && Array.isArray(attrsInfo[group]) ? attrsInfo[group] : [];
-    var runtimeAttr = list.find(function (item) {
-      return String(item.attributeId || item.attributeIdStr || item.id || "") === String(attr.attributeId || attr.id || "");
-    });
-    if (runtimeAttr) {
-      runtimeAttr.values = values;
-      runtimeAttr.value = isCollection ? values.map(function (v) { return v.value; }) : selectedValue.value;
-      runtimeAttr.valueIds = values.map(function (v) { return v.dictionary_value_id; });
-      runtimeAttr.selectedOptions = [matched];
-      runtimeAttr.selectedOption = matched;
-      runtimeAttr.currentValues = values;
+    var attrId = String(attr.attributeId || attr.id || "");
+    var targetMap = null;
+    if (group === "mergeAttrsList") {
+      var mergeStore = findDxmStoreById("ozonProductStore");
+      var mergeFormState = mergeStore && mergeStore.$state && mergeStore.$state.formState;
+      if (mergeFormState) {
+        if (!mergeFormState.mergeAttrsData) mergeFormState.mergeAttrsData = {};
+        targetMap = mergeFormState.mergeAttrsData;
+      }
+    } else {
+      var basicStore = findDxmStoreById("ozonProductBasicStore");
+      var basicFormState = basicStore && basicStore.$state && basicStore.$state.formState;
+      if (basicFormState) {
+        if (!basicFormState.productAttrsData) basicFormState.productAttrsData = {};
+        targetMap = basicFormState.productAttrsData;
+      }
     }
+    if (!targetMap || !attrId) {
+      console.warn("[sERP] DXM runtime value store not found label=" + (entry.label || "?") + " group=" + group);
+      return false;
+    }
+    targetMap[attrId] = {
+      complex_id: 0,
+      id: attrId,
+      attribute_id: attrId,
+      values: values
+    };
     emitDxmVueValue(entry.el, isCollection ? values.map(function (v) { return v.dictionary_value_id; }) : selectedValue.dictionary_value_id, matched);
     entry.el.dispatchEvent(new Event("input", { bubbles: true }));
     entry.el.dispatchEvent(new Event("change", { bubbles: true }));
@@ -3790,6 +3807,7 @@
       if (entry.renderMode === "AntSelect") {
         if (entry.dxmAttribute && entry.dxmAttribute.dictionaryId && String(entry.dxmAttribute.dictionaryId) !== "0") {
           if (fillDxmDictionaryField(entry, value)) return true;
+          return false;
         }
         return await fillAntSelect(el, value, entry.label);
       }

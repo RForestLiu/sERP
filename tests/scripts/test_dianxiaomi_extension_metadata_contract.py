@@ -51,7 +51,22 @@ def test_extension_uses_dxm_dictionary_runtime_fill_path():
     assert "dxmAttribute: f.dxmAttribute || null" in source
     assert "dictionary_value_id" in source
     assert "fillDxmDictionaryField(entry, value)" in source
-    assert "return await fillAntSelect(el, value, entry.label)" in source
+    assert "productAttrsData" in source
+    assert "mergeAttrsData" in source
+    assert "ozonProductBasicStore" in source
+    assert "ozonProductStore" in source
+    assert "return false;" in source
+
+
+def test_extension_does_not_fallback_to_clicking_dxm_dictionary_selects():
+    source = EXTENSION_FILE.read_text(encoding="utf-8")
+
+    dictionary_branch = source.split('if (entry.renderMode === "AntSelect") {', 1)[1].split("// ===== select =====", 1)[0]
+
+    assert "fillDxmDictionaryField(entry, value)" in dictionary_branch
+    assert "return false;" in dictionary_branch
+    assert "if (fillDxmDictionaryField(entry, value)) return true;\n          return false;" in dictionary_branch
+    assert dictionary_branch.index("return false;") < dictionary_branch.index("return await fillAntSelect(el, value, entry.label);")
 
 
 def test_extension_uses_dxm_attribute_ids_for_deterministic_prefill():
