@@ -986,6 +986,13 @@
         .settings-formula-note { margin-top: 6px; font-size: 11px; color: #777; line-height: 1.5; }
         .settings-add-btn { border: 1px dashed #b7d8ff; background: #f7fbff; color: #1677ff; border-radius: 4px; padding: 8px 12px; cursor: pointer; width: 100%; }
         .settings-remove-btn { border: 1px solid #ffccc7; background: #fff2f0; color: #cf1322; border-radius: 4px; padding: 7px 10px; cursor: pointer; }
+        .settings-provider-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 8px; }
+        .settings-provider-title { font-size: 13px; font-weight: 700; color: #333; }
+        .settings-provider-subtitle { font-size: 11px; color: #777; margin-top: 2px; }
+        .settings-model-row { display: grid; grid-template-columns: 150px 1fr 180px 130px 90px auto; gap: 8px; align-items: end; padding: 8px 0; border-top: 1px solid #f2f2f2; }
+        .settings-model-row label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: #777; }
+        .settings-model-row input, .settings-model-row select { border: 1px solid #d9d9d9; border-radius: 4px; padding: 7px 8px; font-size: 12px; background: #fff; min-width: 0; }
+        .settings-model-add-btn { border: 1px solid #b7d8ff; background: #f7fbff; color: #1677ff; border-radius: 4px; padding: 7px 10px; cursor: pointer; }
         .settings-secret-status { font-size: 11px; color: #888; margin-top: 4px; }
         .settings-io-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
         .settings-import-text { width: 100%; min-height: 220px; resize: vertical; font-family: Consolas, monospace; }
@@ -994,6 +1001,7 @@
         .settings-hint { font-size: 12px; color: #8c6d1f; background: #fffbe6; border: 1px solid #ffe58f; border-radius: 6px; padding: 10px 12px; }
         @media (max-width: 1100px) {
             .settings-grid { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+            .settings-model-row { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
             .settings-io-grid { grid-template-columns: 1fr; }
         }
         /* ===== 产品-店铺矩阵表格 ===== */
@@ -2859,6 +2867,84 @@
             return `<label>${name}<input data-var="${name}" value="${_escHtml(value || "")}"></label>`;
         }
 
+        function providerKey(model) {
+            const baseUrl = (model.base_url || "").trim();
+            const apiKeyEnv = (model.api_key_env || "").trim();
+            return `${baseUrl}::${apiKeyEnv}`;
+        }
+
+        function providerNameFromModel(model) {
+            const provider = (model.provider || "").trim();
+            const baseUrl = (model.base_url || "").trim();
+            if (provider === "laozhang" || baseUrl.includes("laozhang.ai")) return "LaoZhang";
+            if (provider === "deepseek" || baseUrl.includes("deepseek.com")) return "DeepSeek";
+            if (provider === "openai" || baseUrl.includes("api.openai.com")) return "OpenAI";
+            if (provider === "gemini" && !baseUrl.includes("laozhang.ai")) return "Gemini";
+            return model.name ? model.name.replace(/\s+[^ ]+$/, "") : "AI Provider";
+        }
+
+        function normalizeApiKeyEnv(value) {
+            let key = String(value || "AI").toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+            if (!key) key = "AI";
+            if (!key.endsWith("_API_KEY") && key !== "API_KEY") key += "_API_KEY";
+            return key;
+        }
+
+        function groupModelProviders(models) {
+            const providers = [];
+            const byKey = new Map();
+            (models || []).forEach(model => {
+                const key = providerKey(model);
+                if (!byKey.has(key)) {
+                    const provider = {
+                        key,
+                        name: providerNameFromModel(model),
+                        provider: model.provider || "openai_compatible",
+                        base_url: model.base_url || "",
+                        api_key_env: model.api_key_env || "",
+                        models: []
+                    };
+                    byKey.set(key, provider);
+                    providers.push(provider);
+                }
+                byKey.get(key).models.push(Object.assign({}, model));
+            });
+            return providers;
+        }
+
+        function flattenModelProviders(providers) {
+            const models = [];
+            (providers || []).forEach(provider => {
+                (provider.models || []).forEach(model => {
+                    models.push(Object.assign({}, model, {
+                        provider: model.provider || provider.provider || "openai_compatible",
+                        base_url: provider.base_url || "",
+                        api_key_env: provider.api_key_env || ""
+                    }));
+                });
+            });
+            return models;
+        }
+
+        function renderProviderModelRow(model, providerIndex, modelIndex) {
+            return `
+                <div class="settings-model-row" data-provider-model="${providerIndex}:${modelIndex}">
+                    <label>模型 ID<input data-model-field="id" value="${_escHtml(model.id || "")}"></label>
+                    <label>显示名称<input data-model-field="name" value="${_escHtml(model.name || "")}"></label>
+                    <label>模型名<input data-model-field="model" value="${_escHtml(model.model || "")}"></label>
+                    ${settingsSelect("provider", model.provider || "openai_compatible", [
+                        {value:"deepseek", label:"DeepSeek"},
+                        {value:"laozhang", label:"LaoZhang"},
+                        {value:"openai_compatible", label:"OpenAI-compatible"},
+                        {value:"gemini", label:"Gemini / Image"},
+                        {value:"custom", label:"Custom"}
+                    ]).replaceAll("data-field", "data-model-field")}
+                    ${settingsSelect("enabled", model.enabled === false ? "false" : "true", [{value:"true", label:"启用"}, {value:"false", label:"停用"}]).replaceAll("data-field", "data-model-field")}
+                    <button class="settings-remove-btn" data-remove-provider-model="${providerIndex}:${modelIndex}">删除</button>
+                </div>
+            `;
+        }
+
         function modelOptions() {
             const models = ((settingsState && settingsState.settings && settingsState.settings.models) || []).filter(m => m.enabled !== false);
             return models.map(m => ({ value: m.id, label: `${m.name || m.id} (${m.model || ""})` }));
@@ -2869,28 +2955,36 @@
             const env = settingsState.env || {};
             const modelsEl = document.getElementById("settings-models-list");
             modelsEl.innerHTML = "";
-            (settingsState.settings.models || []).forEach((m, index) => {
-                const status = env[m.api_key_env] || {};
+            const providers = groupModelProviders(settingsState.settings.models || []);
+            settingsState.settings.model_providers = providers;
+            providers.forEach((provider, providerIndex) => {
+                const status = env[provider.api_key_env] || {};
                 const card = document.createElement("div");
-                card.className = "settings-card";
+                card.className = "settings-card settings-provider-card";
                 card.innerHTML = `
+                    <div class="settings-provider-head">
+                        <div>
+                            <div class="settings-provider-title">${_escHtml(provider.name || "AI Provider")}</div>
+                            <div class="settings-provider-subtitle">${_escHtml(provider.base_url || "未设置接口地址")} · ${provider.models.length} 个模型</div>
+                        </div>
+                        <button class="settings-model-add-btn" data-add-provider-model="${providerIndex}">添加模型</button>
+                    </div>
                     <div class="settings-grid">
-                        ${settingsInput("id", m.id)}
-                        ${settingsInput("name", m.name)}
-                        ${settingsSelect("provider", m.provider, [
+                        <label>通道名称<input data-channel-field="name" value="${_escHtml(provider.name || "")}"></label>
+                        ${settingsSelect("provider", provider.provider, [
                             {value:"deepseek", label:"DeepSeek"},
+                            {value:"laozhang", label:"LaoZhang"},
                             {value:"openai_compatible", label:"OpenAI-compatible"},
                             {value:"gemini", label:"Gemini / Image"},
                             {value:"custom", label:"Custom"}
-                        ])}
-                        ${settingsInput("model", m.model)}
-                        ${settingsInput("base_url", m.base_url)}
-                        ${settingsInput("api_key_env", m.api_key_env)}
-                        <label>密钥新值<input data-secret-env="${_escHtml(m.api_key_env || "")}" type="password" placeholder="留空保留原值"></label>
-                        <label>启用<select data-field="enabled"><option value="true"${m.enabled !== false ? " selected" : ""}>启用</option><option value="false"${m.enabled === false ? " selected" : ""}>停用</option></select></label>
+                        ]).replaceAll("data-field", "data-channel-field")}
+                        <label>接口地址<input data-channel-field="base_url" value="${_escHtml(provider.base_url || "")}" placeholder="https://api.example.com/v1"></label>
+                        <input data-channel-field="api_key_env" type="hidden" value="${_escHtml(provider.api_key_env || "")}">
+                        <label>密钥新值<input data-secret-env="${_escHtml(provider.api_key_env || "")}" type="password" placeholder="留空保留原值"></label>
                     </div>
-                    <div class="settings-secret-status">密钥状态：${status.configured ? "已配置 " + (status.masked || "") : "未配置"}</div>
-                    <div style="margin-top:8px;text-align:right;"><button class="settings-remove-btn" data-remove-model="${index}">删除模型</button></div>
+                    <div class="settings-secret-status">密钥状态：${status.configured ? "已配置 " + (status.masked || "") : "未配置"}。同一通道下所有模型共用这个密钥。</div>
+                    <div>${provider.models.map((model, modelIndex) => renderProviderModelRow(model, providerIndex, modelIndex)).join("")}</div>
+                    <div style="margin-top:8px;text-align:right;"><button class="settings-remove-btn" data-remove-provider="${providerIndex}">删除通道</button></div>
                 `;
                 modelsEl.appendChild(card);
             });
@@ -3012,16 +3106,26 @@
         function collectSettingsPayload() {
             const envUpdates = {};
             const models = [];
-            document.querySelectorAll("#settings-models-list .settings-card").forEach(card => {
-                const item = {};
-                card.querySelectorAll("[data-field]").forEach(el => {
-                    item[el.dataset.field] = el.dataset.field === "enabled" ? el.value === "true" : el.value.trim();
+            document.querySelectorAll("#settings-models-list .settings-provider-card").forEach(card => {
+                const channel = {};
+                card.querySelectorAll("[data-channel-field]").forEach(el => {
+                    channel[el.dataset.channelField] = el.value.trim();
                 });
-                card.querySelectorAll("[data-secret-env]").forEach(el => {
-                    const key = el.dataset.secretEnv;
-                    if (key && el.value) envUpdates[key] = el.value;
+                if (!channel.api_key_env) channel.api_key_env = normalizeApiKeyEnv(channel.name || channel.provider || channel.base_url);
+                const secretEl = card.querySelector("[data-secret-env]");
+                if (channel.api_key_env && secretEl && secretEl.value) envUpdates[channel.api_key_env] = secretEl.value;
+                card.querySelectorAll("[data-provider-model]").forEach(row => {
+                    const item = {};
+                    row.querySelectorAll("[data-model-field]").forEach(el => {
+                        item[el.dataset.modelField] = el.dataset.modelField === "enabled" ? el.value === "true" : el.value.trim();
+                    });
+                    item.provider = item.provider || channel.provider || "openai_compatible";
+                    item.base_url = channel.base_url || "";
+                    item.api_key_env = channel.api_key_env || "";
+                    if (!item.name) item.name = item.model || item.id || "Unnamed Model";
+                    if (!item.id) item.id = (item.name || item.model || "model").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+                    models.push(item);
                 });
-                models.push(item);
             });
             const featureModels = {};
             document.querySelectorAll("[data-feature]").forEach(sel => { featureModels[sel.dataset.feature] = sel.value; });
@@ -3065,7 +3169,8 @@
 
         document.getElementById("settings-add-model").addEventListener("click", function() {
             if (!settingsState) return;
-            settingsState.settings.models.push({ id: "model_" + Date.now(), name: "新模型", provider: "openai_compatible", base_url: "", api_key_env: "", model: "", enabled: true });
+            settingsState.settings.models = collectSettingsPayload().settings.models;
+            settingsState.settings.models.push({ id: "model_" + Date.now(), name: "New Model", provider: "openai_compatible", base_url: "", api_key_env: "API_KEY", model: "", enabled: true });
             renderSettings();
         });
 
@@ -3102,9 +3207,34 @@
         });
 
         document.addEventListener("click", function(e) {
-            const rmModel = e.target.closest("[data-remove-model]");
-            if (rmModel && settingsState) {
-                settingsState.settings.models.splice(Number(rmModel.dataset.removeModel), 1);
+            const addProviderModel = e.target.closest("[data-add-provider-model]");
+            if (addProviderModel && settingsState) {
+                settingsState.settings.models = collectSettingsPayload().settings.models;
+                const providers = groupModelProviders(settingsState.settings.models);
+                const provider = providers[Number(addProviderModel.dataset.addProviderModel)];
+                if (provider) {
+                    provider.models.push({ id: "model_" + Date.now(), name: "New Model", provider: provider.provider || "openai_compatible", model: "", enabled: true });
+                    settingsState.settings.models = flattenModelProviders(providers);
+                    renderSettings();
+                }
+            }
+            const rmProviderModel = e.target.closest("[data-remove-provider-model]");
+            if (rmProviderModel && settingsState) {
+                settingsState.settings.models = collectSettingsPayload().settings.models;
+                const providers = groupModelProviders(settingsState.settings.models);
+                const [providerIndex, modelIndex] = rmProviderModel.dataset.removeProviderModel.split(":").map(Number);
+                if (providers[providerIndex]) {
+                    providers[providerIndex].models.splice(modelIndex, 1);
+                    settingsState.settings.models = flattenModelProviders(providers);
+                    renderSettings();
+                }
+            }
+            const rmProvider = e.target.closest("[data-remove-provider]");
+            if (rmProvider && settingsState) {
+                settingsState.settings.models = collectSettingsPayload().settings.models;
+                const providers = groupModelProviders(settingsState.settings.models);
+                providers.splice(Number(rmProvider.dataset.removeProvider), 1);
+                settingsState.settings.models = flattenModelProviders(providers);
                 renderSettings();
             }
             const rmStore = e.target.closest("[data-remove-store]");
