@@ -36,7 +36,7 @@ class JsonFileStore:
         if not self._filepath.exists():
             return None
         try:
-            with open(self._filepath, "r", encoding="utf-8") as f:
+            with open(self._filepath, "r", encoding="utf-8-sig") as f:
                 data = json.load(f)
                 return data if isinstance(data, dict) else None
         except (json.JSONDecodeError, OSError) as e:
@@ -48,7 +48,7 @@ class JsonFileStore:
         if not self._filepath.exists():
             return None
         try:
-            with open(self._filepath, "r", encoding="utf-8") as f:
+            with open(self._filepath, "r", encoding="utf-8-sig") as f:
                 data = json.load(f)
                 return data if isinstance(data, list) else None
         except (json.JSONDecodeError, OSError) as e:
@@ -60,7 +60,7 @@ class JsonFileStore:
         if not self._filepath.exists():
             return None
         try:
-            with open(self._filepath, "r", encoding="utf-8") as f:
+            with open(self._filepath, "r", encoding="utf-8-sig") as f:
                 return json.load(f)
         except (json.JSONDecodeError, OSError) as e:
             logger.warning("Failed to read %s: %s", self._filepath, e)
