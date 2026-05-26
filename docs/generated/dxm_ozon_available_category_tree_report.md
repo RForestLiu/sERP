@@ -1,10 +1,10 @@
 # Dianxiaomi Ozon Available Category Tree Report
 
-- Generated: `2026-05-26T11:17:19`
+- Generated: `2026-05-26T11:23:45`
 - Source API: `https://www.dianxiaomi.com/api/ozonCategoryNew/list.json`
 - JSON tree: `docs/generated/dxm_ozon_available_category_tree.json`
 - LLM tree: `docs/generated/dxm_ozon_available_category_tree_llm.txt`
-- Elapsed seconds: `76.0`
+- Elapsed seconds: `72.7`
 
 ## Availability Basis
 
@@ -26,5 +26,5 @@
 
 ## LLM Usage
 
-Use the LLM tree as a compact path map only. The LLM should output a category path, then program code resolves that path against the JSON tree and uses `description_category_id` plus `type_id` for later Ozon/Dianxiaomi attribute work.
+Use the LLM tree as a compact path map only. It intentionally keeps only Ozon/Dianxiaomi Russian category names to reduce tokens and avoid bilingual matching drift. The LLM should output a category path, then program code resolves that path against the JSON tree and uses `description_category_id` plus `type_id` for later Ozon/Dianxiaomi attribute work.
 

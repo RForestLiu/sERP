@@ -171,10 +171,7 @@ def write_llm_tree(nodes: list[dict[str, Any]]) -> str:
     lines: list[str] = []
 
     def walk(item: dict[str, Any], depth: int) -> None:
-        name = item["name"]
-        cn = item.get("name_cn") or ""
-        text = f"{name} ({cn})" if cn and cn != name else name
-        lines.append(f"{'  ' * depth}- {text}")
+        lines.append(f"{'  ' * depth}- {item['name']}")
         for child in item.get("children") or []:
             walk(child, depth + 1)
 
@@ -229,7 +226,7 @@ def write_outputs(roots: list[dict[str, Any]], stats: dict[str, int], elapsed_se
             "",
             "## LLM Usage",
             "",
-            "Use the LLM tree as a compact path map only. The LLM should output a category path, then program code resolves that path against the JSON tree and uses `description_category_id` plus `type_id` for later Ozon/Dianxiaomi attribute work.",
+            "Use the LLM tree as a compact path map only. It intentionally keeps only Ozon/Dianxiaomi Russian category names to reduce tokens and avoid bilingual matching drift. The LLM should output a category path, then program code resolves that path against the JSON tree and uses `description_category_id` plus `type_id` for later Ozon/Dianxiaomi attribute work.",
             "",
         ]) + "\n",
         encoding="utf-8",
