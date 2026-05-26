@@ -15,3 +15,13 @@ def test_extension_exposes_grouped_autofill_prompt_inputs():
     assert "serp_hint_category_" in source
     assert "prompts.product_fields" in source
     assert "prompts.variant" in source
+
+
+def test_extension_exposes_default_prompt_actions():
+    source = Path("extensions/amazon_collector/dianxiaomi_ozon.js").read_text(encoding="utf-8")
+
+    assert "DEFAULT_HINT_PROMPTS" in source
+    assert "data-default-prompt=\"title\"" in source
+    assert "data-default-prompt=\"product_fields\"" in source
+    assert "applyDefaultHintPrompt" in source
+    assert "默认提示词" in source

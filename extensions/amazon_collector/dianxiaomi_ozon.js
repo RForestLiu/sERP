@@ -76,6 +76,17 @@
   var fillAllVariants = true;
   var dxmRuntimeFieldModelCache = null;
   var dxmRuntimeBridgeInstalled = false;
+  var DEFAULT_HINT_PROMPTS = {
+    title: "生成俄语商品标题：突出产品类型、材质、功能和适用人群；不包含品牌名；控制在50-100字符。",
+    description: "生成俄语商品描述：按功能用途、材质设计、使用场景、优势特点组织，语气客观自然。",
+    json_text: "生成有效的raShowcase JSON富文本内容；所有文字使用俄语；不要输出JSON以外的解释。",
+    hashtag: "生成10-22个俄语主题标签；每个标签以#开头并用空格分隔；覆盖核心词、长尾词、场景词和人群词。",
+    platform: "按Ozon平台规则填充字段：优先使用人工登记数据，其次使用采集数据；下拉/单选/多选字段只能从候选项中选择。",
+    store: "按当前店铺运营口径填充字段；保持标题、描述、标签风格一致。",
+    category: "按当前品类规则填充字段；优先匹配品类属性、材质、颜色、尺寸、重量等关键字段。",
+    product_fields: "将本组产品属性按“字段名: 填充值”的方式补全；字段不确定时留空；下拉/单选/多选只选候选项。",
+    variant: "填充变种/SKU行字段：SKU、价格、库存、尺寸、重量等按variant_list和行上下文逐行匹配。"
+  };
 
   // ==================== CSS 注入 ====================
   var style = document.createElement("style");
@@ -216,8 +227,10 @@
     "#serp-hint-panel .hint-section-header{font-size:12px;font-weight:600;color:#555;margin-bottom:6px;display:flex;align-items:center;gap:6px;}",
     "#serp-hint-panel .hint-section-header .hs-ctx{font-size:10px;color:#999;font-weight:400;}",
     "#serp-hint-panel .hint-section-header .hs-ctx span{color:#428bca;}",
-    "#serp-hint-panel .hint-label{font-size:11px;color:#888;margin-bottom:2px;margin-top:6px;}",
+    "#serp-hint-panel .hint-label{font-size:11px;color:#888;margin-bottom:2px;margin-top:6px;display:flex;align-items:center;justify-content:space-between;gap:8px;}",
     "#serp-hint-panel .hint-label:first-of-type{margin-top:0;}",
+    "#serp-hint-panel .hint-default-btn{font-size:10px;padding:1px 6px;border:1px solid #d1d5db;border-radius:4px;background:#fff;color:#64748b;cursor:pointer;line-height:1.4;}",
+    "#serp-hint-panel .hint-default-btn:hover{border-color:#428bca;color:#2563eb;background:#eff6ff;}",
     "#serp-hint-panel textarea.serp-hint-input{width:100%;height:50px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;padding:5px 8px;resize:vertical;font-family:\"Microsoft YaHei\",sans-serif;box-sizing:border-box;outline:none;transition:border-color 0.2s;}",
     "#serp-hint-panel textarea.serp-hint-input:focus{border-color:#428bca;box-shadow:0 0 0 3px rgba(66,139,202,0.1);}",
     "/* ===== 保存按钮 ===== */",
@@ -395,33 +408,33 @@
       /* ===== 平台提示词 ===== */
       '<div class="hint-section" id="hint-section-platform">' +
         '<div class="hint-section-header">📋 平台提示词 <span class="hs-ctx">(当前: <span id="hint-ctx-platform">--</span>)</span></div>' +
-        '<div class="hint-label">产品标题</div>' +
+        '<div class="hint-label"><span>产品标题</span><button class="hint-default-btn" data-default-prompt="title" data-default-target="serp-hint-title" type="button">默认提示词</button></div>' +
         '<textarea class="serp-hint-input" id="serp-hint-title" placeholder="标题填充提示..."></textarea>' +
-        '<div class="hint-label">产品描述</div>' +
+        '<div class="hint-label"><span>产品描述</span><button class="hint-default-btn" data-default-prompt="description" data-default-target="serp-hint-desc" type="button">默认提示词</button></div>' +
         '<textarea class="serp-hint-input" id="serp-hint-desc" placeholder="描述填充提示..."></textarea>' +
-        '<div class="hint-label">JSON富文本</div>' +
+        '<div class="hint-label"><span>JSON富文本</span><button class="hint-default-btn" data-default-prompt="json_text" data-default-target="serp-hint-json" type="button">默认提示词</button></div>' +
         '<textarea class="serp-hint-input" id="serp-hint-json" placeholder="JSON属性填充提示..."></textarea>' +
-        '<div class="hint-label">主题标签</div>' +
+        '<div class="hint-label"><span>主题标签</span><button class="hint-default-btn" data-default-prompt="hashtag" data-default-target="serp-hint-hashtag" type="button">默认提示词</button></div>' +
         '<textarea class="serp-hint-input" id="serp-hint-hashtag" placeholder="主题标签填充提示..."></textarea>' +
-        '<div class="hint-label">平台专属提示</div>' +
+        '<div class="hint-label"><span>平台专属提示</span><button class="hint-default-btn" data-default-prompt="platform" data-default-target="serp-hint-platform-prompt" type="button">默认提示词</button></div>' +
         '<textarea class="serp-hint-input" id="serp-hint-platform-prompt" placeholder="当前平台的额外填充指引..."></textarea>' +
         '<div class="hint-save-row"><button class="hint-save-btn" data-level="platform">💾 保存</button></div>' +
       '</div>' +
       /* ===== 店铺提示词 ===== */
       '<div class="hint-section" id="hint-section-store">' +
         '<div class="hint-section-header">📋 店铺提示词 <span class="hs-ctx">(当前: <span id="hint-ctx-store">--</span>)</span></div>' +
-        '<div class="hint-label">店铺专属提示</div>' +
+        '<div class="hint-label"><span>店铺专属提示</span><button class="hint-default-btn" data-default-prompt="store" data-default-target="serp-hint-store-prompt" type="button">默认提示词</button></div>' +
         '<textarea class="serp-hint-input" id="serp-hint-store-prompt" placeholder="当前店铺的额外填充指引..."></textarea>' +
         '<div class="hint-save-row"><button class="hint-save-btn" data-level="store">💾 保存</button></div>' +
       '</div>' +
       /* ===== 品类提示词 ===== */
       '<div class="hint-section" id="hint-section-category" style="display:none;">' +
         '<div class="hint-section-header">📋 品类提示词 <span class="hs-ctx">(当前: <span id="hint-ctx-category">--</span>)</span></div>' +
-        '<div class="hint-label">品类专属提示</div>' +
+        '<div class="hint-label"><span>品类专属提示</span><button class="hint-default-btn" data-default-prompt="category" data-default-target="serp-hint-category-prompt" type="button">默认提示词</button></div>' +
         '<textarea class="serp-hint-input" id="serp-hint-category-prompt" placeholder="此品类的额外填充指引..."></textarea>' +
-        '<div class="hint-label">产品属性/产品信息</div>' +
+        '<div class="hint-label"><span>产品属性/产品信息</span><button class="hint-default-btn" data-default-prompt="product_fields" data-default-target="serp-hint-product-fields" type="button">默认提示词</button></div>' +
         '<textarea class="serp-hint-input" id="serp-hint-product-fields" placeholder="此品类的产品属性、产品信息填充提示..."></textarea>' +
-        '<div class="hint-label">变种属性</div>' +
+        '<div class="hint-label"><span>变种属性</span><button class="hint-default-btn" data-default-prompt="variant" data-default-target="serp-hint-variant" type="button">默认提示词</button></div>' +
         '<textarea class="serp-hint-input" id="serp-hint-variant" placeholder="此品类的变种属性、SKU、价格、库存、尺寸重量填充提示..."></textarea>' +
         '<div class="hint-save-row"><button class="hint-save-btn" data-level="category">💾 保存</button></div>' +
       '</div>' +
@@ -478,6 +491,15 @@
   var selectedPanelImageUrls = {};
   var imagePanelDrag = null;
   var imagePanelSuppressClickUntil = 0;
+
+  function applyDefaultHintPrompt(btn) {
+    var promptKey = btn.getAttribute("data-default-prompt");
+    var targetId = btn.getAttribute("data-default-target");
+    var target = targetId ? document.getElementById(targetId) : null;
+    if (!target || !DEFAULT_HINT_PROMPTS[promptKey]) return;
+    target.value = DEFAULT_HINT_PROMPTS[promptKey];
+    target.focus();
+  }
 
   // ==================== 平台检测 ====================
   function detectPlatform() {
@@ -4799,6 +4821,11 @@
   });
   // 保存按钮委托
   hintPanel.addEventListener("click", function (e) {
+    var defaultBtn = e.target.closest(".hint-default-btn");
+    if (defaultBtn) {
+      applyDefaultHintPrompt(defaultBtn);
+      return;
+    }
     var btn = e.target.closest(".hint-save-btn");
     if (!btn) return;
     var level = btn.getAttribute("data-level");
