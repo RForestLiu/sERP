@@ -3,12 +3,27 @@ import json
 import logging
 import os
 import unicodedata
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
 import requests
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class ChatCompletionEndpoint:
+    base_url: str
+
+    def request_url(self, tools: list[dict]) -> str:
+        base_url = str(self.base_url or "").rstrip("/")
+        has_strict_tool = any((t.get("function") or {}).get("strict") is True for t in tools)
+        if has_strict_tool and base_url == "https://api.deepseek.com/v1/chat/completions":
+            return "https://api.deepseek.com/beta/chat/completions"
+        if base_url.endswith("/v1"):
+            return f"{base_url}/chat/completions"
+        return base_url
 
 
 class ProductDataCleaner:
@@ -199,7 +214,7 @@ class ProductDataCleaner:
             if "v4-pro" in str(config["model"]).lower():
                 payload["enable_thinking"] = False
         resp = requests.post(
-            self._request_url(config["base_url"], tools),
+            ChatCompletionEndpoint(config["base_url"]).request_url(tools),
             headers={"Authorization": f"Bearer {config['api_key']}", "Content-Type": "application/json"},
             json=payload,
             timeout=90,
@@ -214,13 +229,6 @@ class ProductDataCleaner:
         if not content:
             raise ValueError("LLM returned empty structured output")
         return json.loads(content)
-
-    @staticmethod
-    def _request_url(base_url: str, tools: list[dict]) -> str:
-        has_strict_tool = any((t.get("function") or {}).get("strict") is True for t in tools)
-        if has_strict_tool and base_url == "https://api.deepseek.com/v1/chat/completions":
-            return "https://api.deepseek.com/beta/chat/completions"
-        return base_url
 
     @staticmethod
     def _tool_arguments(message: dict) -> str:

@@ -17,7 +17,7 @@ def test_product_data_clean_defaults_to_laozhang_gpt_5_4_mini():
         "id": "laozhang_gpt_5_4_mini",
         "name": "LaoZhang GPT-5.4 Mini",
         "provider": "laozhang",
-        "base_url": "https://api.laozhang.ai/v1/chat/completions",
+        "base_url": "https://api.laozhang.ai/v1",
         "api_key_env": "API_KEY",
         "model": "gpt-5.4-mini",
         "enabled": True,

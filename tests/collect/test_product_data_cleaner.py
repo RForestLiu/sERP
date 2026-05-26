@@ -1,6 +1,6 @@
 import json
 
-from src.serp.collect.infrastructure.product_data_cleaner import ProductDataCleaner
+from src.serp.collect.infrastructure.product_data_cleaner import ChatCompletionEndpoint, ProductDataCleaner
 
 
 class FakeSettings:
@@ -31,7 +31,7 @@ class LaoZhangCleanSettings(FakeSettings):
     def get_models(self):
         return [{
             "id": "laozhang_gpt_5_4_mini",
-            "base_url": "https://api.laozhang.ai/v1/chat/completions",
+            "base_url": "https://api.laozhang.ai/v1",
             "api_key_env": "API_KEY",
             "model": "gpt-5.4-mini",
         }]
@@ -145,6 +145,20 @@ def test_cleaner_can_use_laozhang_openai_compatible_model(monkeypatch):
     assert captured["urls"] == ["https://api.laozhang.ai/v1/chat/completions"]
     assert captured["models"] == ["gpt-5.4-mini"]
     assert captured["authorization"] == "Bearer sk-laozhang"
+
+
+def test_cleaner_appends_chat_completions_for_openai_compatible_base_url():
+    assert ChatCompletionEndpoint("https://api.laozhang.ai/v1").request_url([]) == (
+        "https://api.laozhang.ai/v1/chat/completions"
+    )
+
+
+def test_chat_completion_endpoint_routes_deepseek_strict_tools_to_beta():
+    tools = [{"function": {"strict": True}}]
+
+    assert ChatCompletionEndpoint("https://api.deepseek.com/v1/chat/completions").request_url(tools) == (
+        "https://api.deepseek.com/beta/chat/completions"
+    )
 
 
 def test_cleaner_routes_strict_tools_to_deepseek_beta(monkeypatch):
