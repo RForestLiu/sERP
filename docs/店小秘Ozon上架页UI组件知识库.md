@@ -79,6 +79,103 @@ Ozon 分类是页面 schema 的分水岭。未选择分类时只能采集到店�
 | 变种颜色控件 | `.sku-checkbox`, `.sku-checkbox-panel`, `input[name=skuMutiSelect]` | 商品颜色 `Цвет товара` | 打开面板，搜索标准色，点击候选；不要直接写文本 | 颜色标签/选中项出现在 SKU 行 |
 | 变种图片组件 | 变种图片区域、上传/图片空间/排序控件 | 每个变种的图片 | 优先通过扩展辅助复制/选择图片 URL；自动上传需单独能力 | 每个变种下出现目标图片缩略图 |
 
+## DXM 组件分类树
+
+sERP 自动填充里的 DXM 组件分类分两层，不要混用。
+
+第一层是页面控件分类，由 `collectFormFields()` 扫描 DOM 后交给 `dxmControlKindFromField()` 归类，结果写入 `form_fields[].controlKind`，主要回答“页面上这个东西怎么填”。
+
+```text
+页面控件 controlKind
+├─ 文本/数值
+│  ├─ input-text
+│  ├─ input-number
+│  ├─ textarea
+│  ├─ contenteditable
+│  └─ json-editor
+├─ 原生控件
+│  ├─ native-select
+│  ├─ single-checkbox
+│  └─ single-radio
+├─ Ant Select
+│  ├─ ant-select-single
+│  ├─ ant-select-search
+│  ├─ ant-select-multiple
+│  └─ ant-select-multiple-search
+├─ 分组选项
+│  ├─ checkbox-group
+│  └─ radio-group
+└─ unknown
+```
+
+第二层是 DXM runtime 属性分类，由 `dxm_runtime_bridge.js` 从店小秘页面内 Vue/Pinia store 读取 `attrsInfo.attrsList`、`mergeAttrsList`、`skuList`，再由 `inferDxmControlKindFromMeta()` 根据 `dictionaryId`、`collection/maxValueCount`、`_remoteSearch/_searchFlag`、`type` 推断，结果写入 `field.dxmAttribute.dxmControlKind`，主要回答“这个属性是不是字典、候选值从哪里来、应该写到哪个 DXM 数据模型”。
+
+```text
+DXM runtime dxmControlKind
+├─ text-input
+├─ number-input
+├─ dictionary-single
+├─ dictionary-single-remote
+├─ dictionary-multiple
+├─ dictionary-multiple-remote
+└─ unknown
+```
+
+关键规则:
+
+- `controlKind` 决定填充器入口，例如文本输入、textarea、checkbox 组、Ant Select。
+- `dxmAttribute.dxmControlKind` 决定字段语义和候选来源，例如字典字段、远程字典、多值字典。
+- 只要 `dxmAttribute.dictionaryId` 非空且不是 `0`，就视为 DXM 字典字段，优先走 `fillDxmDictionaryField()`。
+- DXM 字典字段不再用鼠标点击 Ant Select 作为主路径；应使用 DXM runtime 候选值和 `attributeId` 回填 store。
+- `fillAntSelect()` 只保留给非 DXM 字典控件和少量特殊流程，例如变种主题选择、搜索型 checkbox 添加候选。
+
+## DXM Runtime 回填模型
+
+店小秘编辑已创建商品时，会先把属性值加载到页面 runtime store，再由 Vue 组件渲染 UI。sERP 自动填充字典字段时应复用这个模型，而不是模拟鼠标打开下拉框。
+
+当前字典回填路径:
+
+1. `dxm_runtime_bridge.js` 在页面上下文读取 DXM runtime 字段模型。
+2. `compactDxmAttrMeta()` 保留 `attributeId`、`dictionaryId`、`sourceGroup`、`collection`、`maxValueCount`、`options` 等字段。
+3. `compactDxmOptions()` 从 `_allOptions`、`_options`、`options` 中提取候选值，统一成 `{ id, value, valueCn, valueEn }`。
+4. `_fieldForLLM()` 把 `dxmAttribute` 和候选值发给 LLM。
+5. LLM 返回 `value`，字典字段可同时返回 `dictionary_value_id`。
+6. `fillDxmDictionaryField()` 优先按 `dictionary_value_id` 匹配候选；没有 ID 时按 `value/valueCn/valueEn` 归一化匹配。
+7. 命中后写入 DXM store:
+
+```json
+{
+  "complex_id": 0,
+  "id": "4389",
+  "attribute_id": "4389",
+  "values": [
+    {
+      "dictionary_value_id": 90296,
+      "value": "Китай"
+    }
+  ]
+}
+```
+
+写入位置由 `sourceGroup` 决定:
+
+| `sourceGroup` | 店小秘 store | 写入字段 |
+|---|---|---|
+| `attrsList` | `ozonProductBasicStore.$state.formState` | `productAttrsData` |
+| `mergeAttrsList` | `ozonProductStore.$state.formState` | `mergeAttrsData` |
+| `skuList` | 暂按字段实际 DOM/后续 SKU 专用逻辑处理 | 不要猜，先诊断 |
+
+写入后调用 Vue 组件链上的 `emit("update:value")`、`emit("change")`、`emit("select")`，并对字段 DOM 触发 `input/change`，让店小秘组件自己刷新显示。
+
+## 填写注意事项
+
+- 对 DXM 字典字段，LLM 返回值不在 `dxmAttribute.options` 里时，不填、不点击下拉，只显示“DXM候选不包含该值”或“DXM候选未加载”。
+- 对产品属性区的 DXM 字典字段，禁止回退到鼠标点击 Ant Select，否则会再次出现“暂无数据”下拉和错误选项。
+- 远程字典字段如果 runtime 没有加载目标候选，第一版先失败并留证；后续应接 DXM 自己的搜索接口，不要改用 Ozon 官方 API 字典硬塞。
+- 品牌、VAT、店铺、分类这类非产品属性固定控件可能仍是普通 Ant Select，不能简单套用产品属性字典回填。
+- 变种主题选择、SKU 颜色面板、库存编辑弹窗是特殊流程，不属于普通产品属性字典字段。
+- 新增组件时先判断是 DOM 控件识别问题，还是 DXM runtime 候选缺失问题；前者改 `collectFormFields()` / `dxmControlKindFromField()`，后者改 runtime bridge 或 DXM 搜索接口。
+
 ## 未知组件处理
 
 扩展版本 `3.2.43` 起，字段扫描阶段会自动记录未知 DXM 控件。未知控件的定义是：页面中存在可输入/可选择组件，但没有被 `collectFormFields()` 纳入字段模型。
