@@ -85,6 +85,7 @@ class DotEnvRepository(EnvRepository):
         return env
 
     def write(self, updates: dict[str, str]):
+        runtime_updates = dict(updates)
         existing_lines = []
         existing_keys = set()
         if os.path.exists(self._filepath):
@@ -118,6 +119,9 @@ class DotEnvRepository(EnvRepository):
 
         with open(self._filepath, "w", encoding="utf-8") as f:
             f.write("\n".join(new_lines).rstrip("\n") + "\n")
+
+        for key, value in runtime_updates.items():
+            os.environ[str(key)] = str(value)
 
     def read_managed(self) -> list[EnvVariable]:
         all_env = self.read_all()

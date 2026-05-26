@@ -1728,7 +1728,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="settings-hint">密钥默认只显示配置状态；留空表示保留原值。保存后部分配置需要重启 sERP 才会完全生效。</div>
+                <div class="settings-hint">密钥默认只显示配置状态；留空表示保留原值。保存密钥后下一次 AI 调用会立即使用新值。</div>
             </div>
         </div>
     </div>
@@ -3201,7 +3201,8 @@
         document.getElementById("settings-save-btn").addEventListener("click", async function() {
             const res = await fetch("/api/settings", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(collectSettingsPayload()) });
             if (!res.ok) { showMsg("设置保存失败", true); return; }
-            showMsg("设置已保存，部分配置重启后完全生效");
+            const data = await res.json();
+            showMsg(data.restart_required ? "设置已保存，部分配置重启后完全生效" : "设置已保存，密钥已即时生效");
             settingsLoaded = false;
             await loadSettings(true);
         });
@@ -3273,7 +3274,7 @@
             if (!res.ok) { showMsg(data.error || "导入失败", true); return; }
             document.getElementById("settings-import-diff").textContent = JSON.stringify(data.diff || data, null, 2);
             if (apply) {
-                showMsg("配置已导入，部分配置重启后完全生效");
+                showMsg(data.restart_required ? "配置已导入，部分配置重启后完全生效" : "配置已导入，密钥已即时生效");
                 settingsLoaded = false;
                 await loadSettings(true);
             }

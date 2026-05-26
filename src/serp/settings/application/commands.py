@@ -173,7 +173,6 @@ class SettingsApplicationService(SettingsFacade):
             safe_updates[str(key).strip()] = str(value)
         if safe_updates:
             self._env_repo.write(safe_updates)
-            restart_required = True
             self._event_bus.publish(EnvVariablesChanged(changed_keys=list(safe_updates.keys())))
 
         return {"success": True, "restart_required": restart_required}
@@ -308,13 +307,12 @@ class SettingsApplicationService(SettingsFacade):
                 value = info if isinstance(info, str) else info.get("value", "")
                 if value and not EnvVariable.is_masked_placeholder(value):
                     env_updates[key] = value
-            restart_required = bool(env_updates)
             if env_updates:
                 self._env_repo.write(env_updates)
 
             self._event_bus.publish(SettingsImported(summary=preview.summary))
 
-            return ImportResultDTO(success=True, summary=preview.summary, restart_required=restart_required)
+            return ImportResultDTO(success=True, summary=preview.summary, restart_required=False)
         except Exception as e:
             errors.append(str(e))
             return ImportResultDTO(success=False, summary=preview.summary or {}, errors=errors)
