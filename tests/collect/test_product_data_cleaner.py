@@ -102,6 +102,7 @@ def test_cleaner_preserves_raw_and_splits_parameters_descriptions(monkeypatch):
     assert cleaned["clean_audit"]["language"] == "English"
     assert cleaned["clean_audit"]["evidence"]["product_weight"] == "product_details.weight"
     assert cleaned["clean_audit"]["review"]["passed"] is True
+    assert cleaned["clean_audit"]["review"]["skipped"] is True
     assert calls[0]["model"] == "deepseek-v4-pro"
     assert calls[0]["tools"][0]["function"]["strict"] is True
     assert calls[0]["tool_choice"]["function"]["name"] == "clean_product_data"
@@ -141,11 +142,8 @@ def test_cleaner_can_use_laozhang_openai_compatible_model(monkeypatch):
 
     ProductDataCleaner(LaoZhangCleanSettings()).clean({"title": "Wallet"})
 
-    assert captured["urls"] == [
-        "https://api.laozhang.ai/v1/chat/completions",
-        "https://api.laozhang.ai/v1/chat/completions",
-    ]
-    assert captured["models"] == ["gpt-5.4-mini", "gpt-5.4-mini"]
+    assert captured["urls"] == ["https://api.laozhang.ai/v1/chat/completions"]
+    assert captured["models"] == ["gpt-5.4-mini"]
     assert captured["authorization"] == "Bearer sk-laozhang"
 
 
@@ -185,10 +183,7 @@ def test_cleaner_routes_strict_tools_to_deepseek_beta(monkeypatch):
 
     ProductDataCleaner(EnvSettings()).clean({"title": "Wallet"})
 
-    assert urls == [
-        "https://api.deepseek.com/beta/chat/completions",
-        "https://api.deepseek.com/beta/chat/completions",
-    ]
+    assert urls == ["https://api.deepseek.com/beta/chat/completions"]
 
 
 def test_cleaner_reports_empty_structured_output(monkeypatch):
@@ -208,7 +203,7 @@ def test_cleaner_reports_empty_structured_output(monkeypatch):
     assert "empty structured output" in cleaned["clean_audit"]["error"]
 
 
-def test_cleaner_local_audit_rejects_non_english_output(monkeypatch):
+def test_cleaner_skips_local_language_audit_for_model_output_review(monkeypatch):
     calls = []
 
     def fake_post(_url, headers, json, timeout):
@@ -249,13 +244,14 @@ def test_cleaner_local_audit_rejects_non_english_output(monkeypatch):
         "product_description": "Кошелек женский из натуральной кожи.",
     })
 
-    assert cleaned["clean_audit"]["status"] == "review_failed"
-    assert cleaned["clean_audit"]["review"]["passed"] is False
-    assert "language_mismatch" in cleaned["clean_audit"]["review"]["issues"]
-    assert cleaned["clean_audit"]["review"]["checks"][-1]["field"] == "output_language"
+    assert cleaned["clean_audit"]["status"] == "ok"
+    assert cleaned["clean_audit"]["review"]["passed"] is True
+    assert cleaned["clean_audit"]["review"]["skipped"] is True
+    assert "color" in cleaned["product_data"]["product_param"]
+    assert len(calls) == 1
 
 
-def test_cleaner_retries_once_after_language_mismatch(monkeypatch):
+def test_cleaner_does_not_retry_after_language_mismatch_while_audit_is_skipped(monkeypatch):
     clean_calls = 0
     user_prompts = []
 
@@ -305,10 +301,11 @@ def test_cleaner_retries_once_after_language_mismatch(monkeypatch):
     })
 
     assert cleaned["clean_audit"]["status"] == "ok"
-    assert cleaned["product_data"]["product_param"] == {"color": "red"}
-    assert cleaned["product_data"]["product_description"] == "Women's leather wallet."
-    assert clean_calls == 2
-    assert "previous_attempt_failed" in user_prompts[2]
+    assert cleaned["clean_audit"]["review"]["skipped"] is True
+    assert "color" in cleaned["product_data"]["product_param"]
+    assert cleaned["product_data"]["product_description"]
+    assert clean_calls == 1
+    assert all("previous_attempt_failed" not in prompt for prompt in user_prompts)
 
 
 def test_cleaner_falls_back_when_llm_is_not_configured(monkeypatch):

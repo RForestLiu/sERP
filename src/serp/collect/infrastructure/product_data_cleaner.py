@@ -29,42 +29,26 @@ class ProductDataCleaner:
         }
 
         try:
-            retry_reason = {}
-            for attempt in range(2):
-                cleaned = self._call_clean_llm(config, language, raw_copy, retry_reason)
-                params, evidence = self._normalize_params(cleaned.get("product_param", {}))
-                description = self._normalize_description(cleaned.get("product_description", {}))
-                audit["evidence"] = evidence
-                review = self._call_review_llm(config, language, raw_copy, params, description, evidence)
-                language_review = self._review_output_language(language, params, description)
-                if language_review:
-                    review = self._merge_review_failure(review, language_review)
-                audit["review"] = review
-                audit["status"] = "ok" if review.get("passed") is True else "review_failed"
-                if review.get("passed") is True:
-                    return {
-                        "product_data": {
-                            "product_param": params,
-                            "product_description": description,
-                        },
-                        "raw_product_data": raw_copy,
-                        "clean_audit": audit,
-                    }
-                if attempt == 0 and "language_mismatch" in (review.get("issues") or []):
-                    retry_reason = {
-                        "reason": "language_mismatch",
-                        "instruction": f"Translate every cleaned value into {language}. Do not copy source-language words into product_param values or product_description.",
-                        "failed_checks": review.get("checks", [])[-8:],
-                    }
-                    continue
-                return {
-                    "product_data": {
-                        "product_param": params,
-                        "product_description": description,
-                    },
-                    "raw_product_data": raw_copy,
-                    "clean_audit": audit,
-                }
+            cleaned = self._call_clean_llm(config, language, raw_copy)
+            params, evidence = self._normalize_params(cleaned.get("product_param", {}))
+            description = self._normalize_description(cleaned.get("product_description", {}))
+            audit["evidence"] = evidence
+            audit["review"] = {
+                "passed": True,
+                "skipped": True,
+                "reason": "temporarily_disabled_for_model_output_review",
+                "issues": [],
+                "checks": [],
+            }
+            audit["status"] = "ok"
+            return {
+                "product_data": {
+                    "product_param": params,
+                    "product_description": description,
+                },
+                "raw_product_data": raw_copy,
+                "clean_audit": audit,
+            }
         except Exception as exc:
             logger.warning("[collect] product data clean failed: %s", exc)
             audit["error"] = str(exc)
