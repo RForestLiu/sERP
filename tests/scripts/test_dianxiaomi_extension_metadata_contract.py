@@ -4,7 +4,7 @@ from pathlib import Path
 EXTENSION_FILE = Path(__file__).resolve().parents[2] / "extensions" / "amazon_collector" / "dianxiaomi_ozon.js"
 BRIDGE_FILE = Path(__file__).resolve().parents[2] / "extensions" / "amazon_collector" / "dxm_runtime_bridge.js"
 MANIFEST_FILE = Path(__file__).resolve().parents[2] / "extensions" / "amazon_collector" / "manifest.json"
-EXPECTED_EXTENSION_VERSION = "3.2.41"
+EXPECTED_EXTENSION_VERSION = "3.2.42"
 
 
 def test_extension_collects_dianxiaomi_runtime_field_model():
@@ -67,7 +67,7 @@ def test_extension_does_not_fallback_to_clicking_dxm_dictionary_selects():
     assert "fillDxmDictionaryField(entry, value)" in dictionary_branch
     assert "return false;" in dictionary_branch
     assert "if (fillDxmDictionaryField(entry, value)) return true;\n          return false;" in dictionary_branch
-    assert dictionary_branch.index("return false;") < dictionary_branch.index("return await fillAntSelect(el, value, entry.label);")
+    assert "fillAntSelect(el, value, entry.label)" not in dictionary_branch
 
 
 def test_extension_does_not_click_dxm_dictionary_checkbox_groups():
@@ -81,14 +81,14 @@ def test_extension_does_not_click_dxm_dictionary_checkbox_groups():
     assert checkbox_branch.index("return false;") < checkbox_branch.index("fillSearchableCheckboxGroup(entry, value)")
 
 
-def test_extension_does_not_click_product_attribute_antselect_fallback():
+def test_extension_does_not_click_antselect_fallback_in_autofill():
     source = EXTENSION_FILE.read_text(encoding="utf-8")
 
     dictionary_branch = source.split('if (entry.renderMode === "AntSelect") {', 1)[1].split("// ===== select =====", 1)[0]
 
-    assert 'entry.section === "product_attributes"' in dictionary_branch
-    assert "fillAntSelect(el, value, entry.label)" in dictionary_branch
-    assert dictionary_branch.index('entry.section === "product_attributes"') < dictionary_branch.index("fillAntSelect(el, value, entry.label)")
+    assert "fillDxmDictionaryField(entry, value)" in dictionary_branch
+    assert "下拉缺少DXM候选，已跳过点击兜底" in source
+    assert "fillAntSelect(el, value, entry.label)" not in dictionary_branch
 
 
 def test_extension_reports_dxm_candidate_mismatch_error():

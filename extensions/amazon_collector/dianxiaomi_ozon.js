@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.41";
+  var SERP_EXTENSION_VERSION = "3.2.42";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -3822,11 +3822,8 @@
           if (fillDxmDictionaryField(entry, value)) return true;
           return false;
         }
-        if (entry.section === "product_attributes") {
-          entry._lastFillError = "产品属性下拉缺少DXM候选，已跳过点击兜底";
-          return false;
-        }
-        return await fillAntSelect(el, value, entry.label);
+        entry._lastFillError = "下拉缺少DXM候选，已跳过点击兜底";
+        return false;
       }
 
       // ===== select =====
