@@ -130,7 +130,7 @@
     "#serp-toolbar .product-data-bullets{margin:0;padding-left:16px;color:#475569;line-height:1.45;}",
     "#serp-toolbar .pi-clear{font-size:10px;color:#ff4d4f;cursor:pointer;margin-top:7px;text-align:center;border:1px solid #ffccc7;border-radius:4px;padding:3px 6px;transition:all 0.2s;}",
     "#serp-toolbar .pi-clear:hover{background:#fff1f0;}",
-    ".serp-field-evidence{margin:6px 0 0 0;padding:7px 9px;border:1px solid #dbeafe;border-left:3px solid #2563eb;border-radius:5px;background:#f8fbff;font-family:\"Microsoft YaHei\",sans-serif;font-size:11px;line-height:1.45;color:#475569;}",
+    ".serp-field-evidence{display:block;width:100%;box-sizing:border-box;clear:both;margin:6px 0 0 0;padding:7px 9px;border:1px solid #dbeafe;border-left:3px solid #2563eb;border-radius:5px;background:#f8fbff;font-family:\"Microsoft YaHei\",sans-serif;font-size:11px;line-height:1.45;color:#475569;}",
     ".serp-field-evidence .serp-ev-head{display:flex;align-items:center;gap:6px;margin-bottom:3px;}",
     ".serp-field-evidence .serp-ev-status{display:inline-block;border-radius:999px;padding:1px 7px;font-size:10px;font-weight:700;color:#166534;background:#dcfce7;border:1px solid #bbf7d0;white-space:nowrap;}",
     ".serp-field-evidence.review{border-color:#fde68a;border-left-color:#f59e0b;background:#fffbeb;}",
@@ -3800,6 +3800,12 @@
     return el.closest(".ant-form-item, .el-form-item, .form-group, tr") || null;
   }
 
+  function fieldEvidenceMountFromEntry(entry) {
+    var formItem = fieldFormItemFromEntry(entry);
+    if (!formItem) return null;
+    return formItem.querySelector(".ant-form-item-control, .el-form-item__content, .form-group-content") || formItem;
+  }
+
   function productAttributeBounds() {
     var basic = findFormSectionByClass("基本信息");
     if (!basic || !basic.container) return null;
@@ -3873,19 +3879,20 @@
     fillResults.forEach(function (result) {
       if (!isProductAttributeFillResult(result)) return;
       var entry = resolveFieldByIndex(result.index);
-      var formItem = fieldFormItemFromEntry(entry);
-      if (!formItem) return;
+      var mount = fieldEvidenceMountFromEntry(entry);
+      if (!mount) return;
       var mapping = mappingByIndex && mappingByIndex[result.index];
       var status = evidenceStatus(mapping, result);
       var cls = status === "AI填写,需核对" ? " review" : "";
       var evidence = document.createElement("div");
       evidence.className = "serp-field-evidence" + cls;
+      evidence.setAttribute("data-serp-evidence-index", String(result.index));
       evidence.innerHTML =
         '<div class="serp-ev-head"><span class="serp-ev-status">' + escapeHtml(status) + '</span>' +
         '<span class="serp-ev-value">' + escapeHtml(result.value || "") + '</span></div>' +
         '<div class="serp-ev-text">' + escapeHtml(mappingEvidenceText(mapping, result)) + '</div>';
-      formItem.appendChild(evidence);
-      installManualChangeWatcher(formItem, evidence);
+      mount.appendChild(evidence);
+      installManualChangeWatcher(fieldFormItemFromEntry(entry), evidence);
     });
   }
 
@@ -4657,9 +4664,20 @@
       markAutoFill("deterministic-fill");
 
       if (!mappings.length) {
+        var unmatchedResults = formFields.map(function (f) {
+          return {
+            index: f.index,
+            label: f.label,
+            value: "",
+            filled: false,
+            order: f.index,
+            error: "LLM 未匹配此字段"
+          };
+        });
         setBtnLoading(btnFill, false); setProgress(0);
         showToast("未能自动填充任何字段", "error");
-        renderFillResults([], formFields.length);
+        renderFillResults(unmatchedResults, formFields.length);
+        renderProductAttributeEvidence(unmatchedResults, mappingByIndex);
         return;
       }
 
