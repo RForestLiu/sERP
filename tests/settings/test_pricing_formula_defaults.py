@@ -1,4 +1,4 @@
-from src.serp.settings.domain.services import DEFAULT_SETTINGS
+from src.serp.settings.domain.services import DEFAULT_SETTINGS, PRODUCT_CLEAN_DEFAULT_PROMPT
 
 
 def test_default_pricing_formulas_include_minimum_profit_rate():
@@ -22,3 +22,9 @@ def test_product_data_clean_defaults_to_laozhang_gpt_5_4_mini():
         "model": "gpt-5.4-mini",
         "enabled": True,
     }
+
+
+def test_default_product_clean_prompt_removes_brand_content():
+    assert DEFAULT_SETTINGS["product_clean_prompt"] == PRODUCT_CLEAN_DEFAULT_PROMPT
+    assert "Remove brand-related content" in PRODUCT_CLEAN_DEFAULT_PROMPT
+    assert "Do not mention the source product brand" in PRODUCT_CLEAN_DEFAULT_PROMPT

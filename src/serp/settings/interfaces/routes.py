@@ -19,6 +19,8 @@ def create_settings_blueprint(facade: SettingsFacade) -> Blueprint:
             "feature_models": view.feature_models,
             "pricing_formulas": view.pricing_formulas,
             "product_clean_language": view.product_clean_language,
+            "product_clean_prompt": view.product_clean_prompt,
+            "product_clean_default_prompt": view.product_clean_default_prompt,
             "env": view.env,
             "stores": view.stores,
             "feature_model_keys": view.feature_model_keys,

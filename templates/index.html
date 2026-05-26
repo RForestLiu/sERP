@@ -982,6 +982,8 @@
         .settings-formula-grid label, .settings-vars-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: #777; }
         .settings-formula-grid input, .settings-formula-grid select, .settings-vars-grid input, .settings-formula-text { border: 1px solid #d9d9d9; border-radius: 4px; padding: 7px 8px; font-size: 12px; background: #fff; }
         .settings-formula-text { width: 100%; min-height: 54px; resize: vertical; font-family: Consolas, monospace; box-sizing: border-box; }
+        .settings-prompt-text { width: 100%; min-height: 190px; resize: vertical; font-family: Consolas, monospace; border: 1px solid #d9d9d9; border-radius: 4px; padding: 8px; font-size: 12px; line-height: 1.45; background: #fff; box-sizing: border-box; }
+        .settings-inline-btn { border: 1px solid #d9d9d9; background: #fff; color: #555; border-radius: 4px; padding: 7px 10px; cursor: pointer; }
         .settings-vars-grid { display: grid; grid-template-columns: repeat(6, minmax(100px, 1fr)); gap: 8px; margin-top: 8px; }
         .settings-formula-note { margin-top: 6px; font-size: 11px; color: #777; line-height: 1.5; }
         .settings-add-btn { border: 1px dashed #b7d8ff; background: #f7fbff; color: #1677ff; border-radius: 4px; padding: 8px 12px; cursor: pointer; width: 100%; }
@@ -2998,6 +3000,19 @@
             langRow.className = "settings-binding-row";
             langRow.innerHTML = `<div>采集产品数据清洗语言<div style="font-size:11px;color:#999;">product_clean_language</div></div><label>语言<input data-product-clean-language value="${_escHtml(settingsState.settings.product_clean_language || "English")}"></label>`;
             bindingsEl.appendChild(langRow);
+            const promptRow = document.createElement("div");
+            promptRow.className = "settings-card";
+            promptRow.innerHTML = `
+                <div class="settings-provider-head">
+                    <div>
+                        <div class="settings-provider-title">产品数据清洗提示词</div>
+                        <div class="settings-provider-subtitle">product_clean_prompt</div>
+                    </div>
+                    <button class="settings-inline-btn" id="settings-reset-clean-prompt" type="button">恢复默认提示词</button>
+                </div>
+                <textarea class="settings-prompt-text" data-product-clean-prompt>${_escHtml(settingsState.settings.product_clean_prompt || settingsState.product_clean_default_prompt || "")}</textarea>
+            `;
+            bindingsEl.appendChild(promptRow);
             Object.keys(features).forEach(key => {
                 const row = document.createElement("div");
                 row.className = "settings-binding-row";
@@ -3095,7 +3110,8 @@
                     models: settingsState.models || [],
                     feature_models: settingsState.feature_models || {},
                     pricing_formulas: settingsState.pricing_formulas || [],
-                    product_clean_language: settingsState.product_clean_language || "English"
+                    product_clean_language: settingsState.product_clean_language || "English",
+                    product_clean_prompt: settingsState.product_clean_prompt || ""
                 };
                 settingsState.features = settingsState.feature_model_keys || {};
             }
@@ -3131,6 +3147,8 @@
             document.querySelectorAll("[data-feature]").forEach(sel => { featureModels[sel.dataset.feature] = sel.value; });
             const cleanLanguageEl = document.querySelector("[data-product-clean-language]");
             const productCleanLanguage = cleanLanguageEl ? cleanLanguageEl.value.trim() : "English";
+            const cleanPromptEl = document.querySelector("[data-product-clean-prompt]");
+            const productCleanPrompt = cleanPromptEl ? cleanPromptEl.value.trim() : "";
             const stores = [];
             document.querySelectorAll("#settings-stores-list .settings-card").forEach(card => {
                 const item = {};
@@ -3155,7 +3173,7 @@
                 item.currency = "CNY";
                 pricingFormulas.push(item);
             });
-            return { settings: { models: models, feature_models: featureModels, pricing_formulas: pricingFormulas, product_clean_language: productCleanLanguage || "English" }, stores: stores, env: envUpdates };
+            return { settings: { models: models, feature_models: featureModels, pricing_formulas: pricingFormulas, product_clean_language: productCleanLanguage || "English", product_clean_prompt: productCleanPrompt }, stores: stores, env: envUpdates };
         }
 
         document.querySelectorAll(".settings-tab").forEach(btn => {
@@ -3208,6 +3226,11 @@
         });
 
         document.addEventListener("click", function(e) {
+            const resetCleanPrompt = e.target.closest("#settings-reset-clean-prompt");
+            if (resetCleanPrompt && settingsState) {
+                const promptEl = document.querySelector("[data-product-clean-prompt]");
+                if (promptEl) promptEl.value = settingsState.product_clean_default_prompt || "";
+            }
             const addProviderModel = e.target.closest("[data-add-provider-model]");
             if (addProviderModel && settingsState) {
                 settingsState.settings.models = collectSettingsPayload().settings.models;

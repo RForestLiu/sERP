@@ -8,7 +8,12 @@ from src.serp.shared import Result, EventBus
 
 from ..domain.entities import Settings as SettingsAggregate, Store
 from ..domain.value_objects import ModelConfig, PricingFormula, EnvVariable
-from ..domain.services import SettingsValidationService, FEATURE_MODEL_KEYS, MANAGED_ENV_KEYS
+from ..domain.services import (
+    SettingsValidationService,
+    FEATURE_MODEL_KEYS,
+    MANAGED_ENV_KEYS,
+    PRODUCT_CLEAN_DEFAULT_PROMPT,
+)
 from ..domain.events import (
     SettingsUpdated,
     EnvVariablesChanged,
@@ -56,6 +61,8 @@ class SettingsApplicationService(SettingsFacade):
             feature_models=settings.feature_models,
             pricing_formulas=[f.to_dict() for f in settings.pricing_formulas],
             product_clean_language=settings.product_clean_language,
+            product_clean_prompt=settings.product_clean_prompt,
+            product_clean_default_prompt=PRODUCT_CLEAN_DEFAULT_PROMPT,
             env={v.key: {"value": v.masked, "configured": v.configured} for v in env_vars},
             stores=[s.to_view() for s in stores],
             feature_model_keys=FEATURE_MODEL_KEYS,
@@ -86,6 +93,7 @@ class SettingsApplicationService(SettingsFacade):
                 "models": models_data,
                 "feature_models": settings.feature_models,
                 "product_clean_language": settings.product_clean_language,
+                "product_clean_prompt": settings.product_clean_prompt,
             },
             stores=[s.to_dict() for s in stores],
             env=env_status,

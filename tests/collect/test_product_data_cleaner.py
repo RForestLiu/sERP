@@ -37,6 +37,20 @@ class LaoZhangCleanSettings(FakeSettings):
         }]
 
 
+class PromptSettings(FakeSettings):
+    def __init__(self, prompt):
+        super().__init__("English")
+        self.prompt = prompt
+
+    def get_view(self):
+        return type("View", (), {
+            "settings": {
+                "product_clean_language": self.language,
+                "product_clean_prompt": self.prompt,
+            }
+        })()
+
+
 def test_cleaner_preserves_raw_and_splits_parameters_descriptions(monkeypatch):
     calls = []
 
@@ -107,6 +121,38 @@ def test_cleaner_preserves_raw_and_splits_parameters_descriptions(monkeypatch):
     assert calls[0]["tools"][0]["function"]["strict"] is True
     assert calls[0]["tool_choice"]["function"]["name"] == "clean_product_data"
     assert calls[0]["thinking"] == {"type": "disabled"}
+
+
+def test_cleaner_uses_custom_product_clean_prompt(monkeypatch):
+    system_prompts = []
+
+    def fake_post(_url, headers, json, timeout):
+        system_prompts.append(json["messages"][0]["content"])
+        content = {
+            "product_param": [],
+            "product_description": {"summary": "", "evidence": []},
+        }
+        return type("Resp", (), {
+            "status_code": 200,
+            "text": "ok",
+            "json": lambda self: {
+                "choices": [{
+                    "message": {
+                        "tool_calls": [{
+                            "function": {"arguments": json_module.dumps(content, ensure_ascii=False)},
+                        }],
+                    },
+                }],
+            },
+        })()
+
+    json_module = json
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
+    monkeypatch.setattr("src.serp.collect.infrastructure.product_data_cleaner.requests.post", fake_post)
+
+    ProductDataCleaner(PromptSettings("CUSTOM CLEAN PROMPT")).clean({"title": "Wallet"})
+
+    assert system_prompts == ["CUSTOM CLEAN PROMPT"]
 
 
 def test_cleaner_can_use_laozhang_openai_compatible_model(monkeypatch):

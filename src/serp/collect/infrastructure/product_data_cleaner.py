@@ -9,6 +9,8 @@ from typing import Optional
 
 import requests
 
+from src.serp.settings.domain.services import PRODUCT_CLEAN_DEFAULT_PROMPT
+
 logger = logging.getLogger(__name__)
 
 
@@ -34,6 +36,7 @@ class ProductDataCleaner:
         raw_copy = copy.deepcopy(raw_data) if isinstance(raw_data, dict) else {}
         config = self._resolve_config()
         language = self._resolve_language()
+        prompt = self._resolve_prompt()
         audit = {
             "model": config.get("model", ""),
             "language": language,
@@ -44,7 +47,7 @@ class ProductDataCleaner:
         }
 
         try:
-            cleaned = self._call_clean_llm(config, language, raw_copy)
+            cleaned = self._call_clean_llm(config, language, raw_copy, prompt)
             params, evidence = self._normalize_params(cleaned.get("product_param", {}))
             description = self._normalize_description(cleaned.get("product_description", {}))
             audit["evidence"] = evidence
@@ -112,18 +115,26 @@ class ProductDataCleaner:
             pass
         return "English"
 
-    def _call_clean_llm(self, config: dict, language: str, raw_data: dict, retry_reason: dict | None = None) -> dict:
-        system_prompt = (
-            "You are an ecommerce product data cleaning assistant. Output JSON only. "
-            "Return exactly two first-level fields: product_param and product_description. "
-            "product_param must contain only objective facts as flat snake_case key-value pairs, "
-            "for example product_length, product_width, product_height, product_weight, material, color. "
-            "Return product_param as an array of key, value, evidence objects. "
-            "Translate all cleaned field values and description text into the requested output_language. "
-            "Keep evidence as source references or exact source text; evidence may remain in the source language. "
-            "product_description is for subjective or marketing copy such as Amazon About this item "
-            "or Wildberries Description."
-        )
+    def _resolve_prompt(self) -> str:
+        try:
+            view = self._settings.get_view()
+            value = getattr(view, "product_clean_prompt", "")
+            if not value:
+                value = getattr(view, "settings", {}).get("product_clean_prompt", "")
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+        except Exception:
+            pass
+        return PRODUCT_CLEAN_DEFAULT_PROMPT
+
+    def _call_clean_llm(
+        self,
+        config: dict,
+        language: str,
+        raw_data: dict,
+        system_prompt: str,
+        retry_reason: dict | None = None,
+    ) -> dict:
         user_prompt = json.dumps({
             "output_language": language,
             "return_schema": {
