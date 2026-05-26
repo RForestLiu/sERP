@@ -2915,6 +2915,22 @@
     var seenSelectors = {};
     var groupedBaseLabels = {};
 
+    function formItemForFieldEl(el) {
+      if (!el) return null;
+      return el.closest(".ant-form-item, .el-form-item, .form-group, tr") || null;
+    }
+
+    function fieldSectionForEl(el) {
+      var formItem = formItemForFieldEl(el) || el;
+      if (!formItem) return "";
+      var bounds = productAttributeBounds();
+      if (!bounds || !bounds.container || !bounds.marker) return "";
+      if (!bounds.container.contains(formItem)) return "";
+      var pos = bounds.marker.compareDocumentPosition(formItem);
+      if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return "product_attributes";
+      return "";
+    }
+
     // ===== 第一遍：收集 checkbox/radio，按 form-item 分组 =====
     // { groupKey: { groupLabel, rowCtx, items: [{selector, optionLabel}] } }
     var checkboxGroups = {};
@@ -2937,19 +2953,19 @@
         var soloLabel = optionLabel + (rowCtx ? " [" + rowCtx + "]" : "");
         if (/^(设置sku标题|颜色样本|条形码)$/.test(fieldBaseLabel(soloLabel))) return;
         if (el.type === "checkbox") {
-          loneCheckboxes.push({ _fid: sel, label: soloLabel, el: el, selector: sel });
+          loneCheckboxes.push({ _fid: sel, label: soloLabel, el: el, selector: sel, section: fieldSectionForEl(el) });
         } else {
-          loneRadios.push({ _fid: sel, label: soloLabel, el: el, selector: sel });
+          loneRadios.push({ _fid: sel, label: soloLabel, el: el, selector: sel, section: fieldSectionForEl(el) });
         }
         return;
       }
 
       var groupKey = (groupLabel + "|" + (rowCtx || "")).replace(/\(.+?\)/g, "").trim();
       if (el.type === "checkbox") {
-        if (!checkboxGroups[groupKey]) checkboxGroups[groupKey] = { groupLabel: groupLabel, rowCtx: rowCtx, items: [] };
+        if (!checkboxGroups[groupKey]) checkboxGroups[groupKey] = { groupLabel: groupLabel, rowCtx: rowCtx, section: fieldSectionForEl(el), items: [] };
         checkboxGroups[groupKey].items.push({ _fid: sel, optionLabel: optionLabel, el: el });
       } else {
-        if (!radioGroups[groupKey]) radioGroups[groupKey] = { groupLabel: groupLabel, rowCtx: rowCtx, items: [] };
+        if (!radioGroups[groupKey]) radioGroups[groupKey] = { groupLabel: groupLabel, rowCtx: rowCtx, section: fieldSectionForEl(el), items: [] };
         radioGroups[groupKey].items.push({ _fid: sel, optionLabel: optionLabel, el: el });
       }
     });
@@ -2958,14 +2974,14 @@
     loneCheckboxes.forEach(function (item) {
       if (seenSelectors[item._fid]) return;
       seenSelectors[item._fid] = true;
-      fields.push({ tag: "input", type: "checkbox", label: item.label, currentValue: item.el.checked ? "true" : "", _fid: item._fid, el: item.el });
+      fields.push({ tag: "input", type: "checkbox", label: item.label, currentValue: item.el.checked ? "true" : "", _fid: item._fid, el: item.el, section: item.section || "" });
     });
 
     // 独立 radio（无 group 或仅单个）
     loneRadios.forEach(function (item) {
       if (seenSelectors[item._fid]) return;
       seenSelectors[item._fid] = true;
-      fields.push({ tag: "input", type: "radio", label: item.label, currentValue: item.el.checked ? "true" : "", _fid: item._fid, el: item.el });
+      fields.push({ tag: "input", type: "radio", label: item.label, currentValue: item.el.checked ? "true" : "", _fid: item._fid, el: item.el, section: item.section || "" });
     });
 
     // checkbox 组：≥2 个选项才用组格式；单个的回退为普通 checkbox
@@ -2977,7 +2993,7 @@
         if (!seenSelectors[single._fid]) {
           seenSelectors[single._fid] = true;
           var sLabel = grp.groupLabel + " - " + single.optionLabel + (grp.rowCtx ? " [" + grp.rowCtx + "]" : "");
-          fields.push({ tag: "input", type: "checkbox", label: sLabel, currentValue: single.el.checked ? "true" : "", _fid: single._fid, el: single.el });
+          fields.push({ tag: "input", type: "checkbox", label: sLabel, currentValue: single.el.checked ? "true" : "", _fid: single._fid, el: single.el, section: grp.section || fieldSectionForEl(single.el) });
         }
         return;
       }
@@ -2998,6 +3014,7 @@
         _fid: fids[0],
         _fids: fids,
         _els: els,
+        section: grp.section || fieldSectionForEl(els[0]),
         options: grp.items.map(function (x, i) { return { text: x.optionLabel, _fid: fids[i] }; })
       });
     });
@@ -3010,7 +3027,7 @@
         if (!seenSelectors[single._fid]) {
           seenSelectors[single._fid] = true;
           var sLabel = grp.groupLabel + " - " + single.optionLabel + (grp.rowCtx ? " [" + grp.rowCtx + "]" : "");
-          fields.push({ tag: "input", type: "radio", label: sLabel, currentValue: single.el.checked ? "true" : "", _fid: single._fid, el: single.el });
+          fields.push({ tag: "input", type: "radio", label: sLabel, currentValue: single.el.checked ? "true" : "", _fid: single._fid, el: single.el, section: grp.section || fieldSectionForEl(single.el) });
         }
         return;
       }
@@ -3030,6 +3047,7 @@
         _fid: fids[0],
         _fids: fids,
         _els: els,
+        section: grp.section || fieldSectionForEl(els[0]),
         options: grp.items.map(function (x, i) { return { text: x.optionLabel, _fid: fids[i] }; })
       });
     });
@@ -3069,13 +3087,14 @@
           currentValue: currentVal,
           _el: antSelect,
           _fid: _serpFidSelector(antSelect),
+          section: fieldSectionForEl(antSelect),
           options: []
         });
         return;
       }
       if (isDictionarySearchInput(el)) return;
 
-      fields.push({ tag: "input", type: el.type || "text", name: el.name || "", id: el.id || "", label: fullLabel, placeholder: el.placeholder || "", currentValue: el.value || "", _fid: fid, el: el });
+      fields.push({ tag: "input", type: el.type || "text", name: el.name || "", id: el.id || "", label: fullLabel, placeholder: el.placeholder || "", currentValue: el.value || "", _fid: fid, el: el, section: fieldSectionForEl(el) });
     });
 
     // ===== select / textarea =====
@@ -3086,7 +3105,7 @@
       if (isSkippedField(label)) return;
       var rowCtx = getRowContext(el);
       var fullLabel = label + (rowCtx ? " [" + rowCtx + "]" : "");
-      fields.push({ tag: "select", name: el.name || "", id: el.id || "", label: fullLabel, currentValue: el.value || "", options: Array.from(el.options).map(function (o) { return { value: o.value, text: o.text }; }), _fid: fid, el: el });
+      fields.push({ tag: "select", name: el.name || "", id: el.id || "", label: fullLabel, currentValue: el.value || "", options: Array.from(el.options).map(function (o) { return { value: o.value, text: o.text }; }), _fid: fid, el: el, section: fieldSectionForEl(el) });
     });
     document.querySelectorAll("textarea").forEach(function (el) {
       if (!isVisibleField(el)) return;
@@ -3095,7 +3114,7 @@
       if (isSkippedField(label)) return;
       var rowCtx = getRowContext(el);
       var fullLabel = label + (rowCtx ? " [" + rowCtx + "]" : "");
-      fields.push({ tag: "textarea", name: el.name || "", id: el.id || "", label: fullLabel, placeholder: el.placeholder || "", currentValue: el.value || "", _fid: fid, el: el });
+      fields.push({ tag: "textarea", name: el.name || "", id: el.id || "", label: fullLabel, placeholder: el.placeholder || "", currentValue: el.value || "", _fid: fid, el: el, section: fieldSectionForEl(el) });
     });
 
     var jsonBtn = Array.from(document.querySelectorAll("#wirelessDescBox button, button")).find(function (btn) {
@@ -3109,7 +3128,8 @@
         label: "JSON富文本",
         currentValue: "",
         _fid: jsonFid,
-        _el: jsonBtn
+        _el: jsonBtn,
+        section: fieldSectionForEl(jsonBtn)
       });
     }
 
@@ -3158,6 +3178,7 @@
         tag: f.tag,
         label: f.label,
         type: f.type,
+        section: f.section || "",
         renderMode: f.renderMode || null,
         jsonEditor: f.tag === "json-editor"
       };
@@ -3816,6 +3837,8 @@
     if (!attrMarker) return null;
     var next = findFormSectionByClass("店小秘信息");
     return {
+      container: basic.container,
+      marker: attrMarker,
       start: visibleTop(attrMarker),
       end: next && next.header ? visibleTop(next.header) : visibleTop(basic.container) + basic.container.getBoundingClientRect().height + 1
     };
@@ -3825,12 +3848,13 @@
     var entry = resolveFieldByIndex(result && result.index);
     var formItem = fieldFormItemFromEntry(entry);
     if (!formItem) return false;
+    var label = String((result && result.label) || (entry && entry.label) || "");
+    if (/店铺名称|产品分类|来源URL|产品标题|VAT|品牌|合并属性|型号名称|SKU|售价|原价|库存|变种|图片|视频|描述|JSON/i.test(label)) return false;
+    if (entry.section === "product_attributes") return true;
     var bounds = productAttributeBounds();
     if (!bounds) return false;
     var top = visibleTop(formItem);
     if (top < bounds.start || top >= bounds.end) return false;
-    var label = String((result && result.label) || (entry && entry.label) || "");
-    if (/店铺名称|产品分类|来源URL|产品标题|VAT|品牌|合并属性|型号名称|SKU|售价|原价|库存|变种|图片|视频|描述|JSON/i.test(label)) return false;
     return true;
   }
 

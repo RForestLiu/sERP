@@ -52,6 +52,26 @@ def test_dianxiaomi_attribute_evidence_mounts_under_control_area():
     assert "data-serp-evidence-index" in source
 
 
+def test_dianxiaomi_field_map_preserves_product_attribute_section():
+    source = (ROOT / "extensions" / "amazon_collector" / "dianxiaomi_ozon.js").read_text(encoding="utf-8")
+
+    assert 'return "product_attributes"' in source
+    assert 'section: f.section || ""' in source
+    assert "function fieldSectionForEl(el)" in source
+    assert "compareDocumentPosition(formItem)" in source
+
+
+def test_dianxiaomi_attribute_evidence_prefers_section_over_scroll_position():
+    source = (ROOT / "extensions" / "amazon_collector" / "dianxiaomi_ozon.js").read_text(encoding="utf-8")
+
+    function_source = source[source.index("function isProductAttributeFillResult"):]
+    section_check = 'if (entry.section === "product_attributes") return true;'
+    fallback_check = "var top = visibleTop(formItem);"
+    assert section_check in function_source
+    assert fallback_check in function_source
+    assert function_source.index(section_check) < function_source.index(fallback_check)
+
+
 def test_dianxiaomi_attribute_evidence_renders_when_llm_returns_no_mappings():
     source = (ROOT / "extensions" / "amazon_collector" / "dianxiaomi_ozon.js").read_text(encoding="utf-8")
 
