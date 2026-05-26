@@ -4,7 +4,7 @@ from pathlib import Path
 EXTENSION_FILE = Path(__file__).resolve().parents[2] / "extensions" / "amazon_collector" / "dianxiaomi_ozon.js"
 BRIDGE_FILE = Path(__file__).resolve().parents[2] / "extensions" / "amazon_collector" / "dxm_runtime_bridge.js"
 MANIFEST_FILE = Path(__file__).resolve().parents[2] / "extensions" / "amazon_collector" / "manifest.json"
-EXPECTED_EXTENSION_VERSION = "3.2.42"
+EXPECTED_EXTENSION_VERSION = "3.2.43"
 
 
 def test_extension_collects_dianxiaomi_runtime_field_model():
@@ -105,6 +105,24 @@ def test_extension_version_is_bumped():
 
     assert f'var SERP_EXTENSION_VERSION = "{EXPECTED_EXTENSION_VERSION}";' in source
     assert f'"version": "{EXPECTED_EXTENSION_VERSION}"' in manifest
+
+
+def test_extension_reports_unknown_dxm_controls_with_repro_context():
+    source = EXTENSION_FILE.read_text(encoding="utf-8")
+
+    assert "function reportUnknownDxmControls(fields)" in source
+    assert 'UNKNOWN_DXM_CONTROL_STORAGE_KEY = "serp_unknown_dxm_controls"' in source
+    assert "collectUnknownDxmControls(fields)" in source
+    assert "chrome.storage.local.set(kv" in source
+    assert "platform: detectPlatform()" in source
+    assert "store_id: detectStoreId()" in source
+    assert "category_path: detectOzonCategoryPathText()" in source
+    assert "category_context: collectDxmCategoryContext()" in source
+    assert "window.alert" in source
+    assert "发现未知DXM控件" in source
+
+    collect_tail = source.split("attachDxmRuntimeMetadata(fields);", 1)[1].split("return fields;", 1)[0]
+    assert "reportUnknownDxmControls(fields)" in collect_tail
 
 
 def test_extension_uses_dxm_attribute_ids_for_deterministic_prefill():

@@ -9,7 +9,8 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.42";
+  var SERP_EXTENSION_VERSION = "3.2.43";
+  var UNKNOWN_DXM_CONTROL_STORAGE_KEY = "serp_unknown_dxm_controls";
 
   // ==================== Service Worker Fetch Proxy ====================
   // Content scripts on some sites can"t directly fetch to localhost due to CSP.
@@ -76,6 +77,7 @@
   var fillAllVariants = true;
   var dxmRuntimeFieldModelCache = null;
   var dxmRuntimeBridgeInstalled = false;
+  var unknownDxmControlSignatures = {};
   var DEFAULT_HINT_PROMPTS = {
     title: "生成俄语商品标题：突出产品类型、材质、功能和适用人群；不包含品牌名；控制在50-100字符。",
     description: "生成俄语商品描述：按功能用途、材质设计、使用场景、优势特点组织，语气客观自然。",
@@ -2826,6 +2828,130 @@
     };
   }
 
+  function fieldDomNode(field) {
+    if (!field) return null;
+    if (field._el) return field._el;
+    if (field.el) return field.el;
+    if (field._els && field._els.length) return field._els[0];
+    return null;
+  }
+
+  function unknownControlRoot(el) {
+    if (!el) return null;
+    return el.closest(".ant-form-item, .el-form-item, .form-group, tr") || null;
+  }
+
+  function unknownControlHasInputLikeNode(root) {
+    if (!root) return false;
+    return !!root.querySelector([
+      'input:not([type="hidden"]):not([type="file"])',
+      "textarea",
+      "select",
+      ".ant-select",
+      ".ant-checkbox-group",
+      ".ant-radio-group",
+      "[contenteditable='true']",
+      ".CodeMirror"
+    ].join(","));
+  }
+
+  function unknownControlText(root) {
+    return String((root && (root.getAttribute("title") || root.textContent)) || "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 500);
+  }
+
+  function unknownControlFeatures(root) {
+    var input = root && root.querySelector("input, textarea, select, [contenteditable='true']");
+    return {
+      tag: input ? String(input.tagName || "").toLowerCase() : "",
+      type: input ? String(input.getAttribute("type") || "") : "",
+      className: String((root && root.className) || "").slice(0, 240),
+      hasAntSelect: !!(root && root.querySelector(".ant-select")),
+      hasCheckboxGroup: !!(root && root.querySelector(".ant-checkbox-group")),
+      hasRadioGroup: !!(root && root.querySelector(".ant-radio-group")),
+      hasCodeMirror: !!(root && root.querySelector(".CodeMirror"))
+    };
+  }
+
+  function collectUnknownDxmControls(fields) {
+    if (window.location.hostname.indexOf("dianxiaomi.com") === -1) return [];
+    var knownRoots = [];
+    (fields || []).forEach(function (field) {
+      var node = fieldDomNode(field);
+      var root = unknownControlRoot(node);
+      if (root && knownRoots.indexOf(root) === -1) knownRoots.push(root);
+    });
+
+    var records = [];
+    var candidates = Array.from(document.querySelectorAll(".ant-form-item, .el-form-item, .form-group, tr"));
+    candidates.forEach(function (root) {
+      if (!isVisibleNode(root)) return;
+      if (root.closest("#serp-toolbar, #serp-category-panel, #serp-product-panel, #serp-extract-panel, #serp-image-panel, #serp-hint-panel")) return;
+      if (!unknownControlHasInputLikeNode(root)) return;
+      var known = knownRoots.some(function (knownRoot) {
+        return knownRoot === root || root.contains(knownRoot) || knownRoot.contains(root);
+      });
+      if (known) return;
+      var text = unknownControlText(root);
+      if (!text) return;
+      records.push({
+        text: text,
+        html: String(root.outerHTML || "").slice(0, 4000),
+        features: unknownControlFeatures(root)
+      });
+    });
+    return records.slice(0, 20);
+  }
+
+  function saveUnknownDxmControlDiagnostics(records) {
+    if (!records || !records.length) return;
+    var payload = {
+      captured_at: new Date().toISOString(),
+      extension_version: SERP_EXTENSION_VERSION,
+      platform: detectPlatform(),
+      store_id: detectStoreId(),
+      url: window.location.href,
+      title: document.title || "",
+      category_path: detectOzonCategoryPathText(),
+      category_context: collectDxmCategoryContext(),
+      controls: records
+    };
+    if (typeof chrome === "undefined" || !chrome.storage || !chrome.storage.local) {
+      console.warn("[sERP] unknown DXM controls:", payload);
+      return;
+    }
+    chrome.storage.local.get([UNKNOWN_DXM_CONTROL_STORAGE_KEY], function (data) {
+      var list = Array.isArray(data && data[UNKNOWN_DXM_CONTROL_STORAGE_KEY]) ? data[UNKNOWN_DXM_CONTROL_STORAGE_KEY] : [];
+      list.unshift(payload);
+      var kv = {};
+      kv[UNKNOWN_DXM_CONTROL_STORAGE_KEY] = list.slice(0, 30);
+      chrome.storage.local.set(kv, function () {
+        console.warn("[sERP] saved unknown DXM controls:", payload);
+      });
+    });
+  }
+
+  function reportUnknownDxmControls(fields) {
+    var records = collectUnknownDxmControls(fields);
+    if (!records.length) return;
+    var signature = [
+      window.location.pathname,
+      detectOzonCategoryPathText(),
+      records.map(function (item) { return item.text; }).join("|")
+    ].join("::");
+    if (unknownDxmControlSignatures[signature]) return;
+    unknownDxmControlSignatures[signature] = true;
+    saveUnknownDxmControlDiagnostics(records);
+    showToast("发现未知DXM控件，已保存诊断信息：" + records.length + " 个", "error");
+    setTimeout(function () {
+      try {
+        window.alert("发现未知DXM控件 " + records.length + " 个，已保存平台、分类和控件信息，后续可复现适配。");
+      } catch (e) {}
+    }, 50);
+  }
+
   function collectDxmRuntimeFieldModel() {
     if (dxmRuntimeFieldModelCache && Array.isArray(dxmRuntimeFieldModelCache.fields) && dxmRuntimeFieldModelCache.fields.length) {
       return dxmRuntimeFieldModelCache;
@@ -3180,6 +3306,7 @@
       f.controlKind = dxmControlKindFromField(f);
     });
     attachDxmRuntimeMetadata(fields);
+    reportUnknownDxmControls(fields);
 
     // ===== 构建索引和字段映射表 =====
     _buildFieldMap(fields);
