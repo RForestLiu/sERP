@@ -3016,7 +3016,6 @@
     document.querySelectorAll('input:not([type="hidden"]):not([type="file"]):not([type="checkbox"]):not([type="radio"])').forEach(function (el) {
       if (el.closest(".sku-checkbox-panel, .sku-mutiSelect")) return;
       if (!isVisibleField(el)) return;
-      if (isDictionarySearchInput(el)) return;
       var fid = _serpFidSelector(el);
       var label = findLabel(el);
       if (isSkippedField(label)) return;
@@ -3029,6 +3028,8 @@
       // 检测 AntSelect：.ant-select 包裹的 input，排除 dropdown 内的搜索框
       var antSelect = el.closest(".ant-select");
       if (antSelect && !el.closest(".ant-select-dropdown")) {
+        var antSelectFormText = ((el.closest(".ant-form-item") || {}).textContent || "");
+        if (isDictionarySearchInput(el) && antSelectFormText.indexOf("更多属性值请搜索添加") !== -1) return;
         if (groupedBaseLabels[fieldBaseLabel(label)]) return;
         if (fieldBaseLabel(label).indexOf("JSON富文本") !== -1) return;
         var selectMode = antSelect.classList.contains("ant-select-multiple") ? "multiple" : "single";
@@ -3050,6 +3051,7 @@
         });
         return;
       }
+      if (isDictionarySearchInput(el)) return;
 
       fields.push({ tag: "input", type: el.type || "text", name: el.name || "", id: el.id || "", label: fullLabel, placeholder: el.placeholder || "", currentValue: el.value || "", _fid: fid, el: el });
     });
