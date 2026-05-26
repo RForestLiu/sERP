@@ -50,15 +50,27 @@ from werkzeug.utils import secure_filename
 import requests
 from src.serp.wiring import create_settings_facade, create_logistics_facade, create_ozon_category_facade, create_collect_facade
 
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+
+
+def _read_extension_version():
+    manifest_path = os.path.join(PROJECT_ROOT, "extensions/amazon_collector/manifest.json")
+    try:
+        with open(manifest_path, "r", encoding="utf-8") as f:
+            return json.load(f).get("version", "unknown")
+    except Exception:
+        return "unknown"
+
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
+EXTENSION_VERSION = _read_extension_version()
 logger.info("=" * 50)
-logger.info("sERP 启动中... | Flask %s | Debug=%s", app.name, app.debug)
+logger.info("sERP 启动中... | Flask %s | Debug=%s | backend=%s | extension=%s", app.name, app.debug, "dev", EXTENSION_VERSION)
 logger.info("=" * 50)
 
 # --------------- 配置 ---------------
-DATA_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
-ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+DATA_ROOT = os.path.join(PROJECT_ROOT, "data")
+ENV_FILE = os.path.join(PROJECT_ROOT, ".env")
 SETTINGS_FILE = os.path.join(DATA_ROOT, "settings.json")
 SETTINGS_FACADE, _SETTINGS_EVENT_BUS = create_settings_facade(DATA_ROOT, ENV_FILE)
 
