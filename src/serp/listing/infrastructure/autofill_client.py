@@ -708,6 +708,26 @@ SKC: {skc}
                 )
                 if ozon_attr.get("name") or ozon_attr.get("name_cn"):
                     field_desc += f" | Ozon名称: {ozon_attr.get('name_cn') or ''}/{ozon_attr.get('name') or ''}"
+                dictionary_values = ozon_attr.get("dictionary_values") or []
+                if isinstance(dictionary_values, list) and dictionary_values:
+                    value_texts: list[str] = []
+                    for value_item in dictionary_values[:100]:
+                        if isinstance(value_item, dict):
+                            value = str(value_item.get("value") or value_item.get("text") or "").strip()
+                            value_cn = str(value_item.get("value_cn") or value_item.get("text_cn") or "").strip()
+                            if value_cn and value:
+                                value_texts.append(f"{value_cn}({value})")
+                            elif value or value_cn:
+                                value_texts.append(value or value_cn)
+                        else:
+                            value_texts.append(str(value_item).strip())
+                    value_texts = [text for text in value_texts if text]
+                    if value_texts:
+                        field_desc += (
+                            " | Ozon官方候选: "
+                            + ", ".join(value_texts)
+                            + " | 字典字段只能返回 Ozon官方候选之一，不要自由编造"
+                        )
             if options:
                 option_texts: list[str] = []
                 for o in options[:30]:

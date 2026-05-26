@@ -692,6 +692,9 @@ class ListingApplicationService(ListingFacade):
             attr_id = dxm_attr.get("attributeId") or dxm_attr.get("id")
             ozon_attr = attr_by_id.get(str(attr_id))
             if ozon_attr:
+                dictionary_values = ozon_attr.get("dictionary_values") or []
+                if not isinstance(dictionary_values, list):
+                    dictionary_values = []
                 next_field["ozonAttribute"] = {
                     "id": ozon_attr.get("id"),
                     "name": ozon_attr.get("name", ""),
@@ -701,6 +704,7 @@ class ListingApplicationService(ListingFacade):
                     "is_required": ozon_attr.get("is_required", False),
                     "is_collection": ozon_attr.get("is_collection", False),
                     "max_value_count": ozon_attr.get("max_value_count", 1),
+                    "dictionary_values": dictionary_values[:100],
                 }
             enriched_fields.append(next_field)
         return enriched_fields

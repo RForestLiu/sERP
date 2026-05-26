@@ -61,6 +61,10 @@ class FakeCategoryFacade:
                     "is_required": True,
                     "is_collection": False,
                     "max_value_count": 1,
+                    "dictionary_values": [
+                        {"id": 970674898, "value": "Китай", "value_cn": "中国"},
+                        {"id": 970674899, "value": "Россия", "value_cn": "俄罗斯"},
+                    ],
                 }
             ],
         }
@@ -103,3 +107,7 @@ def test_dianxiaomi_autofill_enriches_fields_with_current_ozon_api_attributes():
     assert field["ozonAttribute"]["id"] == 4389
     assert field["ozonAttribute"]["name_cn"] == "原产国"
     assert field["ozonAttribute"]["dictionary_id"] == 971082156
+    assert field["ozonAttribute"]["dictionary_values"] == [
+        {"id": 970674898, "value": "Китай", "value_cn": "中国"},
+        {"id": 970674899, "value": "Россия", "value_cn": "俄罗斯"},
+    ]
