@@ -313,10 +313,6 @@
             width: 120px;
             color: var(--text-secondary);
         }
-        .store-listing-link {
-            margin-left: auto;
-            text-decoration: none;
-        }
         .store-status {
             padding: 2px 8px;
             border-radius: 3px;
@@ -539,9 +535,7 @@
     <div class="title">产品维护</div>
     <div class="nav-links">
         <a href="/">采集 & 生图</a>
-        <a href="/ozon-product/add">上架工作台</a>
         <a href="/knowledge-base">知识库</a>
-        <a href="/ozon-listing">Ozon上架(旧)</a>
     </div>
 </div>
 
@@ -647,19 +641,6 @@ function escHtml(s) {
     const d = document.createElement('div');
     d.textContent = s || '';
     return d.innerHTML;
-}
-
-function listingUrl(storeId) {
-    const skc = state.selectedProduct ? state.selectedProduct.skc : state.selectedSku;
-    return `/ozon-product/add?skc=${encodeURIComponent(skc || '')}&store_id=${encodeURIComponent(storeId || '')}`;
-}
-
-function listingActionLabel(status) {
-    if (status === '已上架') return '编辑';
-    if (status === '待发布') return '继续上架';
-    if (status === '审核拒绝') return '修复';
-    if (status === '审核中') return '查看';
-    return '上架';
 }
 
 // ============ Init ============
@@ -824,7 +805,6 @@ function renderDetail() {
                     <div class="store-status-row">
                         <span class="store-name">${escHtml(store.name)}</span>
                         <span class="store-status s-${escHtml(store.status)}">${escHtml(store.status)}</span>
-                        <a class="btn btn-sm store-listing-link" href="${listingUrl(store.id)}">${listingActionLabel(store.status)}</a>
                     </div>`).join('')
                 : '<div style="color:var(--text-muted);font-size:12px;">无店铺状态记录</div>'}
         </div>
