@@ -809,8 +809,14 @@
             flex: 1; overflow-y: auto; padding: 12px;
             display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start;
             border: 2px dashed transparent; transition: border-color 0.2s;
+            position: relative; user-select: none;
         }
         .img-mgmt-grid-wrap.drag-over { border-color: #3498db; background: #f8fbff; }
+        .img-mgmt-selection-box {
+            position: absolute; z-index: 5; pointer-events: none;
+            border: 1px solid #2563eb; background: rgba(37, 99, 235, 0.12);
+            border-radius: 4px; box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.12);
+        }
         .img-mgmt-grid-add {
             width: 80px; height: 80px; border: 2px dashed #ddd; border-radius: 4px;
             display: flex; align-items: center; justify-content: center;
@@ -1756,6 +1762,8 @@
                         <span id="img-mgmt-tb-manage">
                             <button id="img-mgmt-select-all">全选</button>
                             <button id="img-mgmt-deselect-all">取消全选</button>
+                            <button id="img-mgmt-copy-url">复制URL</button>
+                            <button id="img-mgmt-copy-files">复制图片</button>
                             <button id="img-mgmt-switch-batch">🖼️ 批量处理</button>
                             <button id="img-mgmt-save-subset" class="primary">💾 保存为衍生集</button>
                             <button id="img-mgmt-upload-btn">➕ 上传</button>
@@ -4464,6 +4472,7 @@
         let imgMgmtAutoSaveTimer = null;
         let imgMgmtSaving = false;
         let imgMgmtPendingSave = false;
+        let imgMgmtBoxSelect = null;
 
         function _byId(id) { return document.getElementById(id); }
 
@@ -4803,6 +4812,27 @@
             return currentSubsetName ? currentSetName + "::" + currentSubsetName : currentSetName;
         }
 
+        function _imageMgmtEntryUrl(entry) {
+            if (!entry) return "";
+            var url = entry.filename ? `/product_images/${currentImgSkc}/${entry.filename}` : (entry.url || "");
+            if (!url) return "";
+            try { return new URL(url, window.location.origin).href; }
+            catch (e) { return url; }
+        }
+
+        function _getSelectedImageEntries() {
+            var entries = _getCurrentEntries().slice().sort(function(a, b) { return (a.index || 0) - (b.index || 0); });
+            var selected = [];
+            selectedImages.forEach(function(idxStr) {
+                var idx = parseInt(idxStr);
+                if (!isNaN(idx) && idx >= 0 && idx < entries.length) {
+                    selected.push({ index: idx, entry: entries[idx] });
+                }
+            });
+            selected.sort(function(a, b) { return a.index - b.index; });
+            return selected;
+        }
+
         function _updateSelectionInfo() {
             var entries = _getCurrentEntries();
             var el = _byId("img-mgmt-selection-info");
@@ -4829,6 +4859,7 @@
             var gridWrap = _byId("img-mgmt-grid-wrap");
             gridWrap.innerHTML = "";
             bindImageMgmtGridDrop(gridWrap);
+            bindImageMgmtBoxSelect(gridWrap);
 
             if (!currentSetName) {
                 gridWrap.innerHTML = '<div class="img-mgmt-empty"><div>选择左侧图片集查看</div></div>';
@@ -4865,6 +4896,75 @@
             gridWrap.appendChild(addBtn);
 
             _updateSelectionInfo();
+        }
+
+        function bindImageMgmtBoxSelect(gridWrap) {
+            gridWrap.onmousedown = function(e) {
+                if (workspaceMode !== "manage" || !currentSetName || e.button !== 0) return;
+                if (e.target.closest(".img-mgmt-item, .img-mgmt-grid-add, button")) return;
+                e.preventDefault();
+
+                var wrapRect = gridWrap.getBoundingClientRect();
+                var startClientX = e.clientX;
+                var startClientY = e.clientY;
+                var startX = e.clientX - wrapRect.left + gridWrap.scrollLeft;
+                var startY = e.clientY - wrapRect.top + gridWrap.scrollTop;
+                var baseSelection = new Set(selectedImages);
+                var box = document.createElement("div");
+                box.className = "img-mgmt-selection-box";
+                gridWrap.appendChild(box);
+
+                imgMgmtBoxSelect = { box: box, baseSelection: baseSelection, startX: startX, startY: startY };
+
+                function updateBox(ev) {
+                    if (!imgMgmtBoxSelect) return;
+                    var currentX = ev.clientX - wrapRect.left + gridWrap.scrollLeft;
+                    var currentY = ev.clientY - wrapRect.top + gridWrap.scrollTop;
+                    var left = Math.min(startX, currentX);
+                    var top = Math.min(startY, currentY);
+                    var width = Math.abs(currentX - startX);
+                    var height = Math.abs(currentY - startY);
+                    box.style.left = left + "px";
+                    box.style.top = top + "px";
+                    box.style.width = width + "px";
+                    box.style.height = height + "px";
+
+                    var selectionRect = {
+                        left: Math.min(startClientX, ev.clientX),
+                        top: Math.min(startClientY, ev.clientY),
+                        right: Math.max(startClientX, ev.clientX),
+                        bottom: Math.max(startClientY, ev.clientY)
+                    };
+                    var hit = new Set();
+                    gridWrap.querySelectorAll(".img-mgmt-item").forEach(function(item) {
+                        var rect = item.getBoundingClientRect();
+                        var intersects = rect.left <= selectionRect.right &&
+                            rect.right >= selectionRect.left &&
+                            rect.top <= selectionRect.bottom &&
+                            rect.bottom >= selectionRect.top;
+                        if (intersects) hit.add(String(item.dataset.idx));
+                    });
+
+                    selectedImages = new Set(baseSelection);
+                    hit.forEach(function(idx) {
+                        if (selectedImages.has(idx)) selectedImages.delete(idx);
+                        else selectedImages.add(idx);
+                    });
+                    _syncAllImageSelectionVisuals();
+                }
+
+                function finishBox(ev) {
+                    updateBox(ev);
+                    document.removeEventListener("mousemove", updateBox, true);
+                    document.removeEventListener("mouseup", finishBox, true);
+                    if (box.parentNode) box.parentNode.removeChild(box);
+                    imgMgmtBoxSelect = null;
+                }
+
+                document.addEventListener("mousemove", updateBox, true);
+                document.addEventListener("mouseup", finishBox, true);
+                updateBox(e);
+            };
         }
 
         function bindImageMgmtGridDrop(gridWrap) {
@@ -5027,14 +5127,25 @@
         function _toggleImageSelection(idxStr) {
             if (selectedImages.has(idxStr)) selectedImages.delete(idxStr);
             else selectedImages.add(idxStr);
-            // Update visual
+            _syncImageSelectionVisual(idxStr);
+            _updateSelectionInfo();
+        }
+
+        function _syncImageSelectionVisual(idxStr) {
             if (workspaceMode === "batch") {
                 var thumb = document.querySelector(`#img-mgmt-thumb-strip img[data-idx="${idxStr}"]`);
-                if (thumb) thumb.classList.toggle("selected");
+                if (thumb) thumb.classList.toggle("selected", selectedImages.has(idxStr));
             } else {
                 var gridItem = document.querySelector(`#img-mgmt-grid-wrap .img-mgmt-item[data-idx="${idxStr}"]`);
-                if (gridItem) gridItem.classList.toggle("selected");
+                if (gridItem) gridItem.classList.toggle("selected", selectedImages.has(idxStr));
             }
+        }
+
+        function _syncAllImageSelectionVisuals() {
+            document.querySelectorAll("#img-mgmt-grid-wrap .img-mgmt-item, #img-mgmt-thumb-strip img").forEach(function(el) {
+                var idx = el.dataset.idx;
+                if (idx !== undefined) el.classList.toggle("selected", selectedImages.has(String(idx)));
+            });
             _updateSelectionInfo();
         }
 
@@ -5047,6 +5158,48 @@
         function _deselectAll() {
             selectedImages.clear();
             _refreshCurrentView();
+        }
+
+        async function _copySelectedImageUrls() {
+            var selected = _getSelectedImageEntries();
+            var urls = selected.map(function(item) { return _imageMgmtEntryUrl(item.entry); }).filter(Boolean);
+            if (!urls.length) {
+                showMsg("请先选择要复制 URL 的图片", true);
+                return;
+            }
+            try {
+                await navigator.clipboard.writeText(urls.join("\n"));
+                showMsg("已复制 " + urls.length + " 张图片 URL");
+            } catch (e) {
+                showMsg("复制 URL 失败: " + e.message, true);
+            }
+        }
+
+        async function _copySelectedImageFiles() {
+            var selected = _getSelectedImageEntries();
+            var filenames = selected.map(function(item) {
+                return item.entry && item.entry.filename ? item.entry.filename : "";
+            }).filter(Boolean);
+            if (!filenames.length) {
+                showMsg("请先选择本地图片文件", true);
+                return;
+            }
+            try {
+                var res = await fetch(`/api/products/${currentImgSkc}/images/copy_to_clipboard`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ filenames: filenames })
+                });
+                var data = await res.json();
+                if (!res.ok) {
+                    showMsg("复制图片失败: " + (data.error || "未知错误"), true);
+                    return;
+                }
+                var skipped = data.skipped ? "，跳过 " + data.skipped + " 张非本地/不存在图片" : "";
+                showMsg("已复制 " + data.copied + " 张图片" + skipped);
+            } catch (e) {
+                showMsg("复制图片出错: " + e.message, true);
+            }
         }
 
         function _saveAsSubset() {
@@ -5280,6 +5433,8 @@
 
         _byId("img-mgmt-select-all").addEventListener("click", _selectAll);
         _byId("img-mgmt-deselect-all").addEventListener("click", _deselectAll);
+        _byId("img-mgmt-copy-url").addEventListener("click", _copySelectedImageUrls);
+        _byId("img-mgmt-copy-files").addEventListener("click", _copySelectedImageFiles);
         _byId("img-mgmt-switch-batch").addEventListener("click", function() { _showBatchMode(); });
         _byId("img-mgmt-switch-manage").addEventListener("click", function() { _showManageMode(); });
         _byId("img-mgmt-save-subset").addEventListener("click", _saveAsSubset);

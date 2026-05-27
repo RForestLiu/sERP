@@ -14,6 +14,7 @@ from urllib.parse import quote
 import requests
 
 from src.serp.shared import Result, EventBus
+from src.serp.imagetask.domain.services import CopyToClipboardService
 
 from ..domain.entities import Product, ProductCollection, CRITICAL_FIELDS
 from ..domain.value_objects import ManualData, StoreStatusEntry
@@ -817,6 +818,37 @@ class ProductApplicationService(ProductFacade):
             "entry": entry if sub_name else {"filename": rel_name, "index": len(product._image_sets.get(set_name, [])) - 1},
             "url": f"/product_images/{skc}/{rel_name}",
         }
+
+    def copy_images_to_clipboard(self, skc: str, filenames: list[str]) -> dict:
+        product = self._find_product_or_raise(skc)
+        images_dir = os.path.abspath(product.images_dir or "")
+        if not images_dir or not os.path.exists(images_dir):
+            raise ValueError("产品图片目录不存在")
+
+        paths = []
+        skipped = 0
+        for filename in filenames or []:
+            if not filename:
+                skipped += 1
+                continue
+            full_path = os.path.abspath(os.path.join(images_dir, filename.replace("/", os.sep)))
+            if not (full_path == images_dir or full_path.startswith(images_dir + os.sep)):
+                skipped += 1
+                continue
+            if os.path.isfile(full_path):
+                paths.append(full_path)
+            else:
+                skipped += 1
+
+        if not paths:
+            return {"error": "没有可复制的本地图片文件", "skipped": skipped}
+
+        try:
+            CopyToClipboardService.copy_files(paths)
+        except Exception as e:
+            return {"error": str(e), "skipped": skipped}
+
+        return {"success": True, "copied": len(paths), "skipped": skipped}
 
     def upload_video(self, skc: str, file) -> dict:
         from werkzeug.utils import secure_filename

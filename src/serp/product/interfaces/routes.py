@@ -222,6 +222,22 @@ def create_product_blueprint(facade: ProductFacade, data_root: str = "", setting
 
     # ── 视频上传 ──
 
+    @bp.route("/products/<skc>/images/copy_to_clipboard", methods=["POST"])
+    def copy_product_images_to_clipboard(skc):
+        data = request.get_json(silent=True) or {}
+        filenames = data.get("filenames", [])
+        if not isinstance(filenames, list):
+            return jsonify({"error": "filenames 必须是数组"}), 400
+        try:
+            result = facade.copy_images_to_clipboard(skc, filenames)
+            if "error" in result:
+                return jsonify(result), 400
+            return jsonify(result)
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 404
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
     @bp.route("/upload-video", methods=["POST"])
     def upload_video():
         if "file" not in request.files:

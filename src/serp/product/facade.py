@@ -67,6 +67,10 @@ class ProductFacade(Facade, ABC):
         ...
 
     @abstractmethod
+    def copy_images_to_clipboard(self, skc: str, filenames: list[str]) -> dict:
+        ...
+
+    @abstractmethod
     def upload_video(self, skc: str, file) -> dict:
         ...
 
