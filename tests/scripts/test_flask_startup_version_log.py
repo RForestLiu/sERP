@@ -13,4 +13,4 @@ def test_flask_startup_logs_extension_version():
     assert "def _read_extension_version" in source
     assert "extensions/amazon_collector/manifest.json" in source
     assert "extension=%s" in source
-    assert '"version": "3.2.44"' in manifest
+    assert '"version": "3.2.45"' in manifest

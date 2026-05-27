@@ -160,7 +160,7 @@
   // ---------- Amazon ----------
   EXTRACTORS.amazon = {
     isProductPage: function () {
-      return /\/dp\//i.test(href) || /\/gp\/product\//i.test(href);
+      return /\/dp\//i.test(href) || /\/gp\/product\//i.test(href) || /\/gp\/aw\/d\//i.test(href);
     },
 
     extractTitle: function () {
