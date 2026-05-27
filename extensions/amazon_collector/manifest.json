@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "sERP ExtensionHelper",
-  "version": "3.2.7",
-  "description": "sERP 浏览器助手：多平台采集 (Amazon/1688/WB/Ozon) + 店小秘 Ozon 智能上架",
+  "version": "3.2.44",
+  "description": "sERP 浏览器助手：多平台采集 (Amazon/1688/WB/Ozon) + 店小秘智能上架",
   "permissions": ["storage"],
   "background": {
     "service_worker": "background.js"
@@ -11,7 +11,14 @@
     "http://localhost:5000/*",
     "http://127.0.0.1:5000/*",
     "http://localhost:5216/*",
-    "http://127.0.0.1:5216/*"
+    "http://127.0.0.1:5216/*",
+    "*://detail.1688.com/*",
+    "*://*.wildberries.ru/*",
+    "*://*.wildberries.by/*",
+    "*://*.wildberries.kz/*",
+    "*://*.ozon.ru/*",
+    "*://*.ozon.by/*",
+    "*://*.ozon.kz/*"
   ],
   "content_scripts": [
     {
@@ -37,11 +44,17 @@
     },
     {
       "matches": [
-        "*://www.dianxiaomi.com/web/ozonProduct/add*",
-        "*://www.dianxiaomi.com/web/ozonProduct/edit*"
+        "*://*.dianxiaomi.com/web/*Product/add*",
+        "*://*.dianxiaomi.com/web/*Product/edit*"
       ],
       "js": ["dianxiaomi_ozon.js"],
       "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["dxm_runtime_bridge.js"],
+      "matches": ["*://*.dianxiaomi.com/*"]
     }
   ]
 }

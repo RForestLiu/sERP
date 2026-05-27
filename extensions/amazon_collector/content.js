@@ -17,7 +17,7 @@
   if (/amazon\./.test(host)) PLATFORM = "amazon";
   else if (/1688\.com/.test(host)) PLATFORM = "1688";
   else if (/wildberries\./.test(host)) PLATFORM = "wildberries";
-  else if (/ozon\.ru/.test(host)) PLATFORM = "ozon";
+  else if (/ozon\.(ru|by|kz)/.test(host)) PLATFORM = "ozon";
 
   if (!PLATFORM) return;
 
@@ -41,6 +41,16 @@
   }
   function attr(el, name) {
     return el ? el.getAttribute(name) || "" : "";
+  }
+  function uniqueStrings(items) {
+    var seen = {}, out = [];
+    (items || []).forEach(function (item) {
+      var v = String(item || "").replace(/\s+/g, " ").trim();
+      if (!v || seen[v]) return;
+      seen[v] = true;
+      out.push(v);
+    });
+    return out;
   }
 
   /** Wait for DOM to stabilize after a variant click */
@@ -347,7 +357,7 @@
         if (items.length) break;
       }
       if (!items || !items.length) return [];
-      return items.map(function (el) { return text(el); }).filter(Boolean).slice(0, 15);
+      return uniqueStrings(items.map(function (el) { return cleanText(el); })).slice(0, 15);
     },
 
     /** Product Description — 产品描述正文（A+ 内容等） */
@@ -606,8 +616,9 @@
         var pid = m[1], size = m[2], num = parseInt(m[3]);
         if (currentPid && pid !== currentPid) continue;
         if (!byPid[pid]) {
-          byPid[pid] = { base: m[0].substring(0, m[0].lastIndexOf("/images/")), maxNum: 0, hasBig: false };
+          byPid[pid] = { base: m[0].substring(0, m[0].lastIndexOf("/images/")), nums: {}, maxNum: 0, hasBig: false };
         }
+        byPid[pid].nums[num] = true;
         byPid[pid].maxNum = Math.max(byPid[pid].maxNum, num);
         if (size === "big") byPid[pid].hasBig = true;
       }
@@ -621,7 +632,9 @@
       if (mainPid) {
         var images = [];
         var base = byPid[mainPid].base;
-        for (var n = 1; n <= byPid[mainPid].maxNum; n++) {
+        var nums = Object.keys(byPid[mainPid].nums).map(function (n) { return parseInt(n, 10); }).sort(function (a, b) { return a - b; });
+        for (var i = 0; i < nums.length; i++) {
+          var n = nums[i];
           images.push(base + "/images/big/" + n + ".webp");
         }
         return images;
@@ -634,21 +647,38 @@
       var v = {};
       var colors = [];
       var urls = {};
-      var seen = {};
+      var seenNames = {};
+      var seenUrls = {};
 
-      var links = $$("a[data-nm-id]");
-      links.forEach(function (a) {
+      function isColorWord(word) {
+        return /^(черный|чёрный|белый|красный|синий|голубой|серый|зеленый|зелёный|желтый|жёлтый|розовый|фуксия|бежевый|коричневый|фиолетовый|оранжевый|бордовый|золотой|серебряный|молочный|хаки)$/i.test(word || "");
+      }
+
+      function variantNameFromLink(a) {
         var img = $("img", a);
         var alt = img ? attr(img, "alt") : "";
-        if (!alt) return;
-        // alt 格式: "Кошелек маленький серый из экозамши"
-        // 提取颜色词: 去掉 "из <material>" 后缀，取最后一个词
-        var name = alt.replace(/\s+из\s+\S+$/i, "").split(/\s+/).pop();
-        if (name && !seen[name]) {
-          seen[name] = true;
-          colors.push(name);
-          urls[name] = a.href;
-        }
+        var words = alt.replace(/\s+из\s+\S+$/i, "").replace(/[^\w\u0400-\u04FF\s-]+/g, " ").trim().split(/\s+/);
+        var last = words.length ? words[words.length - 1].toLowerCase() : "";
+        return isColorWord(last) ? last : attr(a, "data-nm-id");
+      }
+
+      var colorRoot = $(".product-colors-container") || $("[class*='sizesAndColors']") || $("[data-testid='cardtype:colors']") || document;
+      var links = $$("a[data-nm-id]", colorRoot);
+      links.sort(function (a, b) {
+        var aa = a.closest("[class*='activeColor']") ? 0 : 1;
+        var bb = b.closest("[class*='activeColor']") ? 0 : 1;
+        return aa - bb;
+      });
+      links.forEach(function (a) {
+        var href = a.href || "";
+        if (!href || seenUrls[href]) return;
+        seenUrls[href] = true;
+        var baseName = variantNameFromLink(a);
+        if (!baseName) return;
+        var uniqueName = seenNames[baseName] ? baseName + "_" + attr(a, "data-nm-id") : baseName;
+        seenNames[baseName] = true;
+        colors.push(uniqueName);
+        urls[uniqueName] = href;
       });
 
       if (colors.length) v.colors = colors;
@@ -732,14 +762,19 @@
       return bestLen > 100 ? best : null;
     },
 
-    _ensureDrawerOpen: function () {
-      // Already open?
-      if ($(".descriptionText--JBcnf") || this._findLongTextInDrawer()) {
-        this._drawerOpened = true;
-        return true;
-      }
+    _findDescriptionEl: function () {
+      return $(".mo-drawer__paper [data-testid='product-page-description']") ||
+        $(".mo-drawer__paper .descriptionText--JBcnf") ||
+        $("[data-testid='product-page-description']") ||
+        $(".descriptionText--JBcnf") ||
+        this._findLongTextInDrawer();
+    },
 
-      // Find and click the trigger button (click parent <button>, not inner <span>)
+    _isDrawerReady: function () {
+      return !!(this._findDescriptionEl() || $(".mo-drawer__paper [data-testid='product_additional_information']"));
+    },
+
+    _clickDrawerButton: function () {
       var span = $(".btnDetailText--nrkiv")
         || this._findByText(["Характеристики", "описание"])
         || this._findByText(["Характеристики"]);
@@ -747,31 +782,79 @@
       var btn = span.closest("button") || span;
       console.log("[sERP WB] Clicking drawer button:", (btn.className || btn.tagName).substring(0, 60));
       btn.click();
+      return true;
+    },
+
+    _ensureDrawerOpen: function () {
+      // Already open?
+      if (this._isDrawerReady()) {
+        this._drawerOpened = true;
+        return true;
+      }
+
+      if (!this._clickDrawerButton()) return false;
 
       // Check immediately (React 18 may flush synchronously within event handler)
-      var descEl = $(".descriptionText--JBcnf");
-      var longText = this._findLongTextInDrawer();
-      var found = descEl || longText;
-      console.log("[sERP WB] After click — descEl:", !!descEl, "longText:", !!longText);
+      var found = this._isDrawerReady();
+      console.log("[sERP WB] After click — drawerReady:", found);
       this._drawerOpened = !!found;
       return this._drawerOpened;
+    },
+
+    waitForDrawerOpen: function (timeout) {
+      timeout = timeout || 5000;
+      var self = this;
+      if (self._ensureDrawerOpen()) return Promise.resolve(true);
+      return new Promise(function (resolve) {
+        var start = Date.now();
+        var clickedAt = 0;
+        var timer = setInterval(function () {
+          if (self._isDrawerReady()) {
+            clearInterval(timer);
+            self._drawerOpened = true;
+            resolve(true);
+            return;
+          }
+          if (Date.now() - clickedAt > 1200) {
+            self._clickDrawerButton();
+            clickedAt = Date.now();
+          }
+          if (Date.now() - start > timeout) {
+            clearInterval(timer);
+            resolve(false);
+          }
+        }, 250);
+      });
     },
 
     /** product_additional_information 区域的 table > th/td 规格参数 */
     extractProductDetails: function () {
       var result = {};
       // 弹窗打开后优先从弹窗内读（字段更全），否则读主页面
+      function addPair(rawKey, rawVal) {
+        var key = String(rawKey || "").replace(/\s+/g, "_").replace(/[^\w\u0400-\u04FF]+/g, "").toLowerCase();
+        var val = String(rawVal || "").replace(/\s+/g, " ").trim();
+        if (key && val && !result[key]) result[key] = val;
+      }
       var section = $(".mo-drawer__paper [data-testid='product_additional_information']") || $("[data-testid='product_additional_information']");
       if (!section) return result;
       var rows = $$("tr", section);
       rows.forEach(function (row) {
         var th = $("th", row);
         var td = $("td", row);
-        if (th && td) {
-          var key = text(th).replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_а-яё]/gi, "").toLowerCase();
-          var val = text(td);
-          if (key && val && !result[key]) result[key] = val;
-        }
+        if (th && td) addPair(text(th), text(td));
+      });
+      $$("dl", section).forEach(function (dl) {
+        $$("dt", dl).forEach(function (dt) {
+          var dd = dt.nextElementSibling;
+          while (dd && dd.tagName && dd.tagName.toLowerCase() !== "dd") dd = dd.nextElementSibling;
+          if (dd) addPair(text(dt), text(dd));
+        });
+      });
+      $$("li, [class*='product-params'] div, [class*='productParam'] div", section).forEach(function (row) {
+        if (row.querySelector("tr, dl, dt, dd")) return;
+        var cells = Array.from(row.children || []).map(function (el) { return cleanText(el); }).filter(Boolean);
+        if (cells.length >= 2) addPair(cells[0], cells[cells.length - 1]);
       });
       return result;
     },
@@ -779,7 +862,7 @@
     /** 从 "Характеристики и описание" 弹窗提取文字描述 */
     extractDescription: function () {
       this._ensureDrawerOpen();
-      var descEl = $(".descriptionText--JBcnf") || this._findLongTextInDrawer();
+      var descEl = this._findDescriptionEl();
       return descEl ? cleanText(descEl) : "";
     },
 
@@ -804,7 +887,7 @@
   // ---------- Ozon (basic) ----------
   EXTRACTORS.ozon = {
     isProductPage: function () {
-      return /ozon\.ru\/product\//.test(href);
+      return /ozon\.(ru|by|kz)\/product\//.test(href);
     },
 
     extractTitle: function () {
@@ -1128,28 +1211,22 @@
 
     // WB: Floating UI drawer may be unmounted after React hydration.
     // Poll until the drawer opens (React renders asynchronously after click).
-    if (PLATFORM === "wildberries" && !X._drawerOpened) {
+    if (PLATFORM === "wildberries" && X.waitForDrawerOpen && !X._drawerOpened) {
       console.log("[sERP WB] Single collect — ensuring drawer open...");
-      (function poll(attempt) {
-        if (X._ensureDrawerOpen()) {
+      X.waitForDrawerOpen(6000).then(function (ready) {
+        if (ready) {
           console.log("[sERP WB] Drawer ready, collecting");
-          doCollect();
-          return;
+        } else {
+          console.log("[sERP WB] Drawer failed to open after retries, collecting anyway");
         }
-        if (attempt < 12) {
-          setStatus("等待弹窗打开...");
-          setTimeout(function () { poll(attempt + 1); }, 250);
-          return;
-        }
-        console.log("[sERP WB] Drawer failed to open after retries, collecting anyway");
         doCollect();
-      })(0);
+      });
+      setStatus("等待弹窗打开...");
       return;
     }
 
     doCollect();
   }
-
   /** Fetch a variant ASIN page and extract images + price from HTML */
   function fetchVariantData(asin) {
     var base = window.location.origin;
@@ -1251,7 +1328,8 @@
       var m;
       while ((m = re.exec(html)) !== null) {
         var pid = m[1], size = m[2], num = parseInt(m[3]);
-        if (!byPid[pid]) byPid[pid] = { base: m[0].substring(0, m[0].lastIndexOf("/images/")), maxNum: 0, hasBig: false };
+        if (!byPid[pid]) byPid[pid] = { base: m[0].substring(0, m[0].lastIndexOf("/images/")), nums: {}, maxNum: 0, hasBig: false };
+        byPid[pid].nums[num] = true;
         byPid[pid].maxNum = Math.max(byPid[pid].maxNum, num);
         if (size === "big") byPid[pid].hasBig = true;
       }
@@ -1268,7 +1346,9 @@
       var images = [];
       if (mainPid) {
         var base = byPid[mainPid].base;
-        for (var n = 1; n <= byPid[mainPid].maxNum; n++) {
+        var nums = Object.keys(byPid[mainPid].nums).map(function (n) { return parseInt(n, 10); }).sort(function (a, b) { return a - b; });
+        for (var i = 0; i < nums.length; i++) {
+          var n = nums[i];
           images.push(base + "/images/big/" + n + ".webp");
         }
       }
@@ -1289,7 +1369,20 @@
     });
   }
 
-  function collectAllVariants() {
+  function collectAllVariants(force) {
+    if (PLATFORM === "wildberries" && X.waitForDrawerOpen && !X._drawerOpened && !force) {
+      UI.collecting = true;
+      UI.cancelled = false;
+      setButtons(false);
+      setStatus("等待弹窗打开...");
+      X.waitForDrawerOpen(6000).then(function () {
+        UI.collecting = false;
+        setButtons(true);
+        collectAllVariants(true);
+      });
+      return;
+    }
+
     var variants = X.extractAll().variants;
     var stack = [];
     if (variants.colors && variants.colors.length) {
@@ -1323,7 +1416,9 @@
       price: currentData.price,
       images: currentData.images,
       variantInfo: stack[0],
-      currentVariant: currentData.currentVariant
+      currentVariant: currentData.currentVariant,
+      product_details: currentData.product_details || {},
+      product_description: currentData.product_description || ""
     });
     setStatus("变体 1/" + UI.total + ": " + stack[0].value + " ✓");
     console.log("[sERP] variant 1/" + UI.total + " (current):", stack[0].value, "(" + currentData.images.length + " images)");
@@ -1477,7 +1572,7 @@
   function continueWBTraversal(state) {
     console.log("[sERP traversal] Continue " + state.nextIdx + "/" + state.total);
 
-    var variantName = state.stack[state.nextIdx - 1].value;
+    var variantName = state.stack[state.nextIdx].value;
 
     function tryCollect(attempt) {
       var drawerReady = X._ensureDrawerOpen();
@@ -1506,9 +1601,9 @@
         product_description: data.product_description || ""
       });
 
-      if (state.nextIdx < state.total) {
+      if (state.nextIdx + 1 < state.total) {
         state.nextIdx++;
-        var nextName = state.stack[state.nextIdx - 1].value;
+        var nextName = state.stack[state.nextIdx].value;
         var nextUrl = state.variantUrls[nextName];
         console.log("[sERP traversal] Next: idx " + state.nextIdx + "/" + state.total + " -> " + nextName);
         var setObj = {};

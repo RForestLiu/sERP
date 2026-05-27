@@ -125,14 +125,8 @@
         }
         .top-section { display: flex; gap: 20px; margin-bottom: 20px; }
         .json-section { flex: 1; display: flex; flex-direction: column; }
-        #text1 { flex: 1; max-width: 800px; min-height: 120px; padding: 10px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px; resize: vertical; }
-        .json-textarea-row { display: flex; gap: 10px; align-items: flex-start; }
-        .json-textarea-row .json-btns-col { flex-shrink: 0; }
-        .json-btn { padding: 8px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; width: 140px; }
-        .json-btns-row { display: flex; gap: 10px; margin-top: 10px; }
-        .json-btns-row > .json-btn { margin-top: 0; }
-        .json-btns-col { display: flex; flex-direction: column; gap: 10px; }
-        .json-btns-col > .json-btn { margin-top: 0; }
+        #text1 { flex: 1; min-height: 120px; padding: 10px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px; resize: vertical; }
+        .json-btn { margin-top: 10px; padding: 8px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; max-width: 300px; }
         
         .drop-zone {
             width: 300px; border: 2px dashed #95a5a6; border-radius: 8px; display: flex;
@@ -171,168 +165,6 @@
             font-size: 12px; padding: 0 4px; line-height: inherit;
         }
         .ref-clear-btn:hover { color: #e74c3c; }
-
-        /* ===== 批量替换产品图专用布局 ===== */
-        .product-section {
-            display: flex; gap: 20px; margin-bottom: 18px; align-items: flex-start;
-            flex-shrink: 0;
-        }
-        .section-label {
-            font-size: 13px; font-weight: 700; color: #2c3e50; margin-bottom: 8px;
-            display: flex; align-items: center; gap: 8px;
-        }
-        .section-label .step-badge {
-            background: #1abc9c; color: white; min-width: 22px; height: 22px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700;
-        }
-        .product-card {
-            flex: 1; max-width: 300px; background: white; border: 2px solid #e0e0e0; border-radius: 10px;
-            overflow: hidden; transition: border-color 0.2s;
-        }
-        .product-card.has-image { border-color: #1abc9c; }
-        .product-card-title {
-            font-size: 13px; font-weight: 600; color: #555; padding: 10px 14px;
-            background: #fafafa; border-bottom: 1px solid #eee;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .product-card-title .required-star { color: #e74c3c; }
-        .product-card-title .optional-tag { color: #999; font-weight: 400; font-size: 11px; }
-        .product-drop {
-            min-height: 130px; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; position: relative; transition: background 0.2s;
-        }
-        .product-drop img {
-            width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0;
-        }
-        .product-drop-placeholder { color: #bbb; font-size: 13px; text-align: center; line-height: 1.6; }
-        .product-drop.dragover { background: #ecf0f1; outline: 2px dashed #1abc9c; outline-offset: -4px; }
-        .product-drop.has-image .product-drop-placeholder { display: none; }
-        .product-clear-btn {
-            background: none; border: none; color: #ccc; cursor: pointer;
-            font-size: 14px; padding: 0 4px; line-height: inherit;
-        }
-        .product-clear-btn:hover { color: #e74c3c; }
-
-        .poster-section { margin-bottom: 12px; flex-shrink: 0; }
-        .poster-section-header {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
-        }
-        .poster-drop-zone {
-            border: 2px dashed #95a5a6; border-radius: 8px; min-height: 80px;
-            display: flex; align-items: center; justify-content: center;
-            color: #7f8c8d; font-size: 14px; cursor: pointer; transition: background 0.2s;
-        }
-        .poster-drop-zone.dragover { background: #ecf0f1; border-color: #1abc9c; }
-
-        .prompt-preview-bar {
-            display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
-            background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px 12px;
-        }
-        .prompt-preview-bar .prompt-label { font-size: 12px; color: #888; white-space: nowrap; }
-        .prompt-preview-bar .prompt-text {
-            flex: 1; font-size: 12px; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .prompt-preview-bar .prompt-expand-btn {
-            background: none; border: none; color: #3498db; cursor: pointer; font-size: 12px; white-space: nowrap;
-        }
-        .prompt-preview-bar .prompt-expand-btn:hover { text-decoration: underline; }
-        .prompt-editor {
-            display: none; margin-bottom: 8px;
-        }
-        .prompt-editor.open { display: block; }
-        .prompt-editor textarea {
-            width: 100%; height: 100px; padding: 10px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px; resize: vertical;
-        }
-
-        .batch-generate-bar {
-            display: flex; align-items: center; gap: 12px; margin-top: 8px; padding: 10px 0;
-            border-top: 1px solid #eee; border-bottom: 1px solid #eee;
-        }
-        .batch-generate-btn {
-            padding: 10px 24px; background: #e67e22; color: white; border: none; border-radius: 6px;
-            cursor: pointer; font-size: 14px; font-weight: 600; transition: opacity 0.2s;
-        }
-        .batch-generate-btn:disabled { background: #95a5a6; cursor: not-allowed; }
-        .batch-generate-btn.running::after {
-            content: ""; display: inline-block; width: 14px; height: 14px; margin-left: 8px;
-            border: 2px solid white; border-top: 2px solid transparent; border-radius: 50%;
-            animation: spin 0.8s linear infinite; vertical-align: middle;
-        }
-        .batch-progress { font-size: 13px; color: #666; }
-
-        /* 海报卡片 */
-        .poster-cards-row {
-            display: flex; overflow-x: auto; padding: 8px 0; gap: 15px; align-items: flex-start;
-            flex-shrink: 0; min-height: 400px;
-        }
-        .poster-card {
-            width: 280px; min-width: 280px; max-width: 280px; background: white; border: 1px solid #ddd;
-            border-radius: 8px; padding: 10px; display: flex; flex-direction: column;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.08); position: relative; flex-shrink: 0;
-        }
-        .poster-card .poster-img-frame {
-            width: 100%; height: 150px; background: #f0f0f0; display: flex; align-items: center;
-            justify-content: center; overflow: hidden; border-radius: 4px; position: relative; cursor: pointer;
-        }
-        .poster-card .poster-img-frame img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .poster-card .poster-img-frame:hover img { transform: scale(2); z-index: 10; transition: transform 0.2s; }
-        .poster-card .poster-card-name {
-            font-size: 12px; color: #555; margin-top: 6px; word-break: break-word;
-            text-align: center; line-height: 1.4;
-        }
-        .poster-card .poster-card-delete {
-            position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.45); color: white;
-            border: none; width: 22px; height: 22px; border-radius: 50%; cursor: pointer;
-            font-size: 12px; display: flex; align-items: center; justify-content: center; z-index: 2;
-            transition: background 0.2s;
-        }
-        .poster-card .poster-card-delete:hover { background: #e74c3c; }
-        .poster-exec-btn {
-            margin-top: 8px; padding: 8px; background: #e67e22; color: white; border: none;
-            border-radius: 4px; cursor: pointer; font-size: 13px; position: relative; transition: opacity 0.2s;
-        }
-        .poster-exec-btn:disabled { background: #95a5a6; cursor: not-allowed; }
-        .poster-exec-btn.running::after {
-            content: ""; display: inline-block; width: 12px; height: 12px; margin-left: 6px;
-            border: 2px solid white; border-top: 2px solid transparent; border-radius: 50%;
-            animation: spin 0.8s linear infinite; vertical-align: middle;
-        }
-        .poster-card textarea {
-            margin-top: 8px; width: 100%; height: 60px; padding: 5px; font-size: 12px;
-            border: 1px solid #ccc; border-radius: 4px; resize: vertical;
-        }
-        .poster-result {
-            margin-top: 8px; width: 100%; height: 150px; background: #f0f0f0; display: flex;
-            align-items: center; justify-content: center; overflow: hidden; border-radius: 4px;
-            border: 1px dashed #ddd;
-        }
-        .poster-result img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .poster-result .img-placeholder { color: #bbb; font-size: 12px; }
-
-        /* 结果网格 */
-        .result-section {
-            border-top: 2px solid #1abc9c; padding-top: 15px; margin-top: 12px;
-        }
-        .result-section-header {
-            font-size: 14px; font-weight: 700; color: #2c3e50; margin-bottom: 10px;
-            display: flex; align-items: center; gap: 8px;
-        }
-        .result-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;
-        }
-        .result-card {
-            background: white; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
-        }
-        .result-card .result-img {
-            width: 100%; aspect-ratio: 3/4; background: #f0f0f0; display: flex;
-            align-items: center; justify-content: center; overflow: hidden;
-        }
-        .result-card .result-img img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .result-card .result-card-name {
-            padding: 6px 10px; font-size: 11px; color: #777; text-align: center;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
 
         .cards-container {
             display: flex; overflow-x: auto; padding: 10px 0; gap: 15px; align-items: flex-start;
@@ -377,8 +209,9 @@
             align-items: center; justify-content: center; overflow: hidden; border-radius: 4px;
         }
         .img-frame-result img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .save-all-btn, .open-folder-btn, .compress-btn, .watermark-btn {
-            padding: 10px 16px; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px;
+        .save-all-btn, .open-folder-btn, .compress-btn {
+            padding: 12px 20px; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;
+            margin-right: 10px;
         }
         .save-all-btn { background: #8e44ad; }
         .open-folder-btn { background: #2ecc71; }
@@ -389,31 +222,10 @@
             border: 2px solid white; border-top: 2px solid transparent; border-radius: 50%;
             animation: spin 0.8s linear infinite; vertical-align: middle;
         }
-        .watermark-btn { background: #2980b9; }
-        .watermark-btn:disabled { background: #95a5a6; cursor: not-allowed; }
-        .watermark-btn.running::after {
-            content: ""; display: inline-block; width: 12px; height: 12px; margin-left: 6px;
-            border: 2px solid white; border-top: 2px solid transparent; border-radius: 50%;
-            animation: spin 0.8s linear infinite; vertical-align: middle;
-        }
-        .toolbar { display: flex; margin-top: 15px; gap: 20px; }
-        .toolbar-col {
-            display: flex; flex-direction: column; gap: 8px;
-            padding: 0 20px;
-        }
-        .toolbar-col:first-child { padding-left: 0; }
-        .toolbar-col:last-child { padding-right: 0; }
-        .toolbar-col + .toolbar-col {
-            border-left: 1px solid #ddd;
-        }
-        .toolbar-col .save-all-btn,
-        .toolbar-col .compress-btn,
-        .toolbar-col .watermark-btn,
-        .toolbar-col .open-folder-btn { width: 180px; }
-        .toolbar-subrow { display: flex; align-items: center; gap: 6px; }
+        .toolbar { display: flex; margin-top: 15px; align-items: center; }
         .auto-compress-label {
             font-size: 12px; color: #555; display: inline-flex; align-items: center; gap: 4px;
-            cursor: pointer; user-select: none;
+            margin-right: 10px; cursor: pointer; user-select: none;
         }
         .auto-compress-label input { margin: 0; }
         .message {
@@ -544,7 +356,7 @@
             width: 60px;
             height: 60px;
             border-radius: 4px;
-            object-fit: cover;
+            object-fit: contain;
             flex-shrink: 0;
             background: #f3f4f6;
             border: 1px solid #e5e7eb;
@@ -682,7 +494,7 @@
         .collect-gallery-thumb {
             width: 70px;
             height: 70px;
-            object-fit: cover;
+            object-fit: contain;
             border-radius: 4px;
             border: 2px solid #e5e7eb;
             cursor: pointer;
@@ -762,7 +574,7 @@
         .collect-thumb {
             width: 70px;
             height: 70px;
-            object-fit: cover;
+            object-fit: contain;
             border-radius: 4px;
             border: 2px solid #e5e7eb;
             cursor: pointer;
@@ -847,11 +659,19 @@
             overflow-y: auto;
             padding: 20px;
         }
-        .data-modal-body pre {
+        #data-modal-content {
             background: #f5f5f5;
             padding: 16px;
             border-radius: 4px;
             font-size: 12px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        #data-modal-content pre {
+            background: transparent;
+            padding: 0;
+            border-radius: 0;
             overflow-x: auto;
             white-space: pre-wrap;
             word-break: break-all;
@@ -935,6 +755,7 @@
             padding: 0 3px; color: #999; line-height: 1;
         }
         .img-mgmt-set-item .mgmt-actions .act-rename:hover { color: #3498db; }
+        .img-mgmt-set-item .mgmt-actions .act-derived:hover { color: #8b5cf6; }
         .img-mgmt-set-item .mgmt-actions .act-delete:hover { color: #ff4d4f; }
         .img-mgmt-sidebar-footer {
             padding: 8px; border-top: 1px solid #f0f0f0; flex-shrink: 0;
@@ -1005,7 +826,7 @@
         .img-mgmt-item:hover { border-color: #428bca; }
         .img-mgmt-item.dragging { opacity: 0.4; }
         .img-mgmt-item.selected { border-color: #3498db; box-shadow: 0 0 0 2px rgba(52,152,219,0.3); }
-        .img-mgmt-item img { width: 100%; height: 100%; object-fit: cover; }
+        .img-mgmt-item img { width: 100%; height: 100%; object-fit: contain; background: #f8fafc; }
         .img-mgmt-item .order-badge {
             position: absolute; bottom: 2px; right: 2px;
             background: rgba(0,0,0,0.55); color: #fff;
@@ -1035,7 +856,7 @@
             min-height: 86px; align-items: center; flex-shrink: 0;
         }
         .img-mgmt-thumb-strip img {
-            width: 70px; height: 70px; object-fit: cover; border-radius: 4px;
+            width: 70px; height: 70px; object-fit: contain; border-radius: 4px; background: #f8fafc;
             border: 1px solid #e5e7eb; cursor: pointer; flex-shrink: 0; transition: border-color 0.15s;
         }
         .img-mgmt-thumb-strip img:hover { border-color: #3498db; }
@@ -1124,6 +945,67 @@
             overflow-y: auto;
             gap: 16px;
         }
+        .settings-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f7f8fa;
+        }
+        .settings-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            padding: 14px 16px;
+        }
+        .settings-header h2 { margin: 0; font-size: 18px; color: #222; }
+        .settings-header p { margin: 4px 0 0; font-size: 12px; color: #777; }
+        .settings-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .settings-tabs { display: flex; gap: 6px; background: #fff; border: 1px solid #e8e8e8; border-radius: 6px; padding: 6px; }
+        .settings-tab { border: none; background: transparent; padding: 7px 12px; border-radius: 4px; cursor: pointer; color: #555; font-size: 13px; }
+        .settings-tab.active { background: #e8f3ff; color: #1677ff; font-weight: 600; }
+        .settings-tab-panel { display: none; background: #fff; border: 1px solid #e8e8e8; border-radius: 6px; padding: 14px; }
+        .settings-tab-panel.active { display: block; }
+        .settings-section-title { font-size: 13px; font-weight: 700; color: #333; margin-bottom: 10px; }
+        .settings-card { border: 1px solid #edf0f2; border-radius: 6px; padding: 10px; margin-bottom: 10px; background: #fff; }
+        .settings-grid { display: grid; grid-template-columns: repeat(4, minmax(120px, 1fr)); gap: 8px; }
+        .settings-grid label, .settings-binding-row label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: #777; }
+        .settings-grid input, .settings-grid select, .settings-binding-row select, .settings-import-text { border: 1px solid #d9d9d9; border-radius: 4px; padding: 7px 8px; font-size: 12px; background: #fff; }
+        .settings-binding-row { display: grid; grid-template-columns: 220px minmax(180px, 360px); gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid #f2f2f2; }
+        .settings-formula-grid { display: grid; grid-template-columns: 120px 120px 1fr 100px 100px; gap: 8px; align-items: end; }
+        .settings-formula-grid label, .settings-vars-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: #777; }
+        .settings-formula-grid input, .settings-formula-grid select, .settings-vars-grid input, .settings-formula-text { border: 1px solid #d9d9d9; border-radius: 4px; padding: 7px 8px; font-size: 12px; background: #fff; }
+        .settings-formula-text { width: 100%; min-height: 54px; resize: vertical; font-family: Consolas, monospace; box-sizing: border-box; }
+        .settings-prompt-text { width: 100%; min-height: 190px; resize: vertical; font-family: Consolas, monospace; border: 1px solid #d9d9d9; border-radius: 4px; padding: 8px; font-size: 12px; line-height: 1.45; background: #fff; box-sizing: border-box; }
+        .settings-inline-btn { border: 1px solid #d9d9d9; background: #fff; color: #555; border-radius: 4px; padding: 7px 10px; cursor: pointer; }
+        .settings-vars-grid { display: grid; grid-template-columns: repeat(6, minmax(100px, 1fr)); gap: 8px; margin-top: 8px; }
+        .settings-formula-note { margin-top: 6px; font-size: 11px; color: #777; line-height: 1.5; }
+        .settings-add-btn { border: 1px dashed #b7d8ff; background: #f7fbff; color: #1677ff; border-radius: 4px; padding: 8px 12px; cursor: pointer; width: 100%; }
+        .settings-remove-btn { border: 1px solid #ffccc7; background: #fff2f0; color: #cf1322; border-radius: 4px; padding: 7px 10px; cursor: pointer; }
+        .settings-provider-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 8px; }
+        .settings-provider-title { font-size: 13px; font-weight: 700; color: #333; }
+        .settings-provider-subtitle { font-size: 11px; color: #777; margin-top: 2px; }
+        .settings-model-row { display: grid; grid-template-columns: 150px 1fr 180px 130px 90px auto; gap: 8px; align-items: end; padding: 8px 0; border-top: 1px solid #f2f2f2; }
+        .settings-model-row label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: #777; }
+        .settings-model-row input, .settings-model-row select { border: 1px solid #d9d9d9; border-radius: 4px; padding: 7px 8px; font-size: 12px; background: #fff; min-width: 0; }
+        .settings-model-add-btn { border: 1px solid #b7d8ff; background: #f7fbff; color: #1677ff; border-radius: 4px; padding: 7px 10px; cursor: pointer; }
+        .settings-secret-status { font-size: 11px; color: #888; margin-top: 4px; }
+        .settings-io-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .settings-import-text { width: 100%; min-height: 220px; resize: vertical; font-family: Consolas, monospace; }
+        .settings-diff { margin-top: 10px; min-height: 80px; max-height: 240px; overflow: auto; background: #0f172a; color: #dbeafe; padding: 10px; border-radius: 6px; font-size: 12px; white-space: pre-wrap; }
+        .settings-check { display: inline-flex; gap: 6px; align-items: center; font-size: 12px; margin: 0 0 10px; color: #555; }
+        .settings-hint { font-size: 12px; color: #8c6d1f; background: #fffbe6; border: 1px solid #ffe58f; border-radius: 6px; padding: 10px 12px; }
+        @media (max-width: 1100px) {
+            .settings-grid { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+            .settings-model-row { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+            .settings-io-grid { grid-template-columns: 1fr; }
+        }
         /* ===== 产品-店铺矩阵表格 ===== */
         .product-store-table-wrap {
             background: white;
@@ -1203,7 +1085,7 @@
             width: 100px;
             height: 100px;
             border-radius: 3px;
-            object-fit: cover;
+            object-fit: contain;
             flex-shrink: 0;
             background: #f0f0f0;
         }
@@ -1281,6 +1163,8 @@
         }
         .btn-row-img { color: #8b5cf6; border-color: #8b5cf6; }
         .btn-row-img:hover { background: #8b5cf6; color: white; }
+        .btn-row-data { color: #3498db; border-color: #3498db; }
+        .btn-row-data:hover { background: #3498db; color: white; }
         .btn-row-del { color: #e74c3c; border-color: #e74c3c; }
         .btn-row-del:hover { background: #e74c3c; color: white; }
 
@@ -1302,27 +1186,6 @@
         .store-status-badge.s-已上架 { background: #dcfce7; color: #16a34a; }
         .store-status-badge.s-审核拒绝 { background: #fee2e2; color: #dc2626; }
         .store-status-badge.s-下架回归中 { background: #fef9c3; color: #ca8a04; }
-        .store-listing-btn {
-            font-size: 10px;
-            padding: 2px 8px;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            color: white;
-            background: #3498db;
-            white-space: nowrap;
-            transition: background 0.15s;
-        }
-        .store-listing-btn:hover { background: #2980b9; }
-        .store-listing-btn.pending { background: #8b5cf6; }
-        .store-listing-btn.pending:hover { background: #7c3aed; }
-        .store-listing-btn.reviewing { background: #c026d3; }
-        .store-listing-btn.reviewing:hover { background: #a21caf; }
-        .store-listing-btn.rejected { background: #dc2626; }
-        .store-listing-btn.rejected:hover { background: #b91c1c; }
-        .store-listing-btn.published { background: #f59e0b; }
-        .store-listing-btn.published:hover { background: #d97706; }
-
         /* 展开详情行 */
         .detail-row td {
             padding: 6px 8px 10px;
@@ -1381,10 +1244,11 @@
         }
         .detail-gallery img {
             border-radius: 3px;
-            object-fit: cover;
+            object-fit: contain;
             cursor: pointer;
             border: 1px solid #eee;
             transition: border-color 0.15s;
+            background: #f8fafc;
         }
         .detail-gallery img:hover { border-color: #3498db; }
         .detail-gallery .var-label {
@@ -1440,6 +1304,37 @@
         }
         .product-info-row.collected.overridden .row-value {
             color: #bbb;
+        }
+        .product-info-row.collected.overridden .row-label {
+            color: #bbb;
+        }
+        .product-info-pair-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 4px;
+            width: 100%;
+        }
+        .product-info-pair-row .product-info-row {
+            min-width: 0;
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+        .product-info-pair-row .row-label {
+            width: 48px;
+        }
+        .collect-specs-btn {
+            padding: 4px 10px;
+            background: #0f766e;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .collect-specs-btn:disabled {
+            background: #9ca3af;
+            cursor: wait;
         }
         .product-info-row.manual {
             background: #fff;
@@ -1637,6 +1532,14 @@
             <span class="nav-icon">📋</span>
             <span class="nav-label">产品管理</span>
         </div>
+        <div class="nav-item" data-module="settings">
+            <span class="nav-icon">⚙</span>
+            <span class="nav-label">设置</span>
+        </div>
+        <a href="/knowledge-base" class="nav-item" style="text-decoration:none;">
+            <span class="nav-icon">&#128218;</span>
+            <span class="nav-label">知识库</span>
+        </a>
     </div>
 
     <!-- ===== 模块容器 ===== -->
@@ -1651,16 +1554,10 @@
             <div class="workspace">
                 <div class="top-section">
                     <div class="json-section">
-                        <div class="json-textarea-row">
-                            <textarea id="text1" placeholder="在此粘贴 JSON 提示词体..."></textarea>
-                            <div class="json-btns-col">
-                                <button class="json-btn" id="gen-prompt-btn">生成提示词</button>
-                                <button class="json-btn" id="apply-all-btn">应用到全部</button>
-                            </div>
-                        </div>
-                        <div class="json-btns-row">
-                            <button class="json-btn" id="split-btn">拆分提示词</button>
-                        </div>
+                        <textarea id="text1" placeholder="在此粘贴 JSON 提示词体..."></textarea>
+                        <button class="json-btn" id="split-btn">拆分提示词</button>
+                        <button class="json-btn" id="apply-all-btn">应用到所有</button>
+                        <button class="json-btn" id="gen-prompt-btn">生成提示词</button>
                     </div>
                     <div class="drop-zone" id="drop-zone">
                         <div>拖拽图片到此处<br>（可多选）</div>
@@ -1682,82 +1579,17 @@
                         <input type="file" accept="image/*" id="ref-file-2" style="display:none">
                     </div>
                 </div>
-                <!-- 批量替换产品图：产品图区域 -->
-                <div class="product-section" id="product-section" style="display:none;">
-                    <div style="flex:1;">
-                        <div class="section-label"><span class="step-badge">1</span> 目标产品（要被替换到海报里的产品图）</div>
-                        <div style="display:flex;gap:20px;">
-                            <div class="product-card" id="product-card-1">
-                                <div class="product-card-title">产品图 ①<span class="required-star">*必填</span><button class="product-clear-btn" id="product-clear-1" title="清空">✕</button></div>
-                                <div class="product-drop" id="product-drop-1">
-                                    <div class="product-drop-placeholder">拖拽或点击上传<br>主视角产品图</div>
-                                </div>
-                                <input type="file" accept="image/*" id="product-file-1" style="display:none">
-                            </div>
-                            <div class="product-card" id="product-card-2">
-                                <div class="product-card-title">产品图 ②<span class="optional-tag">选填·辅助角度</span><button class="product-clear-btn" id="product-clear-2" title="清空">✕</button></div>
-                                <div class="product-drop" id="product-drop-2">
-                                    <div class="product-drop-placeholder">拖拽或点击上传<br>辅助角度产品图</div>
-                                </div>
-                                <input type="file" accept="image/*" id="product-file-2" style="display:none">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- 批量替换产品图：海报模板区域 -->
-                <div class="poster-section" id="poster-section" style="display:none;">
-                    <div class="poster-section-header">
-                        <div class="section-label"><span class="step-badge">2</span> 海报模板</div>
-                        <button class="json-btn" id="gen-prompt-btn-v2" style="width:auto;padding:8px 16px;">🔄 生成提示词</button>
-                    </div>
-                    <div class="poster-drop-zone" id="poster-drop-zone">
-                        <div>拖拽海报图片到此处（可多选）或点击上传</div>
-                    </div>
-                </div>
-                <!-- 批量替换产品图：提示词预览 -->
-                <div class="prompt-preview-bar" id="prompt-preview-bar" style="display:none;">
-                    <span class="prompt-label">提示词：</span>
-                    <span class="prompt-text" id="prompt-preview-text"></span>
-                    <button class="prompt-expand-btn" id="prompt-expand-btn">展开编辑</button>
-                </div>
-                <div class="prompt-editor" id="prompt-editor">
-                    <textarea id="prompt-editor-textarea" placeholder="编辑提示词..."></textarea>
-                </div>
                 <div class="cards-container" id="cards-container"></div>
-                <!-- 批量替换产品图：批量生成按钮 -->
-                <div class="batch-generate-bar" id="batch-generate-bar" style="display:none;">
-                    <button class="batch-generate-btn" id="batch-generate-btn">▶ 全部生成</button>
-                    <span class="batch-progress" id="batch-progress"></span>
-                </div>
-                <!-- 批量替换产品图：结果区域 -->
-                <div class="result-section" id="result-section" style="display:none;">
-                    <div class="result-section-header"><span class="step-badge">3</span> 生成结果</div>
-                    <div class="result-grid" id="result-grid"></div>
-                </div>
                 <div class="toolbar">
-                    <div class="toolbar-col">
-                        <button class="save-all-btn" id="copy-all-source-btn">📋 一键复制原图</button>
-                        <button class="save-all-btn" id="copy-all-result-btn">📋 一键复制生成图</button>
-                    </div>
-                    <div class="toolbar-col">
-                        <div class="toolbar-subrow">
-                            <button class="compress-btn" id="compress-btn">🔽 压缩到1.5MB以下</button>
-                            <label class="auto-compress-label">
-                                <input type="checkbox" id="auto-compress" checked> 自动压缩
-                            </label>
-                        </div>
-                        <div class="toolbar-subrow">
-                            <button class="watermark-btn" id="watermark-btn">🛡️ 去除隐形水印</button>
-                            <label class="auto-compress-label">
-                                <input type="checkbox" id="auto-watermark"> 自动去除隐形水印
-                            </label>
-                        </div>
-                    </div>
-                    <div class="toolbar-col">
-                        <button class="save-all-btn" id="save-images-btn">💾 保存到任务文件夹</button>
-                        <button class="save-all-btn" id="save-to-product-btn">📤 保存为图片子集</button>
-                        <button class="open-folder-btn" id="open-folder-btn">📂 打开生成图片文件夹</button>
-                    </div>
+                    <button class="save-all-btn" id="copy-all-source-btn">📋 一键复制原图</button>
+                    <button class="save-all-btn" id="copy-all-result-btn">📋 一键复制生成图</button>
+                    <button class="compress-btn" id="compress-btn">🔽 压缩到1.5MB以下</button>
+                    <label class="auto-compress-label">
+                        <input type="checkbox" id="auto-compress" checked> 自动压缩
+                    </label>
+                    <button class="save-all-btn" id="save-images-btn">💾 保存到任务文件夹</button>
+                    <button class="save-all-btn" id="save-to-product-btn">📤 保存为图片衍生集</button>
+                    <button class="open-folder-btn" id="open-folder-btn">📂 打开生成图片文件夹</button>
                 </div>
             </div>
         </div>
@@ -1812,6 +1644,66 @@
                 <div id="product-cards-container"></div>
             </div>
         </div>
+        <div class="module-panel" id="module-settings">
+            <div class="settings-panel">
+                <div class="settings-header">
+                    <div>
+                        <h2>设置</h2>
+                        <p>模型、功能绑定、平台店铺和本机环境变量</p>
+                    </div>
+                    <div class="settings-actions">
+                        <button class="btn" id="settings-reload-btn">刷新</button>
+                        <button class="btn primary" id="settings-save-btn">保存设置</button>
+                    </div>
+                </div>
+                <div class="settings-tabs">
+                    <button class="settings-tab active" data-settings-tab="models">模型配置</button>
+                    <button class="settings-tab" data-settings-tab="bindings">功能模型绑定</button>
+                    <button class="settings-tab" data-settings-tab="stores">店铺配置</button>
+                    <button class="settings-tab" data-settings-tab="pricing">定价公式</button>
+                    <button class="settings-tab" data-settings-tab="io">导入 / 导出</button>
+                </div>
+                <div class="settings-tab-panel active" id="settings-tab-models">
+                    <div class="settings-section-title">可用模型池</div>
+                    <div id="settings-models-list"></div>
+                    <button class="settings-add-btn" id="settings-add-model">+ 添加模型</button>
+                </div>
+                <div class="settings-tab-panel" id="settings-tab-bindings">
+                    <div class="settings-section-title">每个功能选择使用的模型</div>
+                    <div id="settings-bindings-list"></div>
+                </div>
+                <div class="settings-tab-panel" id="settings-tab-stores">
+                    <div class="settings-section-title">平台 / 店铺</div>
+                    <div id="settings-stores-list"></div>
+                    <button class="settings-add-btn" id="settings-add-store">+ 添加店铺</button>
+                </div>
+                <div class="settings-tab-panel" id="settings-tab-pricing">
+                    <div class="settings-section-title">平台定价公式</div>
+                    <div id="settings-pricing-list"></div>
+                    <button class="settings-add-btn" id="settings-add-pricing">+ 添加定价公式</button>
+                </div>
+                <div class="settings-tab-panel" id="settings-tab-io">
+                    <div class="settings-io-grid">
+                        <div>
+                            <div class="settings-section-title">导出配置</div>
+                            <label class="settings-check"><input type="checkbox" id="settings-export-secrets"> 包含密钥明文</label>
+                            <button class="btn primary" id="settings-copy-export">复制配置 JSON 到剪贴板</button>
+                            <pre class="settings-diff" id="settings-export-preview"></pre>
+                        </div>
+                        <div>
+                            <div class="settings-section-title">导入配置</div>
+                            <textarea id="settings-import-text" class="settings-import-text" placeholder="粘贴配置 JSON"></textarea>
+                            <div class="settings-actions">
+                                <button class="btn" id="settings-preview-import">预览导入</button>
+                                <button class="btn primary" id="settings-apply-import">应用导入</button>
+                            </div>
+                            <pre class="settings-diff" id="settings-import-diff"></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-hint">密钥默认只显示配置状态；留空表示保留原值。保存密钥后下一次 AI 调用会立即使用新值。</div>
+            </div>
+        </div>
     </div>
 
     <!-- 数据查看弹窗 -->
@@ -1823,10 +1715,11 @@
             </div>
             <div class="data-modal-tabs">
                 <div class="data-modal-tab active" data-tab="product">产品数据</div>
+                <div class="data-modal-tab" data-tab="raw">未清洗产品数据</div>
                 <div class="data-modal-tab" data-tab="images">图片映射</div>
             </div>
             <div class="data-modal-body">
-                <pre id="data-modal-content">加载中...</pre>
+                <div id="data-modal-content">加载中...</div>
             </div>
         </div>
     </div>
@@ -1860,12 +1753,12 @@
                             <button id="img-mgmt-select-all">全选</button>
                             <button id="img-mgmt-deselect-all">取消全选</button>
                             <button id="img-mgmt-switch-batch">🖼️ 批量处理</button>
-                            <button id="img-mgmt-save-subset" class="primary">💾 保存为子集</button>
+                            <button id="img-mgmt-save-subset" class="primary">💾 保存为衍生集</button>
                             <button id="img-mgmt-upload-btn">➕ 上传</button>
                         </span>
                         <span id="img-mgmt-tb-batch" style="display:none">
                             <button id="img-mgmt-switch-manage">📋 管理模式</button>
-                            <button id="img-mgmt-save-subset2" class="primary">💾 保存为子集</button>
+                            <button id="img-mgmt-save-subset2" class="primary">💾 保存为衍生集</button>
                         </span>
                         <span style="flex:1"></span>
                         <span class="mgmt-selection-info" id="img-mgmt-selection-info">已选: 0 / 总计: 0</span>
@@ -1888,13 +1781,13 @@
             </div>
             <div class="img-mgmt-footer">
                 <input type="file" id="img-mgmt-upload-input" accept="image/*" multiple style="display:none">
-                <button class="btn" id="img-mgmt-save-btn">💾 保存更改</button>
+                <button class="btn" id="img-mgmt-save-btn">💾 立即保存</button>
                 <span id="img-mgmt-save-status" style="font-size:12px; color:#999;"></span>
             </div>
         </div>
     </div>
 
-    <!-- 保存为图片子集弹窗 -->
+    <!-- 保存为图片衍生集弹窗 -->
     <div class="img-mgmt-overlay" id="save-subset-overlay">
         <div class="img-mgmt-modal" style="max-width:500px;max-height:80vh;">
             <div class="img-mgmt-header">
@@ -1910,11 +1803,11 @@
                 <div id="save-subset-set-list" style="max-height:200px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:4px;padding:4px;">
                     <div style="font-size:12px;color:#bbb;padding:8px;">请先选择产品</div>
                 </div>
-                <label style="font-size:12px;color:#666;margin-top:6px;">新子集名称（可选）</label>
-                <input id="save-subset-new-name" placeholder="输入子集名称以创建新子集…" style="padding:6px;width:100%;border:1px solid #d1d5db;border-radius:4px;font-size:13px;">
+                <label style="font-size:12px;color:#666;margin-top:6px;">新衍生集名称（可选）</label>
+                <input id="save-subset-new-name" placeholder="输入衍生集名称以创建新衍生集…" style="padding:6px;width:100%;border:1px solid #d1d5db;border-radius:4px;font-size:13px;">
                 <div style="display:flex;gap:8px;margin-top:8px;">
                     <button class="btn primary" id="save-subset-exec" style="flex:1;" disabled>执行保存</button>
-                    <button class="btn primary" id="save-subset-new-btn" style="flex:1;background:#8b5cf6;" disabled>保存为子集</button>
+                    <button class="btn primary" id="save-subset-new-btn" style="flex:1;background:#8b5cf6;" disabled>保存为衍生集</button>
                 </div>
                 <div style="margin-top:8px;font-size:11px;color:#999;" id="save-subset-status"></div>
             </div>
@@ -1942,9 +1835,6 @@
         let currentTaskId = null;
         let currentTaskType = "";
         let taskData = { text1: "", cards: [] };
-        let _batchRunning = false;
-        let _batchAbortCtrl = null;
-        let _batchCancelBtn = null;
         const taskList = document.getElementById("task-list");
         const text1El = document.getElementById("text1");
         const cardsContainer = document.getElementById("cards-container");
@@ -1999,20 +1889,7 @@
 
         async function switchTask(taskId) {
             if (currentTaskId && currentTaskId !== taskId) {
-                // 如果正在批量生成，先取消并保存部分结果
-                if (_batchRunning && _batchAbortCtrl) {
-                    _batchAbortCtrl.abort();
-                    await saveCurrentTask();
-                    if (_batchCancelBtn) {
-                        _batchCancelBtn.classList.remove("running");
-                        _batchCancelBtn.textContent = "▶ 全部生成";
-                    }
-                    _batchRunning = false;
-                    _batchAbortCtrl = null;
-                    _batchCancelBtn = null;
-                } else {
-                    await saveCurrentTask();
-                }
+                await saveCurrentTask();
             }
             await loadTask(taskId);
             highlightActiveTask();
@@ -2229,61 +2106,18 @@
         // ---------- 工作台渲染 ----------
         function renderWorkspace() {
             text1El.value = taskData.text1 || "";
-            const isReplace = currentTaskType === "batch_replace_product";
-
-            // Old elements (used by batch_translate etc.)
-            const topSection = document.querySelector(".top-section");
-            const oldRefRow = document.getElementById("ref-images-row");
-            const oldGenPrompt = document.getElementById("gen-prompt-btn");
-            const splitBtn = document.getElementById("split-btn");
-            const applyAllBtn = document.getElementById("apply-all-btn");
-
-            // New elements (batch_replace_product)
-            const productSection = document.getElementById("product-section");
-            const posterSection = document.getElementById("poster-section");
-            const promptBar = document.getElementById("prompt-preview-bar");
-            const promptEditor = document.getElementById("prompt-editor");
-            const batchBar = document.getElementById("batch-generate-bar");
-            const resultSection = document.getElementById("result-section");
-            const genPromptV2 = document.getElementById("gen-prompt-btn-v2");
-
-            if (isReplace) {
-                topSection.style.display = "";
-                oldRefRow.style.display = "none";
-                oldGenPrompt.style.display = "";
-                splitBtn.style.display = "none";
-                applyAllBtn.style.display = "";
-                dropZone.style.display = "none";
-
-                productSection.style.display = "flex";
-                posterSection.style.display = "none";
-                promptBar.style.display = "none";
-                promptEditor.style.display = "none";
-                batchBar.style.display = "flex";
-                resultSection.style.display = "none";
-                genPromptV2.style.display = "none";
-
-                _renderProductImage(1);
-                _renderProductImage(2);
-                _renderPosterCards();
+            const refRow = document.getElementById("ref-images-row");
+            const genPromptBtn = document.getElementById("gen-prompt-btn");
+            if (currentTaskType === "batch_replace_product") {
+                refRow.style.display = "flex";
+                genPromptBtn.style.display = "";
+                _renderRefImage(1);
+                _renderRefImage(2);
             } else {
-                topSection.style.display = "";
-                oldRefRow.style.display = "none";
-                oldGenPrompt.style.display = "none";
-                splitBtn.style.display = "";
-                applyAllBtn.style.display = "";
-                dropZone.style.display = "";
-
-                productSection.style.display = "none";
-                posterSection.style.display = "none";
-                promptBar.style.display = "none";
-                promptEditor.style.display = "none";
-                batchBar.style.display = "none";
-                resultSection.style.display = "none";
-                genPromptV2.style.display = "none";
-
-                renderCards();
+                refRow.style.display = "none";
+                genPromptBtn.style.display = "none";
             }
+            renderCards();
         }
 
         function _renderRefImage(refIndex) {
@@ -2355,378 +2189,7 @@
             showMsg("参考图" + refIndex + "已清空");
         }
 
-        // ===== 批量替换产品图专用函数 =====
-
-        function _renderProductImage(refIndex) {
-            const drop = document.getElementById("product-drop-" + refIndex);
-            const card = document.getElementById("product-card-" + refIndex);
-            const field = "ref_image_" + refIndex;
-            const imgPath = taskData[field];
-            if (imgPath) {
-                drop.innerHTML = '<img src="/task_images/' + currentTaskId + '/' + imgPath + '" alt="产品图' + refIndex + '">';
-                drop.classList.add("has-image");
-                card.classList.add("has-image");
-            } else {
-                const labels = {1: "主视角产品图", 2: "辅助角度产品图"};
-                drop.innerHTML = '<div class="product-drop-placeholder">拖拽或点击上传<br>' + labels[refIndex] + '</div>';
-                drop.classList.remove("has-image");
-                card.classList.remove("has-image");
-            }
-        }
-
-        async function _uploadProductImage(refIndex, file) {
-            if (!currentTaskId) { showMsg("请先选择任务", true); return; }
-            const formData = new FormData();
-            formData.append("image", file);
-            try {
-                const res = await fetch("/api/tasks/" + currentTaskId + "/upload_ref_image/" + refIndex, {
-                    method: "POST", body: formData
-                });
-                if (!res.ok) { const err = await res.json(); throw new Error(err.error); }
-                const result = await res.json();
-                taskData[result.field || ("ref_image_" + refIndex)] = result.path;
-                _renderProductImage(refIndex);
-                await saveCurrentTask();
-                showMsg("产品图" + refIndex + "上传成功");
-            } catch (e) { showMsg("上传失败: " + e.message, true); }
-        }
-
-        async function _clearProductImage(refIndex) {
-            const field = "ref_image_" + refIndex;
-            delete taskData[field];
-            _renderProductImage(refIndex);
-            await saveCurrentTask();
-            showMsg("产品图" + refIndex + "已清空");
-        }
-
-        function _setupProductDrop(refIndex) {
-            const drop = document.getElementById("product-drop-" + refIndex);
-            const fileInput = document.getElementById("product-file-" + refIndex);
-            drop.addEventListener("click", function() { fileInput.click(); });
-            drop.addEventListener("dragover", function(e) { e.preventDefault(); drop.classList.add("dragover"); });
-            drop.addEventListener("dragleave", function() { drop.classList.remove("dragover"); });
-            drop.addEventListener("drop", function(e) {
-                e.preventDefault();
-                drop.classList.remove("dragover");
-                const file = e.dataTransfer.files[0];
-                if (file && file.type.startsWith("image/")) _uploadProductImage(refIndex, file);
-            });
-            fileInput.addEventListener("change", function() {
-                if (fileInput.files[0]) { _uploadProductImage(refIndex, fileInput.files[0]); fileInput.value = ""; }
-            });
-            // Clear button
-            document.getElementById("product-clear-" + refIndex).addEventListener("click", function(e) {
-                e.stopPropagation();
-                _clearProductImage(refIndex);
-            });
-        }
-        _setupProductDrop(1);
-        _setupProductDrop(2);
-
-        function _renderPosterCards() {
-            cardsContainer.innerHTML = "";
-            cardsContainer.className = "poster-cards-row";
-            if (!taskData.cards || taskData.cards.length === 0) {
-                cardsContainer.innerHTML = '<div style="color:#aaa; padding:20px; width:100%;">暂无海报模板，请拖入海报图片</div>';
-                return;
-            }
-            taskData.cards.forEach(function(card, index) {
-                const cardDiv = document.createElement("div");
-                cardDiv.className = "poster-card";
-                cardDiv.dataset.cardId = card.id;
-
-                // 生成结果内容
-                let resultContent = '<div class="img-placeholder">等待生成</div>';
-                const genPath = card.generated_final || card.generated_draft;
-                if (genPath) {
-                    resultContent = '<img src="/task_images/' + currentTaskId + '/' + genPath + '" alt="生成图">';
-                }
-
-                cardDiv.innerHTML =
-                    '<button class="poster-card-delete" title="删除">✕</button>' +
-                    '<div class="poster-img-frame">' +
-                        (card.source_image
-                            ? '<img src="/task_images/' + currentTaskId + '/' + card.source_image + '" alt="海报">'
-                            : '<div class="img-placeholder">无图片</div>') +
-                    '</div>' +
-                    '<div class="poster-card-name">' + (card.image_name || "海报" + (index + 1)) + '</div>' +
-                    '<button class="poster-exec-btn">执行生图</button>' +
-                    '<textarea rows="3" placeholder="提示词...">' + (card.prompt || "") + '</textarea>' +
-                    '<div class="poster-result">' + resultContent + '</div>';
-
-                cardDiv.querySelector(".poster-card-delete").addEventListener("click", function(e) {
-                    e.stopPropagation();
-                    _deletePosterCard(card.id);
-                });
-
-                cardDiv.querySelector(".poster-img-frame").addEventListener("click", function() {
-                    if (card.source_image) { _previewPosterImage(card); }
-                });
-
-                cardDiv.querySelector(".poster-result").addEventListener("click", function() {
-                    if (card.generated_draft || card.generated_final) { _previewGenImage(card); }
-                });
-
-                cardDiv.querySelector(".poster-exec-btn").addEventListener("click", function(e) {
-                    e.stopPropagation();
-                    _onSingleGenerate(card, this);
-                });
-
-                // 卡片级提示词编辑保存
-                cardDiv.querySelector("textarea").addEventListener("input", function() {
-                    card.prompt = this.value;
-                    saveCurrentTask();
-                });
-
-                cardsContainer.appendChild(cardDiv);
-            });
-        }
-
-        // 单个生成
-        async function _onSingleGenerate(card, btn) {
-            if (!card.source_image) { showMsg("请先为这张海报添加图片！", true); return; }
-            if (!taskData.ref_image_1 && !taskData.ref_image_2) {
-                showMsg("请至少上传一张产品图！", true); return;
-            }
-            if (!(card.prompt || taskData.text1) || (card.prompt || taskData.text1).trim() === "") {
-                showMsg("提示词不能为空，请先点击“生成提示词”！", true); return;
-            }
-
-            btn.disabled = true;
-            btn.classList.add("running");
-            btn.textContent = "正在生成…";
-
-            const autoCompress = document.getElementById("auto-compress").checked;
-            const removeWatermark = document.getElementById("auto-watermark").checked;
-            const extra_image_paths = [];
-            if (taskData.ref_image_1) extra_image_paths.push(taskData.ref_image_1);
-            if (taskData.ref_image_2) extra_image_paths.push(taskData.ref_image_2);
-
-            try {
-                const res = await fetch("/api/generate", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        task_id: currentTaskId,
-                        card_id: card.id,
-                        prompt: card.prompt || taskData.text1,
-                        source_image_path: card.source_image,
-                        extra_image_paths: extra_image_paths,
-                        auto_compress: autoCompress,
-                        remove_watermark: removeWatermark
-                    })
-                });
-                if (!res.ok) {
-                    const errData = await res.json().catch(function() { return null; });
-                    throw new Error(errData && errData.error ? errData.error : "HTTP " + res.status);
-                }
-                const data = await res.json();
-                card.generated_draft = data.draft_file;
-                await saveCurrentTask();
-
-                // Update the result area in this card
-                const cardDiv = document.querySelector('[data-card-id="' + card.id + '"]');
-                if (cardDiv) {
-                    cardDiv.querySelector(".poster-result").innerHTML = '<img src="' + data.url + '" alt="生成图">';
-                }
-                showMsg("生成成功！");
-            } catch (e) {
-                showMsg("生成失败: " + e.message, true);
-            } finally {
-                btn.disabled = false;
-                btn.classList.remove("running");
-                btn.textContent = "执行生图";
-            }
-        }
-
-        async function _deletePosterCard(cardId) {
-            if (!confirm("确定要删除这张海报吗？")) return;
-            taskData.cards = taskData.cards.filter(function(c) { return c.id !== cardId; });
-            _renderPosterCards();
-            await saveCurrentTask();
-            showMsg("海报已删除");
-        }
-
-        function _previewPosterImage(card) {
-            const overlay = document.getElementById("img-preview-overlay");
-            const srcImg = document.getElementById("img-preview-src");
-            const genImg = document.getElementById("img-preview-gen");
-            srcImg.src = card.source_image ? "/task_images/" + currentTaskId + "/" + card.source_image : "";
-            var genPath = card.generated_final || card.generated_draft;
-            genImg.src = genPath ? "/task_images/" + currentTaskId + "/" + genPath : "";
-            overlay.classList.add("active");
-        }
-
-        function _previewGenImage(card) {
-            const overlay = document.getElementById("img-preview-overlay");
-            const srcImg = document.getElementById("img-preview-src");
-            const genImg = document.getElementById("img-preview-gen");
-            srcImg.src = card.source_image ? "/task_images/" + currentTaskId + "/" + card.source_image : "";
-            var genPath = card.generated_final || card.generated_draft;
-            genImg.src = genPath ? "/task_images/" + currentTaskId + "/" + genPath : "";
-            overlay.classList.add("active");
-        }
-
-        function _updatePromptPreview() {
-            const promptText = taskData.text1 || "";
-            const previewEl = document.getElementById("prompt-preview-text");
-            const editorTextarea = document.getElementById("prompt-editor-textarea");
-            if (promptText) {
-                previewEl.textContent = promptText.replace(/\n/g, " ");
-            } else {
-                previewEl.textContent = "未生成提示词，请点击“生成提示词”按钮";
-            }
-            editorTextarea.value = promptText;
-        }
-
-        function _renderResultGrid() {
-            const grid = document.getElementById("result-grid");
-            grid.innerHTML = "";
-            if (!taskData.cards || taskData.cards.length === 0) {
-                grid.innerHTML = '<div style="color:#aaa;padding:10px;grid-column:1/-1;">暂无结果</div>';
-                document.getElementById("result-section").style.display = "none";
-                return;
-            }
-            let hasResults = false;
-            taskData.cards.forEach(function(card, index) {
-                const genPath = card.generated_final || card.generated_draft;
-                if (!genPath) return;
-                hasResults = true;
-                const cardDiv = document.createElement("div");
-                cardDiv.className = "result-card";
-                cardDiv.innerHTML =
-                    '<div class="result-img"><img src="/task_images/' + currentTaskId + '/' + genPath + '" alt="结果"></div>' +
-                    '<div class="result-card-name">' + (card.image_name || "结果" + (index + 1)) + '</div>';
-                grid.appendChild(cardDiv);
-            });
-            document.getElementById("result-section").style.display = hasResults ? "block" : "none";
-        }
-
-        // 生成提示词 v2（批量替换产品）
-        function _onGenPromptV2() {
-            if (!currentTaskId) { showMsg("请先选择一个任务！", true); return; }
-            const hasRef1 = taskData.ref_image_1;
-            const hasRef2 = taskData.ref_image_2;
-            let refDesc;
-            if (hasRef1 && hasRef2) {
-                refDesc = "图2和图3是产品的不同角度图片，请你以图1为“参考图像”，以图2和图3为“目标产品”。";
-            } else {
-                refDesc = "图2是产品的图片，请你以图1为“参考图像”，以图2为“目标产品”。";
-            }
-            const prompt = refDesc + "用“目标产品”替换“参考图像”中的产品，生成和“参考图像”一样的海报。\n\n要求：\n- 替换产品，保留图像中其他部分不变。确保替换后能自然融合光影、透视与整体风格。写实风格、高分辨率、无缝整合。\n- 图片比例3:4。";
-            text1El.value = prompt;
-            taskData.text1 = prompt;
-            saveCurrentTask();
-            _updatePromptPreview();
-            showMsg("提示词已生成，可点击“展开编辑”修改。");
-        }
-
-        // 全部生成（批量替换产品）— 并发 + 超时 + 可取消
-        async function _onBatchGenerate(btn) {
-            // 取消模式
-            if (_batchRunning) {
-                if (_batchAbortCtrl) { _batchAbortCtrl.abort(); }
-                showMsg("已取消批量生成");
-                return;
-            }
-
-            if (!taskData.cards || taskData.cards.length === 0) {
-                showMsg("没有海报卡片！", true); return;
-            }
-            if (!taskData.ref_image_1 && !taskData.ref_image_2) {
-                showMsg("请至少上传一张产品图（产品图①）！", true); return;
-            }
-            if (!taskData.text1 || taskData.text1.trim() === "") {
-                showMsg("提示词不能为空，请先点击“生成提示词”！", true); return;
-            }
-
-            _batchRunning = true;
-            _batchAbortCtrl = new AbortController();
-            _batchCancelBtn = btn;
-            btn.textContent = "✕ 取消生成";
-            btn.classList.add("running");
-
-            const autoCompress = document.getElementById("auto-compress").checked;
-            const removeWatermark = document.getElementById("auto-watermark").checked;
-            const extra_image_paths = [];
-            if (taskData.ref_image_1) extra_image_paths.push(taskData.ref_image_1);
-            if (taskData.ref_image_2) extra_image_paths.push(taskData.ref_image_2);
-
-            const progressEl = document.getElementById("batch-progress");
-            let succeeded = 0;
-            let failed = 0;
-            const total = taskData.cards.length;
-            const CONCURRENCY = 3;
-
-            // 只处理有 source_image 的卡片
-            const pending = taskData.cards.filter(function(c) { return !!c.source_image; });
-            failed += taskData.cards.length - pending.length;
-
-            for (let i = 0; i < pending.length; i += CONCURRENCY) {
-                if (_batchAbortCtrl.signal.aborted) break;
-                const batch = pending.slice(i, i + CONCURRENCY);
-                progressEl.textContent = "已生成 " + succeeded + "/" + total + " (并发" + batch.length + ")…";
-
-                const tasks = batch.map(function(card) {
-                    const ctrl = new AbortController();
-                    const timeoutId = setTimeout(function() { ctrl.abort(); }, 300000); // 5 min timeout
-                    // 父级取消信号联动
-                    _batchAbortCtrl.signal.addEventListener("abort", function() { ctrl.abort(); });
-
-                    return fetch("/api/generate", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            task_id: currentTaskId,
-                            card_id: card.id,
-                            prompt: card.prompt || taskData.text1,
-                            source_image_path: card.source_image,
-                            extra_image_paths: extra_image_paths,
-                            auto_compress: autoCompress,
-                            remove_watermark: removeWatermark
-                        }),
-                        signal: ctrl.signal
-                    }).then(async function(res) {
-                        clearTimeout(timeoutId);
-                        if (!res.ok) {
-                            const errData = await res.json().catch(function() { return null; });
-                            throw new Error(errData && errData.error ? errData.error : "HTTP " + res.status);
-                        }
-                        const data = await res.json();
-                        card.generated_draft = data.draft_file;
-                        return { ok: true, card: card };
-                    }).catch(function(e) {
-                        clearTimeout(timeoutId);
-                        if (e.name === "AbortError") {
-                            return { ok: false, card: card, error: "超时或已取消" };
-                        }
-                        return { ok: false, card: card, error: e.message };
-                    });
-                });
-
-                const results = await Promise.allSettled(tasks);
-                for (let r = 0; r < results.length; r++) {
-                    const outcome = results[r].value;
-                    if (outcome.ok) { succeeded++; }
-                    else { failed++; console.error("Generate failed for card " + outcome.card.id + ":", outcome.error); }
-                }
-            }
-
-            await saveCurrentTask();
-            _renderPosterCards();
-
-            var wasAborted = _batchAbortCtrl && _batchAbortCtrl.signal.aborted;
-            _batchRunning = false;
-            _batchAbortCtrl = null;
-            _batchCancelBtn = null;
-            btn.classList.remove("running");
-            btn.textContent = "▶ 全部生成";
-            progressEl.textContent = wasAborted
-                ? "已取消：成功 " + succeeded + " ，失败 " + failed
-                : "生成完成：成功 " + succeeded + " ，失败 " + failed;
-        }
-
-        // 删除卡片（旧版，保留兼容）
+        // 删除卡片
         async function deleteCard(cardId) {
             if (!confirm("确定要删除这个卡片吗？")) return;
             // 从数组中过滤掉该卡片
@@ -2738,7 +2201,6 @@
 
         function renderCards() {
             cardsContainer.innerHTML = "";
-            cardsContainer.className = "cards-container";
             if (!taskData.cards || taskData.cards.length === 0) {
                 cardsContainer.innerHTML = '<div style="color:#aaa; padding:20px;">暂无卡片，请拖入图片或拆分提示词</div>';
                 return;
@@ -2844,8 +2306,12 @@
                 return;
             }
             if (currentTaskType === "batch_replace_product") {
-                if (!taskData.ref_image_1 && !taskData.ref_image_2) {
-                    showMsg("请至少上传一张参考图（参考图1或参考图2）！", true);
+                if (!taskData.ref_image_1) {
+                    showMsg("「替换目标参考图1」不能为空！", true);
+                    return;
+                }
+                if (!taskData.ref_image_2) {
+                    showMsg("「替换目标参考图2」不能为空！", true);
                     return;
                 }
             }
@@ -2858,7 +2324,6 @@
             });
 
             const autoCompress = document.getElementById("auto-compress").checked;
-            const removeWatermark = document.getElementById("auto-watermark").checked;
 
             // 批量替换产品：附加参考图1、参考图2
             let extra_image_paths = undefined;
@@ -2878,8 +2343,7 @@
                         prompt: card.prompt,
                         source_image_path: card.source_image,
                         extra_image_paths: extra_image_paths,
-                        auto_compress: autoCompress,
-                        remove_watermark: removeWatermark
+                        auto_compress: autoCompress
                     })
                 });
                 if (!res.ok) {
@@ -2935,40 +2399,6 @@
             input.click();
         });
 
-        // text1 文本框也支持拖入图片（批量替换产品图等场景）
-        text1El.addEventListener("dragover", function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            text1El.style.outline = "2px dashed #1abc9c";
-            text1El.style.outlineOffset = "-4px";
-        });
-        text1El.addEventListener("dragleave", function() {
-            text1El.style.outline = "";
-        });
-        text1El.addEventListener("drop", async function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            text1El.style.outline = "";
-            const files = Array.from(e.dataTransfer.files).filter(function(f) { return f.type.startsWith("image/"); });
-            if (files.length > 0) { await handleImageUpload(files); }
-        });
-        text1El.addEventListener("click", function(e) {
-            // 按住 Ctrl 点击可以上传图片
-            if (!e.ctrlKey && !e.metaKey) return;
-            const input = document.createElement("input");
-            input.type = "file";
-            input.multiple = true;
-            input.accept = "image/*";
-            input.onchange = async function(ev) {
-                const files = Array.from(ev.target.files);
-                if (files.length > 0) {
-                    await handleImageUpload(files);
-                    if (currentTaskType === "batch_replace_product") { _renderPosterCards(); }
-                }
-            };
-            input.click();
-        });
-
         async function handleImageUpload(files) {
             if (!currentTaskId) {
                 showMsg("请先选择或创建一个任务！", true);
@@ -3002,11 +2432,7 @@
                     newCount++;
                 }
             });
-            if (currentTaskType === "batch_replace_product") {
-                _renderPosterCards();
-            } else {
-                renderCards();
-            }
+            renderCards();
             await saveCurrentTask();
             showMsg(`图片已添加：${matchedCount} 张匹配现有卡片，${newCount} 张新建卡片。`);
         }
@@ -3058,7 +2484,7 @@
             showMsg(`提示词拆分完成：${matched} 项匹配卡片，${created} 项新建卡片。`);
         });
 
-        // ---------- 应用到全部 ----------
+        // ---------- 应用到所有 ----------
         document.getElementById("apply-all-btn").addEventListener("click", () => {
             const content = text1El.value.trim();
             if (!content) {
@@ -3070,13 +2496,9 @@
                 return;
             }
             taskData.cards.forEach(card => { card.prompt = content; });
-            if (currentTaskType === "batch_replace_product") {
-                _renderPosterCards();
-            } else {
-                renderCards();
-            }
+            renderCards();
             saveCurrentTask();
-            showMsg(`已将文本1内容应用到全部 ${taskData.cards.length} 张卡片。`);
+            showMsg(`已将文本1内容应用到所有 ${taskData.cards.length} 张卡片。`);
         });
 
         // ---------- 生成提示词（批量替换产品）----------
@@ -3094,69 +2516,8 @@
             text1El.value = prompt;
             taskData.text1 = prompt;
             saveCurrentTask();
-            showMsg('提示词已生成到文本框1，可使用”应用到全部”分发到卡片。');
+            showMsg('提示词已生成到文本框1，可使用“应用到所有”分发到卡片。');
         });
-        // ---------- 生成提示词 v2（批量替换产品新布局）----------
-        document.getElementById('gen-prompt-btn-v2').addEventListener('click', _onGenPromptV2);
-
-        // ---------- 全部生成（批量替换产品）----------
-        document.getElementById('batch-generate-btn').addEventListener('click', function() {
-            _onBatchGenerate(this);
-        });
-
-        // ---------- 提示词展开/收起 ----------
-        document.getElementById('prompt-expand-btn').addEventListener('click', function() {
-            const editor = document.getElementById('prompt-editor');
-            const btn = document.getElementById('prompt-expand-btn');
-            const isOpen = editor.classList.toggle('open');
-            btn.textContent = isOpen ? '收起编辑' : '展开编辑';
-        });
-
-        // 提示词编辑器内容同步
-        document.getElementById('prompt-editor-textarea').addEventListener('input', function() {
-            taskData.text1 = this.value;
-            text1El.value = this.value;
-            document.getElementById('prompt-preview-text').textContent = this.value.replace(/\n/g, ' ') || '未生成提示词，请点击”生成提示词”按钮';
-            saveCurrentTask();
-        });
-
-        // ---------- 海报拖拽区域 ----------
-        (function() {
-            const posterDrop = document.getElementById('poster-drop-zone');
-            posterDrop.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                posterDrop.classList.add('dragover');
-            });
-            posterDrop.addEventListener('dragleave', function() {
-                posterDrop.classList.remove('dragover');
-            });
-            posterDrop.addEventListener('drop', async function(e) {
-                e.preventDefault();
-                posterDrop.classList.remove('dragover');
-                const files = Array.from(e.dataTransfer.files).filter(function(f) { return f.type.startsWith('image/'); });
-                if (files.length === 0) return;
-                await handleImageUpload(files);
-                if (currentTaskType === 'batch_replace_product') {
-                    _renderPosterCards();
-                }
-            });
-            posterDrop.addEventListener('click', function() {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.multiple = true;
-                input.accept = 'image/*';
-                input.onchange = async function(e) {
-                    const files = Array.from(e.target.files);
-                    if (files.length > 0) {
-                        await handleImageUpload(files);
-                        if (currentTaskType === 'batch_replace_product') {
-                            _renderPosterCards();
-                        }
-                    }
-                };
-                input.click();
-            });
-        })();
         // ---------- 一键复制全部图片到系统剪贴板（后端 CF_HDROP）----------
         document.getElementById("copy-all-source-btn").addEventListener("click", async function() {
             if (!currentTaskId) { showMsg("请先选择任务", true); return; }
@@ -3209,7 +2570,7 @@
             showMsg(`已将 ${data.moved.length} 张生成图片保存至任务文件夹。`);
         });
 
-        // ---------- 保存为图片子集 ----------
+        // ---------- 保存为图片衍生集 ----------
         var saveSubsetOverlay = document.getElementById("save-subset-overlay");
         var saveSubsetProduct = document.getElementById("save-subset-product");
         var saveSubsetSetList = document.getElementById("save-subset-set-list");
@@ -3276,7 +2637,7 @@
                     var ss = subs[setName] || {};
                     Object.keys(ss).sort().forEach(function(subName) {
                         h += '<div class="img-mgmt-task-item save-subset-set-item" data-set="' + setName + '" data-sub="' + subName + '" style="padding-left:28px;cursor:pointer;">';
-                        h += '📄 ' + subName + '<span class="mgmt-count">' + (ss[subName]||[]).length + '</span></div>';
+                        h += '🧬 ' + subName + '<span class="mgmt-count">' + (ss[subName]||[]).length + '</span></div>';
                     });
                 });
                 if (!h) h = '<div style="font-size:12px;color:#bbb;padding:8px;">该产品暂无图片集</div>';
@@ -3290,7 +2651,7 @@
                         saveTargetSet = el.dataset.set;
                         saveTargetSub = el.dataset.sub || "";
                         saveSubsetExec.disabled = false;
-                        // "保存为子集" 需输入新子集名称
+                        // "保存为衍生集" 需输入新衍生集名称
                         _updateNewSubsetBtn();
                         saveSubsetStatus.textContent = "已选: " + saveTargetSet + (saveTargetSub ? " / " + saveTargetSub : "");
                     });
@@ -3326,17 +2687,17 @@
             }
         });
 
-        // 新建子集名称输入 → 控制"保存为子集"按钮
+        // 新建衍生集名称输入 → 控制"保存为衍生集"按钮
         function _updateNewSubsetBtn() {
             saveSubsetNewBtn.disabled = !(saveTargetSet && !saveTargetSub && saveSubsetNewName.value.trim());
         }
         saveSubsetNewName.addEventListener("input", _updateNewSubsetBtn);
 
-        // "保存为子集" → 保存到选中图片集下的新子集
+        // "保存为衍生集" → 保存到选中图片集下的新衍生集
         saveSubsetNewBtn.addEventListener("click", async function() {
             var newSubName = saveSubsetNewName.value.trim();
             if (!currentTaskId || !saveTargetSet || !newSubName) return;
-            if (saveTargetSub) { saveSubsetStatus.textContent = "请选图片集（非子集）再新建"; return; }
+            if (saveTargetSub) { saveSubsetStatus.textContent = "请选图片集（非衍生集）再新建"; return; }
             saveSubsetNewBtn.disabled = true;
             saveSubsetExec.disabled = true;
             saveSubsetStatus.textContent = "保存中...";
@@ -3392,33 +2753,6 @@
             }
         });
 
-        // ---------- 去除隐形水印 ----------
-        document.getElementById("watermark-btn").addEventListener("click", async () => {
-            if (!currentTaskId) {
-                showMsg("请先选择一个任务！", true);
-                return;
-            }
-            const btn = document.getElementById("watermark-btn");
-            btn.disabled = true;
-            btn.classList.add("running");
-            btn.textContent = "🛡️ 处理中…";
-            try {
-                const res = await fetch(`/api/tasks/${currentTaskId}/remove_watermark`, { method: "POST" });
-                const data = await res.json();
-                if (data.processed_count > 0) {
-                    showMsg(`✅ 去水印完成：${data.processed_count} 张图片已重新编码`);
-                } else {
-                    showMsg("✅ 没有可处理的图片");
-                }
-            } catch (e) {
-                showMsg("❌ 去水印失败: " + e.message, true);
-            } finally {
-                btn.disabled = false;
-                btn.classList.remove("running");
-                btn.textContent = "🛡️ 去除隐形水印";
-            }
-        });
-
         // ---------- 打开生成文件夹 ----------
         document.getElementById("open-folder-btn").addEventListener("click", async () => {
             if (!currentTaskId) {
@@ -3450,17 +2784,19 @@
         document.querySelectorAll(".nav-item").forEach(item => {
             item.addEventListener("click", () => {
                 switchModule(item.dataset.module);
+                _onModuleActivated(item.dataset.module);
             });
         });
 
         function _onModuleActivated(moduleName) {
             if (moduleName === "product-manage") loadProducts();
+            if (moduleName === "settings") loadSettings();
         }
 
         // 页面加载时根据 URL hash 恢复模块
         (function initModuleFromHash() {
             var hash = window.location.hash.replace("#", "");
-            var validModules = ["collect-product", "image-batch", "product-manage"];
+            var validModules = ["collect-product", "image-batch", "product-manage", "settings"];
             if (hash && validModules.indexOf(hash) !== -1) {
                 switchModule(hash, false);
                 _onModuleActivated(hash);
@@ -3470,36 +2806,502 @@
         // 浏览器前进/后退时同步切换
         window.addEventListener("hashchange", function() {
             var hash = window.location.hash.replace("#", "");
-            var validModules = ["collect-product", "image-batch", "product-manage"];
+            var validModules = ["collect-product", "image-batch", "product-manage", "settings"];
             if (hash && validModules.indexOf(hash) !== -1) {
                 switchModule(hash, false);
                 _onModuleActivated(hash);
             }
         });
 
-        // ---------- 复选框状态持久化 ----------
-        (function initCheckboxPersistence() {
-            var compressCb = document.getElementById("auto-compress");
-            var watermarkCb = document.getElementById("auto-watermark");
-
-            // 恢复上次状态
-            if (compressCb) {
-                var saved = localStorage.getItem("sERP_auto_compress");
-                compressCb.checked = saved !== null ? saved === "true" : true; // 默认开启
-                compressCb.addEventListener("change", function() {
-                    localStorage.setItem("sERP_auto_compress", compressCb.checked);
-                });
-            }
-            if (watermarkCb) {
-                var savedWm = localStorage.getItem("sERP_auto_watermark");
-                watermarkCb.checked = savedWm === "true"; // 默认关闭
-                watermarkCb.addEventListener("change", function() {
-                    localStorage.setItem("sERP_auto_watermark", watermarkCb.checked);
-                });
-            }
-        })();
-
         // ---------- 恢复历史采集任务 ----------
+        // ---------- 设置模块 ----------
+        let settingsState = null;
+        let settingsLoaded = false;
+
+        function settingsInput(name, value, placeholder) {
+            return `<label>${name}<input data-field="${name}" value="${_escHtml(value || "")}" placeholder="${_escHtml(placeholder || "")}"></label>`;
+        }
+
+        function settingsSelect(name, value, options) {
+            let html = `<label>${name}<select data-field="${name}">`;
+            (options || []).forEach(opt => {
+                const selected = String(opt.value) === String(value || "") ? " selected" : "";
+                html += `<option value="${_escHtml(opt.value)}"${selected}>${_escHtml(opt.label)}</option>`;
+            });
+            html += "</select></label>";
+            return html;
+        }
+
+        function settingsNumberVar(name, value, step) {
+            return `<label>${name}<input data-var="${name}" type="number" step="${step || "0.01"}" value="${_escHtml(value === undefined || value === null ? "" : value)}"></label>`;
+        }
+
+        function settingsTextVar(name, value) {
+            return `<label>${name}<input data-var="${name}" value="${_escHtml(value || "")}"></label>`;
+        }
+
+        function providerKey(model) {
+            const baseUrl = (model.base_url || "").trim();
+            const apiKeyEnv = (model.api_key_env || "").trim();
+            return `${baseUrl}::${apiKeyEnv}`;
+        }
+
+        function providerNameFromModel(model) {
+            const provider = (model.provider || "").trim();
+            const baseUrl = (model.base_url || "").trim();
+            if (provider === "laozhang" || baseUrl.includes("laozhang.ai")) return "LaoZhang";
+            if (provider === "deepseek" || baseUrl.includes("deepseek.com")) return "DeepSeek";
+            if (provider === "openai" || baseUrl.includes("api.openai.com")) return "OpenAI";
+            if (provider === "gemini" && !baseUrl.includes("laozhang.ai")) return "Gemini";
+            return model.name ? model.name.replace(/\s+[^ ]+$/, "") : "AI Provider";
+        }
+
+        function normalizeApiKeyEnv(value) {
+            let key = String(value || "AI").toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+            if (!key) key = "AI";
+            if (!key.endsWith("_API_KEY") && key !== "API_KEY") key += "_API_KEY";
+            return key;
+        }
+
+        function groupModelProviders(models) {
+            const providers = [];
+            const byKey = new Map();
+            (models || []).forEach(model => {
+                const key = providerKey(model);
+                if (!byKey.has(key)) {
+                    const provider = {
+                        key,
+                        name: providerNameFromModel(model),
+                        provider: model.provider || "openai_compatible",
+                        base_url: model.base_url || "",
+                        api_key_env: model.api_key_env || "",
+                        models: []
+                    };
+                    byKey.set(key, provider);
+                    providers.push(provider);
+                }
+                byKey.get(key).models.push(Object.assign({}, model));
+            });
+            return providers;
+        }
+
+        function flattenModelProviders(providers) {
+            const models = [];
+            (providers || []).forEach(provider => {
+                (provider.models || []).forEach(model => {
+                    models.push(Object.assign({}, model, {
+                        provider: model.provider || provider.provider || "openai_compatible",
+                        base_url: provider.base_url || "",
+                        api_key_env: provider.api_key_env || ""
+                    }));
+                });
+            });
+            return models;
+        }
+
+        function isEnabledSettingsItem(item) {
+            return !(item && (item.enabled === false || item.status === "disabled"));
+        }
+
+        function preserveDisabledSettingsItems(visibleItems, originalItems) {
+            return (visibleItems || []).concat((originalItems || []).filter(item => !isEnabledSettingsItem(item)));
+        }
+
+        function renderProviderModelRow(model, providerIndex, modelIndex) {
+            return `
+                <div class="settings-model-row" data-provider-model="${providerIndex}:${modelIndex}">
+                    <label>模型 ID<input data-model-field="id" value="${_escHtml(model.id || "")}"></label>
+                    <label>显示名称<input data-model-field="name" value="${_escHtml(model.name || "")}"></label>
+                    <label>模型名<input data-model-field="model" value="${_escHtml(model.model || "")}"></label>
+                    ${settingsSelect("provider", model.provider || "openai_compatible", [
+                        {value:"deepseek", label:"DeepSeek"},
+                        {value:"laozhang", label:"LaoZhang"},
+                        {value:"openai_compatible", label:"OpenAI-compatible"},
+                        {value:"gemini", label:"Gemini / Image"},
+                        {value:"custom", label:"Custom"}
+                    ]).replaceAll("data-field", "data-model-field")}
+                    ${settingsSelect("enabled", model.enabled === false ? "false" : "true", [{value:"true", label:"启用"}, {value:"false", label:"停用"}]).replaceAll("data-field", "data-model-field")}
+                    <button class="settings-remove-btn" data-remove-provider-model="${providerIndex}:${modelIndex}">删除</button>
+                </div>
+            `;
+        }
+
+        function modelOptions() {
+            const models = ((settingsState && settingsState.settings && settingsState.settings.models) || []).filter(m => m.enabled !== false);
+            return models.map(m => ({ value: m.id, label: `${m.name || m.id} (${m.model || ""})` }));
+        }
+
+        function renderSettings() {
+            if (!settingsState) return;
+            const env = settingsState.env || {};
+            const modelsEl = document.getElementById("settings-models-list");
+            modelsEl.innerHTML = "";
+            const activeModels = (settingsState.settings.models || []).filter(isEnabledSettingsItem);
+            const providers = groupModelProviders(activeModels);
+            settingsState.settings.model_providers = providers;
+            providers.forEach((provider, providerIndex) => {
+                const status = env[provider.api_key_env] || {};
+                const card = document.createElement("div");
+                card.className = "settings-card settings-provider-card";
+                card.innerHTML = `
+                    <div class="settings-provider-head">
+                        <div>
+                            <div class="settings-provider-title">${_escHtml(provider.name || "AI Provider")}</div>
+                            <div class="settings-provider-subtitle">${_escHtml(provider.base_url || "未设置接口地址")} · ${provider.models.length} 个模型</div>
+                        </div>
+                        <button class="settings-model-add-btn" data-add-provider-model="${providerIndex}">添加模型</button>
+                    </div>
+                    <div class="settings-grid">
+                        <label>通道名称<input data-channel-field="name" value="${_escHtml(provider.name || "")}"></label>
+                        ${settingsSelect("provider", provider.provider, [
+                            {value:"deepseek", label:"DeepSeek"},
+                            {value:"laozhang", label:"LaoZhang"},
+                            {value:"openai_compatible", label:"OpenAI-compatible"},
+                            {value:"gemini", label:"Gemini / Image"},
+                            {value:"custom", label:"Custom"}
+                        ]).replaceAll("data-field", "data-channel-field")}
+                        <label>接口地址<input data-channel-field="base_url" value="${_escHtml(provider.base_url || "")}" placeholder="https://api.example.com/v1"></label>
+                        <input data-channel-field="api_key_env" type="hidden" value="${_escHtml(provider.api_key_env || "")}">
+                        <label>密钥新值<input data-secret-env="${_escHtml(provider.api_key_env || "")}" type="password" placeholder="留空保留原值"></label>
+                    </div>
+                    <div class="settings-secret-status">密钥状态：${status.configured ? "已配置 " + (status.masked || "") : "未配置"}。同一通道下所有模型共用这个密钥。</div>
+                    <div>${provider.models.map((model, modelIndex) => renderProviderModelRow(model, providerIndex, modelIndex)).join("")}</div>
+                    <div style="margin-top:8px;text-align:right;"><button class="settings-remove-btn" data-remove-provider="${providerIndex}">删除通道</button></div>
+                `;
+                modelsEl.appendChild(card);
+            });
+
+            const bindingsEl = document.getElementById("settings-bindings-list");
+            const features = settingsState.features || {};
+            const bindings = settingsState.settings.feature_models || {};
+            const opts = modelOptions();
+            bindingsEl.innerHTML = "";
+            const langRow = document.createElement("div");
+            langRow.className = "settings-binding-row";
+            langRow.innerHTML = `<div>采集产品数据清洗语言<div style="font-size:11px;color:#999;">product_clean_language</div></div><label>语言<input data-product-clean-language value="${_escHtml(settingsState.settings.product_clean_language || "English")}"></label>`;
+            bindingsEl.appendChild(langRow);
+            const promptRow = document.createElement("div");
+            promptRow.className = "settings-card";
+            promptRow.innerHTML = `
+                <div class="settings-provider-head">
+                    <div>
+                        <div class="settings-provider-title">产品数据清洗提示词</div>
+                        <div class="settings-provider-subtitle">product_clean_prompt</div>
+                    </div>
+                    <button class="settings-inline-btn" id="settings-reset-clean-prompt" type="button">恢复默认提示词</button>
+                </div>
+                <textarea class="settings-prompt-text" data-product-clean-prompt>${_escHtml(settingsState.settings.product_clean_prompt || settingsState.product_clean_default_prompt || "")}</textarea>
+            `;
+            bindingsEl.appendChild(promptRow);
+            Object.keys(features).forEach(key => {
+                const row = document.createElement("div");
+                row.className = "settings-binding-row";
+                let select = `<select data-feature="${key}">`;
+                opts.forEach(opt => {
+                    select += `<option value="${_escHtml(opt.value)}"${bindings[key] === opt.value ? " selected" : ""}>${_escHtml(opt.label)}</option>`;
+                });
+                select += "</select>";
+                row.innerHTML = `<div>${_escHtml(features[key])}<div style="font-size:11px;color:#999;">${_escHtml(key)}</div></div><label>模型${select}</label>`;
+                bindingsEl.appendChild(row);
+            });
+
+            const storesEl = document.getElementById("settings-stores-list");
+            storesEl.innerHTML = "";
+            const activeStores = (settingsState.stores || [])
+                .map((store, originalIndex) => Object.assign({ _settingsOriginalIndex: originalIndex }, store))
+                .filter(isEnabledSettingsItem);
+            activeStores.forEach((s, index) => {
+                const clientEnv = (s.client_id || "").match(/^\$\{(.+)\}$/);
+                const apiEnv = (s.api_key || "").match(/^\$\{(.+)\}$/);
+                const tokenEnv = (s.token || "").match(/^\$\{(.+)\}$/);
+                const card = document.createElement("div");
+                card.className = "settings-card";
+                card.innerHTML = `
+                    <div class="settings-grid">
+                        ${settingsInput("platform", s.platform)}
+                        ${settingsInput("id", s.id)}
+                        ${settingsInput("name", s.name)}
+                        ${settingsInput("label", s.label)}
+                        ${settingsInput("client_id_env", clientEnv ? clientEnv[1] : "")}
+                        ${settingsInput("api_key_env", apiEnv ? apiEnv[1] : "")}
+                        ${settingsInput("token_env", tokenEnv ? tokenEnv[1] : "")}
+                        ${settingsSelect("status", s.status || "active", [{value:"active", label:"active"}, {value:"disabled", label:"disabled"}])}
+                        <label>Client ID 新值<input data-secret-env="${_escHtml(clientEnv ? clientEnv[1] : "")}" type="password" placeholder="留空保留原值"></label>
+                        <label>API Key 新值<input data-secret-env="${_escHtml(apiEnv ? apiEnv[1] : "")}" type="password" placeholder="留空保留原值"></label>
+                        <label>Token 新值<input data-secret-env="${_escHtml(tokenEnv ? tokenEnv[1] : "")}" type="password" placeholder="留空保留原值"></label>
+                    </div>
+                    <div style="margin-top:8px;text-align:right;"><button class="settings-remove-btn" data-remove-store="${s._settingsOriginalIndex}">删除店铺</button></div>
+                `;
+                storesEl.appendChild(card);
+            });
+
+            const pricingEl = document.getElementById("settings-pricing-list");
+            if (pricingEl) {
+                pricingEl.innerHTML = "";
+                const activePricingFormulas = (settingsState.settings.pricing_formulas || [])
+                    .map((formula, originalIndex) => Object.assign({ _settingsOriginalIndex: originalIndex }, formula))
+                    .filter(isEnabledSettingsItem);
+                activePricingFormulas.forEach((p, index) => {
+                    const defaults = p.defaults || {};
+                    const card = document.createElement("div");
+                    card.className = "settings-card";
+                    card.innerHTML = `
+                        <div class="settings-formula-grid">
+                            ${settingsInput("id", p.id)}
+                            ${settingsInput("platform", p.platform)}
+                            ${settingsInput("name", p.name)}
+                            ${settingsSelect("enabled", p.enabled === false ? "false" : "true", [{value:"true", label:"启用"}, {value:"false", label:"停用"}])}
+                            ${settingsSelect("rounding", p.rounding || "ceil", [{value:"ceil", label:"ceil"}, {value:"round", label:"round"}, {value:"none", label:"none"}])}
+                        </div>
+                        <div style="margin-top:8px;">
+                            <label style="display:block;font-size:11px;color:#777;margin-bottom:4px;">售价公式</label>
+                            <textarea class="settings-formula-text" data-formula="formula">${_escHtml(p.formula || "")}</textarea>
+                        </div>
+                        <div style="margin-top:8px;">
+                            <label style="display:block;font-size:11px;color:#777;margin-bottom:4px;">原价公式</label>
+                            <textarea class="settings-formula-text" data-formula="old_price_formula">${_escHtml(p.old_price_formula || "")}</textarea>
+                        </div>
+                        <div class="settings-vars-grid">
+                            ${settingsNumberVar("profit_rate", defaults.profit_rate, "0.01")}
+                            ${settingsNumberVar("ozon_commission_rate", defaults.ozon_commission_rate, "0.001")}
+                            ${settingsNumberVar("platform_commission_rate", defaults.platform_commission_rate, "0.001")}
+                            ${settingsNumberVar("acquiring_rate", defaults.acquiring_rate, "0.001")}
+                            ${settingsNumberVar("promotion_rate", defaults.promotion_rate, "0.001")}
+                            ${settingsNumberVar("other_percent_fee_rate", defaults.other_percent_fee_rate, "0.001")}
+                            ${settingsNumberVar("seller_logistics_cny", defaults.seller_logistics_cny, "0.01")}
+                            ${settingsNumberVar("ozon_fixed_fee_cny", defaults.ozon_fixed_fee_cny, "0.01")}
+                            ${settingsNumberVar("platform_fixed_fee_cny", defaults.platform_fixed_fee_cny, "0.01")}
+                            ${settingsNumberVar("return_reserve_cny", defaults.return_reserve_cny, "0.01")}
+                            ${settingsNumberVar("other_fixed_cost_cny", defaults.other_fixed_cost_cny, "0.01")}
+                            ${settingsNumberVar("original_price_multiplier", defaults.original_price_multiplier, "0.01")}
+                            ${settingsNumberVar("stock", defaults.stock, "1")}
+                            ${settingsTextVar("logistics_channel", defaults.logistics_channel)}
+                            ${settingsTextVar("chargeable_weight_mode", defaults.chargeable_weight_mode)}
+                        </div>
+                        <div class="settings-formula-note">Ozon 佣金按品类变化；新品创建前用默认值，已有商品可用 Ozon prices API 返回的 commissions/acquiring 覆盖。</div>
+                        <div style="margin-top:8px;text-align:right;"><button class="settings-remove-btn" data-remove-pricing="${p._settingsOriginalIndex}">删除公式</button></div>
+                    `;
+                    pricingEl.appendChild(card);
+                });
+            }
+        }
+
+        async function loadSettings(force) {
+            if (settingsLoaded && !force) return;
+            const res = await fetch("/api/settings");
+            if (!res.ok) { showMsg("设置加载失败", true); return; }
+            settingsState = await res.json();
+            if (!settingsState.settings) {
+                settingsState.settings = {
+                    models: settingsState.models || [],
+                    feature_models: settingsState.feature_models || {},
+                    pricing_formulas: settingsState.pricing_formulas || [],
+                    product_clean_language: settingsState.product_clean_language || "English",
+                    product_clean_prompt: settingsState.product_clean_prompt || ""
+                };
+                settingsState.features = settingsState.feature_model_keys || {};
+            }
+            settingsLoaded = true;
+            renderSettings();
+        }
+
+        function collectSettingsPayload() {
+            const envUpdates = {};
+            const models = [];
+            document.querySelectorAll("#settings-models-list .settings-provider-card").forEach(card => {
+                const channel = {};
+                card.querySelectorAll("[data-channel-field]").forEach(el => {
+                    channel[el.dataset.channelField] = el.value.trim();
+                });
+                if (!channel.api_key_env) channel.api_key_env = normalizeApiKeyEnv(channel.name || channel.provider || channel.base_url);
+                const secretEl = card.querySelector("[data-secret-env]");
+                if (channel.api_key_env && secretEl && secretEl.value) envUpdates[channel.api_key_env] = secretEl.value;
+                card.querySelectorAll("[data-provider-model]").forEach(row => {
+                    const item = {};
+                    row.querySelectorAll("[data-model-field]").forEach(el => {
+                        item[el.dataset.modelField] = el.dataset.modelField === "enabled" ? el.value === "true" : el.value.trim();
+                    });
+                    item.provider = item.provider || channel.provider || "openai_compatible";
+                    item.base_url = channel.base_url || "";
+                    item.api_key_env = channel.api_key_env || "";
+                    if (!item.name) item.name = item.model || item.id || "Unnamed Model";
+                    if (!item.id) item.id = (item.name || item.model || "model").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+                    models.push(item);
+                });
+            });
+            const featureModels = {};
+            document.querySelectorAll("[data-feature]").forEach(sel => { featureModels[sel.dataset.feature] = sel.value; });
+            const cleanLanguageEl = document.querySelector("[data-product-clean-language]");
+            const productCleanLanguage = cleanLanguageEl ? cleanLanguageEl.value.trim() : "English";
+            const cleanPromptEl = document.querySelector("[data-product-clean-prompt]");
+            const productCleanPrompt = cleanPromptEl ? cleanPromptEl.value.trim() : "";
+            const stores = [];
+            document.querySelectorAll("#settings-stores-list .settings-card").forEach(card => {
+                const item = {};
+                card.querySelectorAll("[data-field]").forEach(el => { item[el.dataset.field] = el.value.trim(); });
+                card.querySelectorAll("[data-secret-env]").forEach(el => {
+                    const key = el.dataset.secretEnv;
+                    if (key && el.value) envUpdates[key] = el.value;
+                });
+                stores.push(item);
+            });
+            const pricingFormulas = [];
+            document.querySelectorAll("#settings-pricing-list .settings-card").forEach(card => {
+                const item = { defaults: {} };
+                card.querySelectorAll("[data-field]").forEach(el => {
+                    item[el.dataset.field] = el.dataset.field === "enabled" ? el.value === "true" : el.value.trim();
+                });
+                card.querySelectorAll("[data-formula]").forEach(el => { item[el.dataset.formula] = el.value.trim(); });
+                card.querySelectorAll("[data-var]").forEach(el => {
+                    const raw = el.value.trim();
+                    item.defaults[el.dataset.var] = raw === "" ? "" : (isNaN(Number(raw)) ? raw : Number(raw));
+                });
+                item.currency = "CNY";
+                pricingFormulas.push(item);
+            });
+            return {
+                settings: {
+                    models: preserveDisabledSettingsItems(models, settingsState.settings.models || []),
+                    feature_models: featureModels,
+                    pricing_formulas: preserveDisabledSettingsItems(pricingFormulas, settingsState.settings.pricing_formulas || []),
+                    product_clean_language: productCleanLanguage || "English",
+                    product_clean_prompt: productCleanPrompt
+                },
+                stores: preserveDisabledSettingsItems(stores, settingsState.stores || []),
+                env: envUpdates
+            };
+        }
+
+        document.querySelectorAll(".settings-tab").forEach(btn => {
+            btn.addEventListener("click", function() {
+                document.querySelectorAll(".settings-tab").forEach(x => x.classList.remove("active"));
+                document.querySelectorAll(".settings-tab-panel").forEach(x => x.classList.remove("active"));
+                btn.classList.add("active");
+                document.getElementById("settings-tab-" + btn.dataset.settingsTab).classList.add("active");
+            });
+        });
+
+        document.getElementById("settings-add-model").addEventListener("click", function() {
+            if (!settingsState) return;
+            settingsState.settings.models = collectSettingsPayload().settings.models;
+            settingsState.settings.models.push({ id: "model_" + Date.now(), name: "New Model", provider: "openai_compatible", base_url: "", api_key_env: "API_KEY", model: "", enabled: true });
+            renderSettings();
+        });
+
+        document.getElementById("settings-add-store").addEventListener("click", function() {
+            if (!settingsState) return;
+            settingsState.stores.push({ platform: "ozon", id: "store_" + Date.now(), name: "new_store", label: "New Store", client_id: "", api_key: "", status: "active" });
+            renderSettings();
+        });
+
+        document.getElementById("settings-add-pricing").addEventListener("click", function() {
+            if (!settingsState) return;
+            settingsState.settings.pricing_formulas = settingsState.settings.pricing_formulas || [];
+            settingsState.settings.pricing_formulas.push({
+                id: "pricing_" + Date.now(),
+                platform: "ozon",
+                name: "New pricing formula",
+                enabled: true,
+                currency: "CNY",
+                rounding: "ceil",
+                formula: "(cost_price_cny + seller_logistics_cny + other_fixed_cost_cny) / (1 - profit_rate - ozon_commission_rate - acquiring_rate - promotion_rate - other_percent_fee_rate)",
+                old_price_formula: "sale_price_cny * original_price_multiplier",
+                defaults: { profit_rate: 0.3, ozon_commission_rate: 0.18, acquiring_rate: 0.015, seller_logistics_cny: 0, original_price_multiplier: 1.8, stock: 10000 }
+            });
+            renderSettings();
+        });
+
+        document.getElementById("settings-reload-btn").addEventListener("click", () => loadSettings(true));
+        document.getElementById("settings-save-btn").addEventListener("click", async function() {
+            const res = await fetch("/api/settings", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(collectSettingsPayload()) });
+            if (!res.ok) { showMsg("设置保存失败", true); return; }
+            const data = await res.json();
+            showMsg(data.restart_required ? "设置已保存，部分配置重启后完全生效" : "设置已保存，密钥已即时生效");
+            settingsLoaded = false;
+            await loadSettings(true);
+        });
+
+        document.addEventListener("click", function(e) {
+            const resetCleanPrompt = e.target.closest("#settings-reset-clean-prompt");
+            if (resetCleanPrompt && settingsState) {
+                const promptEl = document.querySelector("[data-product-clean-prompt]");
+                if (promptEl) promptEl.value = settingsState.product_clean_default_prompt || "";
+            }
+            const addProviderModel = e.target.closest("[data-add-provider-model]");
+            if (addProviderModel && settingsState) {
+                settingsState.settings.models = collectSettingsPayload().settings.models;
+                const providers = groupModelProviders(settingsState.settings.models);
+                const provider = providers[Number(addProviderModel.dataset.addProviderModel)];
+                if (provider) {
+                    provider.models.push({ id: "model_" + Date.now(), name: "New Model", provider: provider.provider || "openai_compatible", model: "", enabled: true });
+                    settingsState.settings.models = flattenModelProviders(providers);
+                    renderSettings();
+                }
+            }
+            const rmProviderModel = e.target.closest("[data-remove-provider-model]");
+            if (rmProviderModel && settingsState) {
+                settingsState.settings.models = collectSettingsPayload().settings.models;
+                const providers = groupModelProviders(settingsState.settings.models);
+                const [providerIndex, modelIndex] = rmProviderModel.dataset.removeProviderModel.split(":").map(Number);
+                if (providers[providerIndex]) {
+                    providers[providerIndex].models.splice(modelIndex, 1);
+                    settingsState.settings.models = flattenModelProviders(providers);
+                    renderSettings();
+                }
+            }
+            const rmProvider = e.target.closest("[data-remove-provider]");
+            if (rmProvider && settingsState) {
+                settingsState.settings.models = collectSettingsPayload().settings.models;
+                const providers = groupModelProviders(settingsState.settings.models);
+                providers.splice(Number(rmProvider.dataset.removeProvider), 1);
+                settingsState.settings.models = flattenModelProviders(providers);
+                renderSettings();
+            }
+            const rmStore = e.target.closest("[data-remove-store]");
+            if (rmStore && settingsState) {
+                settingsState.stores.splice(Number(rmStore.dataset.removeStore), 1);
+                renderSettings();
+            }
+            const rmPricing = e.target.closest("[data-remove-pricing]");
+            if (rmPricing && settingsState) {
+                settingsState.settings.pricing_formulas.splice(Number(rmPricing.dataset.removePricing), 1);
+                renderSettings();
+            }
+        });
+
+        document.getElementById("settings-copy-export").addEventListener("click", async function() {
+            const includeSecrets = document.getElementById("settings-export-secrets").checked;
+            if (includeSecrets && !confirm("导出会包含密钥明文，只适合在自己的电脑间迁移。确定继续？")) return;
+            const res = await fetch("/api/settings/export?include_secrets=" + (includeSecrets ? "1" : "0"));
+            const data = await res.json();
+            const text = JSON.stringify(data, null, 2);
+            await navigator.clipboard.writeText(text);
+            document.getElementById("settings-export-preview").textContent = text;
+            showMsg("配置 JSON 已复制到剪贴板");
+        });
+
+        async function previewSettingsImport(apply) {
+            let payload;
+            try {
+                payload = JSON.parse(document.getElementById("settings-import-text").value || "{}");
+            } catch (e) {
+                showMsg("导入 JSON 格式错误: " + e.message, true);
+                return;
+            }
+            const res = await fetch("/api/settings/import", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ payload: payload, preview: !apply }) });
+            const data = await res.json();
+            if (!res.ok) { showMsg(data.error || "导入失败", true); return; }
+            document.getElementById("settings-import-diff").textContent = JSON.stringify(data.diff || data, null, 2);
+            if (apply) {
+                showMsg(data.restart_required ? "配置已导入，部分配置重启后完全生效" : "配置已导入，密钥已即时生效");
+                settingsLoaded = false;
+                await loadSettings(true);
+            }
+        }
+
+        document.getElementById("settings-preview-import").addEventListener("click", () => previewSettingsImport(false));
+        document.getElementById("settings-apply-import").addEventListener("click", () => previewSettingsImport(true));
+
         async function restoreCollectTasks() {
             try {
                 const res = await fetch("/api/collect/tasks");
@@ -3578,6 +3380,7 @@
         const dataModalTitle = document.getElementById("data-modal-title");
         const dataModalContent = document.getElementById("data-modal-content");
         const dataModalTabs = document.querySelectorAll(".data-modal-tab");
+        const dataModalTabsWrap = document.querySelector(".data-modal-tabs");
         let currentModalTaskId = null;
         let currentModalTab = "product";
 
@@ -3609,22 +3412,99 @@
                     return;
                 }
                 const data = await res.json();
+                const pkg = data.product_data || {};
+                const inner = pkg.product_data || {};
                 if (tab === "product") {
                     dataModalTitle.textContent = "产品数据";
-                    dataModalContent.textContent = JSON.stringify(data.product_data || {}, null, 2);
+                    renderCollectProductData(taskId, pkg);
+                } else if (tab === "raw") {
+                    dataModalTitle.textContent = "未清洗产品数据";
+                    dataModalContent.textContent = JSON.stringify(inner.raw_product_data || {}, null, 2);
                 } else {
-                    dataModalTitle.textContent = "图片映射表";
-                    dataModalContent.textContent = JSON.stringify(data.images_mapping || [], null, 2);
+                    dataModalTitle.textContent = "图片映射";
+                    dataModalContent.textContent = JSON.stringify(inner.images_mapping || data.images_mapping || {}, null, 2);
                 }
             } catch (e) {
                 dataModalContent.textContent = "加载出错: " + e.message;
             }
         }
 
+        function cleanStatusText(status) {
+            const map = {
+                not_cleaned: "未清洗",
+                unavailable: "LLM不可用",
+                cleaning: "清洗中",
+                cleaned: "已清洗",
+                failed: "清洗失败",
+                cancelled: "已中断"
+            };
+            return map[status] || status || "未清洗";
+        }
+
+        function renderCollectProductData(taskId, productPackage) {
+            const status = productPackage.clean_status || {};
+            const inner = productPackage.product_data || {};
+            const cleanedData = inner.cleaned_product_data || {};
+            const cleaned = !!inner.cleaned_product_data;
+            const canStart = status.status !== "cleaning";
+            const canCancel = status.status === "cleaning";
+            const estimateText = status.status === "cleaning" && status.estimated_text ? ` · ${status.estimated_text}` : "";
+            const durationText = status.duration_text ? ` · 用时 ${status.duration_text}` : "";
+            dataModalContent.innerHTML = `
+                <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;white-space:normal;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;">
+                        <div><strong>清洗状态：</strong>${_escHtml(cleanStatusText(status.status))}<span style="color:#777;margin-left:8px;">${_escHtml((status.message || "") + estimateText + durationText)}</span></div>
+                        <div style="display:flex;gap:8px;">
+                            <button class="btn" onclick="cleanCollectProductData('${taskId}', ${cleaned ? "true" : "false"})" ${canStart ? "" : "disabled"}>${cleaned ? "重新清洗" : "开始清洗"}</button>
+                            <button class="btn" onclick="cancelCollectProductClean('${taskId}')" ${canCancel ? "" : "disabled"}>中断清洗</button>
+                        </div>
+                    </div>
+                    <pre style="white-space:pre-wrap;margin:0;">${_escHtml(JSON.stringify(cleanedData, null, 2))}</pre>
+                </div>
+            `;
+            if (status.status === "cleaning" && dataModalOverlay.classList.contains("active")) {
+                setTimeout(function () {
+                    if (currentModalTaskId === taskId && currentModalTab === "product" && dataModalOverlay.classList.contains("active")) {
+                        loadModalData(taskId, "product");
+                    }
+                }, 2000);
+            }
+        }
+
+        async function cleanCollectProductData(taskId, force) {
+            const res = await fetch(`/api/collect/${taskId}/clean_product_data`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ force: !!force })
+            });
+            const data = await res.json();
+            if (!res.ok) showMsg(data.error || "清洗启动失败", true);
+            await loadModalData(taskId, "product");
+        }
+
+        async function cancelCollectProductClean(taskId) {
+            const res = await fetch(`/api/collect/${taskId}/clean_product_data/cancel`, { method: "POST" });
+            const data = await res.json();
+            if (!res.ok) showMsg(data.error || "中断失败", true);
+            await loadModalData(taskId, "product");
+        }
+
         function showDataModal(taskId) {
             currentModalTaskId = taskId;
+            if (dataModalTabsWrap) dataModalTabsWrap.style.display = "";
             dataModalOverlay.classList.add("active");
             loadModalData(taskId, currentModalTab);
+        }
+
+        function showProductDataModal(product) {
+            currentModalTaskId = null;
+            if (dataModalTabsWrap) dataModalTabsWrap.style.display = "none";
+            dataModalTitle.textContent = "产品数据 - " + (product.skc || "");
+            const pd = product.product_data || {};
+            dataModalContent.textContent = Object.keys(pd).length
+                ? JSON.stringify(pd, null, 2)
+                : "该产品暂无 product_data。";
+            dataModalOverlay.classList.add("active");
         }
 
         // 创建采集卡片
@@ -4143,16 +4023,6 @@
         // HTML转义辅助
         function _escHtml(s) { var d = document.createElement("div"); d.textContent = s || ""; return d.innerHTML; }
 
-        // ===== 辅助：从文本中提取信息 =====
-        function extractFromText(text, patterns) {
-            if (!text) return "";
-            for (const ptn of patterns) {
-                const m = text.match(ptn);
-                if (m) return m[0].trim();
-            }
-            return "";
-        }
-
         // 渲染产品-店铺矩阵表格
         function renderProducts(products, stores) {
             productCardsContainer.innerHTML = "";
@@ -4176,19 +4046,12 @@
 
             products.forEach(p => {
                 const pd = p.product_data || {};
-                const attrs = pd.attributes || {};
                 const manual = p.manual_data || {};
                 const storeStatus = p.store_status || {};
 
-                const searchText = (pd.about_item || "") + " " + (pd.product_description || "") + " " + (pd.description || "");
-                let collectedWeight = attrs.weight || attrs.重量 || "";
-                if (!collectedWeight) {
-                    collectedWeight = extractFromText(searchText, [/\d+\.?\d*\s*(?:g|克|kg|千克|公斤)/i, /重量[：:]\s*\d+\.?\d*\s*(?:g|克|kg|千克|公斤)/i]);
-                }
-                let collectedSize = attrs.size || attrs.尺寸 || attrs.dimensions || "";
-                if (!collectedSize) {
-                    collectedSize = extractFromText(searchText, [/\d+\.?\d*\s*[×xX*]\s*\d+\.?\d*\s*[×xX*]\s*\d+\.?\d*\s*(?:cm|厘米|mm|毫米)?/i, /\d+\.?\d*\s*[×xX*]\s*\d+\.?\d*\s*(?:cm|厘米|mm|毫米)?/i, /尺寸[：:]\s*[\d\.\s×xX*cm厘米mm毫米]+/i]);
-                }
+                const collectedWeight = manual.collected_weight_g ? manual.collected_weight_g + 'g' : "";
+                const collectedSize = manual.collected_size_spec || "";
+                const collectedEvidence = manual.collected_specs_evidence || {};
                 const createdDate = p.created_at ? new Date(p.created_at).toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) : "";
 
                 // 产品行
@@ -4202,20 +4065,13 @@
                 html += `<div class="prod-info-top"><span class="prod-skc">${p.skc}</span><span class="prod-cat">${p.category || '其他'}</span><span class="prod-toggle" data-action="toggle-detail">📋 ▾</span></div>`;
                 html += `<div class="prod-title">${p.title || '未命名产品'}</div>`;
                 html += `<div class="prod-meta"><span>📎 ${p.platform || '未知平台'}</span><span>💰 ${p.price || '—'}</span><span>🕐 ${createdDate}</span><span>📦 ${(p.skus || []).length} SKU</span></div>`;
-                html += `<div class="prod-actions"><button class="btn-row-sm btn-row-img" data-action="img-mgmt" data-skc="${p.skc}">🖼️ 图片</button></div>`;
+                html += `<div class="prod-actions"><button class="btn-row-sm btn-row-data" data-action="product-data" data-skc="${p.skc}">📋 数据</button><button class="btn-row-sm btn-row-img" data-action="img-mgmt" data-skc="${p.skc}">🖼️ 图片</button></div>`;
                 html += '</div></div></td>';
                 // 店铺状态单元格
                 stores.forEach(s => {
                     const status = storeStatus[s.id] || "未上架";
-                    let btnLabel, btnClass;
-                    if (status === "待发布") { btnLabel = "继续上架"; btnClass = "pending"; }
-                    else if (status === "审核中") { btnLabel = "查看"; btnClass = "reviewing"; }
-                    else if (status === "审核拒绝") { btnLabel = "修复"; btnClass = "rejected"; }
-                    else if (status === "已上架") { btnLabel = "编辑"; btnClass = "published"; }
-                    else { btnLabel = "上架"; btnClass = ""; }
                     html += `<td class="store-cell" data-skc="${p.skc}" data-store-id="${s.id}" data-status="${status}">`;
-                    html += `<span class="store-status-badge s-${status}">${status}</span><br>`;
-                    html += `<button class="store-listing-btn ${btnClass}" data-action="listing">${btnLabel}</button>`;
+                    html += `<span class="store-status-badge s-${status}">${status}</span>`;
                     html += '</td>';
                 });
                 html += '<td></td>';
@@ -4228,27 +4084,34 @@
                 // 左侧 300px：产品登记信息
                 html += '<div class="detail-left">';
                 // 只读基础信息
-                const wv = manual.weight_g ? manual.weight_g + 'g' : (collectedWeight || '');
-                const sv = manual.size_spec || collectedSize || '';
+                const measuredWeight = manual.weight_g ? manual.weight_g + 'g' : '';
+                const measuredSize = manual.size_spec || '';
                 const spv = manual.spec || '';
                 const cpv = manual.cost_price ? '¥' + manual.cost_price : '';
-                html += `<div class="product-info-row ro-info" data-ro-field="weight_g"><span class="row-label">重量</span><span class="row-value${wv ? '' : ' empty'}">${wv || '—'}</span></div>`;
-                html += `<div class="product-info-row ro-info" data-ro-field="size_spec"><span class="row-label">尺寸</span><span class="row-value${sv ? '' : ' empty'}">${sv || '—'}</span></div>`;
-                html += `<div class="product-info-row ro-info" data-ro-field="spec"><span class="row-label">规格</span><span class="row-value${spv ? '' : ' empty'}">${spv || '—'}</span></div>`;
-                html += `<div class="product-info-row ro-info" data-ro-field="cost_price"><span class="row-label">成本价</span><span class="row-value${cpv ? '' : ' empty'}">${cpv || '—'}</span></div>`;
+                html += '<div class="product-info-pair-row">';
+                html += `<div class="product-info-row ro-info" data-ro-field="weight_g"><span class="row-label">实测重量</span><span class="row-value${measuredWeight ? '' : ' empty'}">${_escHtml(measuredWeight || '—')}</span></div>`;
+                html += `<div class="product-info-row collected collected-weight-row${measuredWeight ? ' overridden' : ''}" data-collected-field="weight_g"><span class="row-label">采集重量</span><span class="row-value${collectedWeight ? '' : ' empty'}">${_escHtml(collectedWeight || '—')}</span></div>`;
+                html += '</div>';
+                html += '<div class="product-info-pair-row">';
+                html += `<div class="product-info-row ro-info" data-ro-field="size_spec"><span class="row-label">实测尺寸</span><span class="row-value${measuredSize ? '' : ' empty'}">${_escHtml(measuredSize || '—')}</span></div>`;
+                html += `<div class="product-info-row collected collected-size-row${measuredSize ? ' overridden' : ''}" data-collected-field="size_spec"><span class="row-label">采集尺寸</span><span class="row-value${collectedSize ? '' : ' empty'}">${_escHtml(collectedSize || '—')}</span></div>`;
+                html += '</div>';
+                html += `<div class="product-info-row ro-info" data-ro-field="spec"><span class="row-label">规格</span><span class="row-value${spv ? '' : ' empty'}">${_escHtml(spv || '—')}</span></div>`;
+                html += `<div class="product-info-row ro-info" data-ro-field="cost_price"><span class="row-label">成本价</span><span class="row-value${cpv ? '' : ' empty'}">${_escHtml(cpv || '—')}</span></div>`;
+                html += `<div class="product-info-row"><button class="collect-specs-btn" data-skc="${p.skc}">AI提取采集重量尺</button></div>`;
                 // 编辑按钮
                 html += `<div class="edit-toggle" data-action="toggle-edit" data-skc="${p.skc}">✏️ 编辑 ▾</div>`;
                 // 编辑区（默认隐藏）
                 html += `<div class="edit-section" id="edit-${p.skc}" style="display:none">`;
-                html += `<div class="collected-pip-trigger" data-skc="${p.skc}" data-weight="${collectedWeight}" data-size="${collectedSize}"><span class="pip-icon">📖</span><span class="pip-label">采集原始数据</span><span class="pip-hint">悬停查看</span></div>`;
+                html += `<div class="collected-pip-trigger" data-skc="${p.skc}" data-weight="${encodeURIComponent(collectedWeight)}" data-size="${encodeURIComponent(collectedSize)}" data-weight-evidence="${encodeURIComponent(collectedEvidence.weight || '')}" data-size-evidence="${encodeURIComponent(collectedEvidence.size || '')}"><span class="pip-icon">📖</span><span class="pip-label">采集原始数据</span><span class="pip-hint">悬停查看</span></div>`;
                 html += '<div class="paste-extract-area">';
                 html += '<textarea class="paste-textarea" placeholder="粘贴产品描述文本，点击下方按钮用 AI 自动识别并转换为国际单位..."></textarea>';
                 html += `<button class="paste-extract-btn" data-skc="${p.skc}">🤖 AI 识别并填充</button>`;
                 html += '</div>';
-                html += `<div class="product-info-row manual"><span class="row-label">重量(g)</span><input type="text" class="manual-input" data-field="weight_g" value="${manual.weight_g || ''}" placeholder="克"></div>`;
-                html += `<div class="product-info-row manual"><span class="row-label">尺寸规格</span><input type="text" class="manual-input" data-field="size_spec" value="${manual.size_spec || ''}" placeholder="如 20×10×3cm"></div>`;
-                html += `<div class="product-info-row manual"><span class="row-label">规格</span><input type="text" class="manual-input" data-field="spec" value="${manual.spec || ''}" placeholder="如 大号/黑色"></div>`;
-                html += `<div class="product-info-row manual"><span class="row-label">成本价</span><input type="text" class="manual-input" data-field="cost_price" value="${manual.cost_price || ''}" placeholder="元"></div>`;
+                html += `<div class="product-info-row manual"><span class="row-label">重量(g)</span><input type="text" class="manual-input" data-field="weight_g" value="${_escHtml(manual.weight_g || '')}" placeholder="克"></div>`;
+                html += `<div class="product-info-row manual"><span class="row-label">尺寸规格</span><input type="text" class="manual-input" data-field="size_spec" value="${_escHtml(manual.size_spec || '')}" placeholder="如 20×10×3cm"></div>`;
+                html += `<div class="product-info-row manual"><span class="row-label">规格</span><input type="text" class="manual-input" data-field="spec" value="${_escHtml(manual.spec || '')}" placeholder="如 大号/黑色"></div>`;
+                html += `<div class="product-info-row manual"><span class="row-label">成本价</span><input type="text" class="manual-input" data-field="cost_price" value="${_escHtml(manual.cost_price || '')}" placeholder="元"></div>`;
                 html += `<div class="product-info-row manual ro-save-row"><button class="save-manual-btn" data-skc="${p.skc}">💾 保存人工数据</button></div>`;
                 html += '</div>'; // end edit-section
                 html += '</div>'; // end detail-left
@@ -4268,6 +4131,17 @@
 
         // 绑定产品表格的所有事件
         function bindProductTableEvents(products, stores) {
+            const productBySkc = {};
+            (products || []).forEach(p => { productBySkc[p.skc] = p; });
+
+            document.querySelectorAll('[data-action="product-data"]').forEach(btn => {
+                btn.addEventListener("click", function(e) {
+                    e.stopPropagation();
+                    const skc = this.dataset.skc;
+                    showProductDataModal(productBySkc[skc] || { skc: skc, product_data: {} });
+                });
+            });
+
             // --- 行点击：展开/收起详情 ---
             document.querySelectorAll(".product-row").forEach(row => {
                 row.addEventListener("click", function(e) {
@@ -4348,13 +4222,14 @@
             let pipHideTimer = null;
 
             document.querySelectorAll(".collected-pip-trigger").forEach(trigger => {
-                const weight = trigger.dataset.weight || "";
-                const size = trigger.dataset.size || "";
-
                 trigger.addEventListener("mouseenter", function() {
+                    const weight = decodeURIComponent(trigger.dataset.weight || "");
+                    const size = decodeURIComponent(trigger.dataset.size || "");
+                    const weightEvidence = decodeURIComponent(trigger.dataset.weightEvidence || "");
+                    const sizeEvidence = decodeURIComponent(trigger.dataset.sizeEvidence || "");
                     if (pipHideTimer) { clearTimeout(pipHideTimer); pipHideTimer = null; }
                     const rect = trigger.getBoundingClientRect();
-                    pipFloat.innerHTML = `<div class="pip-float-title">📖 采集原始数据</div><div class="pip-float-row"><span class="pip-float-label">📦 重量</span><span class="pip-float-value">${weight || '—'}</span></div><div class="pip-float-row"><span class="pip-float-label">📐 尺寸</span><span class="pip-float-value">${size || '—'}</span></div>`;
+                    pipFloat.innerHTML = `<div class="pip-float-title">📖 采集原始数据</div><div class="pip-float-row"><span class="pip-float-label">📦 重量</span><span class="pip-float-value">${_escHtml(weight || '—')}</span></div><div class="pip-float-row"><span class="pip-float-label">📐 尺寸</span><span class="pip-float-value">${_escHtml(size || '—')}</span></div><div class="pip-float-row"><span class="pip-float-label">依据</span><span class="pip-float-value">${_escHtml(weightEvidence || sizeEvidence || '—')}</span></div>`;
                     pipFloat.classList.add("show");
                     const pw = pipFloat.offsetWidth || 240, ph = pipFloat.offsetHeight || 100;
                     let left = rect.left + (rect.width - pw) / 2, top = rect.bottom + 6;
@@ -4372,6 +4247,49 @@
             });
             pipFloat.addEventListener("mouseenter", () => { if (pipHideTimer) { clearTimeout(pipHideTimer); pipHideTimer = null; } });
             pipFloat.addEventListener("mouseleave", () => { pipHideTimer = setTimeout(() => pipFloat.classList.remove("show"), 300); });
+
+            // --- AI 提取采集重量尺 ---
+            document.querySelectorAll(".collect-specs-btn").forEach(btn => {
+                btn.addEventListener("click", async function(e) {
+                    e.stopPropagation();
+                    const skc = this.dataset.skc;
+                    this.disabled = true;
+                    this.textContent = "AI提取中...";
+                    try {
+                        const res = await fetch(`/api/products/${skc}/collect_specs`, { method: "POST", headers: { "Content-Type": "application/json" } });
+                        if (!res.ok) { const err = await res.json(); throw new Error(err.error || "提取失败"); }
+                        const data = await res.json();
+                        const detailRow = document.querySelector(`.detail-row[data-skc-detail="${skc}"]`);
+                        if (detailRow && data.collected) {
+                            const weight = data.collected.weight_g ? data.collected.weight_g + "g" : "";
+                            const size = data.collected.size_spec || "";
+                            const weightRow = detailRow.querySelector(".collected-weight-row");
+                            const sizeRow = detailRow.querySelector(".collected-size-row");
+                            if (weightRow) {
+                                const value = weightRow.querySelector(".row-value");
+                                if (value) { value.textContent = weight || "—"; value.className = "row-value" + (weight ? "" : " empty"); }
+                            }
+                            if (sizeRow) {
+                                const value = sizeRow.querySelector(".row-value");
+                                if (value) { value.textContent = size || "—"; value.className = "row-value" + (size ? "" : " empty"); }
+                            }
+                            const pipTrigger = detailRow.querySelector(".collected-pip-trigger");
+                            if (pipTrigger) {
+                                pipTrigger.dataset.weight = encodeURIComponent(weight);
+                                pipTrigger.dataset.size = encodeURIComponent(size);
+                                pipTrigger.dataset.weightEvidence = encodeURIComponent((data.collected.evidence || {}).weight || "");
+                                pipTrigger.dataset.sizeEvidence = encodeURIComponent((data.collected.evidence || {}).size || "");
+                            }
+                        }
+                        showMsg(`✅ ${skc} 采集重量尺已通过结构化提取和AI审核`);
+                    } catch (err) {
+                        showMsg("❌ 采集重量尺提取失败: " + err.message, true);
+                    } finally {
+                        this.disabled = false;
+                        this.textContent = "AI提取采集重量尺";
+                    }
+                });
+            });
 
             // --- AI 识别按钮 ---
             document.querySelectorAll(".paste-extract-btn").forEach(btn => {
@@ -4408,7 +4326,7 @@
                     try {
                         const res = await fetch(`/api/products/${skc}/manual`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
                         if (!res.ok) throw new Error("保存失败");
-                        this.classList.remove("saving"); this.classList.add("saved"); this.textContent = "✅ 已保存";
+                        this.classList.remove("saving"); this.classList.add("saved"); this.textContent = "✅ 已保存"; this.disabled = false;
                         // 更新只读显示
                         detailRow.querySelectorAll(".ro-info").forEach(row => {
                             const field = row.dataset.roField;
@@ -4420,6 +4338,10 @@
                                 valEl.className = "row-value" + (display ? "" : " empty");
                             }
                         });
+                        const collectedWeightRow = detailRow.querySelector(".collected-weight-row");
+                        const collectedSizeRow = detailRow.querySelector(".collected-size-row");
+                        if (collectedWeightRow) collectedWeightRow.classList.toggle("overridden", !!data.weight_g);
+                        if (collectedSizeRow) collectedSizeRow.classList.toggle("overridden", !!data.size_spec);
                         showMsg(`✅ ${skc} 人工数据已保存`);
                     } catch (e) {
                         this.classList.remove("saving"); this.textContent = "💾 保存人工数据"; this.disabled = false;
@@ -4430,35 +4352,6 @@
 
             // --- 店铺状态按钮 ---
             document.querySelectorAll(".store-cell").forEach(cell => {
-                // listing 按钮点击
-                const listingBtn = cell.querySelector(".store-listing-btn");
-                if (listingBtn) {
-                    listingBtn.addEventListener("click", async function(e) {
-                        e.stopPropagation();
-                        const skc = cell.dataset.skc;
-                        const storeId = cell.dataset.storeId;
-                        const badge = cell.querySelector(".store-status-badge");
-                        const currentStatus = cell.dataset.status;
-                        if (currentStatus === "未上架") {
-                            try {
-                                const res = await fetch(`/api/products/${skc}/store_status`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ store_id: storeId, status: "待发布" }) });
-                                if (!res.ok) throw new Error("更新失败");
-                                badge.textContent = "待发布"; badge.className = "store-status-badge s-待发布";
-                                this.textContent = "继续上架"; this.classList.add("pending");
-                                cell.dataset.status = "待发布";
-                            } catch (e) { showMsg("❌ 更新失败: " + e.message, true); return; }
-                        } else if (currentStatus === "审核拒绝") {
-                            try {
-                                const res = await fetch(`/api/products/${skc}/store_status`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ store_id: storeId, status: "待发布" }) });
-                                if (!res.ok) throw new Error("更新失败");
-                                badge.textContent = "待发布"; badge.className = "store-status-badge s-待发布";
-                                this.textContent = "继续上架"; this.classList.add("pending");
-                                cell.dataset.status = "待发布";
-                            } catch (e) { showMsg("❌ 更新失败: " + e.message, true); return; }
-                        }
-                        window.open(`/ozon-listing?skc=${skc}&store_id=${storeId}`, "_blank");
-                    });
-                }
                 // 点击单元格区域切换状态
                 cell.addEventListener("click", async function(e) {
                     if (e.target.closest("button")) return;
@@ -4467,7 +4360,6 @@
                     const badge = this.querySelector(".store-status-badge");
                     const currentStatus = badge ? badge.textContent : this.dataset.status;
                     if (currentStatus === "待发布" || currentStatus === "审核中" || currentStatus === "审核拒绝") {
-                        window.open(`/ozon-listing?skc=${skc}&store_id=${storeId}`, "_blank");
                         return;
                     }
                     const statuses = ["未上架", "已上架", "下架回归中"];
@@ -4560,12 +4452,86 @@
         let imageSets = {};
         let imageSubsets = {};
         let _uploadTargetSet = null;
+        let _uploadTargetSubset = null;
         let currentSetName = null;
         let currentSubsetName = null;
         let workspaceMode = "manage";
         let selectedImages = new Set();
+        let imgMgmtAutoSaveTimer = null;
+        let imgMgmtSaving = false;
+        let imgMgmtPendingSave = false;
 
         function _byId(id) { return document.getElementById(id); }
+
+        function markImageMgmtDirty() {
+            if (!currentImgSkc) return;
+            if (imgMgmtSaveStatus) imgMgmtSaveStatus.textContent = "自动保存中...";
+            clearTimeout(imgMgmtAutoSaveTimer);
+            imgMgmtAutoSaveTimer = setTimeout(function() {
+                saveImageMgmtChanges(false);
+            }, 500);
+        }
+
+        async function saveImageMgmtChanges(showToastOnSuccess) {
+            if (!currentImgSkc) return;
+            if (imgMgmtSaving) {
+                imgMgmtPendingSave = true;
+                return;
+            }
+            var saveSkc = currentImgSkc;
+            var saveImageSets = JSON.parse(JSON.stringify(imageSets || {}));
+            var saveImageSubsets = JSON.parse(JSON.stringify(imageSubsets || {}));
+            clearTimeout(imgMgmtAutoSaveTimer);
+            imgMgmtSaving = true;
+            imgMgmtSaveBtn.disabled = true;
+            imgMgmtSaveBtn.textContent = "保存中...";
+            if (imgMgmtSaveStatus) imgMgmtSaveStatus.textContent = "保存中...";
+            try {
+                const res = await fetch(`/api/products/${saveSkc}/image-sets`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ image_sets: saveImageSets, image_subsets: saveImageSubsets })
+                });
+                if (!res.ok) throw new Error("保存失败");
+                const rdata = await res.json();
+                if (imgMgmtSaveStatus) imgMgmtSaveStatus.textContent = "已自动保存";
+                if (showToastOnSuccess) {
+                    var msg = saveSkc + " 图片集已保存";
+                    if (rdata.deleted_files) msg += "，已清理 " + rdata.deleted_files + " 个文件";
+                    showMsg(msg);
+                }
+            } catch (e) {
+                showMsg("保存失败: " + e.message, true);
+                if (imgMgmtSaveStatus) imgMgmtSaveStatus.textContent = "保存失败";
+            } finally {
+                imgMgmtSaving = false;
+                imgMgmtSaveBtn.disabled = false;
+                imgMgmtSaveBtn.textContent = "立即保存";
+                if (imgMgmtPendingSave) {
+                    imgMgmtPendingSave = false;
+                    markImageMgmtDirty();
+                }
+            }
+        }
+
+        function normalizeDerivedImagesOutOfSets() {
+            Object.keys(imageSubsets || {}).forEach(function(setName) {
+                var derivedFiles = {};
+                var subMap = imageSubsets[setName] || {};
+                Object.keys(subMap).forEach(function(subName) {
+                    (subMap[subName] || []).forEach(function(entry) {
+                        if (entry && entry.filename) derivedFiles[entry.filename] = true;
+                    });
+                });
+                if (Object.keys(derivedFiles).length === 0 || !imageSets[setName]) return;
+                imageSets[setName] = (imageSets[setName] || []).filter(function(entry) {
+                    return !entry || !entry.filename || !derivedFiles[entry.filename];
+                }).map(function(entry, idx) {
+                    entry.index = idx;
+                    return entry;
+                });
+            });
+        }
 
         async function openImageMgmt(skc) {
             currentImgSkc = skc;
@@ -4584,6 +4550,7 @@
                 showMsg("加载图片集出错: " + e.message, true);
                 return;
             }
+            normalizeDerivedImagesOutOfSets();
             if (Object.keys(imageSets).length === 0) { imageSets["采集图片"] = []; }
             _updateSidebar();
             _renderTaskBar();
@@ -4594,10 +4561,15 @@
 
         function closeImageMgmt() {
             imgMgmtOverlay.classList.remove("active");
+            clearTimeout(imgMgmtAutoSaveTimer);
+            imgMgmtAutoSaveTimer = null;
+            if (imgMgmtSaving) imgMgmtPendingSave = true;
+            else saveImageMgmtChanges(false);
             currentImgSkc = null;
             imageSets = {};
             imageSubsets = {};
             _uploadTargetSet = null;
+            _uploadTargetSubset = null;
             currentSetName = null;
             currentSubsetName = null;
             workspaceMode = "manage";
@@ -4642,6 +4614,7 @@
                 h += `📁 ${name}<span class="mgmt-count">${entries.length}</span>`;
                 h += `<span class="mgmt-actions">`;
                 h += `<button class="act-rename" title="重命名" data-action="rename-set" data-set="${name}">✏️</button>`;
+                h += `<button class="act-derived" title="创建空白衍生集" data-action="create-subset" data-set="${name}">+衍生集</button>`;
                 if (name !== "采集图片") {
                     h += `<button class="act-delete" title="删除图片集" data-action="delete-set" data-set="${name}">🗑️</button>`;
                 }
@@ -4653,9 +4626,9 @@
                     total += subEntries.length;
                     const isSubActive = currentSetName === name && currentSubsetName === subName;
                     h += `<div class="img-mgmt-set-item${isSubActive ? " active" : ""}" data-set="${name}" data-subset="${subName}" data-type="subset" style="padding-left:28px;" draggable="true">`;
-                    h += `📄 ${subName}<span class="mgmt-count">${subEntries.length}</span>`;
+                    h += `🧬 ${subName}<span class="mgmt-count">${subEntries.length}</span>`;
                     h += `<span class="mgmt-actions">`;
-                    h += `<button class="act-delete" title="删除子集" data-action="delete-subset" data-set="${name}" data-subset="${subName}">🗑️</button>`;
+                    h += `<button class="act-delete" title="删除衍生集" data-action="delete-subset" data-set="${name}" data-subset="${subName}">🗑️</button>`;
                     h += `</span></div>`;
                 });
             });
@@ -4673,6 +4646,7 @@
                 var setName = actionBtn.dataset.set;
                 var subName = actionBtn.dataset.subset;
                 if (action === "rename-set") renameSet(setName);
+                else if (action === "create-subset") createEmptySubset(setName);
                 else if (action === "delete-set") deleteSet(setName);
                 else if (action === "delete-subset") deleteSubset(setName, subName);
                 return;
@@ -4758,10 +4732,31 @@
                 if (imageSubsets[name]) { imageSubsets[newName] = imageSubsets[name]; delete imageSubsets[name]; }
                 if (currentSetName === name) currentSetName = newName;
                 _updateSidebar();
-                imgMgmtSaveStatus.textContent = "(未保存)";
+                markImageMgmtDirty();
             } else if (newName && imageSets[newName]) {
                 showMsg("图片集名称已存在", true);
             }
+        }
+
+        function createEmptySubset(setName) {
+            if (!setName || !imageSets[setName]) return;
+            var subName = prompt("输入衍生集名称:", "");
+            if (!subName) return;
+            subName = subName.trim();
+            if (!subName) return;
+            if (!imageSubsets[setName]) imageSubsets[setName] = {};
+            if (imageSubsets[setName][subName]) {
+                showMsg("衍生集名称已存在", true);
+                return;
+            }
+            imageSubsets[setName][subName] = [];
+            currentSetName = setName;
+            currentSubsetName = subName;
+            selectedImages.clear();
+            _updateSidebar();
+            _refreshCurrentView();
+            markImageMgmtDirty();
+            showMsg("已创建空白衍生集「" + subName + "」");
         }
 
         function deleteSet(name) {
@@ -4772,19 +4767,19 @@
                 if (currentSetName === name) { currentSetName = null; currentSubsetName = null; selectedImages.clear(); }
                 _updateSidebar();
                 _refreshCurrentView();
-                imgMgmtSaveStatus.textContent = "(未保存)";
+                markImageMgmtDirty();
             }
         }
 
         function deleteSubset(setName, subName) {
-            if (confirm("确定删除子集「" + subName + "」？")) {
+            if (confirm("确定删除衍生集「" + subName + "」？")) {
                 if (imageSubsets[setName]) delete imageSubsets[setName][subName];
                 if (currentSetName === setName && currentSubsetName === subName) {
                     currentSubsetName = null; selectedImages.clear();
                 }
                 _updateSidebar();
                 _refreshCurrentView();
-                imgMgmtSaveStatus.textContent = "(未保存)";
+                markImageMgmtDirty();
             }
         }
 
@@ -4829,6 +4824,7 @@
         function _renderGrid() {
             var gridWrap = _byId("img-mgmt-grid-wrap");
             gridWrap.innerHTML = "";
+            bindImageMgmtGridDrop(gridWrap);
 
             if (!currentSetName) {
                 gridWrap.innerHTML = '<div class="img-mgmt-empty"><div>选择左侧图片集查看</div></div>';
@@ -4859,28 +4855,48 @@
             addBtn.title = "上传图片到「" + (currentSubsetName || currentSetName) + "」";
             addBtn.addEventListener("click", function() {
                 _uploadTargetSet = currentSetName;
+                _uploadTargetSubset = currentSubsetName;
                 imgMgmtUploadInput.click();
             });
             gridWrap.appendChild(addBtn);
 
-            // Grid cross-set drop zone
-            gridWrap.addEventListener("dragover", function(e) {
-                if (e.dataTransfer.types.contains("text/plain")) e.preventDefault();
-                this.classList.add("drag-over");
-            });
-            gridWrap.addEventListener("dragleave", function(e) {
-                if (e.target === this) this.classList.remove("drag-over");
-            });
-            gridWrap.addEventListener("drop", function(e) {
+            _updateSelectionInfo();
+        }
+
+        function bindImageMgmtGridDrop(gridWrap) {
+            function getDroppedImageFiles(e) {
+                return Array.from((e.dataTransfer && e.dataTransfer.files) || []).filter(function(file) {
+                    return file && file.type && file.type.indexOf("image/") === 0;
+                });
+            }
+            gridWrap.ondragover = function(e) {
+                var hasFiles = e.dataTransfer && Array.from(e.dataTransfer.types || []).indexOf("Files") !== -1;
+                var hasImagePayload = e.dataTransfer && Array.from(e.dataTransfer.types || []).indexOf("text/plain") !== -1;
+                if (!hasFiles && !hasImagePayload) return;
                 e.preventDefault();
-                this.classList.remove("drag-over");
+                e.dataTransfer.dropEffect = hasFiles ? "copy" : "move";
+                gridWrap.classList.add("drag-over");
+            };
+            gridWrap.ondragleave = function(e) {
+                if (e.target === gridWrap) gridWrap.classList.remove("drag-over");
+            };
+            gridWrap.ondrop = async function(e) {
+                e.preventDefault();
+                gridWrap.classList.remove("drag-over");
+                if (!currentSetName) {
+                    showMsg("请先选择左侧图片集", true);
+                    return;
+                }
+                var files = getDroppedImageFiles(e);
+                if (files.length) {
+                    await uploadImageMgmtFiles(files, currentSetName, currentSubsetName);
+                    return;
+                }
                 try {
                     var payload = JSON.parse(e.dataTransfer.getData("text/plain"));
                     moveImageToSet(payload.sourceKey, payload.sourceIndex, currentSetName);
                 } catch (ex) {}
-            });
-
-            _updateSelectionInfo();
+            };
         }
 
         function _createGridItem(entry, idx, sourceKey) {
@@ -4945,10 +4961,19 @@
             });
             item.addEventListener("dragover", function(e) {
                 e.preventDefault();
-                e.dataTransfer.dropEffect = "move";
+                var hasFiles = e.dataTransfer && Array.from(e.dataTransfer.types || []).indexOf("Files") !== -1;
+                e.dataTransfer.dropEffect = hasFiles ? "copy" : "move";
             });
-            item.addEventListener("drop", function(e) {
+            item.addEventListener("drop", async function(e) {
                 e.preventDefault();
+                e.stopPropagation();
+                var files = Array.from((e.dataTransfer && e.dataTransfer.files) || []).filter(function(file) {
+                    return file && file.type && file.type.indexOf("image/") === 0;
+                });
+                if (files.length) {
+                    await uploadImageMgmtFiles(files, currentSetName, currentSubsetName);
+                    return;
+                }
                 try {
                     var payload = JSON.parse(e.dataTransfer.getData("text/plain"));
                     var fromKey = payload.sourceKey;
@@ -5022,8 +5047,7 @@
 
         function _saveAsSubset() {
             if (!currentSetName) { alert("请先选择左侧图片集"); return; }
-            if (selectedImages.size === 0) { alert("请先选择图片"); return; }
-            var subName = prompt("输入子集名称:", "已处理");
+            var subName = prompt("输入衍生集名称:", "已处理");
             if (!subName) return;
 
             var entries = _getCurrentEntries();
@@ -5038,8 +5062,8 @@
             imageSubsets[currentSetName][subName] = subsetEntries;
 
             _updateSidebar();
-            imgMgmtSaveStatus.textContent = "(未保存)";
-            alert("子集「" + subName + "」已创建 (" + subsetEntries.length + "张) — 请点击底部「保存更改」持久化");
+            markImageMgmtDirty();
+            alert("衍生集「" + subName + "」已创建 (" + subsetEntries.length + "张)，正在自动保存");
         }
 
         function _deleteImageEntry(sourceKey, idx) {
@@ -5059,7 +5083,7 @@
             selectedImages.clear();
             _updateSidebar();
             _refreshCurrentView();
-            imgMgmtSaveStatus.textContent = "(未保存)";
+            markImageMgmtDirty();
         }
 
         function moveImageToSet(sourceKey, sourceIdx, toSet) {
@@ -5093,7 +5117,7 @@
             }
             _updateSidebar();
             _refreshCurrentView();
-            imgMgmtSaveStatus.textContent = "(未保存)";
+            markImageMgmtDirty();
         }
 
         function _reorderImages(fromKey, fromIdx, toKey, toIdx) {
@@ -5121,7 +5145,7 @@
 
             selectedImages.clear();
             _refreshCurrentView();
-            imgMgmtSaveStatus.textContent = "(未保存)";
+            markImageMgmtDirty();
         }
 
         // ============ Task bar (drag image → create task by type) ============
@@ -5258,6 +5282,7 @@
         _byId("img-mgmt-save-subset2").addEventListener("click", _saveAsSubset);
         _byId("img-mgmt-upload-btn").addEventListener("click", function() {
             _uploadTargetSet = currentSetName || Object.keys(imageSets)[0] || "采集图片";
+            _uploadTargetSubset = currentSetName ? currentSubsetName : null;
             imgMgmtUploadInput.click();
         });
         _byId("img-mgmt-new-set-btn").addEventListener("click", function() {
@@ -5265,7 +5290,7 @@
             if (name && !imageSets[name]) {
                 imageSets[name] = [];
                 _updateSidebar();
-                imgMgmtSaveStatus.textContent = "(未保存)";
+                markImageMgmtDirty();
             } else if (name && imageSets[name]) {
                 showMsg("图片集名称已存在", true);
             }
@@ -5273,15 +5298,15 @@
 
         // ============ Upload ============
 
-        imgMgmtUploadInput.addEventListener("change", async function(e) {
-            var files = Array.from(e.target.files);
-            var targetSet = _uploadTargetSet || currentSetName || Object.keys(imageSets)[0] || "采集图片";
-            if (!files.length) return;
+        async function uploadImageMgmtFiles(files, targetSet, targetSubset) {
+            targetSet = targetSet || currentSetName || Object.keys(imageSets)[0] || "采集图片";
+            if (!currentImgSkc || !targetSet || !files || !files.length) return;
             for (var i = 0; i < files.length; i++) {
                 var file = files[i];
                 var fd = new FormData();
                 fd.append("file", file);
                 fd.append("set_name", targetSet);
+                if (targetSubset) fd.append("sub_name", targetSubset);
                 try {
                     var res = await fetch(`/api/products/${currentImgSkc}/images/upload`, {
                         method: "POST", body: fd
@@ -5292,9 +5317,17 @@
                         continue;
                     }
                     var data = await res.json();
-                    if (!imageSets[targetSet]) imageSets[targetSet] = [];
-                    if (!imageSets[targetSet].find(function(e) { return e.filename === data.entry.filename; })) {
-                        imageSets[targetSet].push(data.entry);
+                    if (targetSubset) {
+                        if (!imageSubsets[targetSet]) imageSubsets[targetSet] = {};
+                        if (!imageSubsets[targetSet][targetSubset]) imageSubsets[targetSet][targetSubset] = [];
+                        if (!imageSubsets[targetSet][targetSubset].find(function(e) { return e.filename === data.entry.filename; })) {
+                            imageSubsets[targetSet][targetSubset].push(data.entry);
+                        }
+                    } else {
+                        if (!imageSets[targetSet]) imageSets[targetSet] = [];
+                        if (!imageSets[targetSet].find(function(e) { return e.filename === data.entry.filename; })) {
+                            imageSets[targetSet].push(data.entry);
+                        }
                     }
                 } catch (err) {
                     showMsg("上传 " + file.name + " 出错: " + err.message, true);
@@ -5302,40 +5335,39 @@
             }
             _updateSidebar();
             _refreshCurrentView();
-            imgMgmtSaveStatus.textContent = "(未保存)";
+            markImageMgmtDirty();
+        }
+
+        imgMgmtUploadInput.addEventListener("change", async function(e) {
+            var files = Array.from(e.target.files);
+            var targetSet = _uploadTargetSet || currentSetName || Object.keys(imageSets)[0] || "采集图片";
+            var targetSubset = _uploadTargetSubset || null;
+            if (!files.length) return;
+            await uploadImageMgmtFiles(files, targetSet, targetSubset);
+            _uploadTargetSet = null;
+            _uploadTargetSubset = null;
             e.target.value = "";
         });
 
         // ============ Save ============
 
         imgMgmtSaveBtn.addEventListener("click", async function() {
-            imgMgmtSaveBtn.disabled = true;
-            imgMgmtSaveBtn.textContent = "⏳ 保存中...";
-            try {
-                const res = await fetch(`/api/products/${currentImgSkc}/image-sets`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ image_sets: imageSets, image_subsets: imageSubsets })
-                });
-                if (!res.ok) throw new Error("保存失败");
-                const rdata = await res.json();
-                var msg = "✅ " + currentImgSkc + " 图片集已保存";
-                if (rdata.deleted_files) msg += "，已清理 " + rdata.deleted_files + " 个文件";
-                imgMgmtSaveStatus.textContent = "✅ 已保存";
-                showMsg(msg);
-            } catch (e) {
-                showMsg("❌ 保存失败: " + e.message, true);
-                imgMgmtSaveStatus.textContent = "❌ 保存失败";
-            } finally {
-                imgMgmtSaveBtn.disabled = false;
-                imgMgmtSaveBtn.textContent = "💾 保存更改";
-            }
+            await saveImageMgmtChanges(true);
         });
 
         // 切换到产品管理模块时加载数据
         document.querySelector('.nav-item[data-module="product-manage"]').addEventListener("click", () => {
             _onModuleActivated("product-manage");
         });
+
+        (function openImageMgmtFromQuery() {
+            const params = new URLSearchParams(window.location.search);
+            const skc = params.get("img_mgmt");
+            if (!skc) return;
+            switchModule("product-manage", false);
+            _onModuleActivated("product-manage");
+            setTimeout(() => openImageMgmt(skc), 300);
+        })();
     </script>
 </body>
 </html>

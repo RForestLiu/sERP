@@ -1,0 +1,7999 @@
+# Ozon ?????
+
+- Source: `data/ozon_cache/ozon_anling_category_tree.json`
+- Generated: `2026-05-26T10:04:23`
+- Category nodes: `568`
+- Type leaves: `7420`
+- LLM records: `7420`
+- Disabled nodes: `0`
+
+## Tree
+
+- Бытовая техника `description_category_id=17027486`
+  - Холодильники `description_category_id=17039634`
+    - Морозильная камера `type_id=93822` `description_category_id=17039634`
+    - Винный шкаф `type_id=93821` `description_category_id=17039634`
+    - Охладитель бутылок `type_id=98376` `description_category_id=17039634`
+    - Барный холодильник `type_id=971310012` `description_category_id=17039634`
+    - Аксессуар для винного шкафа `type_id=971284048` `description_category_id=17039634`
+  - Приготовление алкоголя `description_category_id=74295121`
+    - Самогонный аппарат `type_id=94965` `description_category_id=74295121`
+    - Пивоварня `type_id=90122721` `description_category_id=74295121`
+    - Аксессуары для алкогольного оборудования `type_id=971138803` `description_category_id=74295121`
+  - Стиральная машина `description_category_id=17039633`
+    - Центрифуга для отжима белья `type_id=970797265` `description_category_id=17039633`
+    - Сушильная машина `type_id=93829` `description_category_id=17039633`
+    - Стиральная машина `type_id=93828` `description_category_id=17039633`
+    - Электросушилка `type_id=122770105` `description_category_id=17039633`
+    - Сушильный шкаф для одежды, обуви `type_id=971012096` `description_category_id=17039633`
+    - Паровой шкаф для одежды `type_id=970828015` `description_category_id=17039633`
+  - Весы `description_category_id=17028912`
+    - Торговые весы `type_id=638606215` `description_category_id=17028912`
+    - Крановые весы `type_id=971168847` `description_category_id=17028912`
+    - Гиря калибровочная `type_id=95876` `description_category_id=17028912`
+    - Ювелирные весы `type_id=91420` `description_category_id=17028912`
+    - Напольные весы `type_id=91419` `description_category_id=17028912`
+    - Кухонные весы `type_id=91418` `description_category_id=17028912`
+    - Весы для багажа `type_id=91416` `description_category_id=17028912`
+  - Климатическая техника `description_category_id=17039635`
+    - Осушитель воздуха `type_id=91449` `description_category_id=17039635`
+    - Воздушная завеса `type_id=91446` `description_category_id=17039635`
+    - Тепловентилятор водяной `type_id=971109685` `description_category_id=17039635`
+    - Обогреватель `type_id=91448` `description_category_id=17039635`
+    - Очиститель воздуха `type_id=91451` `description_category_id=17039635`
+    - Вентилятор `type_id=91443` `description_category_id=17039635`
+    - Аромадиффузор ультразвуковой `type_id=97613` `description_category_id=17039635`
+    - Электрокамин `type_id=91457` `description_category_id=17039635`
+    - Ионизатор воздуха `type_id=971433266` `description_category_id=17039635`
+    - Водяная завеса `type_id=970740323` `description_category_id=17039635`
+    - Отопительный модуль `type_id=971976255` `description_category_id=17039635`
+    - Увлажнитель воздуха `type_id=91456` `description_category_id=17039635`
+    - Вентилятор вытяжной `type_id=97272` `description_category_id=17039635`
+    - Мойка воздуха `type_id=91447` `description_category_id=17039635`
+    - Солнечный коллектор `type_id=970742591` `description_category_id=17039635`
+    - Нагреватель для полотенец `type_id=970840732` `description_category_id=17039635`
+    - Портативный кондиционер `type_id=91450` `description_category_id=17039635`
+    - Система приточной вентиляции `type_id=91452` `description_category_id=17039635`
+    - Тепловая завеса `type_id=970739246` `description_category_id=17039635`
+    - Запчасть к сушилке для рук `type_id=971422282` `description_category_id=17039635`
+    - Сушилка для рук `type_id=91453` `description_category_id=17039635`
+    - Вентилятор приточно-вытяжной `type_id=97304` `description_category_id=17039635`
+    - Коврик с подогревом `type_id=115950958` `description_category_id=17039635`
+    - Озонатор `type_id=91841` `description_category_id=17039635`
+  - Устройства для стрижки волос и аксессуары `description_category_id=17039624`
+    - Электробритва `type_id=91687` `description_category_id=17039624`
+    - Триммер `type_id=91683` `description_category_id=17039624`
+    - Машинка для стрижки `type_id=91678` `description_category_id=17039624`
+    - Аксессуары для электробритвы `type_id=91675` `description_category_id=17039624`
+    - Аксессуары для триммера `type_id=96769` `description_category_id=17039624`
+  - Водонагреватели `description_category_id=200000864`
+    - Водонагреватель газовый `type_id=593989091` `description_category_id=200000864`
+    - Водонагреватель проточный `type_id=91445` `description_category_id=200000864`
+    - Водонагреватель накопительный `type_id=91444` `description_category_id=200000864`
+  - Электрические зубные щетки `description_category_id=17028937`
+    - Система отбеливания зубов `type_id=779860076` `description_category_id=17028937`
+    - Жидкость для ирригатора `type_id=98979` `description_category_id=17028937`
+    - Аксессуары для ирригатора `type_id=970671422` `description_category_id=17028937`
+    - Электрическая зубная щетка `type_id=91905` `description_category_id=17028937`
+    - Аксессуар для электрической зубной щетки `type_id=971074008` `description_category_id=17028937`
+    - Насадка для электрической зубной щетки `type_id=94700` `description_category_id=17028937`
+    - Насадка для ирригатора `type_id=94699` `description_category_id=17028937`
+    - Зарядное устройство для щетки `type_id=970681331` `description_category_id=17028937`
+    - Ирригатор `type_id=91903` `description_category_id=17028937`
+  - Кофеварки и кофемашины `description_category_id=17039628`
+    - Автоматическая кофемашина `type_id=94971` `description_category_id=17039628`
+    - Кофеварка `type_id=504866213` `description_category_id=17039628`
+    - Турка электрическая `type_id=504866212` `description_category_id=17039628`
+    - Машина для обжарки кофе `type_id=970857137` `description_category_id=17039628`
+    - Профессиональная кофемашина `type_id=970658779` `description_category_id=17039628`
+    - Капсульная кофемашина `type_id=96852` `description_category_id=17039628`
+  - Технологическое оборудование `description_category_id=89461375`
+    - Запчасть для упаковочного оборудования `type_id=970987564` `description_category_id=89461375`
+    - Упаковочное оборудование `type_id=970862374` `description_category_id=89461375`
+  - Плиты `description_category_id=17039632`
+    - Плита `type_id=94051` `description_category_id=17039632`
+    - Пароварка встраиваемая `type_id=94050` `description_category_id=17039632`
+    - Настольная плита `type_id=94049` `description_category_id=17039632`
+    - Мини-печь `type_id=94048` `description_category_id=17039632`
+    - Духовой шкаф `type_id=94047` `description_category_id=17039632`
+    - Ростер `type_id=95614` `description_category_id=17039632`
+  - Сушилки для овощей и фруктов `description_category_id=17039626`
+    - Сушилка для овощей, фруктов электрическая `type_id=95851` `description_category_id=17039626`
+    - Стерилизатор бытовой `type_id=95850` `description_category_id=17039626`
+  - Мультиварки, хлебопечки, аэрогрили `description_category_id=17039629`
+    - Пароварка электрическая `type_id=94734` `description_category_id=17039629`
+    - Рисоварка `type_id=94735` `description_category_id=17039629`
+    - Ферментатор бытовой `type_id=971067129` `description_category_id=17039629`
+    - Су-вид `type_id=94738` `description_category_id=17039629`
+    - Йогуртница `type_id=94728` `description_category_id=17039629`
+    - Фритюрница `type_id=94740` `description_category_id=17039629`
+    - Хлебопечка `type_id=94741` `description_category_id=17039629`
+    - Маринатор `type_id=94729` `description_category_id=17039629`
+    - Аэрогриль `type_id=94726` `description_category_id=17039629`
+    - Мороженица `type_id=94730` `description_category_id=17039629`
+    - Мультиварка `type_id=94731` `description_category_id=17039629`
+  - Утюги и отпариватели `description_category_id=17039625`
+    - Пароочиститель `type_id=91428` `description_category_id=17039625`
+    - Отпариватель для одежды `type_id=91426` `description_category_id=17039625`
+    - Гладильный пресс `type_id=91425` `description_category_id=17039625`
+    - Гладильная система `type_id=91424` `description_category_id=17039625`
+    - Парогенератор `type_id=115948871` `description_category_id=17039625`
+    - Гладильный манекен `type_id=971163248` `description_category_id=17039625`
+    - Утюг `type_id=91429` `description_category_id=17039625`
+  - Варочные панели `description_category_id=17039646`
+    - Варочная панель `type_id=95262` `description_category_id=17039646`
+  - Вытяжки `description_category_id=17039647`
+    - Кухонная вытяжка `type_id=93827` `description_category_id=17039647`
+    - Зонт вентиляционный `type_id=970988677` `description_category_id=17039647`
+  - Соковыжималки `description_category_id=17039644`
+    - Соковыжималка электрическая `type_id=94989` `description_category_id=17039644`
+    - Маслопресс бытовой `type_id=953995898` `description_category_id=17039644`
+  - Швейные машины `description_category_id=17039640`
+    - Швейная машина `type_id=91773` `description_category_id=17039640`
+    - Распошивальная машина `type_id=91772` `description_category_id=17039640`
+    - Оверлок `type_id=91771` `description_category_id=17039640`
+    - Вышивальная машина `type_id=91769` `description_category_id=17039640`
+    - Раскройная машина `type_id=971296613` `description_category_id=17039640`
+    - Режущий плоттер `type_id=970941852` `description_category_id=17039640`
+    - Прялка электрическая `type_id=970904924` `description_category_id=17039640`
+    - Вязальная машина `type_id=970852739` `description_category_id=17039640`
+  - Миксеры, блендеры, измельчители `description_category_id=17039627`
+    - Кухонный комбайн `type_id=94979` `description_category_id=17039627`
+    - Ломтерезка `type_id=94980` `description_category_id=17039627`
+    - Миксер кухонный `type_id=94982` `description_category_id=17039627`
+    - Кофемолка `type_id=94978` `description_category_id=17039627`
+    - Электромельница `type_id=94981` `description_category_id=17039627`
+    - Кухонная машина `type_id=970686722` `description_category_id=17039627`
+    - Вспениватель молока `type_id=94975` `description_category_id=17039627`
+    - Блендер `type_id=94973` `description_category_id=17039627`
+    - Измельчитель `type_id=94976` `description_category_id=17039627`
+    - Паста-машина `type_id=96862` `description_category_id=17039627`
+    - Мясорубка электрическая `type_id=94983` `description_category_id=17039627`
+  - Ножи электрические, измельчители отходов `description_category_id=17039641`
+    - Электрический нож `type_id=91489` `description_category_id=17039641`
+    - Ножеточка электрическая `type_id=91484` `description_category_id=17039641`
+    - Измельчитель бытовых отходов `type_id=91480` `description_category_id=17039641`
+    - Электрический штопор `type_id=91490` `description_category_id=17039641`
+  - Кулеры для воды `description_category_id=17039636`
+    - Пурифайер `type_id=970952397` `description_category_id=17039636`
+    - Кулер для воды `type_id=94682` `description_category_id=17039636`
+    - Диспенсер для воды `type_id=97929` `description_category_id=17039636`
+  - Встраиваемая бытовая техника `description_category_id=200000311`
+    - Комплект встраиваемой техники `type_id=970825893` `description_category_id=200000311`
+  - Фены и термощетки `description_category_id=17039639`
+    - Выпрямитель для волос `type_id=91724` `description_category_id=17039639`
+    - Стайлер `type_id=234850283` `description_category_id=17039639`
+    - Щипцы для наращивания волос `type_id=970948796` `description_category_id=17039639`
+    - Электробигуди `type_id=91733` `description_category_id=17039639`
+    - Плойка для завивки волос `type_id=91732` `description_category_id=17039639`
+    - Фен для волос `type_id=91730` `description_category_id=17039639`
+    - Расческа с ионизацией `type_id=91728` `description_category_id=17039639`
+    - Аксессуары к приборам для укладки волос `type_id=91725` `description_category_id=17039639`
+  - Аксессуары и запчасти для бытовой техники `description_category_id=53968796`
+    - Аксессуары, запчасти для обогревателя `type_id=96866` `description_category_id=53968796`
+    - Аксессуары, запчасти для вытяжки `type_id=970729309` `description_category_id=53968796`
+    - Аксессуары, запчасти для очистителя воздуха `type_id=91598` `description_category_id=53968796`
+    - Аксессуар для робота-мойщика окон `type_id=972742308` `description_category_id=53968796`
+    - Запчасть для вышивальной машины `type_id=971439372` `description_category_id=53968796`
+    - Аксессуар для вентилятора `type_id=971133761` `description_category_id=53968796`
+    - Запчасть для оверлока `type_id=971223823` `description_category_id=53968796`
+    - Аксессуары, запчасти для увлажнителя воздуха `type_id=98540` `description_category_id=53968796`
+    - Запчасть для маслопресса `type_id=971362718` `description_category_id=53968796`
+    - Поддон для дегидратора `type_id=97941` `description_category_id=53968796`
+    - Аксессуар для пурифайера `type_id=971303852` `description_category_id=53968796`
+    - Аксессуары, запчасти для пылесоса `type_id=971002378` `description_category_id=53968796`
+    - Запчасть для ножеточки `type_id=971408238` `description_category_id=53968796`
+    - Средство для чистки кофемашины `type_id=98642` `description_category_id=53968796`
+    - Аксессуары, запчасти для холодильника `type_id=970663046` `description_category_id=53968796`
+    - Аксессуары, запчасти для кондиционера `type_id=389152488` `description_category_id=53968796`
+    - Аксессуар для морозильника `type_id=970619987` `description_category_id=53968796`
+    - Запчасть для дегидратора `type_id=971306219` `description_category_id=53968796`
+    - Аксессуар для вакууматора `type_id=95798` `description_category_id=53968796`
+    - Запчасть для вязальной машины `type_id=971429615` `description_category_id=53968796`
+    - Аксессуары, запчасти для робота-пылесоса `type_id=971080300` `description_category_id=53968796`
+    - Аксессуары, запчасти для швейной машины `type_id=98532` `description_category_id=53968796`
+    - Запчасть для шоколадного фонтана `type_id=971285999` `description_category_id=53968796`
+    - Аксессуары, запчасти для кулера `type_id=94684` `description_category_id=53968796`
+    - Смазка для бытовой техники `type_id=971473484` `description_category_id=53968796`
+  - Прочая техника для дома `description_category_id=74091405`
+    - Нитрат, экотестер `type_id=91563` `description_category_id=74091405`
+    - Дозиметр `type_id=91550` `description_category_id=74091405`
+    - Стеклоочиститель электрический ручной `type_id=91472` `description_category_id=74091405`
+    - Детектор электромагнитного излучения `type_id=664056976` `description_category_id=74091405`
+    - Портативная стиральная машинка `type_id=971440233` `description_category_id=74091405`
+    - Сенсорный диспенсер `type_id=971046472` `description_category_id=74091405`
+    - Машинка для чистки обуви `type_id=970632191` `description_category_id=74091405`
+  - Пылесосы `description_category_id=17039623`
+    - Воздуходувка `type_id=91617` `description_category_id=17039623`
+    - Ручной пылесос `type_id=91593` `description_category_id=17039623`
+    - Электровеник `type_id=91595` `description_category_id=17039623`
+    - Моющий пылесос `type_id=91588` `description_category_id=17039623`
+    - Пылесос автомобильный `type_id=91584` `description_category_id=17039623`
+    - Робот-полотер `type_id=97937` `description_category_id=17039623`
+    - Вертикальный полотер `type_id=971149304` `description_category_id=17039623`
+    - Электрощетка `type_id=99323` `description_category_id=17039623`
+    - Электрошвабра `type_id=970744639` `description_category_id=17039623`
+    - Пылесос для удаления пылевого клеща `type_id=970684979` `description_category_id=17039623`
+    - Напольный пылесос `type_id=91586` `description_category_id=17039623`
+    - Робот-пылесос `type_id=91592` `description_category_id=17039623`
+    - Вертикальный пылесос `type_id=91587` `description_category_id=17039623`
+    - Робот для мойки окон `type_id=91590` `description_category_id=17039623`
+  - Техника для общепита `description_category_id=68712678`
+    - Кондитерское оборудование для общепита `type_id=971444386` `description_category_id=68712678`
+    - Запчасти для оборудования общепита `type_id=970870780` `description_category_id=68712678`
+    - Аксессуары для торговых аппаратов `type_id=971123834` `description_category_id=68712678`
+    - Посудомоечное профоборудование для общепита `type_id=970966335` `description_category_id=68712678`
+    - Тепловое оборудование для общепита `type_id=971096710` `description_category_id=68712678`
+    - Фризер для мороженого `type_id=971046395` `description_category_id=68712678`
+    - Перерабатывающее оборудование для общепита `type_id=971046393` `description_category_id=68712678`
+    - Пекарское оборудование для общепита `type_id=970693032` `description_category_id=68712678`
+    - Холодильное оборудование для общепита `type_id=93825` `description_category_id=68712678`
+    - Вендинговый аппарат `type_id=970862356` `description_category_id=68712678`
+  - Посудомоечные машины `description_category_id=17039648`
+    - Сушильный шкаф для посуды `type_id=970876143` `description_category_id=17039648`
+    - Посудомоечная машина `type_id=94566` `description_category_id=17039648`
+  - Микроволновые печи `description_category_id=17039643`
+    - Микроволновая печь `type_id=94972` `description_category_id=17039643`
+  - Электрические чайники и термопоты `description_category_id=17039631`
+    - Термопот `type_id=94966` `description_category_id=17039631`
+    - Аксессуар для аквадистиллятора `type_id=971291469` `description_category_id=17039631`
+    - Аквадистиллятор `type_id=971291449` `description_category_id=17039631`
+    - Кипятильник для общепита `type_id=971032927` `description_category_id=17039631`
+    - Подставка-подогреватель для кружки `type_id=970740895` `description_category_id=17039631`
+    - Кипятильник погружной `type_id=94969` `description_category_id=17039631`
+    - Электрический чайник `type_id=94968` `description_category_id=17039631`
+    - Электрический самовар `type_id=94967` `description_category_id=17039631`
+  - Тепловая обработка `description_category_id=17039630`
+    - Электрофондю `type_id=95619` `description_category_id=17039630`
+    - Подогреватель посуды `type_id=95612` `description_category_id=17039630`
+    - Аппарат для сахарной ваты `type_id=95604` `description_category_id=17039630`
+    - Электрогриль `type_id=95616` `description_category_id=17039630`
+    - Сосисочница `type_id=95615` `description_category_id=17039630`
+    - Мультипекарь `type_id=98490` `description_category_id=17039630`
+    - Тостер `type_id=96031` `description_category_id=17039630`
+    - Электрошашлычница `type_id=95620` `description_category_id=17039630`
+    - Яйцеварка `type_id=95621` `description_category_id=17039630`
+    - Коптильный пистолет `type_id=129788425` `description_category_id=17039630`
+    - Электросковорода `type_id=95618` `description_category_id=17039630`
+    - Блинница `type_id=95605` `description_category_id=17039630`
+    - Электрокоптильня `type_id=95617` `description_category_id=17039630`
+    - Аппарат для пончиков `type_id=970828016` `description_category_id=17039630`
+    - Попкорн мейкер `type_id=95613` `description_category_id=17039630`
+    - Аппарат для горячего шоколада `type_id=970829661` `description_category_id=17039630`
+    - Бутербродница `type_id=95606` `description_category_id=17039630`
+    - Аппарат для гамбургеров `type_id=696937868` `description_category_id=17039630`
+    - Ланч-бокс с подогревом `type_id=97980` `description_category_id=17039630`
+    - Вафельница `type_id=95607` `description_category_id=17039630`
+  - Кондиционеры и сплит-системы `description_category_id=17039622`
+    - Фанкойл `type_id=970955810` `description_category_id=17039622`
+    - Сплит-система `type_id=95722` `description_category_id=17039622`
+    - Оконный кондиционер `type_id=95721` `description_category_id=17039622`
+    - Мобильный кондиционер `type_id=95720` `description_category_id=17039622`
+  - Вакуумные упаковщики `description_category_id=17039642`
+    - Запайщик портативный `type_id=98099` `description_category_id=17039642`
+    - Вакуумный упаковщик `type_id=96075` `description_category_id=17039642`
+  - Погодные станции и датчики `description_category_id=17039638`
+    - Аксессуар для метеостанции `type_id=970829665` `description_category_id=17039638`
+    - Электронный термометр `type_id=970692078` `description_category_id=17039638`
+    - Метеостанция `type_id=91891` `description_category_id=17039638`
+    - Барометр `type_id=91888` `description_category_id=17039638`
+    - Гигрометр `type_id=91691` `description_category_id=17039638`
+    - Измеритель качества воздуха `type_id=970879743` `description_category_id=17039638`
+  - Дополнительная гарантия `description_category_id=53541757`
+    - Гарантийный талон `type_id=970783923` `description_category_id=53541757`
+- Продукты питания `description_category_id=17027496`
+  - Макароны, крупы, мука `description_category_id=17027956`
+    - Соевое мясо `type_id=697146973` `description_category_id=17027956`
+    - Пшеничная крупа `type_id=99240` `description_category_id=17027956`
+    - Ячневая крупа `type_id=99231` `description_category_id=17027956`
+    - Гречка `type_id=99250` `description_category_id=17027956`
+    - Маш `type_id=99245` `description_category_id=17027956`
+    - Блюдо быстрого приготовления `type_id=97057` `description_category_id=17027956`
+    - Чечевица `type_id=99233` `description_category_id=17027956`
+    - Овсяная крупа `type_id=99243` `description_category_id=17027956`
+    - Ячменная крупа `type_id=99232` `description_category_id=17027956`
+    - Бобы `type_id=970595065` `description_category_id=17027956`
+    - Булгур `type_id=99252` `description_category_id=17027956`
+    - Клетчатка `type_id=96775` `description_category_id=17027956`
+    - Кукурузная крупа `type_id=99248` `description_category_id=17027956`
+    - Горох сушеный `type_id=115950743` `description_category_id=17027956`
+    - Псиллиум `type_id=970850271` `description_category_id=17027956`
+    - Смесь круп `type_id=99255` `description_category_id=17027956`
+    - Рисовая бумага `type_id=970850520` `description_category_id=17027956`
+    - Клейковина пшеничная `type_id=99192` `description_category_id=17027956`
+    - Хлопья `type_id=97127` `description_category_id=17027956`
+    - Отруби `type_id=96035` `description_category_id=17027956`
+    - Киноа `type_id=115950741` `description_category_id=17027956`
+    - Манка `type_id=99246` `description_category_id=17027956`
+    - Соевые бобы `type_id=671576983` `description_category_id=17027956`
+    - Сорго `type_id=971101346` `description_category_id=17027956`
+    - Перловая крупа `type_id=99242` `description_category_id=17027956`
+    - Пшено `type_id=99239` `description_category_id=17027956`
+    - Фасоль сушеная `type_id=115950726` `description_category_id=17027956`
+    - Макароны `type_id=96033` `description_category_id=17027956`
+    - Кускус `type_id=99247` `description_category_id=17027956`
+    - Нут `type_id=99244` `description_category_id=17027956`
+    - Смесь для супа `type_id=99236` `description_category_id=17027956`
+    - Талкан `type_id=970713520` `description_category_id=17027956`
+    - Ржаная крупа `type_id=99238` `description_category_id=17027956`
+    - Рис `type_id=99237` `description_category_id=17027956`
+    - Полба `type_id=115950733` `description_category_id=17027956`
+    - Тапиока `type_id=99256` `description_category_id=17027956`
+    - Смесь для второго блюда `type_id=970676653` `description_category_id=17027956`
+    - Мука `type_id=96034` `description_category_id=17027956`
+  - Безалкогольное пиво `description_category_id=17028766`
+    - Безалкогольное пиво `type_id=115949792` `description_category_id=17028766`
+  - Соль, сахар, специи `description_category_id=17028769`
+    - Панировка `type_id=970580611` `description_category_id=17028769`
+    - Сухие сливки `type_id=149413330` `description_category_id=17028769`
+    - Улучшитель хлебопекарный `type_id=99376` `description_category_id=17028769`
+    - Бумага для пищевого принтера `type_id=970984287` `description_category_id=17028769`
+    - Загуститель `type_id=97125` `description_category_id=17028769`
+    - Краситель пищевой `type_id=97131` `description_category_id=17028769`
+    - Набор для приготовления кваса `type_id=970842857` `description_category_id=17028769`
+    - Дрожжи `type_id=96056` `description_category_id=17028769`
+    - Разрыхлитель `type_id=97124` `description_category_id=17028769`
+    - Бульон сухой `type_id=971123955` `description_category_id=17028769`
+    - Смесь приправ, специй и трав `type_id=96059` `description_category_id=17028769`
+    - Винный камень `type_id=99377` `description_category_id=17028769`
+    - Набор для приготовления настойки `type_id=970842856` `description_category_id=17028769`
+    - Бонификатор `type_id=970977908` `description_category_id=17028769`
+    - Сода пищевая `type_id=97135` `description_category_id=17028769`
+    - Соль `type_id=96060` `description_category_id=17028769`
+    - Сухое молоко `type_id=115951184` `description_category_id=17028769`
+    - Перец специя `type_id=99223` `description_category_id=17028769`
+    - Сахар `type_id=96863` `description_category_id=17028769`
+    - Осветлитель для алкоголя `type_id=970618547` `description_category_id=17028769`
+    - Кокосовая стружка `type_id=70303780` `description_category_id=17028769`
+    - Сахарозаменитель `type_id=97062` `description_category_id=17028769`
+    - Декор для выпечки `type_id=96055` `description_category_id=17028769`
+    - Сахарная пудра `type_id=97130` `description_category_id=17028769`
+    - Моно приправы, специи и травы `type_id=971291621` `description_category_id=17028769`
+    - Глутамат натрия `type_id=970700443` `description_category_id=17028769`
+    - Смесь для выпечки `type_id=96061` `description_category_id=17028769`
+    - Солодовый экстракт `type_id=96859` `description_category_id=17028769`
+    - Сусло `type_id=96860` `description_category_id=17028769`
+    - Крахмал `type_id=97075` `description_category_id=17028769`
+    - Набор ингредиентов для брожения `type_id=970639049` `description_category_id=17028769`
+    - Набор для изготовления сладостей `type_id=114615311` `description_category_id=17028769`
+    - Смесь для приготовления десерта `type_id=971003978` `description_category_id=17028769`
+    - Ароматизатор пищевой `type_id=97129` `description_category_id=17028769`
+    - Агар-агар `type_id=97122` `description_category_id=17028769`
+    - Глюкозный сироп `type_id=970945781` `description_category_id=17028769`
+    - Закваска для хлеба `type_id=971199053` `description_category_id=17028769`
+    - Патока `type_id=99193` `description_category_id=17028769`
+    - Стабилизатор брожения `type_id=970868117` `description_category_id=17028769`
+    - Хмель `type_id=970618548` `description_category_id=17028769`
+    - Яичный порошок `type_id=970857220` `description_category_id=17028769`
+    - Набор для приготовления вина `type_id=970589077` `description_category_id=17028769`
+    - Мак `type_id=99189` `description_category_id=17028769`
+    - Лимонная кислота `type_id=97133` `description_category_id=17028769`
+    - Консервант `type_id=97132` `description_category_id=17028769`
+  - Безалкогольное вино и шампанское `description_category_id=17027952`
+    - Безалкогольный крепкий напиток `type_id=970904859` `description_category_id=17027952`
+    - Безалкогольное шампанское `type_id=115949793` `description_category_id=17027952`
+    - Безалкогольное вино `type_id=115949791` `description_category_id=17027952`
+    - Безалкогольный сидр `type_id=98299` `description_category_id=17027952`
+  - Мясная и рыбная гастрономия `description_category_id=200001474`
+    - Оболочка для колбас `type_id=523706626` `description_category_id=200001474`
+    - Стартовая культура для колбас `type_id=971114926` `description_category_id=200001474`
+  - Детское питание `description_category_id=17027953`
+    - Чай в пакетиках `type_id=94693` `description_category_id=17027953`
+  - Хлеб и кондитерские изделия `description_category_id=17028773`
+    - Пирог `type_id=97809` `description_category_id=17028773`
+    - Сладкий букет `type_id=971067898` `description_category_id=17028773`
+    - Пончики `type_id=97850` `description_category_id=17028773`
+    - Пирожное `type_id=115948616` `description_category_id=17028773`
+    - Рулет `type_id=115949302` `description_category_id=17028773`
+    - Печенье `type_id=96047` `description_category_id=17028773`
+    - Мармелад `type_id=97032` `description_category_id=17028773`
+    - Ватрушка `type_id=97818` `description_category_id=17028773`
+    - Тахини `type_id=970618658` `description_category_id=17028773`
+    - Сюрприз-бокс кондитерский `type_id=970939983` `description_category_id=17028773`
+    - Шоколадные капли `type_id=99375` `description_category_id=17028773`
+    - Кокосовая паста `type_id=971026976` `description_category_id=17028773`
+    - Ореховая паста `type_id=97120` `description_category_id=17028773`
+    - Чак-чак `type_id=970634996` `description_category_id=17028773`
+    - Шоколадный батончик `type_id=97045` `description_category_id=17028773`
+    - Цукаты `type_id=96050` `description_category_id=17028773`
+    - Слойка `type_id=97804` `description_category_id=17028773`
+    - Профитроли `type_id=970591369` `description_category_id=17028773`
+    - Шоколадное яйцо `type_id=96796` `description_category_id=17028773`
+    - Сахарная вата `type_id=96795` `description_category_id=17028773`
+    - Пастила `type_id=97034` `description_category_id=17028773`
+    - Зефир `type_id=97031` `description_category_id=17028773`
+    - Нуга `type_id=97033` `description_category_id=17028773`
+    - Пирожок `type_id=97808` `description_category_id=17028773`
+    - Тарталетки `type_id=98432` `description_category_id=17028773`
+    - Трубочка для молока `type_id=97107` `description_category_id=17028773`
+    - Шоколадная паста `type_id=97082` `description_category_id=17028773`
+    - Коржи `type_id=971746530` `description_category_id=17028773`
+    - Адвент-календарь кондитерский `type_id=971409196` `description_category_id=17028773`
+    - Щербет `type_id=97037` `description_category_id=17028773`
+    - Торт `type_id=115949297` `description_category_id=17028773`
+    - Пряники `type_id=96048` `description_category_id=17028773`
+    - Кулич `type_id=98332` `description_category_id=17028773`
+    - Шоколад `type_id=97035` `description_category_id=17028773`
+    - Маца `type_id=97810` `description_category_id=17028773`
+    - Фруктовые пастилки `type_id=97139` `description_category_id=17028773`
+    - Жевательная резинка `type_id=96042` `description_category_id=17028773`
+    - Сдоба `type_id=97805` `description_category_id=17028773`
+    - Хлеб `type_id=97800` `description_category_id=17028773`
+    - Козинаки `type_id=96793` `description_category_id=17028773`
+    - Сухари `type_id=97803` `description_category_id=17028773`
+    - Сладкий набор с игрушкой `type_id=99227` `description_category_id=17028773`
+    - Безе `type_id=97090` `description_category_id=17028773`
+    - Крекеры `type_id=96045` `description_category_id=17028773`
+    - Баранки `type_id=97799` `description_category_id=17028773`
+    - Маршмеллоу `type_id=97041` `description_category_id=17028773`
+    - Круассан `type_id=97134` `description_category_id=17028773`
+    - Сушки `type_id=97802` `description_category_id=17028773`
+    - Новогодний подарок кондитерский `type_id=971407260` `description_category_id=17028773`
+    - Лаваш `type_id=97813` `description_category_id=17028773`
+    - Халва `type_id=97036` `description_category_id=17028773`
+    - Кекс `type_id=97712` `description_category_id=17028773`
+    - Конфеты `type_id=96044` `description_category_id=17028773`
+    - Вафли `type_id=96041` `description_category_id=17028773`
+    - Пишмание `type_id=971126086` `description_category_id=17028773`
+    - Лепешка `type_id=97812` `description_category_id=17028773`
+    - Освежающие пластинки `type_id=970953802` `description_category_id=17028773`
+  - Консервация `description_category_id=17027954`
+    - Овощные консервы `type_id=96478` `description_category_id=17027954`
+    - Томатная паста `type_id=65670721` `description_category_id=17027954`
+    - Морепродукты консервированные `type_id=97071` `description_category_id=17027954`
+    - Фрукты консервированные `type_id=96479` `description_category_id=17027954`
+    - Мясные консервы `type_id=96477` `description_category_id=17027954`
+    - Кокосовое молоко консервированное `type_id=99159` `description_category_id=17027954`
+    - Варенье `type_id=97067` `description_category_id=17027954`
+    - Рыбные консервы `type_id=97073` `description_category_id=17027954`
+    - Сухой паек `type_id=98223` `description_category_id=17027954`
+    - Маслины `type_id=970891493` `description_category_id=17027954`
+    - Оливки `type_id=970891492` `description_category_id=17027954`
+    - Готовое блюдо `type_id=97068` `description_category_id=17027954`
+    - Виноградные листья `type_id=970681410` `description_category_id=17027954`
+    - Растительное сгущенное молоко `type_id=971047662` `description_category_id=17027954`
+    - Повидло `type_id=97072` `description_category_id=17027954`
+    - Джем `type_id=96473` `description_category_id=17027954`
+    - Конфитюр `type_id=97070` `description_category_id=17027954`
+    - Концентрированное молоко `type_id=99160` `description_category_id=17027954`
+    - Грибные консервы `type_id=96472` `description_category_id=17027954`
+    - Мед `type_id=96474` `description_category_id=17027954`
+    - Ягоды перетертые `type_id=97086` `description_category_id=17027954`
+    - Топленый жир `type_id=970961108` `description_category_id=17027954`
+    - Мягкая карамель `type_id=719200445` `description_category_id=17027954`
+    - Сгущенное молоко `type_id=96476` `description_category_id=17027954`
+    - Термостабильная начинка `type_id=970975200` `description_category_id=17027954`
+    - Закуска `type_id=970781459` `description_category_id=17027954`
+    - Паштет `type_id=97871` `description_category_id=17027954`
+  - Соки, воды, напитки `description_category_id=17028764`
+    - Кофе молотый `type_id=94690` `description_category_id=17028764`
+    - Чайный напиток `type_id=970677582` `description_category_id=17028764`
+    - Кисель `type_id=96779` `description_category_id=17028764`
+    - Чай в пакетиках `type_id=94693` `description_category_id=17028764`
+    - Пекмез `type_id=970986746` `description_category_id=17028764`
+    - Горячий шоколад капсульный `type_id=97025` `description_category_id=17028764`
+    - Цикорий `type_id=97027` `description_category_id=17028764`
+    - Смузи `type_id=96785` `description_category_id=17028764`
+    - Компот `type_id=97100` `description_category_id=17028764`
+    - Сок `type_id=97101` `description_category_id=17028764`
+    - Газированный напиток `type_id=96778` `description_category_id=17028764`
+    - Шоколадная бомбочка `type_id=970593477` `description_category_id=17028764`
+    - Кофе растворимый `type_id=94691` `description_category_id=17028764`
+    - Кофе в чалдах `type_id=97042` `description_category_id=17028764`
+    - Какао `type_id=96794` `description_category_id=17028764`
+    - Вода `type_id=94686` `description_category_id=17028764`
+    - Кокосовая вода `type_id=970678069` `description_category_id=17028764`
+    - Чайный гриб `type_id=954647288` `description_category_id=17028764`
+    - Чай растворимый `type_id=97043` `description_category_id=17028764`
+    - Растворимый напиток `type_id=639026111` `description_category_id=17028764`
+    - Квас `type_id=96960` `description_category_id=17028764`
+    - Кофе в дрип-пакетах `type_id=970681991` `description_category_id=17028764`
+    - Сироп `type_id=97047` `description_category_id=17028764`
+    - Кофейный напиток `type_id=97026` `description_category_id=17028764`
+    - Чай в капсулах `type_id=94695` `description_category_id=17028764`
+    - Напиток сокосодержащий `type_id=96783` `description_category_id=17028764`
+    - Морс `type_id=96782` `description_category_id=17028764`
+    - Основа для напитка `type_id=970986912` `description_category_id=17028764`
+    - Кофе в зернах `type_id=94688` `description_category_id=17028764`
+    - Чай листовой `type_id=94696` `description_category_id=17028764`
+    - Кофе в капсулах `type_id=94689` `description_category_id=17028764`
+    - Энергетический напиток `type_id=97143` `description_category_id=17028764`
+    - Холодный чай `type_id=97126` `description_category_id=17028764`
+    - Безалкогольная медовуха `type_id=970904858` `description_category_id=17028764`
+    - Топпинг `type_id=97046` `description_category_id=17028764`
+    - Горячий шоколад `type_id=97030` `description_category_id=17028764`
+    - Холодный кофе `type_id=970669339` `description_category_id=17028764`
+    - Тоник `type_id=96787` `description_category_id=17028764`
+    - Нектар `type_id=96784` `description_category_id=17028764`
+    - Сбитень `type_id=970986747` `description_category_id=17028764`
+    - Кэроб `type_id=97106` `description_category_id=17028764`
+    - Кофе молотый в растворимом `type_id=99381` `description_category_id=17028764`
+  - Сухие завтраки, снэки, суперфудс `description_category_id=17028770`
+    - Семена чиа `type_id=98566` `description_category_id=17028770`
+    - Программа здорового питания `type_id=724331055` `description_category_id=17028770`
+    - Хлебные палочки `type_id=97141` `description_category_id=17028770`
+    - Соломка `type_id=97053` `description_category_id=17028770`
+    - Пшеница `type_id=98571` `description_category_id=17028770`
+    - Сухой завтрак `type_id=96148` `description_category_id=17028770`
+    - Гранола `type_id=96791` `description_category_id=17028770`
+    - Спаржа сушеная `type_id=970579486` `description_category_id=17028770`
+    - Вяленая рыба `type_id=970667794` `description_category_id=17028770`
+    - Сухофрукты `type_id=96156` `description_category_id=17028770`
+    - Рахат-лукум `type_id=96049` `description_category_id=17028770`
+    - Сушеная рыба `type_id=97934` `description_category_id=17028770`
+    - Чурчхела `type_id=97121` `description_category_id=17028770`
+    - Сушеное мясо `type_id=971153630` `description_category_id=17028770`
+    - Ягоды сушеные `type_id=96158` `description_category_id=17028770`
+    - Ячмень `type_id=98562` `description_category_id=17028770`
+    - Солод `type_id=96858` `description_category_id=17028770`
+    - Кунжут `type_id=115950695` `description_category_id=17028770`
+    - Амарант `type_id=98579` `description_category_id=17028770`
+    - Хлебцы `type_id=97061` `description_category_id=17028770`
+    - Урбеч `type_id=97103` `description_category_id=17028770`
+    - Смесь семян `type_id=99163` `description_category_id=17028770`
+    - Грибы сушеные `type_id=96149` `description_category_id=17028770`
+    - Орехи `type_id=97051` `description_category_id=17028770`
+    - Семена льна `type_id=96153` `description_category_id=17028770`
+    - Компотная смесь `type_id=970982466` `description_category_id=17028770`
+    - Попкорн `type_id=96151` `description_category_id=17028770`
+    - Вяленое мясо `type_id=96629` `description_category_id=17028770`
+    - Батончик `type_id=96790` `description_category_id=17028770`
+    - Смесь орехов, сухофруктов `type_id=96155` `description_category_id=17028770`
+    - Чипсы `type_id=96157` `description_category_id=17028770`
+    - Сухарики `type_id=97054` `description_category_id=17028770`
+    - Мел пищевой `type_id=971004325` `description_category_id=17028770`
+    - Расторопша `type_id=98570` `description_category_id=17028770`
+    - Добавка для попкорна `type_id=971037806` `description_category_id=17028770`
+    - Рожь `type_id=98569` `description_category_id=17028770`
+    - Вяленая икра `type_id=971069462` `description_category_id=17028770`
+    - Морские водоросли `type_id=96150` `description_category_id=17028770`
+    - Овес `type_id=98574` `description_category_id=17028770`
+    - Кукурузные палочки `type_id=97049` `description_category_id=17028770`
+    - Снэки `type_id=97052` `description_category_id=17028770`
+    - Семечки `type_id=96154` `description_category_id=17028770`
+    - Мюсли `type_id=97050` `description_category_id=17028770`
+    - Вяленые овощи `type_id=96147` `description_category_id=17028770`
+    - Воздушный рис `type_id=970624695` `description_category_id=17028770`
+    - Пахлава `type_id=970855369` `description_category_id=17028770`
+  - Товары для молекулярной кухни `description_category_id=79224106`
+    - Текстура для молекулярной кухни `type_id=970688129` `description_category_id=79224106`
+  - Молочная продукция `description_category_id=200001392`
+    - Закваска `type_id=96776` `description_category_id=200001392`
+    - Молоко `type_id=96578` `description_category_id=200001392`
+    - Сливки `type_id=96585` `description_category_id=200001392`
+    - Фермент сычужный `type_id=971280134` `description_category_id=200001392`
+    - Сывороточный напиток `type_id=970843306` `description_category_id=200001392`
+    - Топленое масло `type_id=970587313` `description_category_id=200001392`
+    - Десерт `type_id=971311214` `description_category_id=200001392`
+    - Йогурт `type_id=96574` `description_category_id=200001392`
+    - Растительный напиток `type_id=97876` `description_category_id=200001392`
+    - Молочный напиток `type_id=96777` `description_category_id=200001392`
+    - Тофу `type_id=971894175` `description_category_id=200001392`
+  - Масла, соусы, уксус `description_category_id=17028761`
+    - Жидкий дым `type_id=971139537` `description_category_id=17028761`
+    - Имбирь маринованный `type_id=97092` `description_category_id=17028761`
+    - Лимонный сок `type_id=97084` `description_category_id=17028761`
+    - Уксус `type_id=96053` `description_category_id=17028761`
+    - Хрен столовый `type_id=96054` `description_category_id=17028761`
+    - Соус `type_id=96052` `description_category_id=17028761`
+    - Горчица `type_id=96051` `description_category_id=17028761`
+    - Васаби `type_id=97093` `description_category_id=17028761`
+    - Какао-масло `type_id=99143` `description_category_id=17028761`
+    - Заправка `type_id=97091` `description_category_id=17028761`
+    - Кетчуп `type_id=97137` `description_category_id=17028761`
+    - Аджика `type_id=97039` `description_category_id=17028761`
+    - Растительное масло `type_id=99151` `description_category_id=17028761`
+    - Маринад `type_id=97040` `description_category_id=17028761`
+    - Масло кокосовое `type_id=99137` `description_category_id=17028761`
+- Аптека `description_category_id=52265716`
+  - Аксессуары для товаров для реабилитации `description_category_id=200001549`
+    - Наконечник для трости `type_id=91827` `description_category_id=200001549`
+    - Держатель для костылей, трости `type_id=971133656` `description_category_id=200001549`
+    - Аксессуар для ходунков `type_id=971133598` `description_category_id=200001549`
+    - Аксессуар для инвалидной коляски `type_id=970587773` `description_category_id=200001549`
+  - Аптечка `description_category_id=52619056`
+    - Аптечка медицинская `type_id=95568` `description_category_id=52619056`
+  - Спортивные добавки `description_category_id=200001663`
+    - Предтренировочный комплекс `type_id=95383` `description_category_id=200001663`
+    - Послетренировочный комплекс `type_id=95382` `description_category_id=200001663`
+    - BCAA `type_id=95347` `description_category_id=200001663`
+    - Препарат для суставов, связок `type_id=95384` `description_category_id=200001663`
+    - Аминокислотный комплекс `type_id=95351` `description_category_id=200001663`
+    - Цинк `type_id=970889525` `description_category_id=200001663`
+    - Хром `type_id=970889526` `description_category_id=200001663`
+    - Селен `type_id=971291473` `description_category_id=200001663`
+    - Ферменты `type_id=95392` `description_category_id=200001663`
+    - Моно аминокислота спортивная `type_id=971211913` `description_category_id=200001663`
+    - Антиоксидант `type_id=95353` `description_category_id=200001663`
+    - Йод `type_id=971168007` `description_category_id=200001663`
+    - Калий `type_id=970889522` `description_category_id=200001663`
+    - ALA `type_id=970889518` `description_category_id=200001663`
+    - Гинкго билоба `type_id=970889520` `description_category_id=200001663`
+    - L-карнитин `type_id=95368` `description_category_id=200001663`
+    - Фитококтейль `type_id=96788` `description_category_id=200001663`
+    - Витамины спортивные `type_id=95358` `description_category_id=200001663`
+    - Мочегонное `type_id=95376` `description_category_id=200001663`
+    - Магний `type_id=970889524` `description_category_id=200001663`
+    - Лецитин `type_id=970889519` `description_category_id=200001663`
+    - Жиросжигатель `type_id=95365` `description_category_id=200001663`
+    - Жирные кислоты `type_id=971062700` `description_category_id=200001663`
+    - Релаксант `type_id=95387` `description_category_id=200001663`
+    - Витаминно-минеральный комплекс спортивный `type_id=95357` `description_category_id=200001663`
+    - Рутин `type_id=970889521` `description_category_id=200001663`
+    - Железо `type_id=95375` `description_category_id=200001663`
+    - Кальций `type_id=970889523` `description_category_id=200001663`
+    - Коэнзим Q10 `type_id=95370` `description_category_id=200001663`
+    - Креатин `type_id=95371` `description_category_id=200001663`
+  - Массажеры, коврики, акупунктура `description_category_id=200001548`
+    - Массажер ручной `type_id=970978680` `description_category_id=200001548`
+    - Электрогрелка `type_id=92629` `description_category_id=200001548`
+    - Массажные банки `type_id=99046` `description_category_id=200001548`
+    - Браслет медицинский `type_id=971082391` `description_category_id=200001548`
+    - Грелка `type_id=94569` `description_category_id=200001548`
+    - Массажный коврик `type_id=314014908` `description_category_id=200001548`
+    - Игла акупунктурная `type_id=970877711` `description_category_id=200001548`
+    - Ванночка глазная `type_id=970621839` `description_category_id=200001548`
+    - Массажный валик `type_id=971943242` `description_category_id=200001548`
+    - Биокорректор `type_id=91815` `description_category_id=200001548`
+    - Мяч массажный `type_id=970985976` `description_category_id=200001548`
+  - Хим средства для дезинфекции, терапии и процедур `description_category_id=200001547`
+    - Гель для УЗИ `type_id=971074216` `description_category_id=200001547`
+    - Дезинфицирующее средство `type_id=970690850` `description_category_id=200001547`
+  - Расходные материалы для оборудования, техники, приборов `description_category_id=200001536`
+    - Расходные материалы для рентгенологии `type_id=970961563` `description_category_id=200001536`
+  - Аксессуары для людей с ограниченными возможностями `description_category_id=200001551`
+    - Ступенька для ванной для людей с ограниченными возможностями `type_id=971406362` `description_category_id=200001551`
+    - Адаптивные приборы, посуда `type_id=971069563` `description_category_id=200001551`
+    - Решетка-сиденье на ванну `type_id=92042` `description_category_id=200001551`
+    - Сидячая ванночка на унитаз `type_id=970823818` `description_category_id=200001551`
+    - Сиденье, насадка на унитаз для людей с ограниченными возможностями `type_id=971133740` `description_category_id=200001551`
+    - Поручень прикроватный `type_id=970865516` `description_category_id=200001551`
+    - Ванна для лежачих больных `type_id=970589547` `description_category_id=200001551`
+    - Стул для ванной для людей с ограниченными возможностями `type_id=971025230` `description_category_id=200001551`
+    - Опорный поручень для ванной `type_id=971133692` `description_category_id=200001551`
+  - Профессиональные аппараты для косметологии `description_category_id=200000122`
+    - Коагулятор косметический `type_id=971123867` `description_category_id=200000122`
+    - Аппарат для мезотерапии профессиональный `type_id=971806593` `description_category_id=200000122`
+    - Аппарат кавитации `type_id=971123865` `description_category_id=200000122`
+    - Аппарат газожидкостного пилинга `type_id=971123862` `description_category_id=200000122`
+    - Аппарат Liposonix `type_id=971123856` `description_category_id=200000122`
+    - Аппарат ФДТ профессиональный `type_id=971806603` `description_category_id=200000122`
+    - Аппарат для криолиполиза `type_id=971304959` `description_category_id=200000122`
+    - Аппарат Thermage `type_id=971123859` `description_category_id=200000122`
+    - RF-лифтинг профессиональный `type_id=971806589` `description_category_id=200000122`
+    - Аппарат для микротоковой терапии профессиональный `type_id=971806600` `description_category_id=200000122`
+    - Электрод для коагуляции `type_id=971196295` `description_category_id=200000122`
+    - Аппарат для микродермабразии `type_id=971806595` `description_category_id=200000122`
+    - Салфетки для криолиполиза `type_id=971304957` `description_category_id=200000122`
+  - Комплектующие для техники для инвалидов `description_category_id=200001550`
+    - Аксессуары для инвалидной коляски `type_id=971166374` `description_category_id=200001550`
+    - Аксессуары для инвалидного подъемника `type_id=971156193` `description_category_id=200001550`
+    - Аксессуар для кресла-туалета `type_id=971472296` `description_category_id=200001550`
+  - Одежда медицинская `description_category_id=200001546`
+    - Аксессуары адаптивные `type_id=971093242` `description_category_id=200001546`
+    - Медицинские защитные очки `type_id=971033079` `description_category_id=200001546`
+    - Респиратор медицинский `type_id=970976284` `description_category_id=200001546`
+    - Одежда для медицинских процедур `type_id=98221` `description_category_id=200001546`
+    - Одежда адаптивная `type_id=971093239` `description_category_id=200001546`
+    - Аксессуар для медицинской маски `type_id=970835975` `description_category_id=200001546`
+    - Комплект СИЗ `type_id=970857138` `description_category_id=200001546`
+    - Маска медицинская `type_id=97464` `description_category_id=200001546`
+    - Нарукавники гигиенические `type_id=970741701` `description_category_id=200001546`
+    - Шапочка медицинская `type_id=98050` `description_category_id=200001546`
+    - Послеоперационное белье `type_id=970841017` `description_category_id=200001546`
+    - Бахилы медицинские `type_id=97466` `description_category_id=200001546`
+    - Перчатки медицинские `type_id=97460` `description_category_id=200001546`
+    - Аппарат для надевания бахил `type_id=970625783` `description_category_id=200001546`
+    - Набородник, защитный экран `type_id=970865456` `description_category_id=200001546`
+    - Головные уборы адаптивные `type_id=971093241` `description_category_id=200001546`
+  - Спортивное питание `description_category_id=17028704`
+    - Средства для повышения тестостерона `type_id=95389` `description_category_id=17028704`
+    - Спортивные электролиты `type_id=971005245` `description_category_id=17028704`
+    - Протеин `type_id=95385` `description_category_id=17028704`
+    - Углеводы `type_id=95391` `description_category_id=17028704`
+    - Спортивное питание `type_id=95380` `description_category_id=17028704`
+    - Гейнер `type_id=95359` `description_category_id=17028704`
+    - Протеиновый батончик `type_id=95386` `description_category_id=17028704`
+    - Спортивный энергетический напиток `type_id=95395` `description_category_id=17028704`
+    - Изотоник `type_id=95367` `description_category_id=17028704`
+    - Анаболический комплекс `type_id=95352` `description_category_id=17028704`
+    - Диетический батончик `type_id=95363` `description_category_id=17028704`
+    - Энергетические паучи и конфеты `type_id=972893664` `description_category_id=17028704`
+    - Энергетический батончик `type_id=95394` `description_category_id=17028704`
+  - БАДы и витамины `description_category_id=200000896`
+    - БАД для костей и суставов `type_id=971300832` `description_category_id=200000896`
+    - БАД при простуде и гриппе `type_id=971300825` `description_category_id=200000896`
+    - БАД для поддержания здоровья волос, ногтей и кожи `type_id=971300815` `description_category_id=200000896`
+    - БАД для хрящевой ткани `type_id=971300831` `description_category_id=200000896`
+    - БАД тонизирующий и общеукрепляющий `type_id=971300824` `description_category_id=200000896`
+    - БАД для зрения `type_id=971390832` `description_category_id=200000896`
+    - БАД при эректильной дисфункции `type_id=971300816` `description_category_id=200000896`
+    - БАД успокоительный `type_id=971300829` `description_category_id=200000896`
+    - БАД для поджелудочной железы `type_id=971390830` `description_category_id=200000896`
+    - БАД при урологических нарушениях `type_id=971300839` `description_category_id=200000896`
+    - БАД при аденоме простаты `type_id=971300817` `description_category_id=200000896`
+    - БАД для вен и сосудов `type_id=971300833` `description_category_id=200000896`
+    - БАД для контроля аппетита `type_id=971300836` `description_category_id=200000896`
+    - БАД для головного мозга `type_id=971300834` `description_category_id=200000896`
+    - БАД для печени `type_id=971300820` `description_category_id=200000896`
+    - БАД моно-и-мульти-аминокислота `type_id=971300840` `description_category_id=200000896`
+    - БАД для поддержания иммунитета `type_id=971300823` `description_category_id=200000896`
+    - БАД для повышения либидо `type_id=971390829` `description_category_id=200000896`
+    - БАД пребиотик `type_id=96770` `description_category_id=200000896`
+    - БАД для ЖКТ `type_id=971300818` `description_category_id=200000896`
+    - БАД для снижения веса `type_id=971300837` `description_category_id=200000896`
+    - БАД пробиотик `type_id=971148086` `description_category_id=200000896`
+    - БАД жирные кислоты `type_id=971300843` `description_category_id=200000896`
+    - БАД при никотиновой зависимости `type_id=971300828` `description_category_id=200000896`
+    - БАД при гинекологических нарушениях `type_id=971300814` `description_category_id=200000896`
+    - БАД для щитовидной железы `type_id=971300821` `description_category_id=200000896`
+    - БАД при алкогольной зависимости `type_id=971300826` `description_category_id=200000896`
+    - Витамины `type_id=115949376` `description_category_id=200000896`
+    - БАД для ускорения обмена веществ `type_id=971300838` `description_category_id=200000896`
+    - БАД от паразитов `type_id=971300819` `description_category_id=200000896`
+  - Медицинские инструменты `description_category_id=65190449`
+    - Инструмент гинекологический `type_id=341668698` `description_category_id=65190449`
+    - Инструмент хирургический `type_id=971891645` `description_category_id=65190449`
+    - Инструмент для оториноларингологии `type_id=971301192` `description_category_id=65190449`
+    - Расходные материалы для брекетов `type_id=971229623` `description_category_id=65190449`
+    - Инструмент для биопсии `type_id=971228055` `description_category_id=65190449`
+  - Текстиль медицинский `description_category_id=200001545`
+    - Текстиль медицинский `type_id=970583070` `description_category_id=200001545`
+    - Пеленка медицинская `type_id=93487` `description_category_id=200001545`
+    - Матрас медицинский `type_id=91850` `description_category_id=200001545`
+    - Салфетка медицинская для процедур `type_id=97465` `description_category_id=200001545`
+    - Подушка медицинская `type_id=970955704` `description_category_id=200001545`
+  - Личная гигиена `description_category_id=52620370`
+    - Энурезный будильник `type_id=970893150` `description_category_id=52620370`
+    - Менструальная чаша `type_id=98194` `description_category_id=52620370`
+    - Шприц для лубриканта `type_id=96567` `description_category_id=52620370`
+    - Пластырь `type_id=94573` `description_category_id=52620370`
+    - Презервативы для УЗИ `type_id=971306914` `description_category_id=52620370`
+    - Ректальная насадка `type_id=971425673` `description_category_id=52620370`
+    - Капли для глаз `type_id=93511` `description_category_id=52620370`
+    - Кружка Эсмарха `type_id=971104962` `description_category_id=52620370`
+    - Беруши `type_id=97330` `description_category_id=52620370`
+    - Средство отбеливающее `type_id=712115221` `description_category_id=52620370`
+    - Спринцовка `type_id=94575` `description_category_id=52620370`
+    - Презервативы `type_id=93498` `description_category_id=52620370`
+    - Лубрикант `type_id=93477` `description_category_id=52620370`
+    - Подгузники, трусы для взрослых `type_id=93496` `description_category_id=52620370`
+    - Прокладки урологические `type_id=99441` `description_category_id=52620370`
+    - Косметическое средство по уходу за больными `type_id=970631770` `description_category_id=52620370`
+    - Крем для фиксации `type_id=93475` `description_category_id=52620370`
+    - Пипетка `type_id=97463` `description_category_id=52620370`
+    - Фиксирующие вкладыши для зубных протезов `type_id=97209` `description_category_id=52620370`
+    - Аспиратор назальный `type_id=97587` `description_category_id=52620370`
+    - Средство для индикации зубного налета `type_id=970879616` `description_category_id=52620370`
+    - Спираль внутриматочная `type_id=970957521` `description_category_id=52620370`
+    - Вагинальная диафрагма `type_id=970996407` `description_category_id=52620370`
+    - Уход за брекетами, протезами `type_id=97223` `description_category_id=52620370`
+    - Спермицидный гель `type_id=970996406` `description_category_id=52620370`
+    - Антисептическое средство `type_id=93503` `description_category_id=52620370`
+  - Сопутствующие товары `description_category_id=200001537`
+    - Контейнер для зубных протезов, капы `type_id=97221` `description_category_id=200001537`
+    - Капсула пустая `type_id=971424762` `description_category_id=200001537`
+    - Защитный чехол на гипс `type_id=970869364` `description_category_id=200001537`
+    - Диспенсер для средств индивидуальной защиты `type_id=970807542` `description_category_id=200001537`
+    - Контейнер для линз `type_id=93513` `description_category_id=200001537`
+    - Таблетница `type_id=91828` `description_category_id=200001537`
+  - Уход за линзами, очками `description_category_id=200001544`
+    - Приспособление для закапывания в глаза `type_id=970865524` `description_category_id=200001544`
+    - Салфетка для очков `type_id=96687` `description_category_id=200001544`
+    - Раствор для линз `type_id=93514` `description_category_id=200001544`
+    - Спрей для очков `type_id=504866199` `description_category_id=200001544`
+    - Набор для контактных линз `type_id=971151486` `description_category_id=200001544`
+  - Медицинские приборы `description_category_id=52620255`
+    - Голосообразующий аппарат `type_id=971043353` `description_category_id=52620255`
+    - Тонометр `type_id=91860` `description_category_id=52620255`
+    - Подоскоп `type_id=971452805` `description_category_id=52620255`
+    - Слуховой аппарат `type_id=252555517` `description_category_id=52620255`
+    - Капсулятор ручной `type_id=971749982` `description_category_id=52620255`
+    - Браслет для диабетика `type_id=970824818` `description_category_id=52620255`
+    - Монитор здоровья `type_id=970904865` `description_category_id=52620255`
+    - Помпа микроинфузионная `type_id=970693057` `description_category_id=52620255`
+    - Стоматологический прибор `type_id=971228580` `description_category_id=52620255`
+    - Устройство антихрап `type_id=91864` `description_category_id=52620255`
+    - Галогенератор `type_id=707801193` `description_category_id=52620255`
+    - Аппарат зуботехнический `type_id=971298192` `description_category_id=52620255`
+    - Медицинский ростомер `type_id=971098208` `description_category_id=52620255`
+    - Усилитель звука `type_id=528186209` `description_category_id=52620255`
+    - Полоски для глюкометра, коагулометра `type_id=94574` `description_category_id=52620255`
+    - Дерматоскоп `type_id=504866194` `description_category_id=52620255`
+    - Пульсоксиметр `type_id=370309949` `description_category_id=52620255`
+    - Пульсотахометр `type_id=91851` `description_category_id=52620255`
+    - Рефлектор лобный `type_id=412778335` `description_category_id=52620255`
+    - Инсулиновая помпа `type_id=970824816` `description_category_id=52620255`
+    - Расходник для медицинских приборов `type_id=971304484` `description_category_id=52620255`
+    - Ингалятор `type_id=91824` `description_category_id=52620255`
+    - Ланцеты для глюкометра `type_id=94570` `description_category_id=52620255`
+    - Расходные материалы для инфузионной системы `type_id=971081512` `description_category_id=52620255`
+    - Диагностический фонарик `type_id=412623543` `description_category_id=52620255`
+    - Налобный осветитель `type_id=412714295` `description_category_id=52620255`
+    - Измельчитель таблеток `type_id=970827264` `description_category_id=52620255`
+    - Анализатор медицинский `type_id=971959765` `description_category_id=52620255`
+    - Коагулометр портативный `type_id=971167360` `description_category_id=52620255`
+    - Дыхательная смесь `type_id=97496` `description_category_id=52620255`
+    - Медицинский термометр `type_id=96493` `description_category_id=52620255`
+  - Парафармацевтика `description_category_id=88739730`
+    - Вода с прополисом `type_id=970862358` `description_category_id=88739730`
+    - Лечебное средство `type_id=971806638` `description_category_id=88739730`
+    - Средство от похмелья `type_id=971202432` `description_category_id=88739730`
+    - Гребень педикулицидный `type_id=971026884` `description_category_id=88739730`
+    - Средство для мышц охлаждающие `type_id=971806646` `description_category_id=88739730`
+    - Антипаразитарное средство `type_id=971065803` `description_category_id=88739730`
+    - Травяной сбор `type_id=970825507` `description_category_id=88739730`
+    - Смесь для ванны медицинская `type_id=971156551` `description_category_id=88739730`
+    - Грязь лечебная `type_id=971156892` `description_category_id=88739730`
+    - Концентрированный сухой напиток `type_id=970861845` `description_category_id=88739730`
+    - Пищевая добавка `type_id=97198` `description_category_id=88739730`
+    - Горчичники `type_id=98977` `description_category_id=88739730`
+    - Лечебный экстракт `type_id=971156548` `description_category_id=88739730`
+    - Гематоген `type_id=954971574` `description_category_id=88739730`
+    - Компресс `type_id=99009` `description_category_id=88739730`
+    - Профилактическое средство `type_id=645165051` `description_category_id=88739730`
+    - Имплантат синовиальной жидкости `type_id=970877576` `description_category_id=88739730`
+    - Специализированное питание `type_id=221096045` `description_category_id=88739730`
+    - Маточное молочко `type_id=970881575` `description_category_id=88739730`
+    - Средство для лечения кожи головы, волос `type_id=93943` `description_category_id=88739730`
+  - Медицинская техника `description_category_id=200001539`
+    - Электроэнцефалограф `type_id=971125504` `description_category_id=200001539`
+    - Фетальный допплер `type_id=971006746` `description_category_id=200001539`
+    - Аппарат для прессотерапии `type_id=971093975` `description_category_id=200001539`
+    - Галитометр `type_id=99430` `description_category_id=200001539`
+    - Электронейромиограф `type_id=971125502` `description_category_id=200001539`
+    - Негатоскоп `type_id=971031826` `description_category_id=200001539`
+    - Эхоэнцефалограф `type_id=971125503` `description_category_id=200001539`
+    - Аппарат для дезинфекции `type_id=970904983` `description_category_id=200001539`
+    - Тренажер для глаз `type_id=970851072` `description_category_id=200001539`
+    - Генератор холодного тумана `type_id=970796916` `description_category_id=200001539`
+    - Остеопатический аппарат `type_id=91843` `description_category_id=200001539`
+  - Медицинское оборудование `description_category_id=200001540`
+    - Насос медицинский `type_id=971426428` `description_category_id=200001540`
+    - Стерилизатор медицинский `type_id=971293437` `description_category_id=200001540`
+    - Лампа Вуда `type_id=504866198` `description_category_id=200001540`
+    - Набор для кислородного коктейля `type_id=97497` `description_category_id=200001540`
+    - Шприцевой дозатор `type_id=970996395` `description_category_id=200001540`
+    - Концентратор кислорода `type_id=362877971` `description_category_id=200001540`
+    - Дыхательный тренажер `type_id=970886447` `description_category_id=200001540`
+    - Офтальмодиагностическое оборудование `type_id=630450955` `description_category_id=200001540`
+    - Запечатывающее устройство `type_id=971277630` `description_category_id=200001540`
+    - Аппарат для очистки, обогащения воды `type_id=255584722` `description_category_id=200001540`
+    - Облучатель медицинский `type_id=91825` `description_category_id=200001540`
+    - Кварцевая лампа `type_id=98395` `description_category_id=200001540`
+    - Рециркулятор `type_id=91852` `description_category_id=200001540`
+    - Светильник медицинский `type_id=970996038` `description_category_id=200001540`
+    - Лампа для прогревания `type_id=971074160` `description_category_id=200001540`
+  - Товары для реабилитации `description_category_id=52620587`
+    - Доска для пересадки `type_id=970996843` `description_category_id=52620587`
+    - Параподиум `type_id=298840669` `description_category_id=52620587`
+    - Автокресло для детей с ДЦП `type_id=971895953` `description_category_id=52620587`
+    - Кресло-туалет `type_id=91833` `description_category_id=52620587`
+    - Подъемник для инвалидов `type_id=970954599` `description_category_id=52620587`
+    - Вертикализатор `type_id=298840670` `description_category_id=52620587`
+    - Уличный транспорт для детей с ДЦП `type_id=972745485` `description_category_id=52620587`
+    - Кресло-коляска `type_id=97491` `description_category_id=52620587`
+    - Реабилитационный тренажер `type_id=970685352` `description_category_id=52620587`
+    - Приспособления для надевания `type_id=97713` `description_category_id=52620587`
+    - Ходунки `type_id=971133360` `description_category_id=52620587`
+    - Носилки медицинские `type_id=970879612` `description_category_id=52620587`
+    - Костыли `type_id=91832` `description_category_id=52620587`
+    - Опора под спину `type_id=970573787` `description_category_id=52620587`
+    - Трость `type_id=91861` `description_category_id=52620587`
+  - Материалы и средства стоматологические `description_category_id=200001533`
+    - Скайсы для зубов `type_id=971978891` `description_category_id=200001533`
+    - Средство стоматологическое `type_id=971892856` `description_category_id=200001533`
+    - Капа, трейнер `type_id=364200928` `description_category_id=200001533`
+  - Комплектующее для медицинского оборудования, техники, приборов `description_category_id=200001534`
+    - Комплектующие для медицинской техники `type_id=971892822` `description_category_id=200001534`
+  - Оправы, комплектующее для очков `description_category_id=200001543`
+    - Запчасти для очков `type_id=971302043` `description_category_id=200001543`
+    - Окклюдер `type_id=970825490` `description_category_id=200001543`
+    - Оправа для очков `type_id=504866211` `description_category_id=200001543`
+  - Тест гинекологический, лабораторный, медицинский `description_category_id=200001552`
+    - Тест медицинский `type_id=970885456` `description_category_id=200001552`
+  - Лабораторное обеспечение `description_category_id=200001541`
+    - Лабораторные расходные материалы `type_id=971893116` `description_category_id=200001541`
+    - Лабораторная посуда `type_id=971893087` `description_category_id=200001541`
+  - Медицинские расходные материалы `description_category_id=17028986`
+    - Шприц `type_id=97474` `description_category_id=17028986`
+    - Подушка для забора крови `type_id=970978012` `description_category_id=17028986`
+    - Нефростома `type_id=971010718` `description_category_id=17028986`
+    - Контейнер для медицинских отходов `type_id=971287161` `description_category_id=17028986`
+    - Инфузионная система `type_id=97468` `description_category_id=17028986`
+    - Аксессуар для кало-, мочеприемника `type_id=971445770` `description_category_id=17028986`
+    - Бинт медицинский `type_id=94567` `description_category_id=17028986`
+    - Жгут медицинский `type_id=971315958` `description_category_id=17028986`
+    - Ручное портативное биде `type_id=970878473` `description_category_id=17028986`
+    - Трахеостомическая трубка `type_id=970629868` `description_category_id=17028986`
+    - Пакет медицинский `type_id=971906275` `description_category_id=17028986`
+    - Гипс медицинский `type_id=971890999` `description_category_id=17028986`
+    - Инъектор `type_id=97629` `description_category_id=17028986`
+    - Складная шина медицинская `type_id=971057729` `description_category_id=17028986`
+    - Мочеприемник `type_id=97467` `description_category_id=17028986`
+    - Марля `type_id=94571` `description_category_id=17028986`
+    - Калоприемник `type_id=409350049` `description_category_id=17028986`
+    - Напальчник медицинский `type_id=504866180` `description_category_id=17028986`
+    - Аппликатор для инъекций `type_id=970877891` `description_category_id=17028986`
+    - Средство, аксессуар для ухода за стомой `type_id=392638732` `description_category_id=17028986`
+    - Катетер медицинский `type_id=970948193` `description_category_id=17028986`
+    - Контейнер для анализов `type_id=97461` `description_category_id=17028986`
+    - Пессарий гинекологический `type_id=970952799` `description_category_id=17028986`
+    - Средство гемостатическое `type_id=971371351` `description_category_id=17028986`
+    - Повязка на рану `type_id=97975` `description_category_id=17028986`
+    - Гигиенический пакет для рвотных масс `type_id=970861796` `description_category_id=17028986`
+    - Эластичный бинт `type_id=91867` `description_category_id=17028986`
+    - Поильник медицинский `type_id=98226` `description_category_id=17028986`
+    - Судно подкладное `type_id=94576` `description_category_id=17028986`
+    - Расходный материал для хирургии `type_id=971892284` `description_category_id=17028986`
+    - Вата `type_id=94568` `description_category_id=17028986`
+    - Набор для самокатетеризации `type_id=970948196` `description_category_id=17028986`
+  - Ортопедия, бандажи, компрессионные изделия, протезирование `description_category_id=52620708`
+    - Колпачки, силиконовые трубки `type_id=971924155` `description_category_id=52620708`
+    - Компрессионное изделие `type_id=971046705` `description_category_id=52620708`
+    - Бандаж `type_id=91814` `description_category_id=52620708`
+    - Массажные стельки `type_id=971924191` `description_category_id=52620708`
+    - Ортопедическая шина `type_id=98198` `description_category_id=52620708`
+    - Пояс иммобилизационный `type_id=970946773` `description_category_id=52620708`
+    - Массажные тапочки `type_id=97698` `description_category_id=52620708`
+    - Корректор для ног `type_id=970987053` `description_category_id=52620708`
+    - Аксессуар для протеза `type_id=971410746` `description_category_id=52620708`
+    - Межпальцевый разделитель `type_id=971924157` `description_category_id=52620708`
+    - Корректор для пальца `type_id=971078296` `description_category_id=52620708`
+    - Корректор осанки `type_id=97485` `description_category_id=52620708`
+    - Протез молочной железы `type_id=971125594` `description_category_id=52620708`
+    - Пояс согревающий `type_id=970892651` `description_category_id=52620708`
+    - Пяткоудерживатель `type_id=971314467` `description_category_id=52620708`
+    - Барука `type_id=971105582` `description_category_id=52620708`
+    - Ортопедические стельки `type_id=504866248` `description_category_id=52620708`
+    - Подметка для ходьбы в гипсовой повязке `type_id=970680698` `description_category_id=52620708`
+    - Протез `type_id=971445262` `description_category_id=52620708`
+    - Ортез `type_id=97483` `description_category_id=52620708`
+    - Искусственные соски `type_id=970829679` `description_category_id=52620708`
+    - Живот накладной силиконовый `type_id=971094050` `description_category_id=52620708`
+    - Силикон для изготовления ортезов `type_id=971067133` `description_category_id=52620708`
+    - Корректор стопы `type_id=91829` `description_category_id=52620708`
+    - Шина иммобилизационная `type_id=971913343` `description_category_id=52620708`
+    - Корсет ортопедический `type_id=97489` `description_category_id=52620708`
+  - Линзы контактные, для очков, корригирующие очки `description_category_id=200001542`
+    - Набор пробных очковых линз `type_id=970996037` `description_category_id=200001542`
+    - Линзы для очков `type_id=970956118` `description_category_id=200001542`
+    - Очки для зрения `type_id=96686` `description_category_id=200001542`
+  - Ветеринарное медицинское оборудование B2B `description_category_id=200000110`
+    - Ветеринарное медицинское оборудование `type_id=971164017` `description_category_id=200000110`
+    - Ветеринарный медицинский инструмент `type_id=971163973` `description_category_id=200000110`
+- Кино, музыка, видеоигры, софт `description_category_id=99999999`
+  - Кино, музыка, видеоигры, софт `description_category_id=46590429`
+    - Программа `type_id=392638731` `description_category_id=46590429`
+    - Фильм `type_id=392638730` `description_category_id=46590429`
+    - Музыкальный диск `type_id=392547272` `description_category_id=46590429`
+    - Пластинка виниловая `type_id=971888493` `description_category_id=46590429`
+    - Видеоигра `type_id=409596018` `description_category_id=46590429`
+- Мебель `description_category_id=17027915`
+  - Мебель бескаркасная `description_category_id=92265029`
+    - Бескаркасный диван `type_id=970943564` `description_category_id=92265029`
+    - Кресло-мешок `type_id=95037` `description_category_id=92265029`
+    - Чехол для бескаркасной мебели `type_id=971842440` `description_category_id=92265029`
+    - Бескаркасный пуф `type_id=970943565` `description_category_id=92265029`
+  - Мебель для бизнеса `description_category_id=85282223`
+    - Защитный экран для офиса `type_id=970744412` `description_category_id=85282223`
+    - Ларь для овощей `type_id=970988646` `description_category_id=85282223`
+    - Примерочная кабина `type_id=971108792` `description_category_id=85282223`
+    - Комплект мебели для ПВЗ `type_id=971434690` `description_category_id=85282223`
+    - Мойка производственная `type_id=970988636` `description_category_id=85282223`
+    - Полка производственная `type_id=970993837` `description_category_id=85282223`
+    - Швейный уголок `type_id=971363893` `description_category_id=85282223`
+    - Подставка производственная `type_id=971816790` `description_category_id=85282223`
+    - Шкаф производственный `type_id=970988648` `description_category_id=85282223`
+    - Стол производственный `type_id=970988643` `description_category_id=85282223`
+    - Мебель медицинская `type_id=970996040` `description_category_id=85282223`
+    - Кушетка косметологическая `type_id=95032` `description_category_id=85282223`
+    - Стойка ресепшн для ПВЗ `type_id=971108795` `description_category_id=85282223`
+    - Аксессуары для медицинской мебели `type_id=971951883` `description_category_id=85282223`
+    - Сундук-тумба для ПВЗ `type_id=971108797` `description_category_id=85282223`
+    - Кресло педикюрное `type_id=95034` `description_category_id=85282223`
+  - Мебельная фурнитура и комплектующие `description_category_id=53884411`
+    - Набор для перемещения мебели `type_id=970801515` `description_category_id=53884411`
+    - Цепь для садовых качелей `type_id=971053796` `description_category_id=53884411`
+    - Демпфер мебельный `type_id=970713341` `description_category_id=53884411`
+    - Пантограф для шкафа `type_id=970632135` `description_category_id=53884411`
+    - Мебельное колесо `type_id=98750` `description_category_id=53884411`
+    - Термоизоляционная планка `type_id=970943103` `description_category_id=53884411`
+    - Протектор для мебели `type_id=91988` `description_category_id=53884411`
+    - Шляпка для саморезов `type_id=98788` `description_category_id=53884411`
+    - Толкатель мебельный `type_id=504866275` `description_category_id=53884411`
+    - Щеточный уплотнитель `type_id=970718860` `description_category_id=53884411`
+    - Пружина мебельная `type_id=971751527` `description_category_id=53884411`
+    - Запчасти для барной стойки `type_id=971075626` `description_category_id=53884411`
+    - Латодержатель `type_id=970695424` `description_category_id=53884411`
+    - Декор для мебели `type_id=971079735` `description_category_id=53884411`
+    - Запчасти для гардеробной системы `type_id=970855443` `description_category_id=53884411`
+    - Полка для клавиатуры `type_id=970991002` `description_category_id=53884411`
+    - Стяжка мебельная `type_id=98759` `description_category_id=53884411`
+    - Стопор колес мебельный `type_id=971287675` `description_category_id=53884411`
+    - Фурнитура для шкафа-купе `type_id=971421251` `description_category_id=53884411`
+    - Направляющие `type_id=504866274` `description_category_id=53884411`
+    - Механизм поворотный мебельный `type_id=971286686` `description_category_id=53884411`
+    - Ламель для кровати `type_id=970695216` `description_category_id=53884411`
+    - Ящик выдвижной мебельный `type_id=970684236` `description_category_id=53884411`
+    - Фурнитура для мебельной трубы `type_id=971100654` `description_category_id=53884411`
+    - Подъемный механизм `type_id=970695398` `description_category_id=53884411`
+    - Подпятник `type_id=98768` `description_category_id=53884411`
+    - Кромка мебельная клеевая `type_id=970866476` `description_category_id=53884411`
+    - Доводчик мебельный `type_id=94525` `description_category_id=53884411`
+    - Крестовина для компьютерного кресла `type_id=970798612` `description_category_id=53884411`
+    - Пружинный блок `type_id=971285252` `description_category_id=53884411`
+    - Держатель для штанги `type_id=971095277` `description_category_id=53884411`
+    - Фиксатор фасада мебельный `type_id=971225344` `description_category_id=53884411`
+    - Запчасти для кровати `type_id=971395646` `description_category_id=53884411`
+    - Кромка мебельная безклеевая `type_id=971025231` `description_category_id=53884411`
+    - Ограждение для кровати `type_id=971283530` `description_category_id=53884411`
+    - Мебельный фасад `type_id=970796917` `description_category_id=53884411`
+    - Эксцентриковая стяжка `type_id=970871927` `description_category_id=53884411`
+    - Наполнитель для кресла-мешка `type_id=756237457` `description_category_id=53884411`
+    - Держатель для полки `type_id=98767` `description_category_id=53884411`
+    - Газлифт мебельный `type_id=970676657` `description_category_id=53884411`
+    - Изголовье кровати `type_id=970872286` `description_category_id=53884411`
+    - Выкатная корзина `type_id=970676212` `description_category_id=53884411`
+    - Ножка для мебели `type_id=298512288` `description_category_id=53884411`
+    - Цоколь для кухни `type_id=971093305` `description_category_id=53884411`
+    - Уголок мебельный `type_id=98777` `description_category_id=53884411`
+    - Шкант мебельный `type_id=94563` `description_category_id=53884411`
+    - Ручка мебельная `type_id=94532` `description_category_id=53884411`
+    - Заглушка декоративная `type_id=98790` `description_category_id=53884411`
+    - Фурнитура для мягкой мебели `type_id=971303632` `description_category_id=53884411`
+    - Механизм качания `type_id=970688624` `description_category_id=53884411`
+    - Механизм трансформации `type_id=970744443` `description_category_id=53884411`
+    - Плинтус для столешницы `type_id=970941858` `description_category_id=53884411`
+    - Петля мебельная `type_id=94530` `description_category_id=53884411`
+    - Столешница `type_id=970804430` `description_category_id=53884411`
+    - Профиль для стекла `type_id=971296070` `description_category_id=53884411`
+    - Штанга в шкаф `type_id=970958518` `description_category_id=53884411`
+    - Шток для эксцентриковой стяжки `type_id=970871928` `description_category_id=53884411`
+    - Планка для столешницы `type_id=970744442` `description_category_id=53884411`
+    - Дверь для шкафа `type_id=971039559` `description_category_id=53884411`
+    - Уплотнитель для цоколя `type_id=971200707` `description_category_id=53884411`
+    - Набор мебельной фурнитуры `type_id=971312699` `description_category_id=53884411`
+    - Ограничитель угла открывания `type_id=971371061` `description_category_id=53884411`
+  - Шкафы `description_category_id=17027919`
+    - Барная стойка `type_id=971288195` `description_category_id=17027919`
+    - Шкаф навесной `type_id=970977423` `description_category_id=17027919`
+    - Шкаф складной `type_id=95484` `description_category_id=17027919`
+    - Шкаф-пенал `type_id=95110` `description_category_id=17027919`
+    - Шкаф-витрина `type_id=95109` `description_category_id=17027919`
+    - Буфет `type_id=95083` `description_category_id=17027919`
+    - Шкаф книжный `type_id=504866300` `description_category_id=17027919`
+    - Антресоль мебельная `type_id=971161297` `description_category_id=17027919`
+    - Корпус шкафа `type_id=970796918` `description_category_id=17027919`
+    - Шкаф-купе `type_id=970679785` `description_category_id=17027919`
+    - Вешалка настенная `type_id=93671` `description_category_id=17027919`
+    - Барный шкаф `type_id=971285308` `description_category_id=17027919`
+    - Гардеробная система `type_id=95472` `description_category_id=17027919`
+    - Шкаф распашной `type_id=95108` `description_category_id=17027919`
+  - Комоды и тумбы `description_category_id=80711064`
+    - Тумба `type_id=971162059` `description_category_id=80711064`
+    - Этажерка для обуви `type_id=970693320` `description_category_id=80711064`
+    - Обувница `type_id=95103` `description_category_id=80711064`
+    - Комод `type_id=95086` `description_category_id=80711064`
+    - Пеленальный стол `type_id=95011` `description_category_id=80711064`
+  - Стулья, скамьи, табуреты, пуфики `description_category_id=17027916`
+    - Запчасти для стула `type_id=970843542` `description_category_id=17027916`
+    - Комплект табуретов `type_id=970685472` `description_category_id=17027916`
+    - Стул для музыканта `type_id=96801` `description_category_id=17027916`
+    - Банкетка `type_id=95021` `description_category_id=17027916`
+    - Пуф `type_id=95044` `description_category_id=17027916`
+    - Сундук `type_id=970714176` `description_category_id=17027916`
+    - Стул откидной `type_id=971476428` `description_category_id=17027916`
+    - Стул `type_id=95048` `description_category_id=17027916`
+    - Комплект стульев `type_id=970685469` `description_category_id=17027916`
+    - Подставка под ноги `type_id=96802` `description_category_id=17027916`
+    - Табурет `type_id=95053` `description_category_id=17027916`
+    - Барный стул `type_id=95023` `description_category_id=17027916`
+    - Табурет-стремянка `type_id=970709003` `description_category_id=17027916`
+    - Кресло детское `type_id=95031` `description_category_id=17027916`
+    - Комплект барных стульев `type_id=970685471` `description_category_id=17027916`
+    - Детский стул `type_id=95049` `description_category_id=17027916`
+    - Складной стул `type_id=970591528` `description_category_id=17027916`
+    - Садовый сундук `type_id=970866475` `description_category_id=17027916`
+  - Садовые и пляжные зонты `description_category_id=17028735`
+    - Садовый зонт `type_id=93357` `description_category_id=17028735`
+    - Пляжный зонт `type_id=93356` `description_category_id=17028735`
+    - Держатель для пляжного зонта `type_id=93351` `description_category_id=17028735`
+  - Мебель для кухни `description_category_id=80771432`
+    - Наполнение для кухонного модуля `type_id=971430403` `description_category_id=80771432`
+    - Кухонный модуль навесной `type_id=970782258` `description_category_id=80771432`
+    - Кухонный модуль напольный `type_id=970782257` `description_category_id=80771432`
+    - Кухонный гарнитур `type_id=95089` `description_category_id=80771432`
+  - Матрасы `description_category_id=17027914`
+    - Медицинский матрас `type_id=970859602` `description_category_id=17027914`
+    - Матрас для садовой мебели `type_id=504866279` `description_category_id=17027914`
+    - Матрас `type_id=115946522` `description_category_id=17027914`
+    - Топпер-наматрасник `type_id=98427` `description_category_id=17027914`
+  - Мебель для ванной `description_category_id=76107195`
+    - Комплект мебели для ванной `type_id=95088` `description_category_id=76107195`
+    - Тумба для ванной `type_id=970666036` `description_category_id=76107195`
+    - Шкаф для ванной `type_id=970665788` `description_category_id=76107195`
+  - Столы `description_category_id=17027918`
+    - Стол обеденный `type_id=95015` `description_category_id=17027918`
+    - Барный стол `type_id=95000` `description_category_id=17027918`
+    - Парта `type_id=95010` `description_category_id=17027918`
+    - Стойка ресепшн `type_id=97452` `description_category_id=17027918`
+    - Сервировочный стол `type_id=95013` `description_category_id=17027918`
+    - Стол-стеллаж `type_id=971113493` `description_category_id=17027918`
+    - Офисный стол `type_id=95001` `description_category_id=17027918`
+    - Туалетный столик `type_id=95101` `description_category_id=17027918`
+    - Кронштейн откидного стола `type_id=970941908` `description_category_id=17027918`
+    - Стол-книжка `type_id=970689232` `description_category_id=17027918`
+    - Подвесной стол `type_id=971311385` `description_category_id=17027918`
+    - Письменный стол `type_id=504866270` `description_category_id=17027918`
+    - Компьютерный стол `type_id=95005` `description_category_id=17027918`
+    - Трибуна для выступлений `type_id=971102673` `description_category_id=17027918`
+    - Консоль `type_id=95006` `description_category_id=17027918`
+    - Столик для ноутбука `type_id=97388` `description_category_id=17027918`
+    - Приставной столик `type_id=970713712` `description_category_id=17027918`
+    - Подставка под системный блок `type_id=971035074` `description_category_id=17027918`
+    - Подстолье `type_id=95012` `description_category_id=17027918`
+    - Журнальный стол `type_id=95002` `description_category_id=17027918`
+    - Детский стол `type_id=95016` `description_category_id=17027918`
+    - Подлокотник для стола `type_id=970841047` `description_category_id=17027918`
+  - Компьютерные и офисные кресла `description_category_id=79164512`
+    - Ортопедический стул `type_id=97582` `description_category_id=79164512`
+    - Стул мастера `type_id=970884997` `description_category_id=79164512`
+    - Детское компьютерное кресло `type_id=970685072` `description_category_id=79164512`
+    - Офисное кресло `type_id=95041` `description_category_id=79164512`
+    - Игровое компьютерное кресло `type_id=95026` `description_category_id=79164512`
+    - Игровая вибронакидка `type_id=91796` `description_category_id=79164512`
+  - Садовая мебель `description_category_id=80443823`
+    - Садовая тумба `type_id=971741657` `description_category_id=80443823`
+    - Садовое кресло `type_id=970693295` `description_category_id=80443823`
+    - Садовый диван `type_id=95062` `description_category_id=80443823`
+    - Шатер `type_id=95075` `description_category_id=80443823`
+    - Садовый тент `type_id=95072` `description_category_id=80443823`
+    - Шезлонг `type_id=94452` `description_category_id=80443823`
+    - Скамья `type_id=613346845` `description_category_id=80443823`
+    - Стенка для садовой постройки `type_id=95069` `description_category_id=80443823`
+    - Садовый шкаф `type_id=971741656` `description_category_id=80443823`
+    - Фурнитура для садовой мебели `type_id=971225454` `description_category_id=80443823`
+    - Садовые качели `type_id=95057` `description_category_id=80443823`
+    - Купол `type_id=95066` `description_category_id=80443823`
+    - Шкаф для газового баллона `type_id=970713678` `description_category_id=80443823`
+    - Аксессуары для гамака `type_id=95059` `description_category_id=80443823`
+    - Аксессуары для качели `type_id=504866289` `description_category_id=80443823`
+    - Каркас для садовой мебели `type_id=95056` `description_category_id=80443823`
+    - Садовая кухня `type_id=970857380` `description_category_id=80443823`
+    - Аксессуары для беседки `type_id=971451382` `description_category_id=80443823`
+    - Готовый навес для крыльца `type_id=971126380` `description_category_id=80443823`
+    - Гамак `type_id=95055` `description_category_id=80443823`
+    - Садовый стол `type_id=970693797` `description_category_id=80443823`
+    - Садовый стул `type_id=970688752` `description_category_id=80443823`
+    - Беседка `type_id=95065` `description_category_id=80443823`
+    - Ремкомплект для садовой мебели `type_id=971287565` `description_category_id=80443823`
+    - Набор садовой мебели `type_id=95028` `description_category_id=80443823`
+  - Комплекты мебели `description_category_id=80770870`
+    - Комплект мягкой мебели `type_id=95027` `description_category_id=80770870`
+    - Обеденная группа `type_id=95009` `description_category_id=80770870`
+    - Комплект детской мебели `type_id=95008` `description_category_id=80770870`
+    - Модуль стенки для гостиной `type_id=971079565` `description_category_id=80770870`
+    - Комплект офисной мебели `type_id=970872419` `description_category_id=80770870`
+    - Комплект мебели для спальни `type_id=970671812` `description_category_id=80770870`
+    - Стенка для гостиной `type_id=95092` `description_category_id=80770870`
+    - Комплект мебели для прихожей `type_id=95090` `description_category_id=80770870`
+  - Кровати `description_category_id=17027917`
+    - Кровать раздвижная `type_id=970968734` `description_category_id=17027917`
+    - Тахта `type_id=94999` `description_category_id=17027917`
+    - Колыбель `type_id=94993` `description_category_id=17027917`
+    - Двуспальная кровать `type_id=94995` `description_category_id=17027917`
+    - Каркас кровати `type_id=94992` `description_category_id=17027917`
+    - Трехъярусная кровать `type_id=971414986` `description_category_id=17027917`
+    - Маятник для кроватки `type_id=99456` `description_category_id=17027917`
+    - Кровать детская `type_id=94996` `description_category_id=17027917`
+    - Шкаф-кровать `type_id=971082810` `description_category_id=17027917`
+    - Односпальная кровать `type_id=970713329` `description_category_id=17027917`
+    - Реечное дно `type_id=94998` `description_category_id=17027917`
+    - Двухъярусная кровать `type_id=970615714` `description_category_id=17027917`
+    - Раскладушка `type_id=94997` `description_category_id=17027917`
+    - Кровать-чердак `type_id=97193` `description_category_id=17027917`
+  - Диваны и кресла `description_category_id=80375615`
+    - Кушетка `type_id=95039` `description_category_id=80375615`
+    - Прямой диван `type_id=95024` `description_category_id=80375615`
+    - Угловой диван `type_id=97632` `description_category_id=80375615`
+    - Кресло `type_id=95030` `description_category_id=80375615`
+    - Модульный диван `type_id=970797823` `description_category_id=80375615`
+    - Кресло-кровать `type_id=95036` `description_category_id=80375615`
+    - Кухонный уголок `type_id=95038` `description_category_id=80375615`
+    - Кресло-качалка `type_id=95035` `description_category_id=80375615`
+    - Подвесное кресло `type_id=970829669` `description_category_id=80375615`
+    - Диван раскладной `type_id=95025` `description_category_id=80375615`
+    - Запчасти для дивана `type_id=970797824` `description_category_id=80375615`
+    - Запчасти для кресла `type_id=971105392` `description_category_id=80375615`
+  - Полки и стеллажи `description_category_id=80731485`
+    - Стеллаж для ванной `type_id=970666031` `description_category_id=80731485`
+    - Этажерка `type_id=95111` `description_category_id=80731485`
+    - Стеллаж `type_id=95098` `description_category_id=80731485`
+    - Полка `type_id=115946601` `description_category_id=80731485`
+    - Запчасти для стеллажа `type_id=970968749` `description_category_id=80731485`
+- Канцелярские товары `description_category_id=17027492`
+  - Электронная карта/браслет `description_category_id=80298595`
+    - Идентификационный браслет, карта `type_id=970997659` `description_category_id=80298595`
+  - Канцелярские мелочи `description_category_id=200001634`
+    - Скобы для степлера `type_id=93315` `description_category_id=200001634`
+    - Резинка канцелярская `type_id=93313` `description_category_id=200001634`
+    - Лезвия канцелярские `type_id=93297` `description_category_id=200001634`
+    - Кнопки канцелярские `type_id=93294` `description_category_id=200001634`
+    - Зажим для бумаги `type_id=93290` `description_category_id=200001634`
+    - Булавки канцелярские `type_id=970808621` `description_category_id=200001634`
+    - Скрепки `type_id=93316` `description_category_id=200001634`
+  - Чертежные принадлежности `description_category_id=200001635`
+    - Транспортир `type_id=93321` `description_category_id=200001635`
+    - Угольник `type_id=93323` `description_category_id=200001635`
+    - Спирограф `type_id=970960653` `description_category_id=200001635`
+    - Циркуль `type_id=93327` `description_category_id=200001635`
+    - Готовальня `type_id=93287` `description_category_id=200001635`
+    - Чертежная доска `type_id=970729015` `description_category_id=200001635`
+    - Линейка `type_id=93298` `description_category_id=200001635`
+    - Геометрический набор `type_id=93286` `description_category_id=200001635`
+    - Рейсфедер `type_id=93314` `description_category_id=200001635`
+  - Бумага `description_category_id=17029017`
+    - Бумага чертежная `type_id=91404` `description_category_id=17029017`
+    - Лента кассовая `type_id=257342270` `description_category_id=17029017`
+    - Калька `type_id=91409` `description_category_id=17029017`
+    - Пленка самоклеящаяся `type_id=257342290` `description_category_id=17029017`
+    - Бумага цветная `type_id=91406` `description_category_id=17029017`
+    - Бумага магнитная `type_id=99091` `description_category_id=17029017`
+    - Бумага широкоформатная `type_id=91405` `description_category_id=17029017`
+    - Бумага офисная `type_id=91411` `description_category_id=17029017`
+    - Бумага для рисования `type_id=91401` `description_category_id=17029017`
+    - Бумага для творчества `type_id=970736881` `description_category_id=17029017`
+    - Фотобумага `type_id=91415` `description_category_id=17029017`
+    - Фольга цветная `type_id=970778039` `description_category_id=17029017`
+    - Пенокартон `type_id=970957182` `description_category_id=17029017`
+    - Бумага для принтера `type_id=91400` `description_category_id=17029017`
+    - Картон `type_id=91410` `description_category_id=17029017`
+  - Папки и файлы `description_category_id=17029023`
+    - Разделитель для папки `type_id=94477` `description_category_id=17029023`
+    - Держатель для бейджа `type_id=97949` `description_category_id=17029023`
+    - Файл `type_id=94480` `description_category_id=17029023`
+    - Бейдж `type_id=94475` `description_category_id=17029023`
+    - Сшиватель `type_id=97616` `description_category_id=17029023`
+    - Папка `type_id=707053704` `description_category_id=17029023`
+    - Короб архивный `type_id=97614` `description_category_id=17029023`
+    - Планшетная доска `type_id=97415` `description_category_id=17029023`
+    - Станок для архивного переплета `type_id=971416128` `description_category_id=17029023`
+    - Сменные блоки для визитниц `type_id=94478` `description_category_id=17029023`
+    - Механизм для папок `type_id=971072241` `description_category_id=17029023`
+    - Лента для бейджа `type_id=97950` `description_category_id=17029023`
+    - Струбцина-лоток для архивного переплета `type_id=971416127` `description_category_id=17029023`
+  - Демонстрационные доски и аксессуары `description_category_id=17029020`
+    - Магнит канцелярский `type_id=93300` `description_category_id=17029020`
+    - Аксессуары для доски, флипчарта `type_id=779247221` `description_category_id=17029020`
+    - Планинг магнитный `type_id=970876418` `description_category_id=17029020`
+    - Флипчарт `type_id=94497` `description_category_id=17029020`
+  - Глобус `description_category_id=17029019`
+    - Теллурий `type_id=125931030` `description_category_id=17029019`
+    - Глобус `type_id=94481` `description_category_id=17029019`
+  - Краска, клей `description_category_id=17029022`
+    - Краски акварельные `type_id=94070` `description_category_id=17029022`
+    - Краска пальчиковая `type_id=94086` `description_category_id=17029022`
+    - Средство матирующее `type_id=971425863` `description_category_id=17029022`
+    - Пастель `type_id=94089` `description_category_id=17029022`
+    - Кэп, распылитель для баллонов `type_id=971044877` `description_category_id=17029022`
+    - Цветовой круг `type_id=971323443` `description_category_id=17029022`
+    - Контур `type_id=97689` `description_category_id=17029022`
+    - Краска типографская `type_id=971363090` `description_category_id=17029022`
+    - Растворитель для краски `type_id=97686` `description_category_id=17029022`
+    - Клей канцелярский `type_id=94073` `description_category_id=17029022`
+    - Бархатная пудра `type_id=971413074` `description_category_id=17029022`
+    - Краска для граффити `type_id=98406` `description_category_id=17029022`
+    - Жидкое стекло для декора `type_id=971102801` `description_category_id=17029022`
+    - Краска текстильная `type_id=94084` `description_category_id=17029022`
+    - Лак для творчества `type_id=94088` `description_category_id=17029022`
+    - Средство для очищения кистей `type_id=971201540` `description_category_id=17029022`
+    - Краска витражная `type_id=94080` `description_category_id=17029022`
+    - Маскирующая жидкость для рисования `type_id=970862444` `description_category_id=17029022`
+    - Гуашь `type_id=94072` `description_category_id=17029022`
+    - Краска штемпельная `type_id=94087` `description_category_id=17029022`
+    - Клеевые подушечки `type_id=98331` `description_category_id=17029022`
+    - Краска масляная `type_id=94085` `description_category_id=17029022`
+    - Чернила `type_id=97678` `description_category_id=17029022`
+    - Разбавитель `type_id=97329` `description_category_id=17029022`
+    - Краска темперная `type_id=94090` `description_category_id=17029022`
+    - Краска для шелкографии `type_id=971370655` `description_category_id=17029022`
+    - Гель-краска `type_id=97178` `description_category_id=17029022`
+    - Паста текстурная `type_id=92321` `description_category_id=17029022`
+    - Фиксатор пигмента `type_id=970849004` `description_category_id=17029022`
+    - Пигмент `type_id=97885` `description_category_id=17029022`
+    - Медиум для художественных красок `type_id=971395608` `description_category_id=17029022`
+    - Краска акриловая `type_id=94079` `description_category_id=17029022`
+    - Шарики для размешивания краски `type_id=971444195` `description_category_id=17029022`
+    - Краска флористическая `type_id=971065060` `description_category_id=17029022`
+    - Грунт художественный `type_id=97251` `description_category_id=17029022`
+    - Краска для керамики `type_id=94082` `description_category_id=17029022`
+    - Замедлитель `type_id=97691` `description_category_id=17029022`
+    - Загуститель для красок `type_id=99417` `description_category_id=17029022`
+    - Глиттер `type_id=98430` `description_category_id=17029022`
+    - Тушь для рисования `type_id=97677` `description_category_id=17029022`
+  - Настенные карты `description_category_id=75974223`
+    - Настенная карта `type_id=970665952` `description_category_id=75974223`
+  - Пенал `description_category_id=17029024`
+    - Пенал `type_id=94105` `description_category_id=17029024`
+  - Печати и штампы `description_category_id=17029016`
+    - Штемпельная подушка `type_id=96737` `description_category_id=17029016`
+    - Аксессуары для печати, штампа `type_id=96732` `description_category_id=17029016`
+    - Печать `type_id=115948239` `description_category_id=17029016`
+    - Этикет-пистолет `type_id=98207` `description_category_id=17029016`
+    - Аксессуары для создания штампа, печати `type_id=971078138` `description_category_id=17029016`
+    - Пистолет-маркиратор `type_id=970778135` `description_category_id=17029016`
+    - Штамп `type_id=96739` `description_category_id=17029016`
+  - Оборудование для торговли `description_category_id=71328593`
+    - Полочный разделитель `type_id=970616683` `description_category_id=71328593`
+    - Выделитель ценника `type_id=971407898` `description_category_id=71328593`
+    - Монетница `type_id=970616288` `description_category_id=71328593`
+    - Дисплей торговый `type_id=970616770` `description_category_id=71328593`
+    - Коробка для товара `type_id=971448894` `description_category_id=71328593`
+    - Антикражный замок для витрины `type_id=971001293` `description_category_id=71328593`
+    - Ценник `type_id=970615927` `description_category_id=71328593`
+    - Ценникодержатель `type_id=970615402` `description_category_id=71328593`
+    - Тележка покупательская `type_id=970855215` `description_category_id=71328593`
+    - Торговый автомат механический `type_id=971065057` `description_category_id=71328593`
+    - Клик-рама `type_id=970616815` `description_category_id=71328593`
+    - Разменный аппарат `type_id=971132995` `description_category_id=71328593`
+    - Биркодержатель для игольчатого пистолета `type_id=971323480` `description_category_id=71328593`
+    - Карман информационный `type_id=970615403` `description_category_id=71328593`
+    - Размерники на вешалки `type_id=971437077` `description_category_id=71328593`
+    - Пресс-волл `type_id=971043038` `description_category_id=71328593`
+    - Поручень рекламный `type_id=971432456` `description_category_id=71328593`
+    - Корзина, накопитель для распродаж `type_id=971296315` `description_category_id=71328593`
+    - Аксессуары для торгового оборудования `type_id=972101856` `description_category_id=71328593`
+    - Игла для чеков, билетов `type_id=971084704` `description_category_id=71328593`
+    - Стойка информационная `type_id=970615776` `description_category_id=71328593`
+    - Светодиодная вывеска для магазина `type_id=970694426` `description_category_id=71328593`
+    - Информационный материал `type_id=970676645` `description_category_id=71328593`
+    - Гардеробный номерок `type_id=970986820` `description_category_id=71328593`
+    - Тейбл-тент `type_id=970615775` `description_category_id=71328593`
+    - Шары для лототрона `type_id=971007683` `description_category_id=71328593`
+    - Рекламная вывеска-баннер `type_id=970865886` `description_category_id=71328593`
+    - Торговая палатка `type_id=95073` `description_category_id=71328593`
+    - Аксессуар для информационной рамки `type_id=970616821` `description_category_id=71328593`
+    - Ключ для покупательской тележки `type_id=971367179` `description_category_id=71328593`
+    - Счетчик-кликер `type_id=94316` `description_category_id=71328593`
+    - Демонстрационная система `type_id=94485` `description_category_id=71328593`
+    - Бокс для пожертвований, голосований `type_id=970842796` `description_category_id=71328593`
+    - Стойка для механического торгового автомата `type_id=971096364` `description_category_id=71328593`
+    - Информационный стенд `type_id=790183771` `description_category_id=71328593`
+    - Подставка под товар `type_id=971440461` `description_category_id=71328593`
+    - Рамка информационная `type_id=970615353` `description_category_id=71328593`
+    - Кассета для купюроприемника `type_id=971287223` `description_category_id=71328593`
+    - Съемник для одежды `type_id=971405336` `description_category_id=71328593`
+    - Корзина покупательская `type_id=970616289` `description_category_id=71328593`
+  - Канцелярия `description_category_id=17029021`
+    - Увлажнитель для пальцев `type_id=93322` `description_category_id=17029021`
+    - Счетный материал `type_id=93319` `description_category_id=17029021`
+    - Подставка канцелярская `type_id=93326` `description_category_id=17029021`
+    - Этикетка `type_id=93328` `description_category_id=17029021`
+    - Аксессуар для лупы `type_id=970834768` `description_category_id=17029021`
+    - Система хранения ключей `type_id=970701654` `description_category_id=17029021`
+    - Закладка `type_id=93291` `description_category_id=17029021`
+    - Дырокол `type_id=93289` `description_category_id=17029021`
+    - Коврик для стола `type_id=93302` `description_category_id=17029021`
+    - Стакан для рисования `type_id=93285` `description_category_id=17029021`
+    - Аксессуар для ножниц `type_id=970629379` `description_category_id=17029021`
+    - Пружина для биндера `type_id=93311` `description_category_id=17029021`
+    - Канцелярский набор `type_id=93292` `description_category_id=17029021`
+    - Держатель канцелярский `type_id=98506` `description_category_id=17029021`
+    - Картотека `type_id=971747556` `description_category_id=17029021`
+    - Калькулятор `type_id=91442` `description_category_id=17029021`
+    - Чернильница `type_id=970625130` `description_category_id=17029021`
+    - Наклейка на банковскую карту `type_id=970941958` `description_category_id=17029021`
+    - Диспенсер для клейкой ленты `type_id=93288` `description_category_id=17029021`
+    - Бирка для ключа `type_id=98505` `description_category_id=17029021`
+    - Масленка художественная `type_id=98649` `description_category_id=17029021`
+    - Мыло для промывки кистей `type_id=970871223` `description_category_id=17029021`
+    - Ластик `type_id=93296` `description_category_id=17029021`
+    - Пылесос канцелярский `type_id=970939350` `description_category_id=17029021`
+    - Ножницы `type_id=93304` `description_category_id=17029021`
+    - Органайзер канцелярский `type_id=970869397` `description_category_id=17029021`
+    - Тубус `type_id=91356` `description_category_id=17029021`
+    - Кистемойка `type_id=98652` `description_category_id=17029021`
+    - Касса букв, цифр `type_id=96733` `description_category_id=17029021`
+    - Клейкая лента канцелярская `type_id=93293` `description_category_id=17029021`
+    - Лазерная указка `type_id=971409620` `description_category_id=17029021`
+    - Мастихин художественный `type_id=97417` `description_category_id=17029021`
+    - Антистеплер `type_id=97585` `description_category_id=17029021`
+    - Лоток для бумаг `type_id=93308` `description_category_id=17029021`
+    - Растушевка `type_id=970841267` `description_category_id=17029021`
+    - Марзан для резака `type_id=971116883` `description_category_id=17029021`
+    - Шило канцелярское `type_id=971411247` `description_category_id=17029021`
+    - Точилка для карандашей `type_id=93320` `description_category_id=17029021`
+    - Обрезчик углов `type_id=970987619` `description_category_id=17029021`
+    - Аксессуар для блокнота, ежедневника `type_id=971416161` `description_category_id=17029021`
+    - Резак сабельный `type_id=93312` `description_category_id=17029021`
+    - Напальчник для бумаги `type_id=970744259` `description_category_id=17029021`
+    - Модель гипсовая `type_id=97506` `description_category_id=17029021`
+    - Скальпель канцелярский `type_id=970859600` `description_category_id=17029021`
+    - Указка `type_id=93324` `description_category_id=17029021`
+    - Обложка `type_id=93305` `description_category_id=17029021`
+    - Лупа `type_id=93299` `description_category_id=17029021`
+    - Набор для прошивки документов `type_id=970680872` `description_category_id=17029021`
+    - Палитра `type_id=93306` `description_category_id=17029021`
+    - Замазка `type_id=93295` `description_category_id=17029021`
+    - Нож канцелярский `type_id=93303` `description_category_id=17029021`
+    - Степлер `type_id=93317` `description_category_id=17029021`
+  - Письменные принадлежности `description_category_id=17029026`
+    - Конвертер для перьевой ручки `type_id=97237` `description_category_id=17029026`
+    - Набор кистей для рисования `type_id=94062` `description_category_id=17029026`
+    - Грифель `type_id=94052` `description_category_id=17029026`
+    - Набор карандашей `type_id=94061` `description_category_id=17029026`
+    - Держатель для мела `type_id=971049096` `description_category_id=17029026`
+    - Ручка `type_id=94066` `description_category_id=17029026`
+    - Мел портновский `type_id=92282` `description_category_id=17029026`
+    - Уголь художественный `type_id=94069` `description_category_id=17029026`
+    - Держатель для пера `type_id=97878` `description_category_id=17029026`
+    - Сепия художественная `type_id=971391751` `description_category_id=17029026`
+    - Распылитель для фломастеров `type_id=970717894` `description_category_id=17029026`
+    - Картридж для ручки, маркера `type_id=94056` `description_category_id=17029026`
+    - Набор фломастеров `type_id=94065` `description_category_id=17029026`
+    - Перо `type_id=97877` `description_category_id=17029026`
+    - Брайлевский прибор `type_id=971072354` `description_category_id=17029026`
+    - Перо для маркера `type_id=971001289` `description_category_id=17029026`
+    - Изограф `type_id=970731280` `description_category_id=17029026`
+    - Камень для растирки туши `type_id=970993161` `description_category_id=17029026`
+    - Тренажер для постановки письма `type_id=971197343` `description_category_id=17029026`
+    - Заправка для маркеров `type_id=971169792` `description_category_id=17029026`
+    - Набор маркеров `type_id=94063` `description_category_id=17029026`
+    - Стержень для ручки `type_id=94067` `description_category_id=17029026`
+    - Кисть для рисования `type_id=94057` `description_category_id=17029026`
+    - Карандаш `type_id=94054` `description_category_id=17029026`
+    - Соус художественный `type_id=971391752` `description_category_id=17029026`
+    - Рапидограф `type_id=97879` `description_category_id=17029026`
+    - Набор ручек `type_id=94064` `description_category_id=17029026`
+    - Маркер `type_id=94058` `description_category_id=17029026`
+    - Сангина художественная `type_id=971391750` `description_category_id=17029026`
+    - Мелки `type_id=94059` `description_category_id=17029026`
+    - Набор для каллиграфии `type_id=971747710` `description_category_id=17029026`
+  - Бумажная продукция `description_category_id=17029018`
+    - Записная книжка `type_id=94096` `description_category_id=17029018`
+    - Планинг `type_id=94100` `description_category_id=17029018`
+    - Каталог подбора автозапчастей `type_id=971100779` `description_category_id=17029018`
+    - Книга рецептов `type_id=95788` `description_category_id=17029018`
+    - Книжка сервисная автомобильная `type_id=971100778` `description_category_id=17029018`
+    - Бумага для заметок `type_id=257342242` `description_category_id=17029018`
+    - Дневник читательский `type_id=971071471` `description_category_id=17029018`
+    - Стикеры `type_id=257342292` `description_category_id=17029018`
+    - Блокнот `type_id=94091` `description_category_id=17029018`
+    - Трудовая книжка `type_id=98472` `description_category_id=17029018`
+    - Анкета для друзей `type_id=971074115` `description_category_id=17029018`
+    - Календарь `type_id=115951185` `description_category_id=17029018`
+    - Гостевая книга `type_id=971075374` `description_category_id=17029018`
+    - Тетрадь со сменным блоком `type_id=97873` `description_category_id=17029018`
+    - Тетрадь `type_id=94103` `description_category_id=17029018`
+    - Родословная книга `type_id=93802` `description_category_id=17029018`
+    - Панель для стикеров на монитор `type_id=970628464` `description_category_id=17029018`
+    - Разделитель для тетради `type_id=971197249` `description_category_id=17029018`
+    - Визитная карточка `type_id=971823449` `description_category_id=17029018`
+    - Дневник школьный `type_id=94093` `description_category_id=17029018`
+    - Бандерольные кольца, ленты `type_id=970869249` `description_category_id=17029018`
+    - Медицинская карта `type_id=970637806` `description_category_id=17029018`
+    - Ежедневник `type_id=94094` `description_category_id=17029018`
+    - Телефонная книга `type_id=94102` `description_category_id=17029018`
+    - Наклейки `type_id=971123837` `description_category_id=17029018`
+    - Декупажная карта `type_id=257361866` `description_category_id=17029018`
+    - Классный журнал `type_id=94097` `description_category_id=17029018`
+    - Бланк документа `type_id=257342239` `description_category_id=17029018`
+    - Книга, дерево пожеланий `type_id=93769` `description_category_id=17029018`
+    - Сертификат прививок `type_id=970680513` `description_category_id=17029018`
+    - Фурнитура для переплета `type_id=97445` `description_category_id=17029018`
+    - Контрольный браслет `type_id=971057908` `description_category_id=17029018`
+    - Дневник личный `type_id=94092` `description_category_id=17029018`
+    - Расписание уроков `type_id=98473` `description_category_id=17029018`
+    - Еженедельник `type_id=94095` `description_category_id=17029018`
+    - Скетчбук `type_id=96168` `description_category_id=17029018`
+    - Сменный блок для тетради `type_id=94101` `description_category_id=17029018`
+    - Книга учета `type_id=94098` `description_category_id=17029018`
+    - Брошюра `type_id=971888236` `description_category_id=17029018`
+    - Альбом `type_id=91396` `description_category_id=17029018`
+  - Детские рюкзаки, ранцы, сумки `description_category_id=61372948`
+    - Сумка для сменной обуви `type_id=94034` `description_category_id=61372948`
+  - Сейфы и архивные шкафы `description_category_id=93167672`
+    - Сейф `type_id=98058` `description_category_id=93167672`
+    - Шкаф архивный `type_id=970869578` `description_category_id=93167672`
+  - Конверты и коробки почтовые `description_category_id=17154182`
+    - Конверт `type_id=97379` `description_category_id=17154182`
+    - Курьерский пакет `type_id=970788192` `description_category_id=17154182`
+    - Коробка для посылок `type_id=863256798` `description_category_id=17154182`
+    - Почтовый пакет `type_id=713080978` `description_category_id=17154182`
+- Хобби и творчество `description_category_id=17027485`
+  - Криминалистика `description_category_id=200000625`
+    - Метки, упаковки криминалистические `type_id=971136881` `description_category_id=200000625`
+    - Инструмент криминалистический `type_id=971136879` `description_category_id=200000625`
+  - Холсты и подрамники `description_category_id=17028667`
+    - Паспарту `type_id=92329` `description_category_id=17028667`
+    - Подрамник `type_id=98330` `description_category_id=17028667`
+    - Холст `type_id=97302` `description_category_id=17028667`
+    - Артборд `type_id=971159541` `description_category_id=17028667`
+    - Аксессуар для холста `type_id=970719121` `description_category_id=17028667`
+  - Настольные и карточные игры `description_category_id=88076545`
+    - Аксессуар для головоломки `type_id=971157847` `description_category_id=88076545`
+    - Шахматные часы `type_id=670219446` `description_category_id=88076545`
+    - Домино `type_id=92888` `description_category_id=88076545`
+    - Дополнение для настольных игр `type_id=970797528` `description_category_id=88076545`
+    - Игра-рулетка `type_id=970675125` `description_category_id=88076545`
+    - Шашки `type_id=98492` `description_category_id=88076545`
+    - Нарды `type_id=98479` `description_category_id=88076545`
+    - Головоломка `type_id=92816` `description_category_id=88076545`
+    - Игральные кости `type_id=98476` `description_category_id=88076545`
+    - Сукно для покера `type_id=971287560` `description_category_id=88076545`
+    - Аксессуар для настольных игр `type_id=92885` `description_category_id=88076545`
+    - Метафорические карты `type_id=970855962` `description_category_id=88076545`
+    - Аксессуар для игральных карт `type_id=98502` `description_category_id=88076545`
+    - Маджонг `type_id=970791574` `description_category_id=88076545`
+    - Психологическая игра `type_id=970982050` `description_category_id=88076545`
+    - Настольная игра `type_id=92893` `description_category_id=88076545`
+    - Стол покерный `type_id=971218398` `description_category_id=88076545`
+    - Игральные карты `type_id=115944396` `description_category_id=88076545`
+    - Набор для покера `type_id=98489` `description_category_id=88076545`
+    - Лото `type_id=92892` `description_category_id=88076545`
+    - Мини-гольф `type_id=91231` `description_category_id=88076545`
+    - Шахматы `type_id=98488` `description_category_id=88076545`
+  - Манекены `description_category_id=17028666`
+    - Аксессуар для манекена `type_id=94859` `description_category_id=17028666`
+    - Манекен `type_id=94857` `description_category_id=17028666`
+  - Фигурки персонажей `description_category_id=200001710`
+    - Фигурки по видеоиграм, фильмам `type_id=97962` `description_category_id=200001710`
+  - Материал для рукоделия `description_category_id=17028963`
+    - Химия кожевенная `type_id=971065942` `description_category_id=17028963`
+    - Проволока для рукоделия `type_id=96599` `description_category_id=17028963`
+    - Рафия `type_id=92339` `description_category_id=17028963`
+    - Доска для иконописи `type_id=971390356` `description_category_id=17028963`
+    - Бисер `type_id=92295` `description_category_id=17028963`
+    - Гипс `type_id=97661` `description_category_id=17028963`
+    - Фетр `type_id=98345` `description_category_id=17028963`
+    - Стабилизатор ткани `type_id=92289` `description_category_id=17028963`
+    - Шпатель для рукоделия `type_id=971311639` `description_category_id=17028963`
+    - Кожа `type_id=180528481` `description_category_id=17028963`
+    - Декор для флористики `type_id=970892412` `description_category_id=17028963`
+    - Канва для вышивки `type_id=92309` `description_category_id=17028963`
+    - Наполнитель для рукоделия `type_id=92323` `description_category_id=17028963`
+    - Кабошоны `type_id=92301` `description_category_id=17028963`
+    - Чернила сублимационные `type_id=971364338` `description_category_id=17028963`
+    - Фоамиран `type_id=97297` `description_category_id=17028963`
+    - Подкладочный материал `type_id=970680747` `description_category_id=17028963`
+    - Шеврон `type_id=970886657` `description_category_id=17028963`
+    - Инструмент для работы со стразами `type_id=971074024` `description_category_id=17028963`
+    - Поддон для флористической губки `type_id=971162646` `description_category_id=17028963`
+    - Гербарий `type_id=970871224` `description_category_id=17028963`
+    - Элемент для изготовления игрушек `type_id=970841515` `description_category_id=17028963`
+    - Природные материалы `type_id=92335` `description_category_id=17028963`
+    - Стабилизированные растения для флористики `type_id=970941663` `description_category_id=17028963`
+    - Сургучная печать `type_id=970680089` `description_category_id=17028963`
+    - Пропиленгликоль косметический `type_id=971195918` `description_category_id=17028963`
+    - Аксессуар для вышивания `type_id=970958445` `description_category_id=17028963`
+    - Станок для бисероплетения `type_id=971103566` `description_category_id=17028963`
+    - Заклепки `type_id=92304` `description_category_id=17028963`
+    - Глицерин `type_id=99056` `description_category_id=17028963`
+    - Воскоплав свечной `type_id=971301761` `description_category_id=17028963`
+    - Клейкая лента декоративная `type_id=96602` `description_category_id=17028963`
+    - Термонаклейка `type_id=92324` `description_category_id=17028963`
+    - Флористическая колба `type_id=970862365` `description_category_id=17028963`
+    - Флористическая лента `type_id=971005740` `description_category_id=17028963`
+    - Часовой механизм `type_id=98100` `description_category_id=17028963`
+    - Ткань `type_id=92344` `description_category_id=17028963`
+    - Утеплитель для одежды `type_id=970804631` `description_category_id=17028963`
+    - Упаковочная бумага для подарков `type_id=970671315` `description_category_id=17028963`
+    - Глина `type_id=98401` `description_category_id=17028963`
+    - Держатель для фитиля свечи `type_id=971307034` `description_category_id=17028963`
+    - Заплатка `type_id=92305` `description_category_id=17028963`
+    - Металл сублимационный `type_id=971364337` `description_category_id=17028963`
+    - Бусина `type_id=92297` `description_category_id=17028963`
+    - Фурнитура для шкатулки `type_id=971815165` `description_category_id=17028963`
+    - Литьевой камень для творчества `type_id=971407846` `description_category_id=17028963`
+    - Изолон для рукоделия `type_id=970688646` `description_category_id=17028963`
+    - Трансфер `type_id=92345` `description_category_id=17028963`
+    - Краситель для творчества `type_id=971313499` `description_category_id=17028963`
+    - Инструмент для валяния `type_id=98465` `description_category_id=17028963`
+    - Сургуч `type_id=98421` `description_category_id=17028963`
+    - Компонент для изготовления косметики `type_id=971424239` `description_category_id=17028963`
+    - Средство для стабилизации растений `type_id=971163994` `description_category_id=17028963`
+    - Бетон для творчества `type_id=970962316` `description_category_id=17028963`
+    - Эпоксидная смола для творчества `type_id=822555160` `description_category_id=17028963`
+    - Материал для изготовления свечей `type_id=970954617` `description_category_id=17028963`
+    - Канитель `type_id=970680554` `description_category_id=17028963`
+    - Пайетки `type_id=92328` `description_category_id=17028963`
+    - Флористическая губка `type_id=92349` `description_category_id=17028963`
+    - Аксессуар для плавки сургуча `type_id=971418741` `description_category_id=17028963`
+    - Леска для рукоделия `type_id=971169755` `description_category_id=17028963`
+    - Отдушка `type_id=92327` `description_category_id=17028963`
+    - Липучка для рукоделия `type_id=971682674` `description_category_id=17028963`
+    - Люверсы `type_id=92319` `description_category_id=17028963`
+    - Основа для мыловарения `type_id=92326` `description_category_id=17028963`
+    - Стеклярус `type_id=971158288` `description_category_id=17028963`
+    - Флористический рукав `type_id=971423238` `description_category_id=17028963`
+    - Декоративный элемент для рукоделия `type_id=92347` `description_category_id=17028963`
+    - Материал для литья `type_id=970674008` `description_category_id=17028963`
+    - Схема для вышивки `type_id=92343` `description_category_id=17028963`
+    - Добавки для мыловарения `type_id=92341` `description_category_id=17028963`
+    - Мебельный наполнитель `type_id=970876448` `description_category_id=17028963`
+    - Багетная рама `type_id=92338` `description_category_id=17028963`
+    - Пряжка `type_id=98543` `description_category_id=17028963`
+    - Заготовка для часов `type_id=971156049` `description_category_id=17028963`
+    - Ароматизатор для полимерной глины `type_id=971287250` `description_category_id=17028963`
+    - Стразы `type_id=92342` `description_category_id=17028963`
+    - Фурнитура для одежды `type_id=92313` `description_category_id=17028963`
+    - Пуговицы `type_id=92337` `description_category_id=17028963`
+    - Акриловая смола для творчества `type_id=971078281` `description_category_id=17028963`
+    - Глина полимерная `type_id=92902` `description_category_id=17028963`
+    - Материал для витражных работ `type_id=971119840` `description_category_id=17028963`
+    - Воск для творчества `type_id=971919690` `description_category_id=17028963`
+    - Размягчитель для полимерной глины `type_id=971042335` `description_category_id=17028963`
+    - Водорастворимая картинка `type_id=971099208` `description_category_id=17028963`
+    - Папка для гербария `type_id=971032588` `description_category_id=17028963`
+    - Штифт для рукоделия `type_id=98209` `description_category_id=17028963`
+    - Инструмент для люверсов `type_id=98581` `description_category_id=17028963`
+    - Флористический каркас `type_id=970871225` `description_category_id=17028963`
+    - Фитиль для свечей `type_id=970880745` `description_category_id=17028963`
+  - Оборудование для ювелирных работ `description_category_id=200000003`
+    - Расходные материалы ювелирные `type_id=971116681` `description_category_id=200000003`
+    - Ювелирное оборудование `type_id=971080264` `description_category_id=200000003`
+    - Ручной инструмент ювелирный `type_id=971074617` `description_category_id=200000003`
+    - Металл ювелирный `type_id=971364722` `description_category_id=200000003`
+  - Инструменты для творчества `description_category_id=200001425`
+    - Инструмент для создания гравюры `type_id=970872563` `description_category_id=200001425`
+    - Оборудование для шелкографии `type_id=971103293` `description_category_id=200001425`
+    - Загуститель для эбру `type_id=970855498` `description_category_id=200001425`
+    - Инструмент для лэмпворка, фьюзинга `type_id=971041756` `description_category_id=200001425`
+    - Инструмент для эбру `type_id=970855492` `description_category_id=200001425`
+    - Клеевой стержень `type_id=94909` `description_category_id=200001425`
+    - Клеевой пистолет для рукоделия `type_id=95575` `description_category_id=200001425`
+    - Краска для эбру `type_id=970855494` `description_category_id=200001425`
+    - Молд для литья `type_id=97229` `description_category_id=200001425`
+    - Фен для сушки картин `type_id=970893285` `description_category_id=200001425`
+    - Инструмент для витражных работ `type_id=971080272` `description_category_id=200001425`
+  - Заготовка, фурнитура для рукоделия `description_category_id=200001272`
+    - Фурнитура для сумок `type_id=92340` `description_category_id=200001272`
+    - Фурнитура для обуви `type_id=92334` `description_category_id=200001272`
+    - Заготовка для рукоделия `type_id=92303` `description_category_id=200001272`
+    - Заготовка для украшений `type_id=98605` `description_category_id=200001272`
+    - Бельевая фурнитура `type_id=92350` `description_category_id=200001272`
+  - Аксессуары для творчества `description_category_id=17028961`
+    - Коврик для резки `type_id=92287` `description_category_id=17028961`
+    - Паяльник для рукоделия `type_id=971148445` `description_category_id=17028961`
+    - Колодка портновская `type_id=97407` `description_category_id=17028961`
+    - Пластик самоклеящийся для рукоделия `type_id=970981967` `description_category_id=17028961`
+    - Гидролатор `type_id=971093692` `description_category_id=17028961`
+    - Специальный инструмент для шитья `type_id=94507` `description_category_id=17028961`
+    - Клипсы для рукоделия `type_id=98557` `description_category_id=17028961`
+    - Прищепка декоративная `type_id=92336` `description_category_id=17028961`
+    - Инструмент для эмбоссинга `type_id=971058376` `description_category_id=17028961`
+    - Катушка для ниток `type_id=970713491` `description_category_id=17028961`
+    - Нитевдеватель `type_id=98201` `description_category_id=17028961`
+    - Наперсток `type_id=92285` `description_category_id=17028961`
+    - Аксессуар для вязания `type_id=786521401` `description_category_id=17028961`
+    - Бирка `type_id=971892212` `description_category_id=17028961`
+    - Органайзер для рукоделия `type_id=95488` `description_category_id=17028961`
+    - Распарыватель `type_id=97189` `description_category_id=17028961`
+    - Расходный материал для эмбоссинга `type_id=971081732` `description_category_id=17028961`
+    - Аксессуар для скрапбукинга `type_id=98303` `description_category_id=17028961`
+    - Защита для уроков труда `type_id=971074121` `description_category_id=17028961`
+    - Бобина для мулине `type_id=97192` `description_category_id=17028961`
+    - Кольцо для рукоделия `type_id=92314` `description_category_id=17028961`
+    - Фартук для творчества `type_id=93869` `description_category_id=17028961`
+    - Лента измерительная для шитья `type_id=97196` `description_category_id=17028961`
+  - Энтомология `description_category_id=200000508`
+    - Энтомологический сачок `type_id=971100637` `description_category_id=200000508`
+  - Инструмент для рукоделия `description_category_id=17028962`
+    - Крючок для вязания `type_id=94508` `description_category_id=17028962`
+    - Резак для рукоделия `type_id=971049280` `description_category_id=17028962`
+    - Машинка для вязания `type_id=94510` `description_category_id=17028962`
+    - Штамп декоративный `type_id=94516` `description_category_id=17028962`
+    - Аксессуар для пялец `type_id=971109509` `description_category_id=17028962`
+    - Ткацкий станок `type_id=971218623` `description_category_id=17028962`
+    - Инструмент для квиллинга `type_id=970691280` `description_category_id=17028962`
+    - Пинцет для рукоделия `type_id=97737` `description_category_id=17028962`
+    - Нож для рукоделия `type_id=97255` `description_category_id=17028962`
+    - Лезвие для раскройного ножа `type_id=97256` `description_category_id=17028962`
+    - Аксессуар для вязальных спиц `type_id=970623773` `description_category_id=17028962`
+    - Шлифовальная машинка для витражных работ `type_id=971053038` `description_category_id=17028962`
+    - Оборудование для установки швейной фурнитуры `type_id=960809160` `description_category_id=17028962`
+    - Пяльцы `type_id=94513` `description_category_id=17028962`
+    - Иглы `type_id=94504` `description_category_id=17028962`
+    - Машинка для вырубки `type_id=98533` `description_category_id=17028962`
+    - Выкройка `type_id=970838697` `description_category_id=17028962`
+    - Утюжок для пэчворка `type_id=97408` `description_category_id=17028962`
+    - Шаблон для рукоделия `type_id=98202` `description_category_id=17028962`
+    - Булавка `type_id=94500` `description_category_id=17028962`
+    - Игольница `type_id=94506` `description_category_id=17028962`
+    - Аксессуар для шлифовальной машины `type_id=971078632` `description_category_id=17028962`
+    - Держатель для пялец `type_id=970855263` `description_category_id=17028962`
+    - Кардер для рукоделия `type_id=971218631` `description_category_id=17028962`
+    - Инструмент для ткачества `type_id=971432461` `description_category_id=17028962`
+    - Тафтинговое оборудование `type_id=971214795` `description_category_id=17028962`
+    - Спицы для вязания `type_id=94514` `description_category_id=17028962`
+    - Инструмент для флористики `type_id=971133771` `description_category_id=17028962`
+    - Инструмент для прядения `type_id=971891599` `description_category_id=17028962`
+    - Инструмент для работы с кожей, мехом `type_id=970721641` `description_category_id=17028962`
+    - Шило швейное `type_id=97190` `description_category_id=17028962`
+    - Набор инструментов для вязания `type_id=98548` `description_category_id=17028962`
+  - Химия для творчества `description_category_id=200001234`
+    - Химия для ювелирных работ `type_id=971433298` `description_category_id=200001234`
+  - Набор для рукоделия, творчества `description_category_id=17028964`
+    - Набор для папье-маше `type_id=92918` `description_category_id=17028964`
+    - Набор для лепки, скульптуры `type_id=92916` `description_category_id=17028964`
+    - Набор для изготовления свечей `type_id=92915` `description_category_id=17028964`
+    - Набор для опытов `type_id=92917` `description_category_id=17028964`
+    - Нить для плетения `type_id=970804409` `description_category_id=17028964`
+    - Картина из пайеток `type_id=98428` `description_category_id=17028964`
+    - Набор для мыловарения `type_id=92914` `description_category_id=17028964`
+    - Набор для создания часов `type_id=970865114` `description_category_id=17028964`
+    - Набор для выжигания `type_id=92901` `description_category_id=17028964`
+    - Резиночки для плетения `type_id=98206` `description_category_id=17028964`
+    - Картина по контурам `type_id=970871699` `description_category_id=17028964`
+    - Набор для создания флорариума `type_id=970826284` `description_category_id=17028964`
+    - Набор для скрапбукинга, аппликаций `type_id=94901` `description_category_id=17028964`
+    - Ротанг для плетения `type_id=971084314` `description_category_id=17028964`
+    - Набор для бисероплетения `type_id=94895` `description_category_id=17028964`
+    - Набор для плетения `type_id=92919` `description_category_id=17028964`
+    - Основа для плетения `type_id=970957181` `description_category_id=17028964`
+    - Набор для вязания `type_id=92911` `description_category_id=17028964`
+    - Набор для шитья, ткачества `type_id=94904` `description_category_id=17028964`
+    - Набор для изготовления косметики, парфюма `type_id=97180` `description_category_id=17028964`
+    - Картина по номерам `type_id=94897` `description_category_id=17028964`
+    - Бумажная лоза для плетения `type_id=971070706` `description_category_id=17028964`
+    - Набор для вышивания `type_id=94896` `description_category_id=17028964`
+    - Набор для создания украшений `type_id=92924` `description_category_id=17028964`
+    - Набор для изготовления слайма `type_id=970585456` `description_category_id=17028964`
+    - Набор для декорирования `type_id=92912` `description_category_id=17028964`
+    - Лопатка для плетения `type_id=971078269` `description_category_id=17028964`
+    - Набор для изготовления игрушки `type_id=92913` `description_category_id=17028964`
+    - Набор для валяния `type_id=92910` `description_category_id=17028964`
+    - Алмазная мозаика `type_id=94899` `description_category_id=17028964`
+    - Набор для создания гравюры `type_id=92903` `description_category_id=17028964`
+    - Набор для рисования, росписи `type_id=97176` `description_category_id=17028964`
+  - Детское творчество и развитие `description_category_id=17028664`
+    - Набор для поделок из бумаги `type_id=92908` `description_category_id=17028664`
+    - Телескоп детский `type_id=970985368` `description_category_id=17028664`
+    - Экран для рисования `type_id=92934` `description_category_id=17028664`
+    - Кинетический песок `type_id=92906` `description_category_id=17028664`
+    - Раскраска `type_id=92929` `description_category_id=17028664`
+    - Трафарет для рукоделия `type_id=92291` `description_category_id=17028664`
+    - Микроскоп детский `type_id=970985367` `description_category_id=17028664`
+    - Учебное оборудование `type_id=971110554` `description_category_id=17028664`
+    - Пластилин `type_id=92928` `description_category_id=17028664`
+    - Анатомическая модель `type_id=970693913` `description_category_id=17028664`
+    - Ингредиент для изготовления слайма `type_id=970841923` `description_category_id=17028664`
+    - Масса для лепки `type_id=92907` `description_category_id=17028664`
+    - Набор для фокусов `type_id=92932` `description_category_id=17028664`
+    - 3D-ручка `type_id=96800` `description_category_id=17028664`
+    - Прибор для выжигания `type_id=98501` `description_category_id=17028664`
+    - Обучающий плакат `type_id=92895` `description_category_id=17028664`
+    - Папертоль `type_id=92930` `description_category_id=17028664`
+    - Мозаика `type_id=92909` `description_category_id=17028664`
+    - Аксессуар для 3D-ручки `type_id=971102243` `description_category_id=17028664`
+    - Стилус для магнитного планшета `type_id=970965210` `description_category_id=17028664`
+    - Губка для творчества `type_id=970841396` `description_category_id=17028664`
+    - Проектор для рисования `type_id=970880499` `description_category_id=17028664`
+    - Аксессуар для фокусов `type_id=971416102` `description_category_id=17028664`
+  - Сумки, органайзеры для творчества `description_category_id=88577267`
+    - Сумка для художественных принадлежностей `type_id=970842657` `description_category_id=88577267`
+  - Гончарное дело `description_category_id=200000858`
+    - Гончарный круг `type_id=971112037` `description_category_id=200000858`
+    - Формовочный станок для глины `type_id=970960411` `description_category_id=200000858`
+    - Инструмент для лепки `type_id=92898` `description_category_id=200000858`
+    - Доска для лепки `type_id=99415` `description_category_id=200000858`
+    - Ангоб для керамики `type_id=971293833` `description_category_id=200000858`
+    - Глазурь для керамики `type_id=971293832` `description_category_id=200000858`
+    - Муфельная печь для обжига керамики `type_id=971197785` `description_category_id=200000858`
+    - Инструмент для гончарного дела `type_id=971155939` `description_category_id=200000858`
+  - Оборудование для творчества `description_category_id=88621580`
+    - Расходные материалы для аэрографа `type_id=971880987` `description_category_id=88621580`
+    - Аксессуары для аэрографа `type_id=970849026` `description_category_id=88621580`
+    - Краска для аэрографа `type_id=970849024` `description_category_id=88621580`
+    - Аэрограф для творчества `type_id=970843532` `description_category_id=88621580`
+  - Гадания и эзотерика `description_category_id=87515080`
+    - Магическая атрибутика `type_id=93730` `description_category_id=87515080`
+    - Аксессуар для гаданий `type_id=93728` `description_category_id=87515080`
+    - Магическая свеча `type_id=93782` `description_category_id=87515080`
+    - Карты Таро `type_id=93767` `description_category_id=87515080`
+    - Гадальные карты `type_id=93752` `description_category_id=87515080`
+    - Магический амулет, оберег `type_id=93733` `description_category_id=87515080`
+  - Мольберты и этюдники `description_category_id=19034774`
+    - Натюрмортный стол `type_id=970617545` `description_category_id=19034774`
+    - Этюдник `type_id=97416` `description_category_id=19034774`
+    - Мольберт художественный `type_id=97414` `description_category_id=19034774`
+    - Аксессуар для мольберта `type_id=970629873` `description_category_id=19034774`
+  - Реставрация и золочение `description_category_id=88621765`
+    - Материал для переплетных работ `type_id=970870442` `description_category_id=88621765`
+    - Инструмент для золочения `type_id=98651` `description_category_id=88621765`
+    - Материал для золочения `type_id=98405` `description_category_id=88621765`
+    - Оборудование для переплета `type_id=971362247` `description_category_id=88621765`
+    - Набор для золочения `type_id=971027024` `description_category_id=88621765`
+  - Пазлы, модели для сборки `description_category_id=17028665`
+    - Аксессуар для сборной модели `type_id=970863160` `description_category_id=17028665`
+    - Чертеж сборной модели `type_id=971045888` `description_category_id=17028665`
+    - Химия для моделизма `type_id=970870906` `description_category_id=17028665`
+    - Материал для моделизма `type_id=970951151` `description_category_id=17028665`
+    - Инструменты для моделирования `type_id=92940` `description_category_id=17028665`
+    - Аксессуар для пазла `type_id=92941` `description_category_id=17028665`
+    - 3D-пазл `type_id=92935` `description_category_id=17028665`
+    - Сборная модель `type_id=92937` `description_category_id=17028665`
+    - Румбокс `type_id=98182` `description_category_id=17028665`
+    - Декоративные эффекты для моделизма `type_id=970849150` `description_category_id=17028665`
+    - Дополнения для сборных моделей `type_id=970667790` `description_category_id=17028665`
+    - Пазл `type_id=92950` `description_category_id=17028665`
+  - Товары для цветотипирования `description_category_id=200000172`
+    - Аксессуар для цветотипирования `type_id=971069466` `description_category_id=200000172`
+  - Нитки, пряжа `description_category_id=17028965`
+    - Нитки `type_id=96598` `description_category_id=17028965`
+    - Тесьма `type_id=96603` `description_category_id=17028965`
+    - Стропа текстильная `type_id=971877582` `description_category_id=17028965`
+    - Лента `type_id=96596` `description_category_id=17028965`
+    - Мулине `type_id=96597` `description_category_id=17028965`
+    - Шнур для рукоделия `type_id=96605` `description_category_id=17028965`
+    - Кружево `type_id=970886710` `description_category_id=17028965`
+    - Пряжа `type_id=96600` `description_category_id=17028965`
+    - Резинка для шитья `type_id=96601` `description_category_id=17028965`
+    - Шерсть `type_id=96604` `description_category_id=17028965`
+- Галантерея и аксессуары `description_category_id=17027493`
+  - Бижутерные украшения `description_category_id=17027899`
+    - Кольцо для платка `type_id=87593409` `description_category_id=17027899`
+    - Камень бижутерный `type_id=971038154` `description_category_id=17027899`
+    - Грилзы `type_id=970872555` `description_category_id=17027899`
+    - Брошь `type_id=87458886` `description_category_id=17027899`
+    - Браслет `type_id=87458883` `description_category_id=17027899`
+    - Значок `type_id=93762` `description_category_id=17027899`
+    - Кольцо `type_id=87458895` `description_category_id=17027899`
+    - Аксессуар для бижутерии `type_id=970874896` `description_category_id=17027899`
+    - Чокер `type_id=87597164` `description_category_id=17027899`
+    - Серьги `type_id=87593412` `description_category_id=17027899`
+    - Комплект украшений `type_id=87458896` `description_category_id=17027899`
+    - Запонки `type_id=87458891` `description_category_id=17027899`
+    - Бусы `type_id=87458887` `description_category_id=17027899`
+    - Подвеска `type_id=87458901` `description_category_id=17027899`
+    - Цепочка `type_id=87593413` `description_category_id=17027899`
+    - Крестик `type_id=87593407` `description_category_id=17027899`
+    - Шарм `type_id=87593414` `description_category_id=17027899`
+    - Брелок `type_id=87458885` `description_category_id=17027899`
+    - Украшение на лицо `type_id=971201815` `description_category_id=17027899`
+    - Шнурок `type_id=87593415` `description_category_id=17027899`
+    - Держатель для сумки `type_id=87458889` `description_category_id=17027899`
+    - Колье `type_id=971168976` `description_category_id=17027899`
+    - Пирсинг `type_id=87593410` `description_category_id=17027899`
+    - Зажим для галстука `type_id=87458890` `description_category_id=17027899`
+  - Аксессуары для волос `description_category_id=29183107`
+    - Шпильки для волос `type_id=97580` `description_category_id=29183107`
+    - Резинка для волос `type_id=97571` `description_category_id=29183107`
+    - Набор аксессуаров для волос `type_id=97581` `description_category_id=29183107`
+    - Невидимка `type_id=97579` `description_category_id=29183107`
+    - Сеточка для волос `type_id=970982035` `description_category_id=29183107`
+    - Заколка для волос `type_id=97576` `description_category_id=29183107`
+    - Повязка для волос `type_id=97575` `description_category_id=29183107`
+    - Бублик для волос `type_id=970659588` `description_category_id=29183107`
+    - Шапочка для сна `type_id=970682680` `description_category_id=29183107`
+    - Диадема `type_id=97573` `description_category_id=29183107`
+    - Гребень `type_id=97572` `description_category_id=29183107`
+    - Бант для волос `type_id=97570` `description_category_id=29183107`
+    - Ободок `type_id=97574` `description_category_id=29183107`
+  - Аксессуары для одежды и обуви `description_category_id=17027929`
+    - Кошки альпинистские `type_id=98167` `description_category_id=17027929`
+    - Фиксаторы для шнурков `type_id=971042048` `description_category_id=17027929`
+    - Машинка для удаления катышков `type_id=94612` `description_category_id=17027929`
+    - Чехлы-дождевики на обувь `type_id=741917976` `description_category_id=17027929`
+    - Штрипки `type_id=887420108` `description_category_id=17027929`
+    - Губка для обуви `type_id=94606` `description_category_id=17027929`
+    - Вкладыш для обуви `type_id=94605` `description_category_id=17027929`
+    - Ролик для чистки одежды `type_id=94615` `description_category_id=17027929`
+    - Ледоступы `type_id=592744673` `description_category_id=17027929`
+    - Шнурки `type_id=94622` `description_category_id=17027929`
+    - Декор для обуви `type_id=971171428` `description_category_id=17027929`
+    - Сушилка для обуви `type_id=94619` `description_category_id=17027929`
+    - Стельки для обуви `type_id=94618` `description_category_id=17027929`
+    - Джиббитсы `type_id=94607` `description_category_id=17027929`
+    - Средство для ухода за одеждой `type_id=95309` `description_category_id=17027929`
+    - Резинка для варежек `type_id=970836651` `description_category_id=17027929`
+    - Наклейки противоскользящие на подошву `type_id=971362877` `description_category_id=17027929`
+    - Вкладыш для одежды `type_id=970807508` `description_category_id=17027929`
+    - Щетка для одежды, обуви `type_id=94623` `description_category_id=17027929`
+    - Ложка, рожок для обуви `type_id=94611` `description_category_id=17027929`
+    - Средство для ухода за обувью `type_id=95308` `description_category_id=17027929`
+    - Снегоступы `type_id=94617` `description_category_id=17027929`
+    - Колодки для обуви `type_id=94609` `description_category_id=17027929`
+    - Подставка для снятия обуви `type_id=970870524` `description_category_id=17027929`
+    - Измеритель стопы `type_id=268217793` `description_category_id=17027929`
+    - Сменный блок к ролику для чистки одежды `type_id=94608` `description_category_id=17027929`
+    - Пропитка водоотталкивающая `type_id=970700299` `description_category_id=17027929`
+  - Аксессуары `description_category_id=17027904`
+    - Ключница карманная `type_id=93334` `description_category_id=17027904`
+    - Кошелек `type_id=93338` `description_category_id=17027904`
+    - Ремешок, браслет для часов `type_id=971301216` `description_category_id=17027904`
+    - Зонт `type_id=93352` `description_category_id=17027904`
+    - Чемодан `type_id=115945552` `description_category_id=17027904`
+    - Портплед дорожный `type_id=94024` `description_category_id=17027904`
+    - Кейс ударопрочный `type_id=94018` `description_category_id=17027904`
+    - Органайзер для документов `type_id=970870896` `description_category_id=17027904`
+    - Обложка для документов `type_id=93341` `description_category_id=17027904`
+    - Картхолдер `type_id=971092190` `description_category_id=17027904`
+    - Носовой платок `type_id=97171` `description_category_id=17027904`
+    - Комплект для путешествия `type_id=970860497` `description_category_id=17027904`
+    - Очки компьютерные `type_id=93865` `description_category_id=17027904`
+    - Рюкзак `type_id=115945533` `description_category_id=17027904`
+    - Косметичка `type_id=93337` `description_category_id=17027904`
+    - Маска для сна `type_id=94295` `description_category_id=17027904`
+    - Очки солнцезащитные `type_id=93866` `description_category_id=17027904`
+    - Часы карманные `type_id=91756` `description_category_id=17027904`
+    - Аксессуары для сумки, рюкзака `type_id=99510` `description_category_id=17027904`
+    - Барсетка `type_id=94012` `description_category_id=17027904`
+    - Чехол для чемодана `type_id=94046` `description_category_id=17027904`
+    - Часы наручные `type_id=91758` `description_category_id=17027904`
+    - Сумка `type_id=970575517` `description_category_id=17027904`
+    - Аксессуар для военной формы `type_id=970682681` `description_category_id=17027904`
+    - Футляр для очков `type_id=96688` `description_category_id=17027904`
+    - Подушка для шеи `type_id=94310` `description_category_id=17027904`
+    - Фурнитура для наручных часов `type_id=971302241` `description_category_id=17027904`
+    - Держатель для очков `type_id=98462` `description_category_id=17027904`
+    - Очки без диоптрий `type_id=971081388` `description_category_id=17027904`
+    - Замок багажный `type_id=94286` `description_category_id=17027904`
+    - Набор галантереи `type_id=93335` `description_category_id=17027904`
+    - Фурнитура для чемодана `type_id=971110560` `description_category_id=17027904`
+    - Тележка складная `type_id=94319` `description_category_id=17027904`
+    - Ремень для багажа `type_id=94313` `description_category_id=17027904`
+    - Чехол для зонта `type_id=970966841` `description_category_id=17027904`
+    - Органайзер дорожный `type_id=94307` `description_category_id=17027904`
+    - Бирка багажная `type_id=94279` `description_category_id=17027904`
+- Автотовары `description_category_id=17027495`
+  - АКБ и пуско-зарядные устройства `description_category_id=71107562`
+    - Устройство зарядное для АКБ `type_id=970834693` `description_category_id=71107562`
+    - Устройство пуско-зарядное `type_id=382839439` `description_category_id=71107562`
+    - Принадлежности к АКБ `type_id=94679` `description_category_id=71107562`
+    - Аккумулятор для мототехники `type_id=504866262` `description_category_id=71107562`
+  - Запчасти для легковых автомобилей `description_category_id=17028756`
+    - Контроллер ДХО `type_id=971403240` `description_category_id=17028756`
+    - Привод в сборе `type_id=98888` `description_category_id=17028756`
+    - Вал карданный `type_id=98805` `description_category_id=17028756`
+    - Картер двигателя `type_id=98827` `description_category_id=17028756`
+    - КПП в сборе `type_id=971325070` `description_category_id=17028756`
+    - Ремкомплект КПП `type_id=971100605` `description_category_id=17028756`
+    - Стартер в сборе `type_id=98941` `description_category_id=17028756`
+    - Сухарь клапана `type_id=971072789` `description_category_id=17028756`
+    - Ручное управление на автомобили `type_id=971168326` `description_category_id=17028756`
+    - Щетки генератора `type_id=970892942` `description_category_id=17028756`
+    - Насос масляный `type_id=98859` `description_category_id=17028756`
+    - Клапан кондиционера `type_id=971072698` `description_category_id=17028756`
+    - Запчасти тормозных колодок `type_id=971100603` `description_category_id=17028756`
+    - Звено разжимное для тормозной системы `type_id=971092554` `description_category_id=17028756`
+    - Ремень вариатора `type_id=970784816` `description_category_id=17028756`
+    - Ремкомплект глушителя `type_id=971100632` `description_category_id=17028756`
+    - Программатор для чип-тюнинга `type_id=971749141` `description_category_id=17028756`
+    - Ключ зажигания `type_id=971072712` `description_category_id=17028756`
+    - Крышка генератора `type_id=970892939` `description_category_id=17028756`
+    - Кабель для автопроводки `type_id=96853` `description_category_id=17028756`
+    - Осушитель кондиционера `type_id=970863588` `description_category_id=17028756`
+    - Рамка переходная для линз `type_id=970976187` `description_category_id=17028756`
+    - Барабан тормозной `type_id=98799` `description_category_id=17028756`
+    - Комплект сцепления `type_id=98840` `description_category_id=17028756`
+    - Бак топливный `type_id=970583533` `description_category_id=17028756`
+    - Гофра глушителя `type_id=98818` `description_category_id=17028756`
+    - Вентилятор радиатора `type_id=970854831` `description_category_id=17028756`
+    - Вискомуфта `type_id=970889790` `description_category_id=17028756`
+    - Комплект для подогрева сиденья `type_id=277254736` `description_category_id=17028756`
+    - Стекло фары `type_id=971072788` `description_category_id=17028756`
+    - Клапан отопителя `type_id=971072701` `description_category_id=17028756`
+    - Стойка стабилизатора `type_id=98943` `description_category_id=17028756`
+    - Электровентилятор отопления `type_id=970782175` `description_category_id=17028756`
+    - Привод ременный `type_id=98801` `description_category_id=17028756`
+    - Комплект высоковольтных проводов `type_id=98893` `description_category_id=17028756`
+    - Ремкомплект катушки зажигания `type_id=971084355` `description_category_id=17028756`
+    - Опора двигателя `type_id=970782919` `description_category_id=17028756`
+    - Насадка на глушитель `type_id=970725995` `description_category_id=17028756`
+    - Форсунка омывателя `type_id=970863584` `description_category_id=17028756`
+    - Переключатель подрулевой `type_id=970889789` `description_category_id=17028756`
+    - Кольцо форсунки `type_id=98839` `description_category_id=17028756`
+    - Втулка клапана `type_id=971072670` `description_category_id=17028756`
+    - Прокладка двигателя `type_id=98894` `description_category_id=17028756`
+    - Электродвигатель автомобильный `type_id=971217996` `description_category_id=17028756`
+    - Проставка пружины подвески `type_id=970944609` `description_category_id=17028756`
+    - Автокондиционер `type_id=970601388` `description_category_id=17028756`
+    - Реле регулятор `type_id=98911` `description_category_id=17028756`
+    - Ремкомплект компрессора `type_id=971061544` `description_category_id=17028756`
+    - Защита рычагов подвески `type_id=660194641` `description_category_id=17028756`
+    - Прожектор автомобильный `type_id=971224716` `description_category_id=17028756`
+    - Утеплитель радиатора `type_id=94668` `description_category_id=17028756`
+    - Ремкомплект насоса водяного `type_id=971047419` `description_category_id=17028756`
+    - Запчасти масляного насоса `type_id=971100607` `description_category_id=17028756`
+    - Свеча накаливания `type_id=95767` `description_category_id=17028756`
+    - Крышка бензобака `type_id=98512` `description_category_id=17028756`
+    - Инвертор автомобильный `type_id=91783` `description_category_id=17028756`
+    - Комплект тормозных дисков, колодок `type_id=970831262` `description_category_id=17028756`
+    - Запчасти насоса ГУР `type_id=970984894` `description_category_id=17028756`
+    - Поршень `type_id=970782910` `description_category_id=17028756`
+    - Защита двигателя, КПП `type_id=970594170` `description_category_id=17028756`
+    - Ремень генератора `type_id=970782977` `description_category_id=17028756`
+    - Мотор вентилятора `type_id=970885012` `description_category_id=17028756`
+    - Резистор автомобильный `type_id=971072775` `description_category_id=17028756`
+    - Вал рулевой `type_id=970984870` `description_category_id=17028756`
+    - Щуп масляный `type_id=970782915` `description_category_id=17028756`
+    - Цилиндр сцепления `type_id=98963` `description_category_id=17028756`
+    - Маслоохладитель `type_id=971363154` `description_category_id=17028756`
+    - Баллон ГБО автомобильный `type_id=971038324` `description_category_id=17028756`
+    - Сайлентблок `type_id=98928` `description_category_id=17028756`
+    - Диск тормозной `type_id=98825` `description_category_id=17028756`
+    - Компьютер бортовой `type_id=199761621` `description_category_id=17028756`
+    - Стержень крепежный `type_id=94662` `description_category_id=17028756`
+    - Радиатор масляный `type_id=970782259` `description_category_id=17028756`
+    - Редуктор моста `type_id=971045568` `description_category_id=17028756`
+    - Радиатор кондиционера `type_id=970781671` `description_category_id=17028756`
+    - Подушка крепления глушителя `type_id=970964738` `description_category_id=17028756`
+    - Переходник для светодиодных ламп `type_id=970957814` `description_category_id=17028756`
+    - Успокоитель цепи ГРМ `type_id=98956` `description_category_id=17028756`
+    - Запчасти для ГБО `type_id=971009111` `description_category_id=17028756`
+    - Ремкомплект суппорта `type_id=98917` `description_category_id=17028756`
+    - Линза фар автомобиля `type_id=970832316` `description_category_id=17028756`
+    - Патрубок автомобильный `type_id=98873` `description_category_id=17028756`
+    - Накладки тормозные `type_id=971852452` `description_category_id=17028756`
+    - Прокладка ГБЦ `type_id=970782913` `description_category_id=17028756`
+    - Запчасти электродвигателя `type_id=971229822` `description_category_id=17028756`
+    - Горловина топливного бака `type_id=970943749` `description_category_id=17028756`
+    - Блок радиатора автомобиля `type_id=971749421` `description_category_id=17028756`
+    - Поддон КПП `type_id=971106653` `description_category_id=17028756`
+    - Муфта компрессора кондиционера `type_id=971072746` `description_category_id=17028756`
+    - Термостат автомобильный `type_id=115950439` `description_category_id=17028756`
+    - Датчик автомобильный `type_id=971006606` `description_category_id=17028756`
+    - Муфта сцепления `type_id=971049313` `description_category_id=17028756`
+    - Дизельный отопитель автономный `type_id=970882211` `description_category_id=17028756`
+    - Крышка радиатора `type_id=970889794` `description_category_id=17028756`
+    - Рычаг подвески `type_id=970849745` `description_category_id=17028756`
+    - Блок цилиндров `type_id=971026650` `description_category_id=17028756`
+    - Блок розжига для ксеноновых ламп `type_id=94671` `description_category_id=17028756`
+    - Распределитель зажигания `type_id=971072773` `description_category_id=17028756`
+    - Ремкомплект стартера `type_id=970889775` `description_category_id=17028756`
+    - Катушка зажигания `type_id=970744686` `description_category_id=17028756`
+    - Оптика линзованная `type_id=364200918` `description_category_id=17028756`
+    - Кран отопителя `type_id=971072732` `description_category_id=17028756`
+    - Картридж осушителя `type_id=971072694` `description_category_id=17028756`
+    - Насос топливный `type_id=98860` `description_category_id=17028756`
+    - Турбокомпрессор `type_id=970870559` `description_category_id=17028756`
+    - Планка фары `type_id=971107287` `description_category_id=17028756`
+    - Защита трубок кондиционера `type_id=68793832` `description_category_id=17028756`
+    - Запчасти для автономного отопителя `type_id=971024816` `description_category_id=17028756`
+    - Вентиль для автокондиционера `type_id=971092865` `description_category_id=17028756`
+    - Бачок стеклоомывателя `type_id=970707039` `description_category_id=17028756`
+    - Форсунка масляная `type_id=972233078` `description_category_id=17028756`
+    - Вискомуфта вентилятора `type_id=971049422` `description_category_id=17028756`
+    - Труба выхлопная `type_id=98954` `description_category_id=17028756`
+    - Переходник на фары `type_id=971041634` `description_category_id=17028756`
+    - Цепь ГРМ `type_id=98962` `description_category_id=17028756`
+    - Корректор фар `type_id=971072731` `description_category_id=17028756`
+    - Маска для ксеноновых линз `type_id=970880271` `description_category_id=17028756`
+    - Глушитель `type_id=971906701` `description_category_id=17028756`
+    - Ремкомплект ТНВД `type_id=971072781` `description_category_id=17028756`
+    - Программатор ключа автомобильный `type_id=970859581` `description_category_id=17028756`
+    - Головка блока цилиндров `type_id=98814` `description_category_id=17028756`
+    - Замок зажигания `type_id=970889769` `description_category_id=17028756`
+    - Реле универсальное автомобильное `type_id=971047417` `description_category_id=17028756`
+    - Ремкомплект лючка бензобака `type_id=971049580` `description_category_id=17028756`
+    - Адсорбер `type_id=971289920` `description_category_id=17028756`
+    - Свеча нагрева охлаждающей жидкости `type_id=95766` `description_category_id=17028756`
+    - Крышка бачка расширительного `type_id=971072740` `description_category_id=17028756`
+    - Круиз-контроль `type_id=971053235` `description_category_id=17028756`
+    - Предохранитель автомобильный `type_id=92190` `description_category_id=17028756`
+    - Радиатор АКПП `type_id=971072771` `description_category_id=17028756`
+    - Щеткодержатель стартера `type_id=970876402` `description_category_id=17028756`
+    - Радиатор охлаждения `type_id=970782911` `description_category_id=17028756`
+    - Омыватель камеры автомобиля `type_id=971362723` `description_category_id=17028756`
+    - Корпус фары `type_id=971072729` `description_category_id=17028756`
+    - Подушка безопасности `type_id=971026652` `description_category_id=17028756`
+    - Якорь стартера `type_id=971092520` `description_category_id=17028756`
+    - Жгут проводов `type_id=970854835` `description_category_id=17028756`
+    - Шланг автомобильный `type_id=970584071` `description_category_id=17028756`
+    - Муфта электромагнитная `type_id=970989394` `description_category_id=17028756`
+    - Автономный отопитель автомобильный `type_id=970831240` `description_category_id=17028756`
+    - Ремень приводной `type_id=98913` `description_category_id=17028756`
+    - Крыльчатка вентилятора радиатора `type_id=971072736` `description_category_id=17028756`
+    - Свеча зажигания `type_id=95765` `description_category_id=17028756`
+    - Кольцо поршневое `type_id=971058287` `description_category_id=17028756`
+    - Кольцо уплотнительное автомобильное `type_id=970863596` `description_category_id=17028756`
+    - Мотор отопителя `type_id=970836768` `description_category_id=17028756`
+    - Информационное табло автомобильное `type_id=970637221` `description_category_id=17028756`
+    - Цоколь автомобильной лампы `type_id=970853203` `description_category_id=17028756`
+    - Прокладка для системы охлаждения автомобиля `type_id=971749438` `description_category_id=17028756`
+    - Направляющая цепи ГРМ `type_id=98856` `description_category_id=17028756`
+    - Шатун двигателя `type_id=971362794` `description_category_id=17028756`
+    - Муфта карданного вала `type_id=970889788` `description_category_id=17028756`
+    - Бендикс стартера `type_id=970863600` `description_category_id=17028756`
+    - Рассеиватель фары `type_id=971072774` `description_category_id=17028756`
+    - Фланец охлаждения `type_id=971156221` `description_category_id=17028756`
+    - Запчасти автомобильные `type_id=970799804` `description_category_id=17028756`
+    - Провод АКБ `type_id=98891` `description_category_id=17028756`
+    - Опора шаровая `type_id=98870` `description_category_id=17028756`
+    - Опора радиатора `type_id=971072752` `description_category_id=17028756`
+    - Блок обманка для фар `type_id=94670` `description_category_id=17028756`
+    - Уплотнительное кольцо автокондиционера `type_id=971452669` `description_category_id=17028756`
+    - Панель приборная `type_id=971072758` `description_category_id=17028756`
+    - Резонатор глушителя `type_id=98906` `description_category_id=17028756`
+    - Блок питания сети автомобиля `type_id=290836202` `description_category_id=17028756`
+    - Наконечник свечной `type_id=970863595` `description_category_id=17028756`
+    - Система контроля водителя `type_id=971074215` `description_category_id=17028756`
+    - Крестовина карданного вала `type_id=970876394` `description_category_id=17028756`
+    - Пробка сливная `type_id=98890` `description_category_id=17028756`
+    - Кран радиатора автомобиля `type_id=971072733` `description_category_id=17028756`
+    - Клапан ГБЦ `type_id=971072711` `description_category_id=17028756`
+    - Опора карданного вала `type_id=971047429` `description_category_id=17028756`
+    - Провод соединительный `type_id=94680` `description_category_id=17028756`
+    - Ниппель автокондиционера `type_id=971452664` `description_category_id=17028756`
+    - Ремкомплект двигателя `type_id=971818474` `description_category_id=17028756`
+    - Опора КПП `type_id=98868` `description_category_id=17028756`
+    - Испаритель кондиционера `type_id=971072692` `description_category_id=17028756`
+    - Запчасти ГРМ автомобиля `type_id=970782921` `description_category_id=17028756`
+    - Защита топливной системы `type_id=97610` `description_category_id=17028756`
+    - Ремкомплект фары `type_id=971092515` `description_category_id=17028756`
+    - Лампа автомобильная `type_id=367249974` `description_category_id=17028756`
+    - Модуль дальнего, ближнего света `type_id=382839438` `description_category_id=17028756`
+    - Хомут для глушителя `type_id=971043197` `description_category_id=17028756`
+    - Защита глушителя `type_id=68793837` `description_category_id=17028756`
+    - Компрессор пневмоподвески `type_id=971007501` `description_category_id=17028756`
+    - Трубка ДВС `type_id=971749367` `description_category_id=17028756`
+    - Радиатор отопителя салона `type_id=970781727` `description_category_id=17028756`
+    - Запчасти карбюратора `type_id=971061543` `description_category_id=17028756`
+    - Кожух ремня ГРМ `type_id=971072713` `description_category_id=17028756`
+    - Корректор педали газа `type_id=971006424` `description_category_id=17028756`
+    - Бачок расширительный автомобильный `type_id=970885027` `description_category_id=17028756`
+    - Фара автомобильная `type_id=970687095` `description_category_id=17028756`
+    - Комплект автопроводки `type_id=94674` `description_category_id=17028756`
+    - Маслоотделитель вентиляции картера `type_id=971049571` `description_category_id=17028756`
+    - Колпачок порта автокондиционера `type_id=971452663` `description_category_id=17028756`
+    - Интеркулер `type_id=971072691` `description_category_id=17028756`
+    - Проектор на лобовое стекло `type_id=193084524` `description_category_id=17028756`
+    - Кожух фары `type_id=971102695` `description_category_id=17028756`
+    - Колодки тормозные `type_id=96167` `description_category_id=17028756`
+    - Пыльник ШРУСа `type_id=98903` `description_category_id=17028756`
+    - Панель радиатора `type_id=971072760` `description_category_id=17028756`
+    - Насос водяной `type_id=98857` `description_category_id=17028756`
+    - Сальник двигателя `type_id=970782912` `description_category_id=17028756`
+    - Компрессор кондиционера `type_id=970782176` `description_category_id=17028756`
+    - Цилиндр тормозной `type_id=98966` `description_category_id=17028756`
+    - Коллектор впускной `type_id=98833` `description_category_id=17028756`
+    - Крышка клапана `type_id=98847` `description_category_id=17028756`
+    - Подогреватель предпусковой `type_id=92191` `description_category_id=17028756`
+    - Блок управления `type_id=971005681` `description_category_id=17028756`
+    - Корпус клапана `type_id=971072722` `description_category_id=17028756`
+    - Кнопка старт-стоп `type_id=971107067` `description_category_id=17028756`
+  - Товары для уборки, чистки автомобиля `description_category_id=17027945`
+    - Салфетка автомобильная `type_id=269166265` `description_category_id=17027945`
+    - Кисть для детейлинга `type_id=970827779` `description_category_id=17027945`
+    - Щетка автомобильная `type_id=970741954` `description_category_id=17027945`
+    - Рукавица автомобильная `type_id=970737903` `description_category_id=17027945`
+    - Водосгон автомобильный `type_id=970707850` `description_category_id=17027945`
+    - Скребок автомобильный `type_id=92201` `description_category_id=17027945`
+    - Салфетки влажные автомобильные `type_id=269166268` `description_category_id=17027945`
+    - Губка автомобильная `type_id=269166266` `description_category_id=17027945`
+  - Товары для гаражей и автосервисов `description_category_id=83250454`
+    - Флакон для краски `type_id=971941251` `description_category_id=83250454`
+    - Тележка транспортировочная `type_id=970904866` `description_category_id=83250454`
+    - Рампа подъемная `type_id=971363224` `description_category_id=83250454`
+    - Аксессуар для заправочной станции `type_id=971456682` `description_category_id=83250454`
+    - Пистолет для ошиповки `type_id=970620999` `description_category_id=83250454`
+    - Кран гидравлический гаражный `type_id=970747452` `description_category_id=83250454`
+    - Заплатка шиноремонтная `type_id=971065947` `description_category_id=83250454`
+    - Пластырь кордовый `type_id=970825888` `description_category_id=83250454`
+    - Специнструмент для авто `type_id=97469` `description_category_id=83250454`
+    - Фреза абразивная для обработки шин `type_id=970825883` `description_category_id=83250454`
+    - Груз для балансировки колес `type_id=970843533` `description_category_id=83250454`
+    - Сушка инфракрасная для автосервиса `type_id=971116090` `description_category_id=83250454`
+    - Манометр автомобильный `type_id=92176` `description_category_id=83250454`
+    - Ключ автомобильный `type_id=92083` `description_category_id=83250454`
+    - Зеркало для автосервиса `type_id=970880447` `description_category_id=83250454`
+    - Бумага маскировочная для авторемонта `type_id=970800874` `description_category_id=83250454`
+    - Тест-пластины для пробных выкрасов `type_id=970800430` `description_category_id=83250454`
+    - Насос для ГСМ `type_id=97240` `description_category_id=83250454`
+    - Индикатор износа шин `type_id=97525` `description_category_id=83250454`
+    - Таль электрическая стационарная `type_id=970827290` `description_category_id=83250454`
+    - Экстрактор `type_id=92159` `description_category_id=83250454`
+    - Турбосушка автомобильная `type_id=971123957` `description_category_id=83250454`
+    - Аппарат для химчистки автомобиля `type_id=409596011` `description_category_id=83250454`
+    - Сиденье ремонтное `type_id=971304178` `description_category_id=83250454`
+    - Специнструмент для мото `type_id=970667792` `description_category_id=83250454`
+    - Запчасти насоса ГСМ `type_id=970874853` `description_category_id=83250454`
+    - Установка маслосборная `type_id=970730339` `description_category_id=83250454`
+    - Запчасти для подъемника `type_id=971038346` `description_category_id=83250454`
+    - Шприц для смазки `type_id=970860463` `description_category_id=83250454`
+    - Съемник `type_id=92140` `description_category_id=83250454`
+    - Машинка для притирки клапанов `type_id=971125310` `description_category_id=83250454`
+    - Шпильковерт `type_id=97554` `description_category_id=83250454`
+    - Бустер взрывной накачки `type_id=970987287` `description_category_id=83250454`
+    - Балансировочный компаунд `type_id=970680860` `description_category_id=83250454`
+    - Удлинитель ударный `type_id=99495` `description_category_id=83250454`
+    - Восстановитель щеток стеклоочистителя `type_id=970868129` `description_category_id=83250454`
+    - Воронка техническая `type_id=92168` `description_category_id=83250454`
+    - Адаптер ударный `type_id=97508` `description_category_id=83250454`
+    - Удлинитель для ключа `type_id=97542` `description_category_id=83250454`
+    - Запчасти для компрессора автомобиля `type_id=971299043` `description_category_id=83250454`
+    - Масленка для смазки `type_id=92096` `description_category_id=83250454`
+    - Стойка для автосервиса `type_id=971116097` `description_category_id=83250454`
+    - Мойка колес `type_id=971095043` `description_category_id=83250454`
+    - Ролик прикаточный шиномонтажный `type_id=970825885` `description_category_id=83250454`
+    - Набор для ремонта шин `type_id=92179` `description_category_id=83250454`
+    - Бокс для АКБ `type_id=970667744` `description_category_id=83250454`
+    - Траверса `type_id=970729014` `description_category_id=83250454`
+    - Шубка полировальная `type_id=269166267` `description_category_id=83250454`
+    - Компрессор автомобильный `type_id=91458` `description_category_id=83250454`
+    - Набор инструментов для автомобиля `type_id=971437067` `description_category_id=83250454`
+    - Индукционный нагреватель для автосервиса `type_id=971306969` `description_category_id=83250454`
+    - Оборудование шиномонтажное `type_id=970825887` `description_category_id=83250454`
+    - Инструмент для ручной ошиповки `type_id=970621001` `description_category_id=83250454`
+    - Лента маскировочная автомобильная `type_id=970861039` `description_category_id=83250454`
+    - Кардан `type_id=92073` `description_category_id=83250454`
+    - Гайколом `type_id=92061` `description_category_id=83250454`
+    - Поддон для слива масла `type_id=97552` `description_category_id=83250454`
+    - Емкость мерная для моторного масла `type_id=971413520` `description_category_id=83250454`
+    - Ракель `type_id=971107021` `description_category_id=83250454`
+    - Компрессометр `type_id=97533` `description_category_id=83250454`
+    - Флакон с пенообразователем `type_id=970702940` `description_category_id=83250454`
+    - Лопатка для ремонта `type_id=115949032` `description_category_id=83250454`
+    - Пистолет для подкачки шин `type_id=95840` `description_category_id=83250454`
+    - Модуль заправочный `type_id=970860479` `description_category_id=83250454`
+    - Сетка для ремонта кузовных деталей `type_id=96752` `description_category_id=83250454`
+    - Запчасти аппарата химчистки автомобиля `type_id=971113372` `description_category_id=83250454`
+    - Зеркало инспекционное `type_id=341100888` `description_category_id=83250454`
+    - Набор для ремонта стекол `type_id=92178` `description_category_id=83250454`
+    - Ареометр для электролита `type_id=92164` `description_category_id=83250454`
+    - Машинка для нарезки протектора `type_id=970825890` `description_category_id=83250454`
+    - Круг шлифовальный автомобильный `type_id=971067910` `description_category_id=83250454`
+    - Мелок для резины разметочный `type_id=971133123` `description_category_id=83250454`
+    - Шланг для компрессора `type_id=971314202` `description_category_id=83250454`
+    - Держатель двигателя `type_id=970729016` `description_category_id=83250454`
+    - Лежак ремонтный `type_id=97341` `description_category_id=83250454`
+    - Мотоподъемник `type_id=970730336` `description_category_id=83250454`
+    - Мотоподставка `type_id=970743081` `description_category_id=83250454`
+    - Яма смотровая `type_id=972821755` `description_category_id=83250454`
+    - Инструмент для удаления вмятин `type_id=970586888` `description_category_id=83250454`
+    - Набор фиксаторов для обслуживания двигателей авто `type_id=970877615` `description_category_id=83250454`
+    - Тавотница `type_id=971035968` `description_category_id=83250454`
+    - Система хранения гаражная `type_id=970883137` `description_category_id=83250454`
+    - Гайка быстрозажимная `type_id=971096682` `description_category_id=83250454`
+    - Станция промывочная `type_id=971046054` `description_category_id=83250454`
+    - Распылитель химостойкий `type_id=87746100` `description_category_id=83250454`
+    - Насос автомобильный `type_id=91459` `description_category_id=83250454`
+    - Гайковерт ручной `type_id=97513` `description_category_id=83250454`
+    - Экстрактор для ниппеля `type_id=971126144` `description_category_id=83250454`
+    - Шипы ремонтные `type_id=970621000` `description_category_id=83250454`
+    - Аксессуары для автомойки `type_id=972027580` `description_category_id=83250454`
+    - Молоток обратный `type_id=504866187` `description_category_id=83250454`
+    - Аксессуар для стапеля `type_id=971214901` `description_category_id=83250454`
+    - Стробоскоп диагностический `type_id=96761` `description_category_id=83250454`
+    - Крышка-дозатор смесительная `type_id=971004627` `description_category_id=83250454`
+    - Клещи автомобильные `type_id=97527` `description_category_id=83250454`
+    - Шило для ремонта шин `type_id=971148684` `description_category_id=83250454`
+    - Запчасти вытяжки для автосервиса `type_id=971434501` `description_category_id=83250454`
+    - Пистолет раздаточный `type_id=970860474` `description_category_id=83250454`
+    - Подъемник автомобильный `type_id=970729387` `description_category_id=83250454`
+    - Мотоподкат `type_id=970743080` `description_category_id=83250454`
+    - Установка для замены технической жидкости `type_id=970743077` `description_category_id=83250454`
+    - Выравниватель колес `type_id=971301947` `description_category_id=83250454`
+    - Шланг для заправки `type_id=97523` `description_category_id=83250454`
+  - Автомобильные камеры для шин `description_category_id=79225084`
+    - Камера колеса для мототехники `type_id=970787046` `description_category_id=79225084`
+    - Камера колеса автомобильная `type_id=99519` `description_category_id=79225084`
+  - Оборудование для парковки `description_category_id=85083429`
+    - Конус дорожный `type_id=970741591` `description_category_id=85083429`
+    - Кабель-канал дорожный `type_id=971106301` `description_category_id=85083429`
+    - Барьеры парковочные `type_id=970741592` `description_category_id=85083429`
+    - Шлагбаум автоматический `type_id=971106303` `description_category_id=85083429`
+    - Колесоотбойник `type_id=970859645` `description_category_id=85083429`
+    - Столбики парковочные `type_id=970741593` `description_category_id=85083429`
+    - Тумба для шлагбаума `type_id=971084398` `description_category_id=85083429`
+    - Дорожная неровность искусственная `type_id=971106299` `description_category_id=85083429`
+    - Демпфер автомобильный `type_id=970747396` `description_category_id=85083429`
+    - Светофор `type_id=971447043` `description_category_id=85083429`
+    - Машина разметочная `type_id=971075582` `description_category_id=85083429`
+    - Контроллер дорожный `type_id=972076776` `description_category_id=85083429`
+  - Перевоз багажа `description_category_id=17028754`
+    - Багажник для лыж, сноубордов `type_id=970871852` `description_category_id=17028754`
+    - Багажные дуги `type_id=94640` `description_category_id=17028754`
+    - Комплект багажника `type_id=94643` `description_category_id=17028754`
+    - Багажный бокс `type_id=94641` `description_category_id=17028754`
+    - Рейлинг автомобильный `type_id=94649` `description_category_id=17028754`
+    - Велобагажник на автомобиль `type_id=94642` `description_category_id=17028754`
+    - Замок для прицепа `type_id=970803521` `description_category_id=17028754`
+    - Запчасти для прицепа `type_id=970964787` `description_category_id=17028754`
+    - Фиксатор багажный `type_id=92195` `description_category_id=17028754`
+    - Корзина экспедиционная `type_id=94644` `description_category_id=17028754`
+    - Сетка для прицепа `type_id=971108777` `description_category_id=17028754`
+    - Крепление для тента `type_id=971288167` `description_category_id=17028754`
+    - Ремень стяжной `type_id=92196` `description_category_id=17028754`
+    - Такелажные крепления груза `type_id=972757884` `description_category_id=17028754`
+  - Тюнинг и внешний декор `description_category_id=17028755`
+    - Ремкомплект решетки радиатора `type_id=971100615` `description_category_id=17028755`
+    - Молдинг автомобильный `type_id=970719027` `description_category_id=17028755`
+    - Накладка на автомобиль `type_id=971006634` `description_category_id=17028755`
+    - Подкрылки `type_id=94663` `description_category_id=17028755`
+    - Заглушка антенны `type_id=971448842` `description_category_id=17028755`
+    - Воздухозаборник `type_id=970895070` `description_category_id=17028755`
+    - Заглушка бампера `type_id=970954154` `description_category_id=17028755`
+    - Защита внешних частей автомобиля `type_id=94658` `description_category_id=17028755`
+    - Комплект подсветки для автомобиля `type_id=971168873` `description_category_id=17028755`
+    - Колпак ступицы колеса `type_id=970984560` `description_category_id=17028755`
+    - Колпаки на колеса `type_id=94659` `description_category_id=17028755`
+    - Тонировка съемная `type_id=970984412` `description_category_id=17028755`
+    - Порог-площадка `type_id=97601` `description_category_id=17028755`
+    - Решетка радиатора `type_id=97666` `description_category_id=17028755`
+    - Шноркель автомобильный `type_id=971166353` `description_category_id=17028755`
+    - Расширитель колесных арок `type_id=970599034` `description_category_id=17028755`
+    - Пленка автомобильная `type_id=970943796` `description_category_id=17028755`
+    - Дуги кузова `type_id=98300` `description_category_id=17028755`
+    - Веткоотбойники автомобильные `type_id=970891873` `description_category_id=17028755`
+    - Подножка автомобильная `type_id=970854767` `description_category_id=17028755`
+    - Заглушка решетки радиатора `type_id=94657` `description_category_id=17028755`
+    - Дефлектор для окон `type_id=97593` `description_category_id=17028755`
+    - Дефлектор капота `type_id=94656` `description_category_id=17028755`
+    - Крышка на пикап `type_id=971045988` `description_category_id=17028755`
+    - Спойлер автомобиля `type_id=970895069` `description_category_id=17028755`
+  - Автомобильный крепеж `description_category_id=74606916`
+    - Кольцо центровочное для дисков `type_id=970957184` `description_category_id=74606916`
+    - Болт автомобильный `type_id=970840917` `description_category_id=74606916`
+    - Клипса крепежная автомобильная `type_id=115950323` `description_category_id=74606916`
+    - Шайба автомобильная `type_id=971153526` `description_category_id=74606916`
+    - Кольцо глушителя стопорное `type_id=971749419` `description_category_id=74606916`
+    - Колпачок на вентиль автомобильный `type_id=971076690` `description_category_id=74606916`
+    - Заклепка автомобильная `type_id=970858642` `description_category_id=74606916`
+    - Вентиль для бескамерных шин `type_id=96757` `description_category_id=74606916`
+    - Шпилька автомобильная `type_id=970881053` `description_category_id=74606916`
+    - Гайка автомобильная `type_id=971214533` `description_category_id=74606916`
+    - Крепление глушителя `type_id=970984895` `description_category_id=74606916`
+    - Штифт автомобильный `type_id=971047431` `description_category_id=74606916`
+    - Ниппель `type_id=92183` `description_category_id=74606916`
+    - Удлинитель вентиля для шин `type_id=970879817` `description_category_id=74606916`
+    - Метиз автомобильный `type_id=970858643` `description_category_id=74606916`
+    - Фиксатор автомобильный `type_id=970858644` `description_category_id=74606916`
+    - Заглушка для автокрепежа `type_id=971391315` `description_category_id=74606916`
+  - Щетки стеклоочистителя `description_category_id=17027950`
+    - Резинка для стеклоочистителя `type_id=95597` `description_category_id=17027950`
+    - Щетка стеклоочистителя `type_id=95589` `description_category_id=17027950`
+    - Адаптер щетки стеклоочистителя `type_id=95588` `description_category_id=17027950`
+  - Мотоэкипировка `description_category_id=79199415`
+    - Запчасти для мотомаски `type_id=970949365` `description_category_id=79199415`
+    - Мотоочки `type_id=970807546` `description_category_id=79199415`
+    - Запчасти для мотошлема `type_id=970777927` `description_category_id=79199415`
+    - Мотозащита `type_id=970681754` `description_category_id=79199415`
+    - Мотошлем `type_id=94195` `description_category_id=79199415`
+    - Мотоперчатки `type_id=94193` `description_category_id=79199415`
+    - Мотомаска `type_id=971061862` `description_category_id=79199415`
+    - Мотоподшлемник `type_id=971043352` `description_category_id=79199415`
+  - Автоаксессуары `description_category_id=17028749`
+    - Поглотитель влаги `type_id=971392609` `description_category_id=17028749`
+    - Автопятка `type_id=234790370` `description_category_id=17028749`
+    - Ограничитель ремня безопасности `type_id=971310091` `description_category_id=17028749`
+    - Флиппер на колеса `type_id=970702677` `description_category_id=17028749`
+    - Ремень безопасности автомобильный `type_id=970863604` `description_category_id=17028749`
+    - Автопалатка `type_id=971302761` `description_category_id=17028749`
+    - Коммуникатор автомобильный `type_id=971058097` `description_category_id=17028749`
+    - Решетка на окно автомобиля `type_id=971158839` `description_category_id=17028749`
+    - Вешалка автомобильная `type_id=93667` `description_category_id=17028749`
+    - Ручка КПП `type_id=98486` `description_category_id=17028749`
+    - Запчасти для автодома `type_id=971768729` `description_category_id=17028749`
+    - Ручка на руль `type_id=238989887` `description_category_id=17028749`
+    - Стекло защитное для элементов салона `type_id=970702707` `description_category_id=17028749`
+    - Набор автолюбителю подарочный `type_id=129347475` `description_category_id=17028749`
+    - Шашка такси `type_id=971456691` `description_category_id=17028749`
+    - Устройство для переноса педали газа `type_id=970857870` `description_category_id=17028749`
+    - Пакеты в автомобиль `type_id=92187` `description_category_id=17028749`
+    - Антистатик автомобильный `type_id=971026639` `description_category_id=17028749`
+    - Чехол брелка автосигнализации `type_id=97381` `description_category_id=17028749`
+    - Демпфер замка двери автомобиля `type_id=971298731` `description_category_id=17028749`
+    - Наклейка автомобильная `type_id=98485` `description_category_id=17028749`
+    - Столик автомобильный `type_id=92202` `description_category_id=17028749`
+    - Номер автомобильный сувенирный `type_id=970969822` `description_category_id=17028749`
+    - Чехол на элемент салона автомобиля `type_id=93595` `description_category_id=17028749`
+    - Автовизитка `type_id=98482` `description_category_id=17028749`
+    - Пепельница автомобильная `type_id=92188` `description_category_id=17028749`
+    - Подушка автомобильная `type_id=92614` `description_category_id=17028749`
+    - Светоотражатель `type_id=92198` `description_category_id=17028749`
+    - Коврик на торпедо `type_id=92173` `description_category_id=17028749`
+    - Знак автомобильный `type_id=98484` `description_category_id=17028749`
+    - Автофлаг `type_id=92161` `description_category_id=17028749`
+    - Рамка госномера `type_id=94664` `description_category_id=17028749`
+    - Шторка солнцезащитная `type_id=92211` `description_category_id=17028749`
+    - Часы автомобильные `type_id=970637383` `description_category_id=17028749`
+    - Болты для номерных знаков `type_id=970957468` `description_category_id=17028749`
+    - Сетка антимоскитная для автомобиля `type_id=970998256` `description_category_id=17028749`
+    - Автоведро `type_id=92165` `description_category_id=17028749`
+    - Сейф автомобильный `type_id=970957536` `description_category_id=17028749`
+    - Элемент нагревательный `type_id=96753` `description_category_id=17028749`
+    - Ароматизатор автомобильный `type_id=92715` `description_category_id=17028749`
+    - Проблесковый маяк `type_id=970827237` `description_category_id=17028749`
+    - Эмблема автомобильная `type_id=96755` `description_category_id=17028749`
+    - Держатель автомобильный `type_id=115950474` `description_category_id=17028749`
+    - Накладка на элементы салона `type_id=970701553` `description_category_id=17028749`
+    - Оплетка на руль `type_id=92185` `description_category_id=17028749`
+    - Матрас в автомобиль `type_id=970573777` `description_category_id=17028749`
+    - Цурикава `type_id=971219257` `description_category_id=17028749`
+    - Козырек солнцезащитный `type_id=970623462` `description_category_id=17028749`
+    - Подстаканник в салон автомобиля `type_id=970748012` `description_category_id=17028749`
+    - Полка автомобильная `type_id=970581309` `description_category_id=17028749`
+    - Жезл ДПС `type_id=970741660` `description_category_id=17028749`
+    - Кейс для салфеток в автомобиль `type_id=970724801` `description_category_id=17028749`
+  - Электроника для автомобиля `description_category_id=80404590`
+    - Очиститель воздуха автомобильный `type_id=970852076` `description_category_id=80404590`
+    - Тахограф автомобильный `type_id=970878192` `description_category_id=80404590`
+    - Аксессуары для алкотестера `type_id=970945780` `description_category_id=80404590`
+    - Увлажнитель воздуха автомобильный `type_id=34006143` `description_category_id=80404590`
+    - Вентилятор автомобильный `type_id=98546` `description_category_id=80404590`
+    - Аксессуар для автохолодильника `type_id=971978894` `description_category_id=80404590`
+    - Удлинитель гнезда прикуривателя `type_id=971749385` `description_category_id=80404590`
+    - Запчасти парктроника `type_id=970692148` `description_category_id=80404590`
+    - Парктроник `type_id=115950492` `description_category_id=80404590`
+    - Диски для тахографа `type_id=909884` `description_category_id=80404590`
+  - Автофильтры `description_category_id=17028751`
+    - Фильтр топливный `type_id=96179` `description_category_id=17028751`
+    - Запчасти автомобильного фильтра `type_id=971071830` `description_category_id=17028751`
+    - Фильтр-влагоотделитель `type_id=970939240` `description_category_id=17028751`
+    - Фильтр гидравлический `type_id=970863592` `description_category_id=17028751`
+    - Фильтр мочевины `type_id=971749376` `description_category_id=17028751`
+    - Фильтр сапуна `type_id=970905417` `description_category_id=17028751`
+    - Набор для ТО `type_id=98301` `description_category_id=17028751`
+    - Фильтр гидравлический для спецтехники `type_id=971749391` `description_category_id=17028751`
+    - Фильтр салонный `type_id=96178` `description_category_id=17028751`
+    - Фильтр-масловлагоотделитель `type_id=970939241` `description_category_id=17028751`
+    - Фильтр АКПП `type_id=970863591` `description_category_id=17028751`
+    - Фильтр масляный `type_id=96176` `description_category_id=17028751`
+    - Фильтр сажевый `type_id=972203269` `description_category_id=17028751`
+    - Фильтр охлаждающей жидкости `type_id=96177` `description_category_id=17028751`
+    - Фильтр воздушный `type_id=96175` `description_category_id=17028751`
+  - Шины `description_category_id=17027949`
+    - Шины для коммерческого транспорта `type_id=97884` `description_category_id=17027949`
+    - Шины для спецтехники `type_id=971980009` `description_category_id=17027949`
+    - Шины для садовой техники `type_id=94767` `description_category_id=17027949`
+    - Шины для мотоциклов `type_id=94766` `description_category_id=17027949`
+    - Шины для грузовых автомобилей `type_id=94763` `description_category_id=17027949`
+    - Шины для легковых автомобилей `type_id=94765` `description_category_id=17027949`
+    - Шины для прицепа `type_id=971444483` `description_category_id=17027949`
+    - Шины для внедорожника `type_id=94762` `description_category_id=17027949`
+    - Шины для квадроциклов `type_id=94764` `description_category_id=17027949`
+  - Автомагнитолы `description_category_id=17039878`
+    - Автомагнитола `type_id=95858` `description_category_id=17039878`
+    - Устройство головное `type_id=91915` `description_category_id=17039878`
+    - Аксессуар для автомагнитолы `type_id=971326576` `description_category_id=17039878`
+  - Автомобильное топливо `description_category_id=200001475`
+    - Топливо моторное `type_id=971936025` `description_category_id=200001475`
+  - Запчасти для грузовых автомобилей и спецтехники `description_category_id=200001532`
+    - Запчасти ДВС для грузовика `type_id=972746806` `description_category_id=200001532`
+    - Рефрижератор автомобильный `type_id=971092861` `description_category_id=200001532`
+    - Кабина в сборе `type_id=972132192` `description_category_id=200001532`
+    - Фурнитура для грузовых автомобилей `type_id=971026579` `description_category_id=200001532`
+  - Автомобильные органайзеры и сумки `description_category_id=82169566`
+    - Сумка-органайзер автомобильная `type_id=92186` `description_category_id=82169566`
+    - Крепление автомобильного органайзера `type_id=971054985` `description_category_id=82169566`
+    - Аптечка автомобильная `type_id=95565` `description_category_id=82169566`
+  - Детали салона `description_category_id=43443514`
+    - Вставка мультируля `type_id=970997292` `description_category_id=43443514`
+    - Переключатель салона автомобиля `type_id=971032531` `description_category_id=43443514`
+    - Перегородка для салона `type_id=970877631` `description_category_id=43443514`
+    - Бардачок автомобильный `type_id=971390059` `description_category_id=43443514`
+    - Обшивка автомобильная `type_id=971159265` `description_category_id=43443514`
+    - Кнопка прикуривателя `type_id=970584059` `description_category_id=43443514`
+    - Сиденье автомобильное `type_id=970960035` `description_category_id=43443514`
+    - Уплотнитель автомобильный `type_id=970891910` `description_category_id=43443514`
+    - Ручка в салон автомобиля `type_id=970942191` `description_category_id=43443514`
+    - Подлокотник автомобильный `type_id=92189` `description_category_id=43443514`
+    - Подиум автомобильный `type_id=970939935` `description_category_id=43443514`
+    - Плафон в салон `type_id=971095570` `description_category_id=43443514`
+    - Дефлектор воздуховода автомобильный `type_id=971125829` `description_category_id=43443514`
+    - Запчасти подлокотника `type_id=971433297` `description_category_id=43443514`
+    - Консоль в автомобиль `type_id=65454042` `description_category_id=43443514`
+    - Замок лобового стекла `type_id=971006632` `description_category_id=43443514`
+    - Кнопка на приборной панели `type_id=971301554` `description_category_id=43443514`
+    - Запчасти бардачка `type_id=971390060` `description_category_id=43443514`
+  - Мотоаксессуары `description_category_id=80189074`
+    - Крепление на мотокофр `type_id=971454529` `description_category_id=80189074`
+    - Аксессуар для хранения мотоэкипировки `type_id=971100145` `description_category_id=80189074`
+    - Спинка для мототехники `type_id=930279483` `description_category_id=80189074`
+    - Мотосумка `type_id=94020` `description_category_id=80189074`
+    - Мотокофр `type_id=92177` `description_category_id=80189074`
+    - Мотономер сувенирный `type_id=971984388` `description_category_id=80189074`
+    - Резак для лыжни `type_id=971409150` `description_category_id=80189074`
+    - Номера для шлема `type_id=98169` `description_category_id=80189074`
+    - Стропа для мототехники `type_id=971311148` `description_category_id=80189074`
+    - Декор для мотошлема `type_id=971149846` `description_category_id=80189074`
+    - Чека безопасности для снегохода `type_id=971094493` `description_category_id=80189074`
+    - Скребки для снегохода `type_id=971094489` `description_category_id=80189074`
+    - Пульт для мотогарнитуры `type_id=970967837` `description_category_id=80189074`
+  - Автоковрики и авточехлы `description_category_id=17028750`
+    - Чехол на автобокс `type_id=970885291` `description_category_id=17028750`
+    - Чехол на запасное колесо `type_id=93590` `description_category_id=17028750`
+    - Чехол для мототехники `type_id=970667859` `description_category_id=17028750`
+    - Чехол для прицепа `type_id=93593` `description_category_id=17028750`
+    - Фурнитура для автомобильного чехла `type_id=971215899` `description_category_id=17028750`
+    - Виброизоляция автомобильная `type_id=703080060` `description_category_id=17028750`
+    - Чехол для хранения колес `type_id=92209` `description_category_id=17028750`
+    - Коврик в багажник `type_id=98347` `description_category_id=17028750`
+    - Пакеты для колес `type_id=971105567` `description_category_id=17028750`
+    - Чехол на автомобиль `type_id=93589` `description_category_id=17028750`
+    - Крепления для авточехлов `type_id=970976073` `description_category_id=17028750`
+    - Накидка автомобильная `type_id=93587` `description_category_id=17028750`
+    - Антискрип автомобильный `type_id=703080057` `description_category_id=17028750`
+    - Коврики в салон автомобиля `type_id=98348` `description_category_id=17028750`
+    - Теплоизоляция автомобильная `type_id=703080058` `description_category_id=17028750`
+    - Чехол в багажник `type_id=970731612` `description_category_id=17028750`
+    - Защита на спинку сиденья `type_id=970700748` `description_category_id=17028750`
+    - Шумоизоляция автомобильная `type_id=65454045` `description_category_id=17028750`
+    - Чехол на сиденье автомобиля `type_id=93596` `description_category_id=17028750`
+  - Колесные диски `description_category_id=17028758`
+    - Колесный диск `type_id=94832` `description_category_id=17028758`
+    - Проставка для колесных дисков `type_id=970886887` `description_category_id=17028758`
+    - Колеса в сборе `type_id=970619447` `description_category_id=17028758`
+  - Кузовные запчасти `description_category_id=48159484`
+    - Элемент зеркальный `type_id=971092521` `description_category_id=48159484`
+    - Ремкомплект автомобильной двери `type_id=971100613` `description_category_id=48159484`
+    - Панель борта автомобильная `type_id=971158144` `description_category_id=48159484`
+    - Бампер `type_id=970856518` `description_category_id=48159484`
+    - Зеркало боковое `type_id=970695250` `description_category_id=48159484`
+    - Арка крыла автомобильная `type_id=971100196` `description_category_id=48159484`
+    - Ограничитель двери автомобильный `type_id=971123160` `description_category_id=48159484`
+    - Ролик двери `type_id=971109196` `description_category_id=48159484`
+    - Запчасти бокового зеркала `type_id=970829668` `description_category_id=48159484`
+    - Карта дверная автомобильная `type_id=971067235` `description_category_id=48159484`
+    - Брызговики `type_id=94655` `description_category_id=48159484`
+    - Запчасти для фаркопа `type_id=94651` `description_category_id=48159484`
+    - Абсорбер бампера `type_id=971100094` `description_category_id=48159484`
+    - Рамка кузова `type_id=971739525` `description_category_id=48159484`
+    - Зеркало заднего вида `type_id=93362` `description_category_id=48159484`
+    - Автостекло `type_id=970977226` `description_category_id=48159484`
+    - Трос открывания `type_id=971049579` `description_category_id=48159484`
+    - Крышка багажника `type_id=971006083` `description_category_id=48159484`
+    - Фаркоп `type_id=94652` `description_category_id=48159484`
+    - Дверь автомобильная `type_id=970781439` `description_category_id=48159484`
+    - Крыло автомобильное `type_id=970967838` `description_category_id=48159484`
+    - Зеркало мертвой зоны `type_id=970587670` `description_category_id=48159484`
+    - Подушка кузова `type_id=971162152` `description_category_id=48159484`
+    - Ручка дверная автомобильная `type_id=970939934` `description_category_id=48159484`
+    - Замок двери автомобиля `type_id=970950655` `description_category_id=48159484`
+  - Автохимия и автокосметика `description_category_id=17028752`
+    - Очиститель тормозов `type_id=92252` `description_category_id=17028752`
+    - Фиксатор резьбы `type_id=970682158` `description_category_id=17028752`
+    - Паста абразивная `type_id=971106641` `description_category_id=17028752`
+    - Обезжириватель автомобильный `type_id=970686351` `description_category_id=17028752`
+    - Ключ жидкий `type_id=92227` `description_category_id=17028752`
+    - Электролит щелочной `type_id=972816275` `description_category_id=17028752`
+    - Смазка автомобильная `type_id=92263` `description_category_id=17028752`
+    - Очиститель датчика `type_id=92240` `description_category_id=17028752`
+    - Клей автомобильный `type_id=970856045` `description_category_id=17028752`
+    - Жидкость стеклоомывателя `type_id=92267` `description_category_id=17028752`
+    - Электролит кислотный `type_id=970941857` `description_category_id=17028752`
+    - Автошпатлевка `type_id=92216` `description_category_id=17028752`
+    - Очиститель масляной системы `type_id=970852589` `description_category_id=17028752`
+    - Антифриз `type_id=92224` `description_category_id=17028752`
+    - Очиститель кузова `type_id=92247` `description_category_id=17028752`
+    - Очиститель контактов `type_id=970941871` `description_category_id=17028752`
+    - Очиститель двигателя `type_id=92241` `description_category_id=17028752`
+    - Вода деионизированная `type_id=971072370` `description_category_id=17028752`
+    - Автошампунь `type_id=92273` `description_category_id=17028752`
+    - Очиститель стекол `type_id=92251` `description_category_id=17028752`
+    - Размягчитель резины `type_id=970960822` `description_category_id=17028752`
+    - Паста автомобильная `type_id=970804367` `description_category_id=17028752`
+    - Автоконсервант `type_id=92215` `description_category_id=17028752`
+    - Активатор адгезии `type_id=971053898` `description_category_id=17028752`
+    - Герметик автомобильный `type_id=369952585` `description_category_id=17028752`
+    - Мастика кузовная `type_id=970701948` `description_category_id=17028752`
+    - Жидкость для обработки выхлопных газов `type_id=971072366` `description_category_id=17028752`
+    - Лак автомобильный `type_id=184134668` `description_category_id=17028752`
+    - Осушитель системы зажигания `type_id=92238` `description_category_id=17028752`
+    - Вода дистиллированная `type_id=92226` `description_category_id=17028752`
+    - Средство для ремонта царапин `type_id=92265` `description_category_id=17028752`
+    - Мовиль `type_id=970952430` `description_category_id=17028752`
+    - Очиститель салона `type_id=92250` `description_category_id=17028752`
+    - Очиститель КПП `type_id=970886296` `description_category_id=17028752`
+    - Активатор для аквапринта `type_id=972050737` `description_category_id=17028752`
+    - Средство антигололедное для шин `type_id=92218` `description_category_id=17028752`
+    - Чернитель шин `type_id=92254` `description_category_id=17028752`
+    - Кондиционер для салона автомобиля `type_id=970893002` `description_category_id=17028752`
+    - Пигмент для микс-системы `type_id=970944771` `description_category_id=17028752`
+    - Воск автомобильный `type_id=92225` `description_category_id=17028752`
+    - Очиститель кондиционера `type_id=92246` `description_category_id=17028752`
+    - Очиститель мотошлемов `type_id=970976079` `description_category_id=17028752`
+    - Очиститель выхлопной системы `type_id=970942583` `description_category_id=17028752`
+    - Клей шиноремонтный `type_id=971065946` `description_category_id=17028752`
+    - Автогрунтовка `type_id=92214` `description_category_id=17028752`
+    - Преобразователь ржавчины `type_id=92257` `description_category_id=17028752`
+    - Антидождь `type_id=92220` `description_category_id=17028752`
+    - Жидкость тормозная `type_id=92269` `description_category_id=17028752`
+    - Электролит корректирующий `type_id=970941856` `description_category_id=17028752`
+    - Очиститель топливной системы `type_id=92243` `description_category_id=17028752`
+    - Кожа жидкая `type_id=504866285` `description_category_id=17028752`
+    - Очиститель от краски `type_id=92248` `description_category_id=17028752`
+    - Антигель `type_id=92261` `description_category_id=17028752`
+    - Раскоксовка двигателя `type_id=970892544` `description_category_id=17028752`
+    - Покрытие антикоррозийное `type_id=92222` `description_category_id=17028752`
+    - Очиститель дисков `type_id=92242` `description_category_id=17028752`
+    - Присадка автомобильная `type_id=92258` `description_category_id=17028752`
+    - Краска автомобильная `type_id=92233` `description_category_id=17028752`
+    - Отвердитель автомобильный `type_id=970695314` `description_category_id=17028752`
+    - Очиститель системы охлаждения `type_id=970952444` `description_category_id=17028752`
+    - Разбавитель автоэмали `type_id=970695319` `description_category_id=17028752`
+    - Гель установочный для пленок `type_id=971452735` `description_category_id=17028752`
+    - Размораживатель стекол `type_id=970742710` `description_category_id=17028752`
+    - Кондиционер для автозапчастей `type_id=92231` `description_category_id=17028752`
+    - Резина жидкая `type_id=97607` `description_category_id=17028752`
+    - Реметаллизант `type_id=92262` `description_category_id=17028752`
+    - Антизапотеватель `type_id=92221` `description_category_id=17028752`
+    - Средство для поиска утечек `type_id=286404838` `description_category_id=17028752`
+    - Адгезив `type_id=92217` `description_category_id=17028752`
+    - Жидкость для быстрого запуска `type_id=92228` `description_category_id=17028752`
+    - Растворитель для переходов автомобильный `type_id=970747511` `description_category_id=17028752`
+    - Размораживатель замков `type_id=970742711` `description_category_id=17028752`
+    - Полироль автомобильный `type_id=92256` `description_category_id=17028752`
+    - Подкрылки жидкие `type_id=970895716` `description_category_id=17028752`
+    - Набор автохимии `type_id=92234` `description_category_id=17028752`
+    - Антигравий `type_id=92219` `description_category_id=17028752`
+  - Аварийные принадлежности `description_category_id=17027943`
+    - Стопор буксировочного троса `type_id=970693186` `description_category_id=17027943`
+    - Софт-шакл `type_id=971444167` `description_category_id=17027943`
+    - Канистра для ГСМ `type_id=92171` `description_category_id=17027943`
+    - Трос буксировочный `type_id=92207` `description_category_id=17027943`
+    - Знак аварийной остановки `type_id=92170` `description_category_id=17027943`
+    - Упор противооткатный `type_id=96758` `description_category_id=17027943`
+    - Лента антипробуксовочная `type_id=92174` `description_category_id=17027943`
+    - Аксессуары для домкрата `type_id=970581471` `description_category_id=17027943`
+    - Фонарь аварийный `type_id=95112` `description_category_id=17027943`
+    - Домкрат автомобильный `type_id=95885` `description_category_id=17027943`
+    - Крюк буксировочный `type_id=970943339` `description_category_id=17027943`
+    - Цепь противоскольжения `type_id=92210` `description_category_id=17027943`
+    - Набор аварийный `type_id=92160` `description_category_id=17027943`
+  - Противоугонные устройства `description_category_id=17028757`
+    - Запчасти брелока автосигнализации `type_id=970862668` `description_category_id=17028757`
+    - Цепь противоугонная `type_id=970873265` `description_category_id=17028757`
+    - Автозапуск `type_id=971160691` `description_category_id=17028757`
+    - Автосигнализация `type_id=98999` `description_category_id=17028757`
+    - Трос противоугонный `type_id=970687355` `description_category_id=17028757`
+    - Устройство противоугонное `type_id=95831` `description_category_id=17028757`
+    - Брелок для автосигнализации `type_id=970662301` `description_category_id=17028757`
+    - Блокиратор рулевого вала `type_id=96181` `description_category_id=17028757`
+    - Замок на диск `type_id=110995359` `description_category_id=17028757`
+    - Блокиратор педалей `type_id=96180` `description_category_id=17028757`
+  - Мотозапчасти `description_category_id=200001531`
+    - Сабкейдж `type_id=971078661` `description_category_id=200001531`
+    - Втулка для мототехники `type_id=971061857` `description_category_id=200001531`
+    - Барабан сцепления для мототехники `type_id=972104467` `description_category_id=200001531`
+    - Импеллер для гидроцикла `type_id=971156606` `description_category_id=200001531`
+    - Ось для мототехники `type_id=971116351` `description_category_id=200001531`
+    - Ремень вариатора для мототехники `type_id=970856517` `description_category_id=200001531`
+    - Хаггеры для мототехники `type_id=970943144` `description_category_id=200001531`
+    - Дуги для мототехники `type_id=970957410` `description_category_id=200001531`
+    - Ручка для мототехники `type_id=971035586` `description_category_id=200001531`
+    - Регулятор напряжения для мототехники `type_id=971036597` `description_category_id=200001531`
+    - Насос масляный для мототехники `type_id=971809230` `description_category_id=200001531`
+    - Крыло для мототехники `type_id=971067233` `description_category_id=200001531`
+    - Муфта для мототехники `type_id=971052860` `description_category_id=200001531`
+    - Подшипник для мототехники `type_id=971052864` `description_category_id=200001531`
+    - Замок зажигания для мототехники `type_id=970957463` `description_category_id=200001531`
+    - Бак топливный для мототехники `type_id=971116347` `description_category_id=200001531`
+    - Бачок для мототехники `type_id=970849655` `description_category_id=200001531`
+    - Пластик, обтекатели для мототехники `type_id=970591268` `description_category_id=200001531`
+    - Колодки тормозные для мототехники `type_id=970964529` `description_category_id=200001531`
+    - Колесные спицы для мототехники `type_id=971082340` `description_category_id=200001531`
+    - Амортизатор для мототехники `type_id=971052840` `description_category_id=200001531`
+    - Пульт управления для мототехники `type_id=970858646` `description_category_id=200001531`
+    - Датчик для мототехники `type_id=971974625` `description_category_id=200001531`
+    - Глушитель для мототехники `type_id=971841061` `description_category_id=200001531`
+    - Сигнал звуковой для мототехники `type_id=970957441` `description_category_id=200001531`
+    - Стоп-сигнал для мототехники `type_id=971168876` `description_category_id=200001531`
+    - Сиденье для мототехники `type_id=971047762` `description_category_id=200001531`
+    - Катушка зажигания для мототехники `type_id=971163698` `description_category_id=200001531`
+    - Панель приборная для мототехники `type_id=970957461` `description_category_id=200001531`
+    - Статор генератора для мототехники `type_id=971052871` `description_category_id=200001531`
+    - Щуп масляный для мототехники `type_id=971390967` `description_category_id=200001531`
+    - Тахометр для мототехники `type_id=971052873` `description_category_id=200001531`
+    - Адаптер для мототехники `type_id=970713369` `description_category_id=200001531`
+    - Двери для мототехники `type_id=971156580` `description_category_id=200001531`
+    - Переключатель для мототехники `type_id=970957462` `description_category_id=200001531`
+    - Фитинги, болты для мототехники `type_id=971061858` `description_category_id=200001531`
+    - Слайдер для мототехники `type_id=971013247` `description_category_id=200001531`
+    - Пружина для мототехники `type_id=970945548` `description_category_id=200001531`
+    - Накладка для мототехники `type_id=971094304` `description_category_id=200001531`
+    - Расширитель арок мототехники `type_id=971297812` `description_category_id=200001531`
+    - Клипоны универсальные для мототехники `type_id=971035591` `description_category_id=200001531`
+    - Сальник для мототехники `type_id=970968228` `description_category_id=200001531`
+    - Демпфер для снегохода `type_id=971094474` `description_category_id=200001531`
+    - Буксатор для мототехники `type_id=971041502` `description_category_id=200001531`
+    - Картер двигателя для мототехники `type_id=971052848` `description_category_id=200001531`
+    - Опора для мототехники `type_id=971433305` `description_category_id=200001531`
+    - Крышка запчасти для мототехники `type_id=971052853` `description_category_id=200001531`
+    - Руль для мототехники `type_id=970849654` `description_category_id=200001531`
+    - Перья вилки для мототехники `type_id=971052861` `description_category_id=200001531`
+    - Натяжитель цепи мототехники `type_id=971309832` `description_category_id=200001531`
+    - Радиатор для мототехники `type_id=971004224` `description_category_id=200001531`
+    - Рама для мототехники `type_id=971283784` `description_category_id=200001531`
+    - Реле для мототехники `type_id=970957466` `description_category_id=200001531`
+    - Магнето для мототехники `type_id=971052858` `description_category_id=200001531`
+    - Ремкомплект подвески мототехники `type_id=970878191` `description_category_id=200001531`
+    - Разъем USB для мототехники `type_id=971034189` `description_category_id=200001531`
+    - Фильтр для мототехники `type_id=971052875` `description_category_id=200001531`
+    - Генератор для мототехники `type_id=971116349` `description_category_id=200001531`
+    - Оправка для сальников вилки мототехники `type_id=970945550` `description_category_id=200001531`
+    - Крыша для мототехники `type_id=971216339` `description_category_id=200001531`
+    - Проводка для мототехники `type_id=971052865` `description_category_id=200001531`
+    - Бампер для мототехники `type_id=971102791` `description_category_id=200001531`
+    - Коммутатор CDI для мототехники `type_id=971154994` `description_category_id=200001531`
+    - Стартер для мототехники `type_id=971155000` `description_category_id=200001531`
+    - Ступица для мототехники `type_id=971447047` `description_category_id=200001531`
+    - Кикстартер для мототехники `type_id=971052869` `description_category_id=200001531`
+    - Цилиндр для мототехники `type_id=970870522` `description_category_id=200001531`
+    - Ремкомплект топливной системы мототехники `type_id=970957519` `description_category_id=200001531`
+    - Наконечник рулевой для мототехники `type_id=971148381` `description_category_id=200001531`
+    - Патрубок для мототехники `type_id=971150587` `description_category_id=200001531`
+    - Поворотники для мототехники `type_id=970858645` `description_category_id=200001531`
+    - Звезда для мототехники `type_id=970868128` `description_category_id=200001531`
+    - Ремкомплект тормозной системы мототехники `type_id=971154929` `description_category_id=200001531`
+    - Багажник для мототехники `type_id=971052841` `description_category_id=200001531`
+    - Запчасти руля для мототехники `type_id=971035592` `description_category_id=200001531`
+    - Рычаг для мототехники `type_id=970849651` `description_category_id=200001531`
+    - Склиз для снегохода `type_id=970719034` `description_category_id=200001531`
+    - Коленвал для мототехники `type_id=971052849` `description_category_id=200001531`
+    - Грипсы для мототехники `type_id=970849648` `description_category_id=200001531`
+    - Шланг тормозной для мототехники `type_id=971052877` `description_category_id=200001531`
+    - Диск сцепления для мототехники `type_id=971123943` `description_category_id=200001531`
+    - Поршень для мототехники `type_id=970868120` `description_category_id=200001531`
+    - Барабан тормозной для мототехники `type_id=972210877` `description_category_id=200001531`
+    - Ремкомплект выхлопной системы мототехники `type_id=970957411` `description_category_id=200001531`
+    - Лента обводная для мототехники ободная `type_id=971041503` `description_category_id=200001531`
+    - Диск тормозной для мототехники `type_id=970986915` `description_category_id=200001531`
+    - Заглушка для мототехники `type_id=970945551` `description_category_id=200001531`
+    - Лыжи для снегохода `type_id=970667863` `description_category_id=200001531`
+    - Траверса для мототехники `type_id=971052874` `description_category_id=200001531`
+    - Фаркоп для мототехники `type_id=971297808` `description_category_id=200001531`
+    - Защита для мототехники `type_id=971078662` `description_category_id=200001531`
+    - Подножка для мототехники `type_id=970868125` `description_category_id=200001531`
+    - Крепление для мототехники `type_id=970875989` `description_category_id=200001531`
+    - Цепь для мототехники `type_id=970854759` `description_category_id=200001531`
+    - Тросы для мототехники `type_id=971068012` `description_category_id=200001531`
+    - Привод для мототехники `type_id=971148376` `description_category_id=200001531`
+    - Стекло ветровое для мототехники `type_id=970874879` `description_category_id=200001531`
+    - Карбюратор для мототехники `type_id=970854766` `description_category_id=200001531`
+    - Вал для мототехники `type_id=971116348` `description_category_id=200001531`
+    - Проставка для мототехники `type_id=970943748` `description_category_id=200001531`
+    - Запчасти карбюратора для мототехники `type_id=971082339` `description_category_id=200001531`
+    - Ремкомплект сцепления для мототехники `type_id=971052852` `description_category_id=200001531`
+    - Вкладыш для мототехники `type_id=970868118` `description_category_id=200001531`
+    - Ремкомплект системы охлаждения мототехники `type_id=971052870` `description_category_id=200001531`
+    - Накладка на лыжи для снегохода `type_id=970707038` `description_category_id=200001531`
+    - Суппорт тормозной для мототехники `type_id=971052872` `description_category_id=200001531`
+    - Прокладка ДВС для мототехники `type_id=970868759` `description_category_id=200001531`
+    - Коробка передач для мототехники `type_id=971116350` `description_category_id=200001531`
+    - Кран топливный для мототехники `type_id=970957324` `description_category_id=200001531`
+    - Вариатор для мототехники `type_id=971052843` `description_category_id=200001531`
+    - Педаль для мототехники `type_id=971039269` `description_category_id=200001531`
+    - Гусеница для мототехники `type_id=971156692` `description_category_id=200001531`
+    - Редуктор для мототехники `type_id=971052867` `description_category_id=200001531`
+    - Ремкомплект двигателя мототехники `type_id=971052859` `description_category_id=200001531`
+    - Капот для мототехники `type_id=972863010` `description_category_id=200001531`
+    - Грузики руля для мототехники `type_id=970849652` `description_category_id=200001531`
+    - Снегоотвал для мототехники `type_id=971298501` `description_category_id=200001531`
+    - Ролик для мототехники `type_id=971065371` `description_category_id=200001531`
+    - Фара для мототехники `type_id=971038745` `description_category_id=200001531`
+    - Распредвал для мототехники `type_id=971052866` `description_category_id=200001531`
+    - Пыльник для мототехники `type_id=970945553` `description_category_id=200001531`
+    - Колесный диск для мототехники `type_id=971052851` `description_category_id=200001531`
+    - Зеркало для мототехники `type_id=970849653` `description_category_id=200001531`
+    - Спидометр для мототехники `type_id=972230262` `description_category_id=200001531`
+    - Дефлектор для мототехники `type_id=970875988` `description_category_id=200001531`
+    - Ремкомплект трансмиссии мототехники `type_id=971148372` `description_category_id=200001531`
+    - Клапан для мототехники `type_id=971412256` `description_category_id=200001531`
+    - Вилка для мототехники `type_id=971052845` `description_category_id=200001531`
+  - Автомобильные масла `description_category_id=17028760`
+    - Масло вилочное для мотоцикла `type_id=96159` `description_category_id=17028760`
+    - Жидкость для гидроусилителя `type_id=92229` `description_category_id=17028760`
+    - Масло трансмиссионное `type_id=96163` `description_category_id=17028760`
+    - Масло редукторное `type_id=970621654` `description_category_id=17028760`
+    - Масло моторное `type_id=96161` `description_category_id=17028760`
+    - Масло для вакуумного насоса `type_id=971292002` `description_category_id=17028760`
+    - Масло компрессорное `type_id=630154628` `description_category_id=17028760`
+    - Масло индустриальное `type_id=970637220` `description_category_id=17028760`
+    - Масло промывочное `type_id=96162` `description_category_id=17028760`
+    - Масло гидравлическое `type_id=96160` `description_category_id=17028760`
+  - Автозвук `description_category_id=17028904`
+    - Мотоакустика `type_id=970724822` `description_category_id=17028904`
+    - Сабвуфер автомобильный `type_id=91918` `description_category_id=17028904`
+    - Колонки автомобильные `type_id=91916` `description_category_id=17028904`
+    - Кольца проставочные `type_id=65454046` `description_category_id=17028904`
+- Товары для взрослых `description_category_id=17027484`
+  - Мебель и текстиль для секса `description_category_id=200001496`
+    - Текстиль для секса `type_id=96538` `description_category_id=200001496`
+    - Мебель для секса `type_id=96544` `description_category_id=200001496`
+  - Кондитерские изделия 18+ `description_category_id=200001462`
+    - Кондитерское изделие для взрослых `type_id=971363842` `description_category_id=200001462`
+  - БДСМ `description_category_id=200001461`
+    - БДСМ станок для секса `type_id=970956271` `description_category_id=200001461`
+    - Расширитель уретральный `type_id=970669701` `description_category_id=200001461`
+    - БДСМ набор `type_id=96506` `description_category_id=200001461`
+    - Электростимуляторы `type_id=96559` `description_category_id=200001461`
+    - Плетка `type_id=96536` `description_category_id=200001461`
+    - Аксессуар БДСМ `type_id=96534` `description_category_id=200001461`
+    - Зажим, стимулятор для сосков `type_id=96517` `description_category_id=200001461`
+    - Стек БДСМ `type_id=96546` `description_category_id=200001461`
+    - Фиксатор БДСМ `type_id=96529` `description_category_id=200001461`
+    - Секс-машина `type_id=96545` `description_category_id=200001461`
+    - Насадка для секс-машины `type_id=971314469` `description_category_id=200001461`
+    - Растяжитель, разделитель мошонки `type_id=96540` `description_category_id=200001461`
+  - Интимная косметика `description_category_id=17028960`
+    - Крем интимный `type_id=97194` `description_category_id=17028960`
+    - Массажное масло эротическое `type_id=971749423` `description_category_id=17028960`
+    - Пролонгатор `type_id=96565` `description_category_id=17028960`
+    - Возбуждающее средство `type_id=96562` `description_category_id=17028960`
+  - Секс игрушки `description_category_id=17028959`
+    - Вагинальные шарики `type_id=96510` `description_category_id=17028959`
+    - Комплект для увеличения пениса `type_id=97451` `description_category_id=17028959`
+    - Расширитель `type_id=96541` `description_category_id=17028959`
+    - Аксессуар для вибратора `type_id=971096778` `description_category_id=17028959`
+    - Фаллоимитатор `type_id=96554` `description_category_id=17028959`
+    - Насадки, удлинители эротические `type_id=971749404` `description_category_id=17028959`
+    - Мастурбатор `type_id=96525` `description_category_id=17028959`
+    - Анальный крюк `type_id=96501` `description_category_id=17028959`
+    - Помпа эротическая `type_id=96512` `description_category_id=17028959`
+    - Вибропуля `type_id=96514` `description_category_id=17028959`
+    - Аксессуар для ролевых игр `type_id=324771396` `description_category_id=17028959`
+    - Эрекционное кольцо `type_id=96560` `description_category_id=17028959`
+    - Аксессуары для помпы `type_id=970958669` `description_category_id=17028959`
+    - Имитатор женской груди `type_id=324689473` `description_category_id=17028959`
+    - Тренажер Кегеля `type_id=96511` `description_category_id=17028959`
+    - Анальный стимулятор `type_id=96503` `description_category_id=17028959`
+    - Анальная пробка `type_id=96535` `description_category_id=17028959`
+    - Страпон `type_id=96508` `description_category_id=17028959`
+    - Вибратор `type_id=96513` `description_category_id=17028959`
+    - Массажер простаты `type_id=96524` `description_category_id=17028959`
+    - Виброяйцо `type_id=96515` `description_category_id=17028959`
+    - Эротический набор `type_id=96518` `description_category_id=17028959`
+    - Аксессуар для вагинального тренажера `type_id=971895257` `description_category_id=17028959`
+  - Парфюмерия с феромонами `description_category_id=85697584`
+    - Парфюмерия с феромонами `type_id=97674` `description_category_id=85697584`
+  - Сувениры и игры эротические `description_category_id=200001505`
+    - Эротический сувенир `type_id=96561` `description_category_id=200001505`
+    - Игра эротическая `type_id=268217795` `description_category_id=200001505`
+  - Уход и хранение секс игрушек `description_category_id=200001500`
+    - Средство для чистки игрушек `type_id=96566` `description_category_id=200001500`
+    - Хранение секс игрушек `type_id=971102746` `description_category_id=200001500`
+- Товары для курения и аксессуары `description_category_id=200001506`
+  - Электронные сигареты и системы нагревания `description_category_id=17028608`
+    - Аксессуар для систем нагревания табака `type_id=971413556` `description_category_id=17028608`
+    - Аксессуар для электронных сигарет `type_id=971412763` `description_category_id=17028608`
+    - Зарядное устройство для электронных сигарет `type_id=90669078` `description_category_id=17028608`
+  - Товары для курения `description_category_id=200001034`
+    - Аксессуар для курения `type_id=971423253` `description_category_id=200001034`
+    - Аксессуар для хранения табака `type_id=971405141` `description_category_id=200001034`
+    - Сигарный шкаф `type_id=93824` `description_category_id=200001034`
+    - Пепельница `type_id=91975` `description_category_id=200001034`
+  - Аксессуары и комплектующие для кальянов `description_category_id=200001032`
+    - Аксессуары для кальяна `type_id=971412759` `description_category_id=200001032`
+    - Плитка электрическая `type_id=970637389` `description_category_id=200001032`
+    - Уголь для кальяна `type_id=970637384` `description_category_id=200001032`
+- Антиквариат и коллекционирование `description_category_id=17027490`
+  - Антиквариат и винтаж `description_category_id=17028993`
+    - Товары для курения антиквариат, винтаж `type_id=971909334` `description_category_id=17028993`
+    - Осветительные приборы антиквариат, винтаж `type_id=970619133` `description_category_id=17028993`
+    - Предметы сервировки антиквариат, винтаж `type_id=970619094` `description_category_id=17028993`
+    - Медицинские приборы антиквариат, винтаж `type_id=971281191` `description_category_id=17028993`
+    - Полиграфия винтаж `type_id=970667734` `description_category_id=17028993`
+    - Скобяные изделия антиквариат, винтаж `type_id=96283` `description_category_id=17028993`
+    - Инструменты для рукоделия антиквариат, винтаж `type_id=971004415` `description_category_id=17028993`
+    - Канцелярия антиквариат, винтаж `type_id=971909157` `description_category_id=17028993`
+    - Измерительные приборы антиквариат, винтаж `type_id=971895579` `description_category_id=17028993`
+    - Украшения антиквариат, винтаж `type_id=971907960` `description_category_id=17028993`
+    - Религиозная атрибутика антиквариат, винтаж `type_id=971909502` `description_category_id=17028993`
+    - Текстиль антиквариат, винтаж `type_id=96402` `description_category_id=17028993`
+    - Игрушки, игры антиквариат, винтаж `type_id=96298` `description_category_id=17028993`
+    - Часы антиквариат, винтаж `type_id=970619208` `description_category_id=17028993`
+    - Предметы военной истории антиквариат, винтаж `type_id=971045359` `description_category_id=17028993`
+    - Мебель антиквариат, винтаж `type_id=970619199` `description_category_id=17028993`
+    - Кухонная утварь антиквариат, винтаж `type_id=96341` `description_category_id=17028993`
+    - Галантерея антиквариат, винтаж `type_id=971895690` `description_category_id=17028993`
+    - Предметы быта антиквариат, винтаж `type_id=970752274` `description_category_id=17028993`
+    - Предметы интерьера антиквариат, винтаж `type_id=96386` `description_category_id=17028993`
+  - Коллекционирование `description_category_id=17028994`
+    - Инструмент коллекционера `type_id=115945355` `description_category_id=17028994`
+    - Медаль коллекционная `type_id=93841` `description_category_id=17028994`
+    - Знамя, вымпел коллекционный `type_id=96297` `description_category_id=17028994`
+    - Наклейка коллекционная `type_id=970689718` `description_category_id=17028994`
+    - Коллекционирование насекомых `type_id=971093594` `description_category_id=17028994`
+    - Минерал, кристалл коллекционный `type_id=970801724` `description_category_id=17028994`
+    - Модель коллекционная `type_id=93842` `description_category_id=17028994`
+    - Марка коллекционная `type_id=93840` `description_category_id=17028994`
+    - Средство для ухода за коллекцией `type_id=93853` `description_category_id=17028994`
+    - Монета коллекционная `type_id=93844` `description_category_id=17028994`
+    - Спичечная коробка, этикетка коллекционная `type_id=971437112` `description_category_id=17028994`
+    - Коллекционные наборы `type_id=95870` `description_category_id=17028994`
+    - Кукла коллекционная `type_id=970619421` `description_category_id=17028994`
+    - Фигурка коллекционная `type_id=970671899` `description_category_id=17028994`
+    - Папки для журналов `type_id=95872` `description_category_id=17028994`
+    - Банкнота, ценная бумага коллекционная `type_id=93831` `description_category_id=17028994`
+    - Окаменелость `type_id=971196253` `description_category_id=17028994`
+    - Значок коллекционный `type_id=93834` `description_category_id=17028994`
+    - Открытка, конверт коллекционный `type_id=97163` `description_category_id=17028994`
+    - Карточка коллекционная `type_id=970678575` `description_category_id=17028994`
+    - Аксессуар для хранения коллекций `type_id=93830` `description_category_id=17028994`
+    - Проездной билет коллекционный `type_id=971096874` `description_category_id=17028994`
+    - Автограф `type_id=971214469` `description_category_id=17028994`
+    - Жетон коллекционный `type_id=93833` `description_category_id=17028994`
+    - Ложка коллекционная `type_id=970724788` `description_category_id=17028994`
+- Дом и сад `description_category_id=17027494`
+  - Аксессуары для приготовления пищи `description_category_id=17027907`
+    - Шпажки для канапе `type_id=92385` `description_category_id=17027907`
+    - Запчасть для ручной кофемолки `type_id=971158326` `description_category_id=17027907`
+    - Набор для моделирования кондитерских украшений `type_id=92372` `description_category_id=17027907`
+    - Аксессуар для фрукто-овощерезки `type_id=971099402` `description_category_id=17027907`
+    - Ручная соковыжималка `type_id=92410` `description_category_id=17027907`
+    - Трафарет кулинарный `type_id=92420` `description_category_id=17027907`
+    - Шприц кулинарный `type_id=970891251` `description_category_id=17027907`
+    - Вспениватель молока ручной `type_id=970736822` `description_category_id=17027907`
+    - Щипцы кулинарные `type_id=92568` `description_category_id=17027907`
+    - Чеснокодавилка `type_id=92401` `description_category_id=17027907`
+    - Мусат `type_id=970862416` `description_category_id=17027907`
+    - Чабань-чайная доска `type_id=971418178` `description_category_id=17027907`
+    - Набор для консервирования `type_id=593367367` `description_category_id=17027907`
+    - Кулинарная нить `type_id=97558` `description_category_id=17027907`
+    - Ацетатная пленка для торта `type_id=970869763` `description_category_id=17027907`
+    - Толкушка для картофеля `type_id=92399` `description_category_id=17027907`
+    - Тендерайзер, молоток для мяса `type_id=92380` `description_category_id=17027907`
+    - Яйцерезка `type_id=92431` `description_category_id=17027907`
+    - Пистолет для фламбирования `type_id=971080182` `description_category_id=17027907`
+    - Кулинарный термометр `type_id=97623` `description_category_id=17027907`
+    - Аксессуар для плиты `type_id=970942532` `description_category_id=17027907`
+    - Бумага пищевая `type_id=92353` `description_category_id=17027907`
+    - Мясорубка ручная `type_id=970792658` `description_category_id=17027907`
+    - Ведерко для льда `type_id=92354` `description_category_id=17027907`
+    - Лапшерезка `type_id=92378` `description_category_id=17027907`
+    - Фрукто-овощерезка `type_id=92435` `description_category_id=17027907`
+    - Кисть кулинарная `type_id=92368` `description_category_id=17027907`
+    - Ролик для теста `type_id=970791945` `description_category_id=17027907`
+    - Ручка для переноски пакетов `type_id=352274040` `description_category_id=17027907`
+    - Стерилизатор для банок `type_id=970859925` `description_category_id=17027907`
+    - Запчасть для автоклава `type_id=971887763` `description_category_id=17027907`
+    - Ручная кофемолка `type_id=92370` `description_category_id=17027907`
+    - Емкость мерная `type_id=92360` `description_category_id=17027907`
+    - Салфетница `type_id=92404` `description_category_id=17027907`
+    - Пинцет кухонный `type_id=92393` `description_category_id=17027907`
+    - Вилка кулинарная `type_id=92356` `description_category_id=17027907`
+    - Сервировочная доска `type_id=447957738` `description_category_id=17027907`
+    - Аксессуары для точильного станка `type_id=971015746` `description_category_id=17027907`
+    - Форма для льда, конфет `type_id=92424` `description_category_id=17027907`
+    - Гастроемкость `type_id=970834482` `description_category_id=17027907`
+    - Закаточная машинка `type_id=92363` `description_category_id=17027907`
+    - Мешок кондитерский `type_id=92427` `description_category_id=17027907`
+    - Терка `type_id=92417` `description_category_id=17027907`
+    - Кулинарная форма `type_id=970878334` `description_category_id=17027907`
+    - Тестораскатка `type_id=971309776` `description_category_id=17027907`
+    - Рыбочистка `type_id=970799661` `description_category_id=17027907`
+    - Коврик для приготовления `type_id=970791754` `description_category_id=17027907`
+    - Доска для разморозки продуктов `type_id=970836173` `description_category_id=17027907`
+    - Сушилка для кондитерских изделий `type_id=970942316` `description_category_id=17027907`
+    - Доска для скручивания чая `type_id=971115198` `description_category_id=17027907`
+    - Совок для сыпучих продуктов, льда `type_id=970675141` `description_category_id=17027907`
+    - Автоклав домашний `type_id=970619001` `description_category_id=17027907`
+    - Половник `type_id=92555` `description_category_id=17027907`
+    - Крышка для СВЧ `type_id=970805013` `description_category_id=17027907`
+    - Венчик `type_id=92355` `description_category_id=17027907`
+    - Точилка для ножей, ножниц `type_id=94462` `description_category_id=17027907`
+    - Воронка кухонная `type_id=115943864` `description_category_id=17027907`
+    - Ручной измельчитель `type_id=92366` `description_category_id=17027907`
+    - Сушилка для лапши `type_id=92413` `description_category_id=17027907`
+    - Фильтр для чая, кофе `type_id=95806` `description_category_id=17027907`
+    - Органайзер барный `type_id=971297805` `description_category_id=17027907`
+    - Фрукто-овощечистка `type_id=92436` `description_category_id=17027907`
+    - Орехокол `type_id=92389` `description_category_id=17027907`
+    - Скалка `type_id=92408` `description_category_id=17027907`
+    - Крышка от брызг `type_id=92440` `description_category_id=17027907`
+    - Шпатель-скребок кондитерский `type_id=970954740` `description_category_id=17027907`
+    - Разделочная доска `type_id=92402` `description_category_id=17027907`
+    - Чекич для лепешек `type_id=971309520` `description_category_id=17027907`
+    - Аэрограф кондитерский `type_id=971137214` `description_category_id=17027907`
+    - Ткань для расстойки теста `type_id=971202492` `description_category_id=17027907`
+    - Лопатка кулинарная `type_id=92376` `description_category_id=17027907`
+    - Вакуумная система для консервации продуктов `type_id=970859940` `description_category_id=17027907`
+    - Ситечко для заваривания чая `type_id=92406` `description_category_id=17027907`
+    - Держатель кухонный `type_id=92358` `description_category_id=17027907`
+    - Насадка для кондитерского мешка `type_id=92386` `description_category_id=17027907`
+    - Ручка ухват для посуды `type_id=92403` `description_category_id=17027907`
+    - Шумовка `type_id=92429` `description_category_id=17027907`
+    - Сырорезка `type_id=92416` `description_category_id=17027907`
+    - Защитная насадка для пальцев `type_id=970960558` `description_category_id=17027907`
+    - Аксессуар для термощупа `type_id=971161563` `description_category_id=17027907`
+    - Фольга пищевая `type_id=92422` `description_category_id=17027907`
+    - Протирка овощей, фруктов, ягод `type_id=971004063` `description_category_id=17027907`
+    - Пакет, мешок для приготовления `type_id=97559` `description_category_id=17027907`
+    - Набор для выпечки `type_id=92456` `description_category_id=17027907`
+    - Яйцечистка `type_id=970861038` `description_category_id=17027907`
+    - Запчасть для лапшерезки `type_id=970977225` `description_category_id=17027907`
+    - Решетка для охлаждения хлеба, выпечки `type_id=970855208` `description_category_id=17027907`
+    - Дуршлаг `type_id=92359` `description_category_id=17027907`
+    - Набор для приготовления матчи `type_id=970874915` `description_category_id=17027907`
+    - Кольцо для салфеток `type_id=970863820` `description_category_id=17027907`
+    - Бомбилья для мате `type_id=971061860` `description_category_id=17027907`
+    - Ложка кулинарная `type_id=92375` `description_category_id=17027907`
+    - Поднос `type_id=92395` `description_category_id=17027907`
+    - Пленка пищевая `type_id=97560` `description_category_id=17027907`
+    - Сушилка для салата, зелени `type_id=92415` `description_category_id=17027907`
+    - Форма для мороженого `type_id=92425` `description_category_id=17027907`
+    - Набор для приготовления роллов `type_id=970882089` `description_category_id=17027907`
+    - Набор кухонной навески `type_id=92374` `description_category_id=17027907`
+    - Сито `type_id=92407` `description_category_id=17027907`
+    - Восковые салфетки `type_id=970889086` `description_category_id=17027907`
+    - Чехол для кухонных принадлежностей `type_id=971043241` `description_category_id=17027907`
+    - Подставка для ножей `type_id=92397` `description_category_id=17027907`
+  - Полотенца и скатерти `description_category_id=17028730`
+    - Подложка под скатерть `type_id=970942681` `description_category_id=17028730`
+    - Грелка на чайник `type_id=97626` `description_category_id=17028730`
+    - Салфетка сервировочная `type_id=970878303` `description_category_id=17028730`
+    - Дорожка для стола `type_id=92670` `description_category_id=17028730`
+    - Клеенка на стол `type_id=970707280` `description_category_id=17028730`
+    - Полотенце для ванной `type_id=970865037` `description_category_id=17028730`
+    - Килт парео для бани `type_id=92671` `description_category_id=17028730`
+    - Полотенце кухонное `type_id=92684` `description_category_id=17028730`
+    - Комплект текстиля для кухни `type_id=97215` `description_category_id=17028730`
+    - Зажим для скатерти `type_id=970945555` `description_category_id=17028730`
+    - Фартук кухонный `type_id=93870` `description_category_id=17028730`
+    - Гибкое стекло `type_id=970939384` `description_category_id=17028730`
+    - Крестильное полотенце `type_id=970942585` `description_category_id=17028730`
+    - Нагрудник для ресторана `type_id=970985936` `description_category_id=17028730`
+    - Скатерть `type_id=92692` `description_category_id=17028730`
+    - Прихватка `type_id=92688` `description_category_id=17028730`
+  - Оборудование для HoReCa `description_category_id=89280910`
+    - Буфетная станция `type_id=970994444` `description_category_id=89280910`
+    - Уборочная тележка `type_id=970585206` `description_category_id=89280910`
+  - Посуда для приготовления `description_category_id=17028732`
+    - Мантоварка `type_id=970895078` `description_category_id=17028732`
+    - Вок `type_id=92441` `description_category_id=17028732`
+    - Крышка `type_id=92454` `description_category_id=17028732`
+    - Сифон для варки чая, кофе `type_id=504866266` `description_category_id=17028732`
+    - Набор для фондю `type_id=92457` `description_category_id=17028732`
+    - Казан `type_id=92446` `description_category_id=17028732`
+    - Чайник `type_id=92474` `description_category_id=17028732`
+    - Пекарский камень `type_id=970863809` `description_category_id=17028732`
+    - Сотейник `type_id=92466` `description_category_id=17028732`
+    - Кухонный ковш `type_id=92448` `description_category_id=17028732`
+    - Жаровня `type_id=92444` `description_category_id=17028732`
+    - Кокотница `type_id=92450` `description_category_id=17028732`
+    - Свисток для чайника `type_id=970877820` `description_category_id=17028732`
+    - Воронка для заваривания кофе `type_id=970686150` `description_category_id=17028732`
+    - Пароварка `type_id=92458` `description_category_id=17028732`
+    - Запчасть для самовара `type_id=971152780` `description_category_id=17028732`
+    - Чугунок `type_id=970884549` `description_category_id=17028732`
+    - Ростер для курицы `type_id=970845451` `description_category_id=17028732`
+    - Самовар `type_id=92461` `description_category_id=17028732`
+    - Скороварка `type_id=92464` `description_category_id=17028732`
+    - Набор посуды для приготовления `type_id=92452` `description_category_id=17028732`
+    - Сковорода `type_id=92462` `description_category_id=17028732`
+    - Гейзерная кофеварка `type_id=92453` `description_category_id=17028732`
+    - Тажин `type_id=92468` `description_category_id=17028732`
+    - Соковарка `type_id=92465` `description_category_id=17028732`
+    - Ручная кофеварка `type_id=970735929` `description_category_id=17028732`
+    - Противень `type_id=92460` `description_category_id=17028732`
+    - Утятница `type_id=92443` `description_category_id=17028732`
+    - Турка `type_id=92469` `description_category_id=17028732`
+    - Молоковарка `type_id=98016` `description_category_id=17028732`
+    - Крышка для кружки, чашки, стакана `type_id=970840809` `description_category_id=17028732`
+    - Френч-пресс `type_id=92534` `description_category_id=17028732`
+    - Ступка с пестиком `type_id=92467` `description_category_id=17028732`
+    - Кастрюля `type_id=92447` `description_category_id=17028732`
+    - Кофейник `type_id=92497` `description_category_id=17028732`
+    - Крышка для подачи блюд `type_id=970982073` `description_category_id=17028732`
+    - Горшочек для запекания `type_id=92442` `description_category_id=17028732`
+    - Крышка-пресс для гриля `type_id=970873474` `description_category_id=17028732`
+    - Песок для приготовления кофе `type_id=970941708` `description_category_id=17028732`
+    - Комплект для заваривания кофе `type_id=971025242` `description_category_id=17028732`
+    - Форма для запекания, выпечки `type_id=92470` `description_category_id=17028732`
+  - Елки `description_category_id=17027935`
+    - Елка живая `type_id=95993` `description_category_id=17027935`
+    - Елка искусственная `type_id=92805` `description_category_id=17027935`
+    - Лапник `type_id=971079125` `description_category_id=17027935`
+    - Чехол для елки `type_id=970891967` `description_category_id=17027935`
+    - Подставка, юбка под елку `type_id=970601440` `description_category_id=17027935`
+  - Ширмы `description_category_id=17028726`
+    - Ширма `type_id=96029` `description_category_id=17028726`
+  - Фильтры для воды `description_category_id=17027931`
+    - Блок управления фильтром `type_id=971124821` `description_category_id=17027931`
+    - Ионизатор проточный воды `type_id=920153135` `description_category_id=17027931`
+    - Питьевой фонтанчик `type_id=94683` `description_category_id=17027931`
+    - Тестер воды `type_id=970718137` `description_category_id=17027931`
+    - Фильтр-насадка на кран `type_id=94602` `description_category_id=17027931`
+    - Сменный картридж для фильтра `type_id=94593` `description_category_id=17027931`
+    - Фильтр-кувшин `type_id=94601` `description_category_id=17027931`
+    - Засыпка наполнитель фильтра для воды `type_id=971306292` `description_category_id=17027931`
+    - УФ установка обеззараживания `type_id=970956451` `description_category_id=17027931`
+    - Накопительный фильтр `type_id=971065466` `description_category_id=17027931`
+    - Насос для системы обратного осмоса `type_id=970985979` `description_category_id=17027931`
+    - Аэрационная колонна `type_id=970987203` `description_category_id=17027931`
+    - Фильтр походный `type_id=94600` `description_category_id=17027931`
+    - Аксессуары для фильтров воды `type_id=94589` `description_category_id=17027931`
+    - Система очистки воды `type_id=97074` `description_category_id=17027931`
+    - Магнитный преобразователь воды `type_id=970973763` `description_category_id=17027931`
+    - Засыпной фильтр `type_id=970797421` `description_category_id=17027931`
+    - Система обратного осмоса `type_id=94592` `description_category_id=17027931`
+    - Умягчитель проточной воды `type_id=970683123` `description_category_id=17027931`
+    - Фильтр встраиваемый для мойки `type_id=94596` `description_category_id=17027931`
+    - Фильтр для скважины `type_id=971052661` `description_category_id=17027931`
+    - Фильтр-бутылка `type_id=94599` `description_category_id=17027931`
+  - Одноразовая посуда `description_category_id=92417201`
+    - Контейнеры одноразовые `type_id=97756` `description_category_id=92417201`
+    - Тарелки одноразовые `type_id=92532` `description_category_id=92417201`
+    - Стаканы одноразовые `type_id=92485` `description_category_id=92417201`
+    - Вилки одноразовые `type_id=970835976` `description_category_id=92417201`
+    - Юбка для стола одноразовая `type_id=971362198` `description_category_id=92417201`
+    - Ложки одноразовые `type_id=970835978` `description_category_id=92417201`
+    - Скатерть одноразовая `type_id=92678` `description_category_id=92417201`
+    - Держатели для стакана одноразовые `type_id=971298672` `description_category_id=92417201`
+    - Ножи одноразовые `type_id=970835984` `description_category_id=92417201`
+    - Размешиватели одноразовые `type_id=970835982` `description_category_id=92417201`
+    - Набор одноразовой посуды `type_id=94430` `description_category_id=92417201`
+    - Креманки одноразовые `type_id=971303710` `description_category_id=92417201`
+    - Крышки одноразовые `type_id=98183` `description_category_id=92417201`
+  - Инвентарь для уборки `description_category_id=17028718`
+    - Насадка для стеклоочистителя `type_id=96016` `description_category_id=17028718`
+    - Губка `type_id=96009` `description_category_id=17028718`
+    - Щетка для посуды `type_id=96027` `description_category_id=17028718`
+    - Веник `type_id=96007` `description_category_id=17028718`
+    - Щетка для уборки `type_id=970869623` `description_category_id=17028718`
+    - Швабра `type_id=96025` `description_category_id=17028718`
+    - Стеклоочиститель `type_id=96023` `description_category_id=17028718`
+    - Держатель для швабры `type_id=970727488` `description_category_id=17028718`
+    - Перчатки хозяйственные `type_id=115947509` `description_category_id=17028718`
+    - Скребок для уборки `type_id=96020` `description_category_id=17028718`
+    - Водосгон для пола `type_id=970954002` `description_category_id=17028718`
+    - Тряпка `type_id=96024` `description_category_id=17028718`
+    - Совок `type_id=96022` `description_category_id=17028718`
+    - Насадка на швабру `type_id=96017` `description_category_id=17028718`
+    - Метла `type_id=96014` `description_category_id=17028718`
+    - Кухонный диспенсер для моющего средства `type_id=971220928` `description_category_id=17028718`
+    - Набор для уборки `type_id=96012` `description_category_id=17028718`
+    - Запчасть для швабры `type_id=643199398` `description_category_id=17028718`
+    - Пад для орбитальных машин `type_id=970973758` `description_category_id=17028718`
+    - Пылевыбивалка `type_id=780969507` `description_category_id=17028718`
+    - Пипидастр `type_id=96021` `description_category_id=17028718`
+    - Салфетки для уборки `type_id=96018` `description_category_id=17028718`
+  - Аксессуары для цветов `description_category_id=17028715`
+    - Кронштейн для кашпо `type_id=970967883` `description_category_id=17028715`
+    - Фильтр для цветочного горшка `type_id=970787821` `description_category_id=17028715`
+    - Пульверизатор `type_id=96257` `description_category_id=17028715`
+    - Горшок для цветов `type_id=96250` `description_category_id=17028715`
+    - Набор для рассады `type_id=98312` `description_category_id=17028715`
+    - Умный сад `type_id=697462970` `description_category_id=17028715`
+    - Автополив `type_id=970785941` `description_category_id=17028715`
+    - Рассеиватель для садовой лейки `type_id=970806521` `description_category_id=17028715`
+    - Коврик для растений `type_id=971161064` `description_category_id=17028715`
+    - Поддон для цветов `type_id=96258` `description_category_id=17028715`
+    - Гроубокс `type_id=970715572` `description_category_id=17028715`
+    - Подставка для цветов `type_id=96259` `description_category_id=17028715`
+    - Лейка `type_id=92789` `description_category_id=17028715`
+    - Гидропонная установка `type_id=122627223` `description_category_id=17028715`
+    - Кашпо `type_id=96251` `description_category_id=17028715`
+    - Проращиватель семян `type_id=98467` `description_category_id=17028715`
+  - Семена и саженцы `description_category_id=17027942`
+    - Набор для выращивания `type_id=970679739` `description_category_id=17027942`
+  - Аксессуары для бани и ванной `description_category_id=17027905`
+    - Подушка для ванны `type_id=92035` `description_category_id=17027905`
+    - Набор для ванной комнаты `type_id=92030` `description_category_id=17027905`
+    - Футляр для зубной щетки `type_id=92048` `description_category_id=17027905`
+    - Матрас для бани `type_id=971117757` `description_category_id=17027905`
+    - Дозатор для зубной пасты `type_id=504866276` `description_category_id=17027905`
+    - Дозатор для жидкого мыла `type_id=92014` `description_category_id=17027905`
+    - Шапка для бани `type_id=92051` `description_category_id=17027905`
+    - Камни для бани `type_id=970707076` `description_category_id=17027905`
+    - Аксессуар для дозатора `type_id=970675230` `description_category_id=17027905`
+    - Ершик для унитаза `type_id=92017` `description_category_id=17027905`
+    - Стакан для зубных щеток `type_id=92044` `description_category_id=17027905`
+    - Бондарное изделие для бани `type_id=92025` `description_category_id=17027905`
+    - Испаритель для бани `type_id=970957180` `description_category_id=17027905`
+    - Держатель для полотенец `type_id=92010` `description_category_id=17027905`
+    - Диспенсер для покрытий на унитаз `type_id=92009` `description_category_id=17027905`
+    - Опахало для бани `type_id=971104653` `description_category_id=17027905`
+    - Кольца для шторки в ванной `type_id=92022` `description_category_id=17027905`
+    - Диспенсер для гигиенических пакетов `type_id=92006` `description_category_id=17027905`
+    - Подголовник для бани `type_id=92033` `description_category_id=17027905`
+    - Мыльница `type_id=92029` `description_category_id=17027905`
+    - Рукавица для бани `type_id=92040` `description_category_id=17027905`
+    - Коврик для бани `type_id=93656` `description_category_id=17027905`
+    - Веник для бани `type_id=92002` `description_category_id=17027905`
+    - Держатель для ванной комнаты `type_id=92008` `description_category_id=17027905`
+    - Подспинник для бани `type_id=972879685` `description_category_id=17027905`
+    - Держатель для туалетной бумаги `type_id=92011` `description_category_id=17027905`
+    - Набор банных принадлежностей `type_id=92000` `description_category_id=17027905`
+    - Диспенсер для бумажных полотенец `type_id=92013` `description_category_id=17027905`
+  - Инвентарь для дома `description_category_id=17028714`
+    - Трос для прочистки труб `type_id=92046` `description_category_id=17028714`
+    - Мешок для стирки `type_id=93696` `description_category_id=17028714`
+    - Веревка бельевая `type_id=93691` `description_category_id=17028714`
+    - Аксессуары для ведра `type_id=970867617` `description_category_id=17028714`
+    - Органайзер для столовых приборов `type_id=594158428` `description_category_id=17028714`
+    - Корзина для белья `type_id=95478` `description_category_id=17028714`
+    - Стиральная доска `type_id=311150108` `description_category_id=17028714`
+    - Прищепки для белья `type_id=93699` `description_category_id=17028714`
+    - Шарик для стирки `type_id=92694` `description_category_id=17028714`
+    - Сетка для раковины `type_id=93701` `description_category_id=17028714`
+    - Вантуз `type_id=93689` `description_category_id=17028714`
+    - Мешки для мусора `type_id=93695` `description_category_id=17028714`
+    - Урна уличная `type_id=970855518` `description_category_id=17028714`
+    - Контейнер для стирального порошка `type_id=970631771` `description_category_id=17028714`
+    - Вкладыш для хранения посуды `type_id=970787019` `description_category_id=17028714`
+    - Таз `type_id=92045` `description_category_id=17028714`
+    - Ведро `type_id=93690` `description_category_id=17028714`
+    - Мусорное ведро `type_id=93697` `description_category_id=17028714`
+    - Коландер для мойки `type_id=970731396` `description_category_id=17028714`
+    - Сушилка для посуды `type_id=92414` `description_category_id=17028714`
+    - Ковш хозяйственный `type_id=95700` `description_category_id=17028714`
+    - Коврик для раковины `type_id=93693` `description_category_id=17028714`
+  - Столовые приборы `description_category_id=17028742`
+    - Палочки для еды `type_id=92566` `description_category_id=17028742`
+    - Нож столовый `type_id=92565` `description_category_id=17028742`
+    - Набор столовых приборов `type_id=92561` `description_category_id=17028742`
+    - Ложка чайная `type_id=92557` `description_category_id=17028742`
+    - Ложка столовая `type_id=92556` `description_category_id=17028742`
+    - Вилка столовая `type_id=92546` `description_category_id=17028742`
+    - Столовый прибор для морепродуктов `type_id=971047443` `description_category_id=17028742`
+    - Столовое серебро `type_id=970737658` `description_category_id=17028742`
+  - Питьевая посуда и аксессуары `description_category_id=17027926`
+    - Джиггер `type_id=98187` `description_category_id=17027926`
+    - Каплеуловитель для вина `type_id=63569936` `description_category_id=17027926`
+    - Сабля для сабража `type_id=970841269` `description_category_id=17027926`
+    - Рюмка `type_id=92483` `description_category_id=17027926`
+    - Подставка под горячее `type_id=92398` `description_category_id=17027926`
+    - Декантер `type_id=115948973` `description_category_id=17027926`
+    - Подставка под кружку `type_id=96376` `description_category_id=17027926`
+    - Украшение для бокалов, бутылок `type_id=93815` `description_category_id=17027926`
+    - Пробка `type_id=92482` `description_category_id=17027926`
+    - Графин `type_id=92478` `description_category_id=17027926`
+    - Мадлер `type_id=98186` `description_category_id=17027926`
+    - Кувшин `type_id=92479` `description_category_id=17027926`
+    - Диспенсер для напитков `type_id=97478` `description_category_id=17027926`
+    - Трубочки для коктейлей `type_id=92488` `description_category_id=17027926`
+    - Стакан `type_id=92484` `description_category_id=17027926`
+    - Аксессуар для вина `type_id=92384` `description_category_id=17027926`
+    - Бутылка `type_id=92477` `description_category_id=17027926`
+    - Подставка для подогрева чайника `type_id=970872471` `description_category_id=17027926`
+    - Подставка для рюмок `type_id=971067224` `description_category_id=17027926`
+    - Открывалка `type_id=92434` `description_category_id=17027926`
+    - Аэратор для вина `type_id=63569938` `description_category_id=17027926`
+    - Охладитель для напитков `type_id=970997907` `description_category_id=17027926`
+    - Шейкер `type_id=92490` `description_category_id=17027926`
+    - Латте арт инструмент `type_id=971450448` `description_category_id=17027926`
+    - Стрейнер `type_id=970943104` `description_category_id=17027926`
+    - Бокал `type_id=92476` `description_category_id=17027926`
+    - Набор бармена `type_id=970871316` `description_category_id=17027926`
+    - Набор для напитков `type_id=92481` `description_category_id=17027926`
+    - Стопка `type_id=92486` `description_category_id=17027926`
+    - Дозатор для напитков `type_id=98184` `description_category_id=17027926`
+    - Измельчитель для льда ручной `type_id=971054435` `description_category_id=17027926`
+    - Штопор `type_id=92428` `description_category_id=17027926`
+  - Фейерверки и салюты `description_category_id=17027925`
+    - Петарда `type_id=95516` `description_category_id=17027925`
+    - Набор пиротехники `type_id=95514` `description_category_id=17027925`
+    - Пиротехническая мортира `type_id=970859642` `description_category_id=17027925`
+    - Цветной дым `type_id=970824549` `description_category_id=17027925`
+    - Свеча для торта бенгальская `type_id=971005818` `description_category_id=17027925`
+    - Фонтан пиротехнический `type_id=95519` `description_category_id=17027925`
+    - Фальшфейер `type_id=970987107` `description_category_id=17027925`
+    - Фейерверк `type_id=95518` `description_category_id=17027925`
+    - Бенгальский огонь `type_id=95512` `description_category_id=17027925`
+    - Салют `type_id=95511` `description_category_id=17027925`
+  - Термосы, термокружки и сифоны для газирования `description_category_id=17027928`
+    - Термокружка `type_id=92574` `description_category_id=17027928`
+    - Сифон для газирования `type_id=92573` `description_category_id=17027928`
+    - Аксессуары для термоса `type_id=99447` `description_category_id=17027928`
+    - Запчасть для сифона газирования `type_id=971893197` `description_category_id=17027928`
+    - Термокастрюля `type_id=970880053` `description_category_id=17027928`
+    - Термос `type_id=92576` `description_category_id=17027928`
+  - Хранение продуктов `description_category_id=17027933`
+    - Хлебница `type_id=93725` `description_category_id=17027933`
+    - Пакет для продуктов `type_id=93722` `description_category_id=17027933`
+    - Бочка для транспортировки `type_id=971045181` `description_category_id=17027933`
+    - Ведро пищевое `type_id=970896625` `description_category_id=17027933`
+    - Контейнер для специй с разделителями `type_id=970834493` `description_category_id=17027933`
+    - Чайница `type_id=971115251` `description_category_id=17027933`
+    - Коробка для продуктов `type_id=970897618` `description_category_id=17027933`
+    - Уплотнитель для бидона `type_id=971108815` `description_category_id=17027933`
+    - Емкость для жидких продуктов `type_id=93708` `description_category_id=17027933`
+    - Бидон `type_id=97498` `description_category_id=17027933`
+    - Зажим кухонный `type_id=92362` `description_category_id=17027933`
+    - Крышка для корма животных `type_id=970778863` `description_category_id=17027933`
+    - Пакет с вырубной ручкой `type_id=970942189` `description_category_id=17027933`
+    - Кадка для продуктов `type_id=92445` `description_category_id=17027933`
+    - Коврик для кухонных полок `type_id=93710` `description_category_id=17027933`
+    - Пакет майка `type_id=970942188` `description_category_id=17027933`
+    - Аксессуары для пищевого контейнера `type_id=971120371` `description_category_id=17027933`
+    - Крышка для банки `type_id=92371` `description_category_id=17027933`
+    - Лимонница `type_id=93718` `description_category_id=17027933`
+    - Пакет бумажный `type_id=970731577` `description_category_id=17027933`
+    - Сворачиватель пакетов `type_id=971311575` `description_category_id=17027933`
+    - Банка для продуктов `type_id=93724` `description_category_id=17027933`
+    - Набор для специй `type_id=93720` `description_category_id=17027933`
+    - Органайзер для холодильника `type_id=970742618` `description_category_id=17027933`
+    - Масленка, сырница `type_id=92504` `description_category_id=17027933`
+    - Диспенсер для сыпучих продуктов `type_id=970952659` `description_category_id=17027933`
+    - Контейнер пищевой `type_id=93712` `description_category_id=17027933`
+    - Мельница для специй `type_id=92379` `description_category_id=17027933`
+    - Солонка `type_id=93704` `description_category_id=17027933`
+    - Пакеты фасовочные `type_id=970783182` `description_category_id=17027933`
+    - Термопакет `type_id=195360333` `description_category_id=17027933`
+  - Товары для пикника `description_category_id=17027930`
+    - Набор инструментов для барбекю `type_id=115945855` `description_category_id=17027930`
+    - Садж `type_id=970892534` `description_category_id=17027930`
+    - Печь для казана `type_id=970949534` `description_category_id=17027930`
+    - Топливо для саджей, мармитов `type_id=970973519` `description_category_id=17027930`
+    - Костровая чаша `type_id=94346` `description_category_id=17027930`
+    - Томильня `type_id=970865473` `description_category_id=17027930`
+    - Стартер для розжига угля `type_id=713080979` `description_category_id=17027930`
+    - Топливные гранулы, брикеты `type_id=790183772` `description_category_id=17027930`
+    - Уголь `type_id=504866281` `description_category_id=17027930`
+    - Шампур `type_id=971049134` `description_category_id=17027930`
+    - Барбекю-гриль `type_id=94340` `description_category_id=17027930`
+    - Набор для приготовления лепешек `type_id=970860983` `description_category_id=17027930`
+    - Аксессуар для гриля, мангала, коптильни `type_id=970946624` `description_category_id=17027930`
+    - Решетка-гриль `type_id=94354` `description_category_id=17027930`
+    - Факел для пикника `type_id=971079308` `description_category_id=17027930`
+    - Мультитул для гриля `type_id=970862355` `description_category_id=17027930`
+    - Печь-барбекю `type_id=971102359` `description_category_id=17027930`
+    - Чехол для принадлежностей барбекю `type_id=702661764` `description_category_id=17027930`
+    - Финская свеча `type_id=971035594` `description_category_id=17027930`
+    - Щепа для копчения `type_id=95747` `description_category_id=17027930`
+    - Форма для барбекю, гриля `type_id=702556875` `description_category_id=17027930`
+    - Набор для пикника `type_id=94350` `description_category_id=17027930`
+    - Дрова `type_id=970896775` `description_category_id=17027930`
+    - Веер для раздувания огня `type_id=970956113` `description_category_id=17027930`
+    - Тандыр `type_id=94356` `description_category_id=17027930`
+    - Роллы для розжига `type_id=970957185` `description_category_id=17027930`
+    - Вилка для барбекю `type_id=94341` `description_category_id=17027930`
+    - Мангал `type_id=94347` `description_category_id=17027930`
+    - Устройство для вращения шампуров `type_id=970874897` `description_category_id=17027930`
+    - Корзина для пикника `type_id=94345` `description_category_id=17027930`
+    - Аккумулятор холода `type_id=94339` `description_category_id=17027930`
+    - Лопатка для барбекю `type_id=504866280` `description_category_id=17027930`
+    - Защитный зонт для продуктов `type_id=971156481` `description_category_id=17027930`
+    - Греющий элемент для термосумки `type_id=970826009` `description_category_id=17027930`
+    - Контейнер для щепы `type_id=702556876` `description_category_id=17027930`
+    - Тренога `type_id=94358` `description_category_id=17027930`
+    - Держатели мяса на шампуре `type_id=971102381` `description_category_id=17027930`
+    - Термосумка `type_id=94357` `description_category_id=17027930`
+    - Щетка для чистки гриля `type_id=238989882` `description_category_id=17027930`
+    - Подставка для шампуров `type_id=970877827` `description_category_id=17027930`
+    - Коптильня `type_id=94344` `description_category_id=17027930`
+    - Жаровня для пикника `type_id=115945849` `description_category_id=17027930`
+    - Лучина для розжига `type_id=971291458` `description_category_id=17027930`
+    - Аксессуары для костровой чаши `type_id=970889580` `description_category_id=17027930`
+    - Спички `type_id=431787897` `description_category_id=17027930`
+  - Насосы для дачи `description_category_id=83625738`
+    - Насос погружной `type_id=91462` `description_category_id=83625738`
+    - Аксессуары для садового насоса `type_id=99332` `description_category_id=83625738`
+    - Насос поверхностный `type_id=98340` `description_category_id=83625738`
+    - Насосная группа `type_id=971125576` `description_category_id=83625738`
+    - Насосная станция `type_id=91468` `description_category_id=83625738`
+    - Мотопомпа `type_id=91465` `description_category_id=83625738`
+  - Купель, фитобочка, инфракрасная сауна `description_category_id=17028724`
+    - Фитобочка `type_id=971067131` `description_category_id=17028724`
+    - Купель `type_id=970836179` `description_category_id=17028724`
+    - Запчасть для инфракрасной сауны `type_id=96088` `description_category_id=17028724`
+    - Инфракрасная сауна `type_id=96087` `description_category_id=17028724`
+  - Товары для пруда `description_category_id=78833978`
+    - Фильтр для пруда `type_id=970684991` `description_category_id=78833978`
+    - Аэратор для пруда `type_id=970684990` `description_category_id=78833978`
+    - Пленка для пруда `type_id=970969696` `description_category_id=78833978`
+    - Оборудование для зимнего пруда `type_id=970731397` `description_category_id=78833978`
+    - Пруд `type_id=970725661` `description_category_id=78833978`
+    - Насос для пруда `type_id=970699235` `description_category_id=78833978`
+    - Скиммер для пруда `type_id=970694284` `description_category_id=78833978`
+  - Сувениры и подарки `description_category_id=17028743`
+    - Военный сувенир `type_id=970667791` `description_category_id=17028743`
+    - Бонбоньерка `type_id=93742` `description_category_id=17028743`
+    - Грамота подарочная `type_id=93754` `description_category_id=17028743`
+    - Украшение на машину `type_id=93729` `description_category_id=17028743`
+    - Конверт, шкатулка для денег `type_id=971102841` `description_category_id=17028743`
+    - Именные столовые приборы `type_id=370189574` `description_category_id=17028743`
+    - Сюрприз-бокс `type_id=970955218` `description_category_id=17028743`
+    - Атрибутика болельщика `type_id=98607` `description_category_id=17028743`
+    - Музыкальный сувенир `type_id=971097529` `description_category_id=17028743`
+    - Матрешка `type_id=91965` `description_category_id=17028743`
+    - Награда `type_id=970872284` `description_category_id=17028743`
+    - Букет из игрушек `type_id=95410` `description_category_id=17028743`
+    - Банкетная карточка `type_id=93738` `description_category_id=17028743`
+    - Монета сувенирная `type_id=970966635` `description_category_id=17028743`
+    - Адвент-календарь `type_id=970880509` `description_category_id=17028743`
+    - Флагшток `type_id=970967802` `description_category_id=17028743`
+    - Бутоньерка `type_id=96184` `description_category_id=17028743`
+    - Магнит на холодильник `type_id=93785` `description_category_id=17028743`
+    - Шар для принятия решений `type_id=93819` `description_category_id=17028743`
+    - Футляр для медали `type_id=971310233` `description_category_id=17028743`
+    - Копилка `type_id=93770` `description_category_id=17028743`
+    - Лента праздничная `type_id=559455264` `description_category_id=17028743`
+    - Плакетка наградная `type_id=970872981` `description_category_id=17028743`
+    - Открытка `type_id=93796` `description_category_id=17028743`
+    - Колодка для медалей `type_id=970967096` `description_category_id=17028743`
+    - Подарок с приколом `type_id=97340` `description_category_id=17028743`
+    - Книга, дерево пожеланий `type_id=93769` `description_category_id=17028743`
+    - Подвязка для невесты `type_id=971013633` `description_category_id=17028743`
+    - Рушник `type_id=93804` `description_category_id=17028743`
+    - Банкноты сувенирные `type_id=93756` `description_category_id=17028743`
+    - Диплом подарочный `type_id=97233` `description_category_id=17028743`
+    - Веер `type_id=148495146` `description_category_id=17028743`
+    - Замок декоративный `type_id=93761` `description_category_id=17028743`
+    - Ловец снов `type_id=93776` `description_category_id=17028743`
+    - Подарочный набор `type_id=970955230` `description_category_id=17028743`
+    - Медаль сувенирная `type_id=93790` `description_category_id=17028743`
+    - Кубок `type_id=93772` `description_category_id=17028743`
+    - Колокольчик `type_id=970669850` `description_category_id=17028743`
+    - Буклет для заполнения `type_id=95411` `description_category_id=17028743`
+    - Карта желаний `type_id=970966675` `description_category_id=17028743`
+    - Вечный календарь `type_id=971072554` `description_category_id=17028743`
+    - Звонок на стол `type_id=970746729` `description_category_id=17028743`
+    - Набор для конкурса `type_id=93792` `description_category_id=17028743`
+    - Маятник-антистресс `type_id=971422434` `description_category_id=17028743`
+    - Миниатюра с кристаллами `type_id=93791` `description_category_id=17028743`
+    - Приглашение на праздник `type_id=95445` `description_category_id=17028743`
+    - Вымпел `type_id=93748` `description_category_id=17028743`
+    - Сувенир `type_id=93735` `description_category_id=17028743`
+    - Флаг `type_id=97901` `description_category_id=17028743`
+  - Постельное белье `description_category_id=17028731`
+    - Комплект постельного белья `type_id=92603` `description_category_id=17028731`
+    - Наперник `type_id=970665432` `description_category_id=17028731`
+    - Наволочка декоративная `type_id=92607` `description_category_id=17028731`
+    - Простыня `type_id=92612` `description_category_id=17028731`
+    - Держатель простыни, одеяла `type_id=970623351` `description_category_id=17028731`
+    - Пододеяльник `type_id=92610` `description_category_id=17028731`
+    - Наматрасник `type_id=92609` `description_category_id=17028731`
+    - Держатель для матраса `type_id=970862445` `description_category_id=17028731`
+    - Наволочка `type_id=92606` `description_category_id=17028731`
+  - Садовый декор и теплицы `description_category_id=17028745`
+    - Комплект дуг для парника `type_id=448376286` `description_category_id=17028745`
+    - Опора для растений `type_id=92730` `description_category_id=17028745`
+    - Садовый настил `type_id=92770` `description_category_id=17028745`
+    - Колючая проволока `type_id=970850388` `description_category_id=17028745`
+    - Крепление для бордюра `type_id=98278` `description_category_id=17028745`
+    - Подвязка для растений `type_id=92767` `description_category_id=17028745`
+    - Сетка садовая `type_id=92774` `description_category_id=17028745`
+    - Аксессуары для грядок `type_id=971436913` `description_category_id=17028745`
+    - Декоративная отсыпка для сада `type_id=970701974` `description_category_id=17028745`
+    - Бордюр садовый `type_id=92724` `description_category_id=17028745`
+    - Газон искусственный `type_id=970695682` `description_category_id=17028745`
+    - Фундамент для теплицы `type_id=971478691` `description_category_id=17028745`
+    - Запчасти для биотуалета `type_id=971075628` `description_category_id=17028745`
+    - Флюгер `type_id=92737` `description_category_id=17028745`
+    - Мостик садовый декоративный `type_id=971406087` `description_category_id=17028745`
+    - Кормушка `type_id=92728` `description_category_id=17028745`
+    - Дом для насекомых `type_id=971004434` `description_category_id=17028745`
+    - Фитомодуль `type_id=145334990` `description_category_id=17028745`
+    - Грядка `type_id=98280` `description_category_id=17028745`
+    - Табличка садовая `type_id=98283` `description_category_id=17028745`
+    - Фигурка садовая `type_id=92736` `description_category_id=17028745`
+    - Компостер `type_id=92727` `description_category_id=17028745`
+    - Арка садовая `type_id=971309711` `description_category_id=17028745`
+    - Форма для выращивания овощей `type_id=970693184` `description_category_id=17028745`
+    - Пугало садовое `type_id=971309763` `description_category_id=17028745`
+    - Клумба `type_id=98279` `description_category_id=17028745`
+    - Ворота для дачи `type_id=971893124` `description_category_id=17028745`
+    - Поддон для воды декоративный `type_id=971445205` `description_category_id=17028745`
+    - Фитостена `type_id=145334991` `description_category_id=17028745`
+    - Декроттуар для очистки обуви `type_id=971282571` `description_category_id=17028745`
+    - Приствольная решетка для дерева `type_id=971309435` `description_category_id=17028745`
+    - Штекер садовый `type_id=971309519` `description_category_id=17028745`
+    - Форточка для теплицы `type_id=970953822` `description_category_id=17028745`
+    - Каркас для укрытия растений `type_id=971079476` `description_category_id=17028745`
+    - Установка для обогрева теплицы `type_id=971168332` `description_category_id=17028745`
+    - Термопривод для теплицы `type_id=640171728` `description_category_id=17028745`
+    - Укрывной материал `type_id=92735` `description_category_id=17028745`
+    - Колышек, скоба садовые `type_id=970588196` `description_category_id=17028745`
+    - Фонтан садовый `type_id=970701973` `description_category_id=17028745`
+    - Парник, теплица `type_id=92731` `description_category_id=17028745`
+    - Ведро-туалет `type_id=94470` `description_category_id=17028745`
+    - Скворечник `type_id=92732` `description_category_id=17028745`
+    - Биотуалет `type_id=94469` `description_category_id=17028745`
+    - Аксессуары для забора, ворот `type_id=971893125` `description_category_id=17028745`
+  - Товары для праздников `description_category_id=17028733`
+    - Украшение на окна `type_id=95438` `description_category_id=17028733`
+    - Коробка подарочная `type_id=970671314` `description_category_id=17028733`
+    - Мишура `type_id=95430` `description_category_id=17028733`
+    - Реквизит, бутафория карнавальная `type_id=95422` `description_category_id=17028733`
+    - Аксессуар для воздушного шара `type_id=971284427` `description_category_id=17028733`
+    - Снежный шар `type_id=110485576` `description_category_id=17028733`
+    - Дождик `type_id=95420` `description_category_id=17028733`
+    - Фигурка светящаяся `type_id=970623277` `description_category_id=17028733`
+    - Головной убор карнавальный `type_id=96727` `description_category_id=17028733`
+    - Насос для воздушных шаров `type_id=95437` `description_category_id=17028733`
+    - Упаковочная бумага для подарков `type_id=970671315` `description_category_id=17028733`
+    - Шарик воздушный `type_id=95414` `description_category_id=17028733`
+    - Электрогирлянда `type_id=91672` `description_category_id=17028733`
+    - Мешок для подарков `type_id=95429` `description_category_id=17028733`
+    - Язычки, горны `type_id=95457` `description_category_id=17028733`
+    - Декоративная корзинка `type_id=91958` `description_category_id=17028733`
+    - Бант подарочный `type_id=971054434` `description_category_id=17028733`
+    - Серпантин `type_id=95450` `description_category_id=17028733`
+    - Гирлянда растяжка `type_id=95446` `description_category_id=17028733`
+    - Жидкость для пенной машины `type_id=971168370` `description_category_id=17028733`
+    - Хлопушка на праздник `type_id=95454` `description_category_id=17028733`
+    - Очки карнавальные `type_id=95439` `description_category_id=17028733`
+    - Краски Холи `type_id=369952583` `description_category_id=17028733`
+    - Аксессуар для электрогирлянд `type_id=970887478` `description_category_id=17028733`
+    - Пиньята `type_id=95440` `description_category_id=17028733`
+    - Аксессуар для фотосессий `type_id=95453` `description_category_id=17028733`
+    - Гирлянда хвойная `type_id=95417` `description_category_id=17028733`
+    - Пасхальный декор `type_id=971298346` `description_category_id=17028733`
+    - Конфетти `type_id=95425` `description_category_id=17028733`
+    - Ленточка для упаковки подарков `type_id=970671313` `description_category_id=17028733`
+    - Маска карнавальная `type_id=95428` `description_category_id=17028733`
+    - Бумажный шар `type_id=970729343` `description_category_id=17028733`
+    - Китайский фонарик `type_id=95513` `description_category_id=17028733`
+    - Бумага для шоу с бумагой `type_id=970943858` `description_category_id=17028733`
+    - Каркасная светодиодная фигура `type_id=970623276` `description_category_id=17028733`
+    - Аксессуар для аквагрима `type_id=971888272` `description_category_id=17028733`
+    - Венок `type_id=95413` `description_category_id=17028733`
+    - Пакет подарочный `type_id=970671325` `description_category_id=17028733`
+    - Носок для подарков `type_id=970630185` `description_category_id=17028733`
+    - Украшения из фольги `type_id=970623278` `description_category_id=17028733`
+    - Искусственный снег `type_id=970625098` `description_category_id=17028733`
+    - Крючок декоративный для украшений `type_id=970891491` `description_category_id=17028733`
+    - Парик, борода карнавальные `type_id=96997` `description_category_id=17028733`
+    - Фигура надувная `type_id=970889583` `description_category_id=17028733`
+    - Украшение на праздник новогоднее `type_id=95451` `description_category_id=17028733`
+    - Композиция из живой хвои `type_id=971116272` `description_category_id=17028733`
+    - Елочные украшения `type_id=95421` `description_category_id=17028733`
+    - Грим `type_id=99518` `description_category_id=17028733`
+  - Часы `description_category_id=72095144`
+    - Настольные часы `type_id=91760` `description_category_id=72095144`
+    - Настенные часы `type_id=91759` `description_category_id=72095144`
+    - Напольные часы `type_id=91757` `description_category_id=72095144`
+    - Таймер `type_id=91765` `description_category_id=72095144`
+    - Песочные часы `type_id=91761` `description_category_id=72095144`
+  - Ножи кухонные `description_category_id=17027921`
+    - Набор для резки сыра `type_id=568746176` `description_category_id=17027921`
+  - Ритуальные, религиозные товары `description_category_id=77011122`
+    - Аксессуары религиозные `type_id=971365974` `description_category_id=77011122`
+    - Уголь церковный `type_id=970952494` `description_category_id=77011122`
+    - Коврик для намаза `type_id=970638695` `description_category_id=77011122`
+    - Четки `type_id=261138229` `description_category_id=77011122`
+    - Ваза на кладбище `type_id=970780863` `description_category_id=77011122`
+    - Ограда на могилу `type_id=971038322` `description_category_id=77011122`
+    - Святая вода `type_id=971217350` `description_category_id=77011122`
+    - Святое миро `type_id=970890458` `description_category_id=77011122`
+    - Цветник на могилу `type_id=971414565` `description_category_id=77011122`
+    - Траурная рамка `type_id=971151259` `description_category_id=77011122`
+    - Крест на могилу `type_id=970780866` `description_category_id=77011122`
+    - Чаша для омовения `type_id=971312507` `description_category_id=77011122`
+    - Образок нательный `type_id=971149518` `description_category_id=77011122`
+    - Цветы на кладбище `type_id=96195` `description_category_id=77011122`
+    - Печать для просфоры `type_id=971136501` `description_category_id=77011122`
+    - Икона `type_id=91953` `description_category_id=77011122`
+    - Облачение для храма `type_id=971439094` `description_category_id=77011122`
+    - Ритуальный аксессуар `type_id=971812108` `description_category_id=77011122`
+    - Табличка на памятник `type_id=971138804` `description_category_id=77011122`
+  - Товары для полива `description_category_id=17027941`
+    - Автоматический поплавковый клапан `type_id=971166390` `description_category_id=17027941`
+    - Крепление для системы полива `type_id=970796017` `description_category_id=17027941`
+    - Разбрызгиватель, дождеватель `type_id=92795` `description_category_id=17027941`
+    - Капельница для капельного полива `type_id=970942693` `description_category_id=17027941`
+    - Шланг поливочный `type_id=92803` `description_category_id=17027941`
+    - Пистолет для полива `type_id=92792` `description_category_id=17027941`
+    - Управление системой полива `type_id=970795435` `description_category_id=17027941`
+    - Комплект капельного полива `type_id=92797` `description_category_id=17027941`
+    - Запчасть для садового опрыскивателя `type_id=971054436` `description_category_id=17027941`
+    - Опрыскиватель садовый `type_id=92796` `description_category_id=17027941`
+    - Инжектор Вентури `type_id=970984516` `description_category_id=17027941`
+    - Гри-вкладыш для бочки `type_id=412778336` `description_category_id=17027941`
+    - Кран для бочки, бака `type_id=92788` `description_category_id=17027941`
+    - Капельная трубка `type_id=970942695` `description_category_id=17027941`
+    - Коннектор для шланга `type_id=92787` `description_category_id=17027941`
+    - Катушка для шланга `type_id=92786` `description_category_id=17027941`
+    - Садовая колонка для воды `type_id=970870932` `description_category_id=17027941`
+    - Бочка садовая `type_id=268217791` `description_category_id=17027941`
+    - Система для туманообразования `type_id=971056668` `description_category_id=17027941`
+    - Короб для системы полива `type_id=970795606` `description_category_id=17027941`
+    - Капельная лента `type_id=970942694` `description_category_id=17027941`
+    - Фильтр для полива `type_id=92801` `description_category_id=17027941`
+    - Тележка для шлангов `type_id=92799` `description_category_id=17027941`
+    - Крышка для бочки, бака `type_id=971760451` `description_category_id=17027941`
+    - Обратный клапан `type_id=92791` `description_category_id=17027941`
+    - Подводка дождевателя `type_id=970960332` `description_category_id=17027941`
+  - Шторы и карнизы `description_category_id=17027934`
+    - Японские панели `type_id=92669` `description_category_id=17027934`
+    - Аксессуар для карниза `type_id=970870505` `description_category_id=17027934`
+    - Ламбрекен `type_id=970863786` `description_category_id=17027934`
+    - Штора для ванной `type_id=92666` `description_category_id=17027934`
+    - Штора `type_id=92665` `description_category_id=17027934`
+    - Карниз для ванной `type_id=92650` `description_category_id=17027934`
+    - Комплект штор `type_id=92654` `description_category_id=17027934`
+    - Римские шторы `type_id=92658` `description_category_id=17027934`
+    - Пленка для окон `type_id=504866192` `description_category_id=17027934`
+    - Плиссе `type_id=97367` `description_category_id=17027934`
+    - Аксессуар для штор `type_id=971115255` `description_category_id=17027934`
+    - Жалюзи `type_id=92646` `description_category_id=17027934`
+    - Занавеска на дверь `type_id=92647` `description_category_id=17027934`
+    - Тюль `type_id=92661` `description_category_id=17027934`
+    - Аксессуар для жалюзи `type_id=970952739` `description_category_id=17027934`
+    - Карниз для штор `type_id=92649` `description_category_id=17027934`
+    - Балдахин `type_id=95054` `description_category_id=17027934`
+    - Рулонные шторы `type_id=92659` `description_category_id=17027934`
+  - Грунт, удобрения и садовая химия `description_category_id=17028748`
+    - Побелка для деревьев `type_id=970956381` `description_category_id=17028748`
+    - Средство для очистки водоемов `type_id=92705` `description_category_id=17028748`
+    - Химическое средство от садовых вредителей `type_id=308043` `description_category_id=17028748`
+    - Противогололедное средство `type_id=99107` `description_category_id=17028748`
+    - Удобрение `type_id=99226` `description_category_id=17028748`
+    - Мох `type_id=971025171` `description_category_id=17028748`
+    - Марганцовка `type_id=970956383` `description_category_id=17028748`
+    - Агрохимикат `type_id=971895170` `description_category_id=17028748`
+    - Защита от сорняков `type_id=970955995` `description_category_id=17028748`
+    - Грунт `type_id=95781` `description_category_id=17028748`
+    - Торф `type_id=702455406` `description_category_id=17028748`
+    - Биоактиватор `type_id=970942387` `description_category_id=17028748`
+    - Садовый вар для деревьев `type_id=970956382` `description_category_id=17028748`
+    - Мульча `type_id=971012871` `description_category_id=17028748`
+    - Отпугиватель вредителей `type_id=95223` `description_category_id=17028748`
+    - Дренаж `type_id=97146` `description_category_id=17028748`
+    - Биостимулятор `type_id=970942696` `description_category_id=17028748`
+    - Средство от болезней растений `type_id=970895807` `description_category_id=17028748`
+    - Перлит `type_id=971438839` `description_category_id=17028748`
+    - Ловушка для садовых вредителей `type_id=971286432` `description_category_id=17028748`
+    - Гидрогель для растений `type_id=970709571` `description_category_id=17028748`
+    - Навоз `type_id=971844586` `description_category_id=17028748`
+    - Противоприсадные шипы `type_id=971124652` `description_category_id=17028748`
+  - Фоторамки и фотоальбомы `description_category_id=17027932`
+    - Фотоальбом `type_id=95468` `description_category_id=17027932`
+    - Фоторамка `type_id=115946973` `description_category_id=17027932`
+    - Держатель для фото `type_id=98504` `description_category_id=17027932`
+    - Cтекло для рамок `type_id=971327048` `description_category_id=17027932`
+  - Декор и интерьер `description_category_id=17027906`
+    - Фонтан для дома `type_id=93652` `description_category_id=17027906`
+    - Номер на дверь `type_id=257687166` `description_category_id=17027906`
+    - Держатель для книг `type_id=99229` `description_category_id=17027906`
+    - Подставка декоративная `type_id=970752275` `description_category_id=17027906`
+    - Трафарет для декора стен, окон `type_id=268217790` `description_category_id=17027906`
+    - Наклейка интерьерная `type_id=91971` `description_category_id=17027906`
+    - Постамент `type_id=971738440` `description_category_id=17027906`
+    - Газетница `type_id=95471` `description_category_id=17027906`
+    - Ваза `type_id=91936` `description_category_id=17027906`
+    - Фигурка декоративная `type_id=91996` `description_category_id=17027906`
+    - Фальш-окно `type_id=971102365` `description_category_id=17027906`
+    - Термометр `type_id=15869053` `description_category_id=17027906`
+    - Гобелен `type_id=91939` `description_category_id=17027906`
+    - Декоративная табличка `type_id=257687111` `description_category_id=17027906`
+    - Постер `type_id=91987` `description_category_id=17027906`
+    - Камни для декора `type_id=91945` `description_category_id=17027906`
+    - Интерьерное украшение `type_id=970959847` `description_category_id=17027906`
+    - Картина `type_id=91955` `description_category_id=17027906`
+    - Рама для зеркала `type_id=970713862` `description_category_id=17027906`
+    - Крепление для картин `type_id=970725250` `description_category_id=17027906`
+    - Накладка на подлокотник дивана `type_id=970664084` `description_category_id=17027906`
+    - Статуэтка `type_id=91992` `description_category_id=17027906`
+    - Информационная табличка `type_id=257687128` `description_category_id=17027906`
+    - Адресная табличка `type_id=257687106` `description_category_id=17027906`
+    - Плакат `type_id=91976` `description_category_id=17027906`
+    - Панно `type_id=91973` `description_category_id=17027906`
+    - Стоппер для двери `type_id=91993` `description_category_id=17027906`
+    - Держатель для бутылок интерьерный `type_id=91947` `description_category_id=17027906`
+    - Баннер для праздника `type_id=971084476` `description_category_id=17027906`
+  - Свечи и подсвечники `description_category_id=17028739`
+    - Подсвечник `type_id=95737` `description_category_id=17028739`
+    - Аромалампа `type_id=95733` `description_category_id=17028739`
+    - Топпер для торта `type_id=818399464` `description_category_id=17028739`
+    - Ароматический воск `type_id=98469` `description_category_id=17028739`
+    - Аксессуар для свечей `type_id=970838692` `description_category_id=17028739`
+    - Свеча `type_id=95741` `description_category_id=17028739`
+  - Садовый электроинструмент `description_category_id=17028940`
+    - Дровокол автоматический `type_id=971100773` `description_category_id=17028940`
+    - Скарификатор `type_id=970713366` `description_category_id=17028940`
+    - Снегоуборщик `type_id=91626` `description_category_id=17028940`
+    - Садовый райдер `type_id=97956` `description_category_id=17028940`
+    - Триммер садовый `type_id=970905496` `description_category_id=17028940`
+    - Садовый трактор `type_id=91624` `description_category_id=17028940`
+    - Подметальная машина `type_id=97958` `description_category_id=17028940`
+    - Кусторез `type_id=98397` `description_category_id=17028940`
+    - Садовый измельчитель `type_id=91623` `description_category_id=17028940`
+    - Ледокол `type_id=970994142` `description_category_id=17028940`
+    - Выжигатель сорняков `type_id=970943855` `description_category_id=17028940`
+    - Вертикуттер `type_id=970889112` `description_category_id=17028940`
+    - Электротяпка `type_id=504866296` `description_category_id=17028940`
+    - Электросекатор `type_id=91629` `description_category_id=17028940`
+    - Аэратор для газона `type_id=91616` `description_category_id=17028940`
+    - Газонокосилка `type_id=970890702` `description_category_id=17028940`
+    - Прополочная машинка `type_id=970886280` `description_category_id=17028940`
+    - Воздуходувка `type_id=91617` `description_category_id=17028940`
+    - Электрический высоторез `type_id=98335` `description_category_id=17028940`
+    - Щеточная машина `type_id=970860296` `description_category_id=17028940`
+  - Оснастка и запчасти к садовой технике `description_category_id=84338046`
+    - Двигатель для садовой техники `type_id=970676555` `description_category_id=84338046`
+    - Леска для триммера `type_id=94924` `description_category_id=84338046`
+    - Катушка для триммера `type_id=94908` `description_category_id=84338046`
+    - Нож для садового инструмента `type_id=94880` `description_category_id=84338046`
+  - Вешалки для одежды `description_category_id=17027908`
+    - Вешалка потолочная `type_id=971166270` `description_category_id=17027908`
+    - Крючок для дома `type_id=93676` `description_category_id=17027908`
+    - Вешалка для одежды животных `type_id=971306932` `description_category_id=17027908`
+    - Вешалка напольная `type_id=93670` `description_category_id=17027908`
+    - Вешалка-органайзер `type_id=971001227` `description_category_id=17027908`
+    - Вешалка на дверь `type_id=93669` `description_category_id=17027908`
+    - Вешалка плечики `type_id=93668` `description_category_id=17027908`
+    - Накладки на вешалки `type_id=971226091` `description_category_id=17027908`
+    - Крючок мебельный `type_id=94527` `description_category_id=17027908`
+  - Цветы и растения `description_category_id=17027938`
+    - Стабилизированный мох `type_id=971150970` `description_category_id=17027938`
+    - Ветка, шишка декоративная `type_id=970623275` `description_category_id=17027938`
+    - Сухоцветы `type_id=504866295` `description_category_id=17027938`
+    - Искусственная трава `type_id=971078305` `description_category_id=17027938`
+    - Стабилизированные цветы `type_id=96183` `description_category_id=17027938`
+    - Искусственные цветы `type_id=93653` `description_category_id=17027938`
+  - Зеркала `description_category_id=17028712`
+    - Зеркало для ванной `type_id=93364` `description_category_id=17028712`
+    - Зеркало интерьерное `type_id=93366` `description_category_id=17028712`
+  - Пледы и покрывала `description_category_id=17027927`
+    - Плед `type_id=92634` `description_category_id=17027927`
+    - Подзор для кровати `type_id=971115053` `description_category_id=17027927`
+    - Защита для мягкой мебели от животных `type_id=971093280` `description_category_id=17027927`
+    - Чехол на мебель `type_id=92641` `description_category_id=17027927`
+    - Покрывало `type_id=92638` `description_category_id=17027927`
+  - Ковры и ковровые дорожки `description_category_id=17028727`
+    - Крепление для ковров `type_id=970967959` `description_category_id=17028727`
+    - Подложка под ковер `type_id=970861612` `description_category_id=17028727`
+    - Шкура `type_id=93666` `description_category_id=17028727`
+    - Коврик `type_id=93659` `description_category_id=17028727`
+    - Ковер `type_id=93655` `description_category_id=17028727`
+    - Лоток для обуви `type_id=971201999` `description_category_id=17028727`
+    - Придверная решетка `type_id=971166108` `description_category_id=17028727`
+  - Гладильные доски и сушилки `description_category_id=17027909`
+    - Аксессуар для гладильной доски `type_id=970843250` `description_category_id=17027909`
+    - Чехол для гладильной доски `type_id=93687` `description_category_id=17027909`
+    - Сушилка для белья `type_id=93682` `description_category_id=17027909`
+    - Аксессуар для утюга `type_id=93681` `description_category_id=17027909`
+    - Гладильная доска `type_id=93680` `description_category_id=17027909`
+    - Аксессуары для сушилки белья `type_id=971035115` `description_category_id=17027909`
+  - Хранение вещей `description_category_id=17027937`
+    - Чехол для одежды `type_id=91372` `description_category_id=17027937`
+    - Упаковочная пленка `type_id=97503` `description_category_id=17027937`
+    - Кофр для хранения вещей `type_id=95483` `description_category_id=17027937`
+    - Органайзер для хранения вещей `type_id=970896147` `description_category_id=17027937`
+    - Картонные втулки `type_id=971279068` `description_category_id=17027937`
+    - Упаковочный пакет `type_id=971096037` `description_category_id=17027937`
+    - Коробка для хранения `type_id=95482` `description_category_id=17027937`
+    - Насос для вакуумных пакетов `type_id=971015900` `description_category_id=17027937`
+    - Мини бар `type_id=95485` `description_category_id=17027937`
+    - Диспенсер упаковочной ленты `type_id=971039893` `description_category_id=17027937`
+    - Мешок для хранения `type_id=971078631` `description_category_id=17027937`
+    - Корзина для хранения `type_id=95481` `description_category_id=17027937`
+    - Чехол для обуви `type_id=94621` `description_category_id=17027937`
+    - Подставка для обуви `type_id=504866185` `description_category_id=17027937`
+    - Ящик для хранения `type_id=97369` `description_category_id=17027937`
+    - Упаковочный наполнитель `type_id=970952431` `description_category_id=17027937`
+    - Рамка для складывания одежды `type_id=970744607` `description_category_id=17027937`
+    - Крышка для ящика `type_id=970716865` `description_category_id=17027937`
+    - Ключница настенная `type_id=95474` `description_category_id=17027937`
+    - Соединитель для рейлинга `type_id=971311826` `description_category_id=17027937`
+    - Защитный уголок для перевозки `type_id=971027088` `description_category_id=17027937`
+    - Вакуумный пакет `type_id=91315` `description_category_id=17027937`
+    - Рейлинг для кухни, ванной `type_id=970588173` `description_category_id=17027937`
+    - Защитный уголок для стекла, зеркала `type_id=971071691` `description_category_id=17027937`
+    - Биг-бэг `type_id=970992524` `description_category_id=17027937`
+    - Подставка для украшений `type_id=95493` `description_category_id=17027937`
+    - Инкассаторский мешок `type_id=971013614` `description_category_id=17027937`
+    - Шкатулка `type_id=115947006` `description_category_id=17027937`
+    - Гофролист `type_id=970825205` `description_category_id=17027937`
+    - Диспенсер для стрейч пленки `type_id=970860462` `description_category_id=17027937`
+  - Подушки, одеяла `description_category_id=17028729`
+    - Подушка декоративная `type_id=92620` `description_category_id=17028729`
+    - Поддерживающая подушка `type_id=96803` `description_category_id=17028729`
+    - Одеяло `type_id=92616` `description_category_id=17028729`
+    - Мультиподушка `type_id=970852585` `description_category_id=17028729`
+    - Сиденье для садовой мебели `type_id=971036614` `description_category_id=17028729`
+    - Подушка на стул `type_id=92624` `description_category_id=17028729`
+    - Ортопедическая подушка `type_id=92618` `description_category_id=17028729`
+    - Электропростыня `type_id=92632` `description_category_id=17028729`
+    - Подушка `type_id=92619` `description_category_id=17028729`
+    - Комплект одеяло, подушки `type_id=92615` `description_category_id=17028729`
+    - Электроодеяло `type_id=92631` `description_category_id=17028729`
+  - Ароматы для дома `description_category_id=86029514`
+    - Подставка для благовоний `type_id=970629291` `description_category_id=86029514`
+    - Благовония `type_id=93740` `description_category_id=86029514`
+    - Ароматизатор для дома `type_id=92721` `description_category_id=86029514`
+    - Нейтрализатор запаха `type_id=92719` `description_category_id=86029514`
+    - Ароматический диффузор `type_id=92718` `description_category_id=86029514`
+    - Палочки для аромадиффузора `type_id=971012137` `description_category_id=86029514`
+    - Стойка для эфирных масел `type_id=970833114` `description_category_id=86029514`
+    - Флакон для ароматизатора `type_id=970833113` `description_category_id=86029514`
+  - Садовый инвентарь `description_category_id=17028746`
+    - Пояс для садовых инструментов `type_id=970877664` `description_category_id=17028746`
+    - Разбрасыватель, сеялка `type_id=98094` `description_category_id=17028746`
+    - Сито садовое `type_id=971013555` `description_category_id=17028746`
+    - Плоскорез `type_id=790944802` `description_category_id=17028746`
+    - Дровокол ручной `type_id=568746175` `description_category_id=17028746`
+    - Сучкорез `type_id=92777` `description_category_id=17028746`
+    - Запчасть для секатора, сучкореза `type_id=970693798` `description_category_id=17028746`
+    - Снегорез для крыши `type_id=971439099` `description_category_id=17028746`
+    - Грабли `type_id=92743` `description_category_id=17028746`
+    - Кирка `type_id=92749` `description_category_id=17028746`
+    - Коса `type_id=92755` `description_category_id=17028746`
+    - Косоотбойник `type_id=970697099` `description_category_id=17028746`
+    - Тачка садовая `type_id=92778` `description_category_id=17028746`
+    - Черенок `type_id=92783` `description_category_id=17028746`
+    - Коврик, подколенник для садовых работ `type_id=92750` `description_category_id=17028746`
+    - Секатор `type_id=92772` `description_category_id=17028746`
+    - Мешки садовые `type_id=92760` `description_category_id=17028746`
+    - Инструмент для заточки садового инструмента `type_id=970970693` `description_category_id=17028746`
+    - Канистра универсальная `type_id=92748` `description_category_id=17028746`
+    - Конус посадочный `type_id=92752` `description_category_id=17028746`
+    - Серп `type_id=92773` `description_category_id=17028746`
+    - Тапенер `type_id=970956871` `description_category_id=17028746`
+    - Тяпка `type_id=92780` `description_category_id=17028746`
+    - Ручной каток для газона `type_id=970942368` `description_category_id=17028746`
+    - Щепокол `type_id=971101618` `description_category_id=17028746`
+    - Держатель садового инструмента `type_id=971299476` `description_category_id=17028746`
+    - Набор садовых инструментов `type_id=92762` `description_category_id=17028746`
+    - Плодосборник `type_id=92766` `description_category_id=17028746`
+    - Корнеудалитель `type_id=92754` `description_category_id=17028746`
+    - Корыто для садовой тачки `type_id=971309522` `description_category_id=17028746`
+    - Аксессуары для тапенера `type_id=970956873` `description_category_id=17028746`
+    - Кустодер `type_id=970904890` `description_category_id=17028746`
+    - Бур садовый ручной `type_id=92738` `description_category_id=17028746`
+    - Запчасть для садовой косы `type_id=971300851` `description_category_id=17028746`
+    - Калибратор для овощей, фруктов, ягод `type_id=971299499` `description_category_id=17028746`
+    - Ручка для черенка `type_id=971288073` `description_category_id=17028746`
+    - Колесо для садовой тачки `type_id=92746` `description_category_id=17028746`
+    - Аэратор для газона ручной `type_id=971292984` `description_category_id=17028746`
+    - Рыхлитель `type_id=92769` `description_category_id=17028746`
+    - Садовые ножницы `type_id=970581805` `description_category_id=17028746`
+    - Газонокосилка механическая `type_id=970995956` `description_category_id=17028746`
+    - Культиватор ручной `type_id=92756` `description_category_id=17028746`
+    - Душ садовый `type_id=92745` `description_category_id=17028746`
+    - Садовый нож `type_id=92765` `description_category_id=17028746`
+    - Вилы `type_id=92742` `description_category_id=17028746`
+    - Мотыга `type_id=92761` `description_category_id=17028746`
+    - Совок садовый `type_id=92775` `description_category_id=17028746`
+    - Ремкомплект для тачки, тележки садовой `type_id=971412034` `description_category_id=17028746`
+    - Ручной кусторез `type_id=92757` `description_category_id=17028746`
+    - Садовые нарукавники `type_id=970877666` `description_category_id=17028746`
+    - Скрепер для уборки снега `type_id=970874522` `description_category_id=17028746`
+    - Умывальник для дачи `type_id=94760` `description_category_id=17028746`
+    - Лопата `type_id=92759` `description_category_id=17028746`
+    - Дождемер `type_id=970798596` `description_category_id=17028746`
+    - Скребок-ледоруб `type_id=97170` `description_category_id=17028746`
+  - Столовая посуда `description_category_id=17028741`
+    - Набор для чайной церемонии `type_id=970825777` `description_category_id=17028741`
+    - Мармит `type_id=92503` `description_category_id=17028741`
+    - Подставка для яиц `type_id=97596` `description_category_id=17028741`
+    - Сахарница `type_id=92520` `description_category_id=17028741`
+    - Тарелка `type_id=92528` `description_category_id=17028741`
+    - Калабас для мате `type_id=971061859` `description_category_id=17028741`
+    - Миска `type_id=92506` `description_category_id=17028741`
+    - Чайник заварочный `type_id=92538` `description_category_id=17028741`
+    - Посуда для чайных церемоний `type_id=971069589` `description_category_id=17028741`
+    - Блюдце `type_id=92493` `description_category_id=17028741`
+    - Менажница `type_id=92505` `description_category_id=17028741`
+    - Блюдо сервировочное `type_id=92492` `description_category_id=17028741`
+    - Фруктовница `type_id=92535` `description_category_id=17028741`
+    - Корзина для сервировки `type_id=970865623` `description_category_id=17028741`
+    - Супница, бульонница `type_id=92526` `description_category_id=17028741`
+    - Сервиз чайный, кофейный `type_id=92515` `description_category_id=17028741`
+    - Органайзер для чайных пакетиков `type_id=93715` `description_category_id=17028741`
+    - Подставка сервировочная `type_id=970875771` `description_category_id=17028741`
+    - Подложка для торта, пирожного `type_id=970856654` `description_category_id=17028741`
+    - Икорница `type_id=970667010` `description_category_id=17028741`
+    - Межъярус для торта `type_id=971047669` `description_category_id=17028741`
+    - Кружка `type_id=92499` `description_category_id=17028741`
+    - Креманка, розетка `type_id=92498` `description_category_id=17028741`
+    - Питчер, молочник `type_id=971158724` `description_category_id=17028741`
+    - Набор столовой посуды `type_id=92514` `description_category_id=17028741`
+    - Конфетница `type_id=92495` `description_category_id=17028741`
+    - Тортница `type_id=92533` `description_category_id=17028741`
+    - Чайная, кофейная пара `type_id=92537` `description_category_id=17028741`
+    - Чашка `type_id=92540` `description_category_id=17028741`
+    - Пиала `type_id=92516` `description_category_id=17028741`
+    - Соусник `type_id=92524` `description_category_id=17028741`
+    - Паштетница `type_id=970593920` `description_category_id=17028741`
+    - Подстаканник `type_id=92517` `description_category_id=17028741`
+    - Салатник `type_id=92519` `description_category_id=17028741`
+  - Печи `description_category_id=17027924`
+    - Дровница `type_id=92016` `description_category_id=17027924`
+    - Печь для сжигания мусора `type_id=970952445` `description_category_id=17027924`
+    - Портал для камина, печи `type_id=91986` `description_category_id=17027924`
+    - Газовая печь `type_id=971013046` `description_category_id=17027924`
+    - Кочерга `type_id=971002657` `description_category_id=17027924`
+    - Совок для угля, золы `type_id=971002659` `description_category_id=17027924`
+    - Дровяная печь `type_id=96037` `description_category_id=17027924`
+    - Защитный экран для камина `type_id=91998` `description_category_id=17027924`
+    - Бак для банной печи `type_id=970965243` `description_category_id=17027924`
+    - Запчасть парогенератора для бани `type_id=971306157` `description_category_id=17027924`
+    - Ерш, щетка для чистки дымохода `type_id=970721638` `description_category_id=17027924`
+    - Аксессуары для печи, камина `type_id=970890460` `description_category_id=17027924`
+    - Электрокаменка `type_id=96040` `description_category_id=17027924`
+    - Парогенератор для бани `type_id=96039` `description_category_id=17027924`
+    - Щипцы для дров, угля `type_id=971002658` `description_category_id=17027924`
+    - Набор каминный `type_id=91968` `description_category_id=17027924`
+    - Теплообменник для бани `type_id=971109081` `description_category_id=17027924`
+    - Декор для биокамина `type_id=756711260` `description_category_id=17027924`
+    - Биокамин `type_id=96038` `description_category_id=17027924`
+    - Печь-камин `type_id=971001226` `description_category_id=17027924`
+    - Рамка декоративная для печи `type_id=971405113` `description_category_id=17027924`
+- Электроника `description_category_id=15621042`
+  - 3D-печать и сканирование `description_category_id=200001721`
+    - 3D-сканер `type_id=91513` `description_category_id=200001721`
+    - Полимерная пленка для 3D-печати `type_id=970832318` `description_category_id=200001721`
+  - Принтеры, сканеры и МФУ `description_category_id=17028932`
+    - МФУ `type_id=91515` `description_category_id=17028932`
+    - Принтер для чеков `type_id=96865` `description_category_id=17028932`
+    - Принтер `type_id=91516` `description_category_id=17028932`
+    - Мини-принтер `type_id=91518` `description_category_id=17028932`
+    - Копировальный аппарат `type_id=91514` `description_category_id=17028932`
+    - Принтер для наклеек, этикеток `type_id=971957387` `description_category_id=17028932`
+    - Сканер `type_id=91517` `description_category_id=17028932`
+  - Компьютеры `description_category_id=17028619`
+    - Тонкий клиент `type_id=970575376` `description_category_id=17028619`
+    - Сенсорный стол `type_id=91478` `description_category_id=17028619`
+    - Ноутбук `type_id=91477` `description_category_id=17028619`
+    - Комплект с системным блоком `type_id=971215778` `description_category_id=17028619`
+    - Системный блок `type_id=91476` `description_category_id=17028619`
+    - Моноблок `type_id=91475` `description_category_id=17028619`
+    - Игровой ноутбук `type_id=91474` `description_category_id=17028619`
+    - Мини-ПК `type_id=97235` `description_category_id=17028619`
+  - Расходные материалы для печати `description_category_id=17028935`
+    - Пленка для ламинирования `type_id=97444` `description_category_id=17028935`
+    - Расходник для печати `type_id=95980` `description_category_id=17028935`
+  - Коврики для мыши `description_category_id=18262715`
+    - Коврик для мышки `type_id=96808` `description_category_id=18262715`
+  - Флешки и карты памяти `description_category_id=17028930`
+    - Диск для записи `type_id=91295` `description_category_id=17028930`
+  - Чистящие средства и расходные материалы для электроники `description_category_id=17028936`
+    - Чистящий набор для электроники `type_id=99402` `description_category_id=17028936`
+    - Пылезащитная заглушка `type_id=971002589` `description_category_id=17028936`
+    - Инструмент для чистки электроники `type_id=91571` `description_category_id=17028936`
+    - Спрей для электроники `type_id=92710` `description_category_id=17028936`
+    - Салфетки для электроники `type_id=99399` `description_category_id=17028936`
+    - Чистящий карандаш `type_id=99401` `description_category_id=17028936`
+    - Перчатки для графического планшета `type_id=970897014` `description_category_id=17028936`
+    - Щетка для чистки электроники `type_id=971133788` `description_category_id=17028936`
+    - Чистящее средство для принтеров `type_id=95991` `description_category_id=17028936`
+    - Перчатки чистящие антистатические `type_id=970843176` `description_category_id=17028936`
+  - Оборудование для фотостудии `description_category_id=200001713`
+    - Софтбокс `type_id=99011` `description_category_id=200001713`
+    - Отражатель `type_id=115950045` `description_category_id=200001713`
+    - Держатель фотофона `type_id=971100222` `description_category_id=200001713`
+    - Фотозонт `type_id=98554` `description_category_id=200001713`
+    - Принадлежности для фотолаборатории `type_id=971229598` `description_category_id=200001713`
+    - Фон для фото `type_id=98991` `description_category_id=200001713`
+    - Студийное оборудование `type_id=91750` `description_category_id=200001713`
+    - Хромакей `type_id=408451301` `description_category_id=200001713`
+    - Маска гобо `type_id=971871099` `description_category_id=200001713`
+    - Фотобокс `type_id=98549` `description_category_id=200001713`
+  - Кабели и переходники `description_category_id=17028634`
+    - Сетевой кабель питания `type_id=970825506` `description_category_id=17028634`
+    - Кабель для фитнес-браслета `type_id=970682683` `description_category_id=17028634`
+    - Антенный кабель `type_id=970579941` `description_category_id=17028634`
+    - Кабельный тестер `type_id=970878805` `description_category_id=17028634`
+    - Инструментальный кабель `type_id=97621` `description_category_id=17028634`
+    - Защита для кабеля от износа `type_id=970627153` `description_category_id=17028634`
+    - Аудиокабель `type_id=970781744` `description_category_id=17028634`
+    - Кабель для мобильных устройств `type_id=971081965` `description_category_id=17028634`
+    - Кабель-переходник `type_id=95674` `description_category_id=17028634`
+    - Видеокабель `type_id=970781745` `description_category_id=17028634`
+    - Кабель для интернет-соединения `type_id=115012246` `description_category_id=17028634`
+    - USB-концентратор `type_id=95671` `description_category_id=17028634`
+    - Органайзер для хранения проводов `type_id=97946` `description_category_id=17028634`
+    - Коннектор `type_id=95673` `description_category_id=17028634`
+    - Удлинитель кабеля `type_id=95676` `description_category_id=17028634`
+    - Разветвитель кабеля `type_id=95675` `description_category_id=17028634`
+    - Органайзер для сетевого фильтра `type_id=98456` `description_category_id=17028634`
+    - Держатель для кабеля `type_id=91548` `description_category_id=17028634`
+    - Кабель для компьютерной периферии `type_id=971082159` `description_category_id=17028634`
+  - Сетевые фильтры, разветвители и удлинители `description_category_id=17028643`
+    - Удлинитель, сетевой фильтр `type_id=91790` `description_category_id=17028643`
+    - Разветвитель электрический `type_id=91788` `description_category_id=17028643`
+    - Сетевой адаптер `type_id=971168639` `description_category_id=17028643`
+  - Штативы и стабилизаторы `description_category_id=17028651`
+    - Штатив `type_id=91780` `description_category_id=17028651`
+    - Селфи-палка `type_id=91776` `description_category_id=17028651`
+    - Мобильная платформа для штатива `type_id=91775` `description_category_id=17028651`
+    - Стабилизатор для смартфона `type_id=99500` `description_category_id=17028651`
+    - Площадка для штатива `type_id=91777` `description_category_id=17028651`
+    - Аксессуар для стабилизатора `type_id=863341198` `description_category_id=17028651`
+    - Штативная головка `type_id=91782` `description_category_id=17028651`
+  - Наушники и гарнитуры `description_category_id=17028929`
+    - Наушники `type_id=504866264` `description_category_id=17028929`
+    - Мотогарнитура `type_id=970959015` `description_category_id=17028929`
+  - Устройства ручного ввода `description_category_id=17028646`
+    - Подставка под клавиатуру `type_id=970955161` `description_category_id=17028646`
+    - Клавиатура `type_id=91801` `description_category_id=17028646`
+    - Набор для обслуживания клавиатуры `type_id=970940776` `description_category_id=17028646`
+    - Игровая мышь `type_id=91798` `description_category_id=17028646`
+    - Подставка под запястье `type_id=970782665` `description_category_id=17028646`
+    - Аксессуары для клавиатуры, мыши `type_id=970801332` `description_category_id=17028646`
+    - Ремкомплект для пультов `type_id=971003890` `description_category_id=17028646`
+    - Комплект клавиатура, мышь `type_id=91804` `description_category_id=17028646`
+    - Держатель для пульта `type_id=970855397` `description_category_id=17028646`
+    - Мышь `type_id=91805` `description_category_id=17028646`
+    - Стриминговый контроллер `type_id=409069095` `description_category_id=17028646`
+    - Аксессуары для симрейсинга `type_id=971079311` `description_category_id=17028646`
+    - Трекпад `type_id=970780257` `description_category_id=17028646`
+    - Пульт ДУ для светильника `type_id=970941664` `description_category_id=17028646`
+    - Чехол для пульта `type_id=98229` `description_category_id=17028646`
+    - Смазка для клавиатуры `type_id=971294479` `description_category_id=17028646`
+    - Игровая клавиатура `type_id=91797` `description_category_id=17028646`
+    - Игровой руль `type_id=91810` `description_category_id=17028646`
+    - Пульт для телевизора `type_id=91809` `description_category_id=17028646`
+    - Накладка для клавиатуры `type_id=970870448` `description_category_id=17028646`
+    - Комплект игровая клавиатура, мышь `type_id=91803` `description_category_id=17028646`
+  - Проигрыватели и плееры `description_category_id=17028620`
+    - DVD-плеер `type_id=95572` `description_category_id=17028620`
+    - Blu-ray-плеер `type_id=95571` `description_category_id=17028620`
+    - CD-проигрыватель `type_id=95555` `description_category_id=17028620`
+    - MP3-плеер `type_id=91385` `description_category_id=17028620`
+  - Чехлы `description_category_id=17028650`
+    - Зарядный кейс для наушников `type_id=971363141` `description_category_id=17028650`
+    - Защитное стекло, чехол для смарт-часов `type_id=97162` `description_category_id=17028650`
+    - Чехол для планшета `type_id=115948509` `description_category_id=17028650`
+    - Чехол для наушников `type_id=97021` `description_category_id=17028650`
+    - Чехол для смартфона `type_id=97011` `description_category_id=17028650`
+    - Чехол для компьютерных комплектующих, периферии `type_id=97019` `description_category_id=17028650`
+    - Чехол для фото- видеотехники `type_id=97022` `description_category_id=17028650`
+    - Чехол для акустики, плеера `type_id=97024` `description_category_id=17028650`
+    - Чехол для электронной книги `type_id=97020` `description_category_id=17028650`
+    - Чехол для игровой приставки `type_id=97015` `description_category_id=17028650`
+    - Шнурок для телефона `type_id=122770107` `description_category_id=17028650`
+    - Картхолдер для смартфона `type_id=971444249` `description_category_id=17028650`
+  - Объективы `description_category_id=17028610`
+    - Увеличительная линза `type_id=91504` `description_category_id=17028610`
+    - Телеконвертер `type_id=91503` `description_category_id=17028610`
+    - Объектив `type_id=91501` `description_category_id=17028610`
+  - Запчасти для ноутбуков `description_category_id=60358593`
+    - Корпусный элемент ноутбука `type_id=970665294` `description_category_id=60358593`
+    - Аккумулятор для ноутбука `type_id=91881` `description_category_id=60358593`
+  - Аксессуары для фото- и видеотехники `description_category_id=17028647`
+    - Аудиокассета `type_id=970892542` `description_category_id=17028647`
+    - Картридж для фото `type_id=91611` `description_category_id=17028647`
+    - Вспышка `type_id=91736` `description_category_id=17028647`
+    - Защита ЖК-экрана камеры `type_id=91738` `description_category_id=17028647`
+    - Аксессуар для камеры `type_id=91740` `description_category_id=17028647`
+    - Крышка объектива `type_id=91742` `description_category_id=17028647`
+    - Кейс для фотопленки `type_id=971159374` `description_category_id=17028647`
+    - Магнитофонная лента `type_id=971159818` `description_category_id=17028647`
+    - Аквабокс `type_id=91734` `description_category_id=17028647`
+    - Видеокассета `type_id=970892543` `description_category_id=17028647`
+    - Свет для мобильной съемки `type_id=97420` `description_category_id=17028647`
+    - Видоискатель `type_id=970960410` `description_category_id=17028647`
+    - Адаптер для объектива `type_id=91744` `description_category_id=17028647`
+    - Светофильтр `type_id=91748` `description_category_id=17028647`
+    - Ремень для камеры `type_id=91746` `description_category_id=17028647`
+    - Bluetooth-кнопка для фото `type_id=91793` `description_category_id=17028647`
+    - Фотопленка `type_id=971066314` `description_category_id=17028647`
+    - Видеосендер `type_id=971307628` `description_category_id=17028647`
+    - Бленда для фото `type_id=91735` `description_category_id=17028647`
+    - Синхронизатор для вспышки `type_id=91749` `description_category_id=17028647`
+  - Графические планшеты `description_category_id=17028623`
+    - Графический планшет `type_id=91871` `description_category_id=17028623`
+    - Графический экран `type_id=97892` `description_category_id=17028623`
+  - Полиграфическое оборудование `description_category_id=200001717`
+    - Факсимильный аппарат `type_id=91519` `description_category_id=200001717`
+    - Полиграфический аппарат `type_id=970988679` `description_category_id=200001717`
+    - Термопресс `type_id=970971656` `description_category_id=200001717`
+    - Плоттер `type_id=96864` `description_category_id=200001717`
+    - Ламинатор бумаги `type_id=91558` `description_category_id=200001717`
+    - Аппликатор этикеток `type_id=970958993` `description_category_id=200001717`
+    - Бумагосверлильная машина `type_id=970690301` `description_category_id=200001717`
+    - Запчасть для полиграфического аппарата `type_id=971941645` `description_category_id=200001717`
+    - Брошюровщик, переплетчик `type_id=91544` `description_category_id=200001717`
+  - Умный дом `description_category_id=24692739`
+    - Умное реле `type_id=972188833` `description_category_id=24692739`
+    - Крепление для устройств умного дома `type_id=972188831` `description_category_id=24692739`
+    - Система защиты от протечек `type_id=99436` `description_category_id=24692739`
+    - Датчик умного дома `type_id=972188832` `description_category_id=24692739`
+  - Мониторы и запчасти `description_category_id=17028926`
+    - Интерактивная видеопанель `type_id=970739234` `description_category_id=17028926`
+    - Монитор `type_id=91494` `description_category_id=17028926`
+    - Экран на камеру `type_id=970803519` `description_category_id=17028926`
+  - Смарт-часы `description_category_id=17028644`
+    - Украшение для смарт-часов `type_id=97156` `description_category_id=17028644`
+    - Запчасть для смарт-часов `type_id=970961835` `description_category_id=17028644`
+    - Аккумулятор для смарт-часов `type_id=970865571` `description_category_id=17028644`
+    - Смарт-часы `type_id=94698` `description_category_id=17028644`
+    - Ремешок для смарт-часов `type_id=94697` `description_category_id=17028644`
+    - Смарт-часы детские `type_id=97693` `description_category_id=17028644`
+  - VR-устройства и аксессуары `description_category_id=17028915`
+    - VR-очки `type_id=97239` `description_category_id=17028915`
+    - VR-аксессуар `type_id=971104255` `description_category_id=17028915`
+    - 3D-очки `type_id=91899` `description_category_id=17028915`
+  - Проводные и DECT-телефоны `description_category_id=17028642`
+    - Аксессуары для телефона, АТС `type_id=970880437` `description_category_id=17028642`
+    - Проводной телефон `type_id=91723` `description_category_id=17028642`
+  - Электронное оборудование для торговли `description_category_id=44082285`
+    - Код ОФД `type_id=970863796` `description_category_id=44082285`
+    - Пинпад `type_id=98392` `description_category_id=44082285`
+    - Сканер штрих-кодов `type_id=98454` `description_category_id=44082285`
+    - Онлайн-касса `type_id=98308` `description_category_id=44082285`
+    - POS-компьютер `type_id=970989429` `description_category_id=44082285`
+    - Электронная касса `type_id=98236` `description_category_id=44082285`
+    - Защитное стекло для онлайн-касс `type_id=970803731` `description_category_id=44082285`
+    - Счетчик посетителей `type_id=661551652` `description_category_id=44082285`
+  - Смартфоны, планшеты, мобильные телефоны `description_category_id=15621050`
+    - Мобильный телефон `type_id=95135` `description_category_id=15621050`
+    - Детский планшет `type_id=970581253` `description_category_id=15621050`
+    - Смартфон `type_id=95139` `description_category_id=15621050`
+    - Планшет `type_id=95137` `description_category_id=15621050`
+  - Сценическое оборудование и свет `description_category_id=57185538`
+    - Кейс для сценического оборудования `type_id=970986869` `description_category_id=57185538`
+    - Лазер для спецэффектов `type_id=970693019` `description_category_id=57185538`
+    - Диско-шар `type_id=970882223` `description_category_id=57185538`
+    - Световая стойка `type_id=99023` `description_category_id=57185538`
+    - Система сброса занавеса `type_id=971854061` `description_category_id=57185538`
+    - Контроллер управления сценическим светом `type_id=970987980` `description_category_id=57185538`
+    - Световой сценический прибор `type_id=970987978` `description_category_id=57185538`
+    - Запчасти для сценического оборудования `type_id=971914440` `description_category_id=57185538`
+    - Генератор спецэффектов `type_id=99025` `description_category_id=57185538`
+    - Жидкость для генератора спецэффектов `type_id=718886862` `description_category_id=57185538`
+  - Офисная техника `description_category_id=88780434`
+    - Система конференц-связи `type_id=970831237` `description_category_id=88780434`
+    - Детектор драгоценных металлов `type_id=970699947` `description_category_id=88780434`
+    - Счетчик-сортировщик банкнот `type_id=970689914` `description_category_id=88780434`
+    - Счетчик-сортировщик монет `type_id=970601774` `description_category_id=88780434`
+    - Шредер `type_id=96595` `description_category_id=88780434`
+    - Презентер `type_id=91808` `description_category_id=88780434`
+    - Детектор банкнот `type_id=405801078` `description_category_id=88780434`
+    - Переговорное устройство для конференций `type_id=970939159` `description_category_id=88780434`
+  - Зарядные устройства и док-станции `description_category_id=17028627`
+    - Беспроводное зарядное устройство `type_id=95769` `description_category_id=17028627`
+    - Солнечное зарядное устройство `type_id=971751172` `description_category_id=17028627`
+    - Сетевое зарядное устройство `type_id=95777` `description_category_id=17028627`
+    - USB-тестер `type_id=970832314` `description_category_id=17028627`
+    - Автомобильное зарядное устройство `type_id=115947272` `description_category_id=17028627`
+    - Док-станция `type_id=95774` `description_category_id=17028627`
+    - Приемник-адаптер беспроводной зарядки `type_id=369952587` `description_category_id=17028627`
+    - Блок питания `type_id=970970185` `description_category_id=17028627`
+  - Микрофоны и аксессуары `description_category_id=17028925`
+    - Аксессуар для микрофона `type_id=97589` `description_category_id=17028925`
+    - Микрофонная стойка `type_id=97569` `description_category_id=17028925`
+    - Студийный комплект для звукозаписи `type_id=971168551` `description_category_id=17028925`
+    - Вокальная радиосистема `type_id=971083532` `description_category_id=17028925`
+    - Микрофон `type_id=95141` `description_category_id=17028925`
+  - Запчасти и аксессуары для аудио и видеотехники `description_category_id=95617422`
+    - Аксессуары, запчасти для аудиотехники `type_id=970985280` `description_category_id=95617422`
+    - Крепление для умной колонки `type_id=970959004` `description_category_id=95617422`
+    - Стойка, крепление для акустики `type_id=95910` `description_category_id=95617422`
+    - Амбушюры для наушников `type_id=98638` `description_category_id=95617422`
+  - Рюкзаки, чехлы, сумки `description_category_id=17028939`
+    - Аксессуар для хранения дисков `type_id=970688452` `description_category_id=17028939`
+    - Замок для ноутбука `type_id=91551` `description_category_id=17028939`
+    - Сумка для ноутбука `type_id=91342` `description_category_id=17028939`
+  - Батарейки и аккумуляторы `description_category_id=17028910`
+    - Внешний аккумулятор `type_id=91886` `description_category_id=17028910`
+    - Аккумулятор для телефона `type_id=91880` `description_category_id=17028910`
+    - Бокс для батареек `type_id=971007032` `description_category_id=17028910`
+    - Чехол-аккумулятор `type_id=91885` `description_category_id=17028910`
+  - Виниловые проигрыватели и аксессуары `description_category_id=17028918`
+    - Оцифровщик виниловых пластинок `type_id=970958994` `description_category_id=17028918`
+    - Подставка для пластинок `type_id=970864534` `description_category_id=17028918`
+    - Набор для ухода за пластинками `type_id=970680397` `description_category_id=17028918`
+    - Кейс для хранения пластинок `type_id=970626359` `description_category_id=17028918`
+    - Виниловый проигрыватель `type_id=115947054` `description_category_id=17028918`
+    - Конверт для пластинок `type_id=97378` `description_category_id=17028918`
+    - Аксессуары, запчасти для винилового проигрывателя `type_id=971150003` `description_category_id=17028918`
+  - Охранные системы и контроль доступа `description_category_id=17028931`
+    - Турникет `type_id=971106337` `description_category_id=17028931`
+    - Автоматика для ворот и дверей `type_id=970952402` `description_category_id=17028931`
+    - Аксессуары, запчасти для автоматических ворот `type_id=970619975` `description_category_id=17028931`
+    - Электронный замок `type_id=94536` `description_category_id=17028931`
+    - Ретранслятор сигнала охранной системы `type_id=971092829` `description_category_id=17028931`
+    - Комплект охранной системы для дома `type_id=95830` `description_category_id=17028931`
+    - Считыватель `type_id=59468087` `description_category_id=17028931`
+    - Мегафон `type_id=97411` `description_category_id=17028931`
+    - Электронный ключ `type_id=14591392` `description_category_id=17028931`
+    - Промышленная охранная система `type_id=971047643` `description_category_id=17028931`
+    - Муляж телефона `type_id=970958653` `description_category_id=17028931`
+    - Аксессуары для монтажа домофона `type_id=970981484` `description_category_id=17028931`
+    - Имитатор включенного телевизора `type_id=970862669` `description_category_id=17028931`
+    - Аксессуары для монтажа охранных систем `type_id=970583534` `description_category_id=17028931`
+    - СКУД `type_id=59468083` `description_category_id=17028931`
+    - Антикражная система `type_id=970880441` `description_category_id=17028931`
+  - Антенны и аксессуары к ним `description_category_id=17028909`
+    - Крепление для антенны `type_id=97710` `description_category_id=17028909`
+  - Проекторы `description_category_id=17028933`
+    - Экран для проектора `type_id=91495` `description_category_id=17028933`
+    - Гобо-проектор `type_id=504866269` `description_category_id=17028933`
+    - Натяжитель проекционного экрана `type_id=970994386` `description_category_id=17028933`
+    - Пиксельный экран `type_id=970971430` `description_category_id=17028933`
+    - Запчасть для проектора `type_id=970863485` `description_category_id=17028933`
+    - Голографический вентилятор `type_id=970664076` `description_category_id=17028933`
+    - Проектор `type_id=91525` `description_category_id=17028933`
+  - Аксессуары для игровых приставок `description_category_id=17028633`
+    - Подставка для консоли `type_id=96137` `description_category_id=17028633`
+    - Охлаждение для консоли `type_id=96136` `description_category_id=17028633`
+    - Аксессуар для игровой приставки `type_id=91539` `description_category_id=17028633`
+    - Игровой картридж `type_id=99055` `description_category_id=17028633`
+    - Накладка на контроллер `type_id=97249` `description_category_id=17028633`
+    - Игровой рукав `type_id=972065584` `description_category_id=17028633`
+    - Запчасть для игровой приставки `type_id=971062474` `description_category_id=17028633`
+  - Акустика и колонки `description_category_id=17028908`
+    - Музыкальный центр `type_id=96489` `description_category_id=17028908`
+    - Домашний кинотеатр `type_id=95304` `description_category_id=17028908`
+    - Кассетный плеер `type_id=970682682` `description_category_id=17028908`
+    - Беспроводная колонка `type_id=95320` `description_category_id=17028908`
+    - Компьютерная акустика `type_id=95318` `description_category_id=17028908`
+    - Саундбар `type_id=95305` `description_category_id=17028908`
+    - Магнитола `type_id=96488` `description_category_id=17028908`
+    - Караоке-система `type_id=970863449` `description_category_id=17028908`
+    - Умная колонка `type_id=447870437` `description_category_id=17028908`
+    - Запчасть для умной колонки `type_id=971450163` `description_category_id=17028908`
+  - Электронные книги, переводчики и словари `description_category_id=17028618`
+    - Электронная книга `type_id=91870` `description_category_id=17028618`
+  - Системы охлаждения для компьютеров `description_category_id=17028921`
+    - Шпатель для термопасты `type_id=970671240` `description_category_id=17028921`
+    - Термоклей `type_id=970983153` `description_category_id=17028921`
+    - Термопаста `type_id=99372` `description_category_id=17028921`
+  - Квадрокоптеры, дроны, роботы `description_category_id=48233792`
+    - Система сброса грузов `type_id=972943129` `description_category_id=48233792`
+  - Корпуса для компьютеров `description_category_id=17028613`
+    - Компьютерный корпус `type_id=96090` `description_category_id=17028613`
+  - Гаджеты и аксессуары `description_category_id=17028919`
+    - Объектив для смартфона `type_id=97159` `description_category_id=17028919`
+    - Умное кольцо `type_id=970788293` `description_category_id=17028919`
+    - Браслет для бесконтактной оплаты `type_id=970579909` `description_category_id=17028919`
+    - Цифровая фоторамка `type_id=91496` `description_category_id=17028919`
+    - Умная ручка `type_id=970877188` `description_category_id=17028919`
+    - Умная визитка `type_id=970868727` `description_category_id=17028919`
+    - Аксессуар для стилуса `type_id=91562` `description_category_id=17028919`
+    - Стилус `type_id=91574` `description_category_id=17028919`
+    - Кулер для смартфона `type_id=95136` `description_category_id=17028919`
+    - Увеличитель экрана смартфона `type_id=970856632` `description_category_id=17028919`
+  - Телескопы и микроскопы `description_category_id=17028641`
+    - Аксессуар для микроскопа `type_id=97402` `description_category_id=17028641`
+    - Телескоп `type_id=94823` `description_category_id=17028641`
+    - Микроскоп `type_id=94822` `description_category_id=17028641`
+    - Аксессуар для телескопа `type_id=98609` `description_category_id=17028641`
+  - Майнеры и криптокошельки `description_category_id=200001712`
+    - Устройство для хранения фраз восстановления `type_id=971149236` `description_category_id=200001712`
+  - Телевизоры `description_category_id=17028640`
+    - Телевизор `type_id=94988` `description_category_id=17028640`
+  - Запчасти и инструменты для ремонта смартфонов `description_category_id=53567477`
+    - Запчасть для смартфона `type_id=504866229` `description_category_id=53567477`
+  - Игровые приставки `description_category_id=17028632`
+    - Танцевальный коврик `type_id=970897617` `description_category_id=17028632`
+    - Игровая приставка `type_id=99088` `description_category_id=17028632`
+    - Карта оплаты для магазина приложений `type_id=971739017` `description_category_id=17028632`
+    - Карта оплаты для игровой приставки `type_id=97144` `description_category_id=17028632`
+  - Защитные пленки и стекла `description_category_id=17028628`
+    - Защитное стекло `type_id=91523` `description_category_id=17028628`
+    - Защитная пленка `type_id=91521` `description_category_id=17028628`
+    - Гидрогелевая пленка для плоттера `type_id=971007174` `description_category_id=17028628`
+    - Аксессуар для наклейки защитных стекол `type_id=970941509` `description_category_id=17028628`
+  - Кронштейны, держатели, подставки `description_category_id=17028922`
+    - Попсокет `type_id=268217788` `description_category_id=17028922`
+    - Защитный экран для телевизора `type_id=970856631` `description_category_id=17028922`
+    - Подставка для планшета `type_id=99378` `description_category_id=17028922`
+    - Стойка для DJ-оборудования `type_id=99022` `description_category_id=17028922`
+    - Страховочные ремни для телевизора `type_id=98411` `description_category_id=17028922`
+    - Аксессуары для монтажа сетевого оборудования `type_id=95898` `description_category_id=17028922`
+    - Подставка для наушников `type_id=99380` `description_category_id=17028922`
+    - Держатель для телефона `type_id=98636` `description_category_id=17028922`
+    - Подставка под монитор `type_id=99379` `description_category_id=17028922`
+    - Кронштейн для монитора `type_id=95902` `description_category_id=17028922`
+    - Кронштейн для ТВ `type_id=95905` `description_category_id=17028922`
+    - Интерьерная рамка для телевизора `type_id=970715585` `description_category_id=17028922`
+    - Подвесное крепление для ПК `type_id=970804067` `description_category_id=17028922`
+    - Подставка для смарт-часов `type_id=99382` `description_category_id=17028922`
+    - Подставка для ноутбука `type_id=99383` `description_category_id=17028922`
+- Детские товары `description_category_id=17027488`
+  - Детская комната `description_category_id=200000862`
+    - Балдахин в кроватку `type_id=91932` `description_category_id=200000862`
+    - Москитная сетка на кроватку `type_id=628997053` `description_category_id=200000862`
+    - Настенный декор для детской `type_id=971316095` `description_category_id=200000862`
+    - Держатель для балдахина `type_id=970874554` `description_category_id=200000862`
+    - Ростомер `type_id=91989` `description_category_id=200000862`
+    - Бортик для кроватки `type_id=91935` `description_category_id=200000862`
+  - Подвижные игры `description_category_id=17028980`
+    - Дартс детский `type_id=92989` `description_category_id=17028980`
+    - Воздушный змей `type_id=92988` `description_category_id=17028980`
+    - Нейроскакалка `type_id=970990105` `description_category_id=17028980`
+    - Снежколеп `type_id=97886` `description_category_id=17028980`
+    - Игрушка-попрыгун `type_id=92992` `description_category_id=17028980`
+    - Пусковая игрушка `type_id=97300` `description_category_id=17028980`
+    - Сачок `type_id=971469925` `description_category_id=17028980`
+    - Набор для подвижных игр `type_id=92991` `description_category_id=17028980`
+    - Вертушка `type_id=92987` `description_category_id=17028980`
+  - Конструкторы `description_category_id=62573858`
+    - Конструктор `type_id=92952` `description_category_id=62573858`
+  - Стульчики для кормления `description_category_id=17028678`
+    - Аксессуар к стульчикам для кормления `type_id=95399` `description_category_id=17028678`
+    - Стульчик для кормления `type_id=95400` `description_category_id=17028678`
+  - Мобили и дуги в кроватку `description_category_id=17028978`
+    - Мобиль `type_id=96495` `description_category_id=17028978`
+    - Аксессуары, запчасти для мобиля `type_id=971448435` `description_category_id=17028978`
+    - Развивающая дуга `type_id=96496` `description_category_id=17028978`
+  - Электромобили детские `description_category_id=63444126`
+    - Аксессуары, запчасти для детской авто-, мототехники `type_id=970870421` `description_category_id=63444126`
+    - Электромобиль детский `type_id=92977` `description_category_id=63444126`
+  - Игровые и спортивные комплексы `description_category_id=17028681`
+    - Песочница `type_id=94850` `description_category_id=17028681`
+    - Качели детские `type_id=94849` `description_category_id=17028681`
+    - Площадка детская `type_id=94844` `description_category_id=17028681`
+    - Спортивный комплекс для детей `type_id=94851` `description_category_id=17028681`
+    - Игровой домик `type_id=94847` `description_category_id=17028681`
+    - Горка детская `type_id=94842` `description_category_id=17028681`
+    - Песок для песочницы `type_id=718886853` `description_category_id=17028681`
+    - Тарзанка `type_id=970696413` `description_category_id=17028681`
+    - Защитный чехол для песочницы `type_id=970783982` `description_category_id=17028681`
+    - Аксессуары для игрового, спортивного комплекса `type_id=970946405` `description_category_id=17028681`
+  - Развивающие и игровые коврики `description_category_id=17028675`
+    - Развивающий коврик `type_id=95937` `description_category_id=17028675`
+    - Коврик-пазл `type_id=95935` `description_category_id=17028675`
+    - Игровой коврик `type_id=95934` `description_category_id=17028675`
+    - Оборудование для сенсорной комнаты `type_id=971012568` `description_category_id=17028675`
+  - Детский транспорт `description_category_id=17028975`
+    - Прыгунки `type_id=92969` `description_category_id=17028975`
+    - Каталка `type_id=92959` `description_category_id=17028975`
+    - Автомобиль детский `type_id=971447132` `description_category_id=17028975`
+    - Квадроцикл детский `type_id=970828017` `description_category_id=17028975`
+    - Качалка `type_id=92960` `description_category_id=17028975`
+    - Ходунки детские `type_id=92970` `description_category_id=17028975`
+    - Мотоцикл детский `type_id=970967803` `description_category_id=17028975`
+    - Аксессуары для детского транспорта `type_id=970896163` `description_category_id=17028975`
+    - Снегоход детский `type_id=971742428` `description_category_id=17028975`
+  - Железные дороги `description_category_id=17028972`
+    - Железная дорога `type_id=96126` `description_category_id=17028972`
+    - Дополнительный элемент для железной дороги `type_id=96125` `description_category_id=17028972`
+    - Вагон игрушечный `type_id=96124` `description_category_id=17028972`
+    - Рельсы игрушечные `type_id=96128` `description_category_id=17028972`
+    - Паровоз `type_id=96127` `description_category_id=17028972`
+  - Молокоотсосы `description_category_id=17028979`
+    - Акcеccуары, запчасти для молокоотсоса `type_id=95398` `description_category_id=17028979`
+    - Молокоотсос `type_id=95397` `description_category_id=17028979`
+    - Система кормления `type_id=93021` `description_category_id=17028979`
+  - Игрушки `description_category_id=17028973`
+    - Игрушечный танк `type_id=92872` `description_category_id=17028973`
+    - Игрушка-тренажер для дыхания `type_id=971080578` `description_category_id=17028973`
+    - Игрушка-грелка `type_id=94288` `description_category_id=17028973`
+    - Игрушечная парковка для машинок `type_id=92858` `description_category_id=17028973`
+    - Музыкальная игрушка `type_id=92848` `description_category_id=17028973`
+    - Шнуровка `type_id=92896` `description_category_id=17028973`
+    - Комфортер `type_id=92831` `description_category_id=17028973`
+    - Пупс `type_id=92862` `description_category_id=17028973`
+    - Игрушечное оружие `type_id=98527` `description_category_id=17028973`
+    - Пистоны для игрушечного оружия `type_id=97238` `description_category_id=17028973`
+    - Игрушка-подвеска `type_id=92832` `description_category_id=17028973`
+    - Трансформер `type_id=92875` `description_category_id=17028973`
+    - Транспорт для куклы `type_id=853163911` `description_category_id=17028973`
+    - Игрушка-каталка `type_id=92830` `description_category_id=17028973`
+    - Кукольный театр `type_id=92841` `description_category_id=17028973`
+    - Игрушка для песочницы `type_id=92828` `description_category_id=17028973`
+    - Пирамидка `type_id=92860` `description_category_id=17028973`
+    - Обувь, одежда для куклы, мягкой игрушки `type_id=92857` `description_category_id=17028973`
+    - Игрушечная машинка `type_id=92843` `description_category_id=17028973`
+    - Игрушка электронная `type_id=92883` `description_category_id=17028973`
+    - Кубики `type_id=92839` `description_category_id=17028973`
+    - Водное оружие `type_id=92814` `description_category_id=17028973`
+    - Игрушечный велосипед `type_id=970995259` `description_category_id=17028973`
+    - Развивающий центр `type_id=92864` `description_category_id=17028973`
+    - Кукольный домик `type_id=92818` `description_category_id=17028973`
+    - Калейдоскоп `type_id=92905` `description_category_id=17028973`
+    - Юла `type_id=92884` `description_category_id=17028973`
+    - Музыкальная шкатулка `type_id=92849` `description_category_id=17028973`
+    - Аксессуар для кукол `type_id=92806` `description_category_id=17028973`
+    - Набор солдатиков `type_id=92854` `description_category_id=17028973`
+    - Сортер `type_id=92868` `description_category_id=17028973`
+    - Игрушечный космический корабль `type_id=92837` `description_category_id=17028973`
+    - Надувная игрушка `type_id=96988` `description_category_id=17028973`
+    - Фигурка `type_id=115944384` `description_category_id=17028973`
+    - Фингерспорт `type_id=92880` `description_category_id=17028973`
+    - Игрушечный водный транспорт `type_id=92813` `description_category_id=17028973`
+    - Игрушечный трек `type_id=92825` `description_category_id=17028973`
+    - Набор игрушек `type_id=970895715` `description_category_id=17028973`
+    - Генератор мыльных пузырей детский `type_id=92842` `description_category_id=17028973`
+    - Сюжетно-ролевые игрушки `type_id=92871` `description_category_id=17028973`
+    - Неокуб `type_id=972055032` `description_category_id=17028973`
+    - Кукла-манекен для причесок `type_id=97978` `description_category_id=17028973`
+    - Лабиринт игрушечный `type_id=92891` `description_category_id=17028973`
+    - Аксессуары для игрушечного оружия `type_id=92859` `description_category_id=17028973`
+    - Книжка-игрушка `type_id=92835` `description_category_id=17028973`
+    - Игрушечный робот `type_id=92865` `description_category_id=17028973`
+    - Мяч `type_id=971150563` `description_category_id=17028973`
+    - Аксессуар для фигурок `type_id=92810` `description_category_id=17028973`
+    - Бизиборд `type_id=97696` `description_category_id=17028973`
+    - Заводная игрушка `type_id=92821` `description_category_id=17028973`
+    - Автогородок детский `type_id=970952817` `description_category_id=17028973`
+    - Йо-йо `type_id=92834` `description_category_id=17028973`
+    - Игрушечный мотоцикл `type_id=92847` `description_category_id=17028973`
+    - Неваляшка `type_id=92856` `description_category_id=17028973`
+    - Игрушечный воздушный транспорт `type_id=92812` `description_category_id=17028973`
+    - Интерактивная игрушка `type_id=92833` `description_category_id=17028973`
+    - Кукла `type_id=92840` `description_category_id=17028973`
+    - Игрушка-стучалка `type_id=970965252` `description_category_id=17028973`
+    - Погремушка `type_id=92861` `description_category_id=17028973`
+    - Аксессуар для машинок `type_id=92807` `description_category_id=17028973`
+    - Мягкая игрушка `type_id=92851` `description_category_id=17028973`
+    - Мыльные пузыри `type_id=92850` `description_category_id=17028973`
+    - Игрушка-антистресс `type_id=92811` `description_category_id=17028973`
+    - Мебель для куклы `type_id=92845` `description_category_id=17028973`
+    - Балансир `type_id=971049244` `description_category_id=17028973`
+    - Игрушка для ванной `type_id=92827` `description_category_id=17028973`
+  - Подгузники и гигиена `description_category_id=56253658`
+    - Клеенка `type_id=93474` `description_category_id=56253658`
+    - Гигиенический набор для новорожденного `type_id=971360402` `description_category_id=56253658`
+    - Многоразовая непромокаемая пеленка `type_id=971073602` `description_category_id=56253658`
+    - Подгузники-трусики `type_id=93497` `description_category_id=56253658`
+    - Подгузники `type_id=93495` `description_category_id=56253658`
+    - Пеленка одноразовая `type_id=93492` `description_category_id=56253658`
+    - Аксессуар для подгузников `type_id=93485` `description_category_id=56253658`
+    - Многоразовый подгузник `type_id=93480` `description_category_id=56253658`
+  - Безопасность ребенка `description_category_id=92496473`
+    - Кокон для новорожденных `type_id=97952` `description_category_id=92496473`
+    - Защитный уголок для мебели `type_id=91951` `description_category_id=92496473`
+    - Заглушка для розетки от детей `type_id=91960` `description_category_id=92496473`
+    - Слипик `type_id=504866284` `description_category_id=92496473`
+    - Наколенники для ползания `type_id=93012` `description_category_id=92496473`
+    - Пеленальная доска `type_id=253134034` `description_category_id=92496473`
+    - Защитный набор `type_id=91950` `description_category_id=92496473`
+    - Защита головы малыша `type_id=812884311` `description_category_id=92496473`
+    - Вожжи для детей `type_id=92958` `description_category_id=92496473`
+    - Защита от падения ребенка `type_id=970985014` `description_category_id=92496473`
+    - Пеленальный матрасик `type_id=92605` `description_category_id=92496473`
+    - Защита плиты от детей `type_id=970993457` `description_category_id=92496473`
+    - Позиционер `type_id=92627` `description_category_id=92496473`
+    - Пояс для фиксации ребенка `type_id=99524` `description_category_id=92496473`
+    - Блокиратор дверей, ящиков, окон `type_id=91934` `description_category_id=92496473`
+    - Светоотражатель `type_id=92198` `description_category_id=92496473`
+    - Лента безопасности `type_id=91963` `description_category_id=92496473`
+  - Электрокачели и шезлонги детские `description_category_id=17028685`
+    - Аксессуар для детского шезлонга `type_id=95914` `description_category_id=17028685`
+    - Качели для новорожденных `type_id=95913` `description_category_id=17028685`
+    - Шезлонг для новорожденных `type_id=95915` `description_category_id=17028685`
+  - Переноски для детей `description_category_id=17028676`
+    - Переноска для детей `type_id=95462` `description_category_id=17028676`
+    - Люлька-переноска `type_id=95461` `description_category_id=17028676`
+    - Аксессуар для переносок `type_id=95458` `description_category_id=17028676`
+    - Накидка для кормления грудью `type_id=99007` `description_category_id=17028676`
+    - Гамак детский в самолет `type_id=971051590` `description_category_id=17028676`
+    - Набор в роддом `type_id=970662051` `description_category_id=17028676`
+  - Купание ребенка `description_category_id=17028976`
+    - Горка для купания `type_id=95698` `description_category_id=17028976`
+    - Ванна для детей `type_id=95697` `description_category_id=17028976`
+    - Козырек для мытья головы `type_id=95701` `description_category_id=17028976`
+    - Набор для купания малыша `type_id=970967766` `description_category_id=17028976`
+    - Подушка для купания новорожденных `type_id=95708` `description_category_id=17028976`
+    - Шезлонг для купания `type_id=95713` `description_category_id=17028976`
+    - Хранение игрушек в ванной `type_id=95710` `description_category_id=17028976`
+    - Подставка для ванны `type_id=95707` `description_category_id=17028976`
+    - Стульчик для купания `type_id=95711` `description_category_id=17028976`
+    - Насадка на кран для воды детская `type_id=95705` `description_category_id=17028976`
+    - Матрасик для купания `type_id=95704` `description_category_id=17028976`
+    - Круг для купания `type_id=95703` `description_category_id=17028976`
+    - Мини-коврик для ванной `type_id=95699` `description_category_id=17028976`
+  - Бутылочки и соски `description_category_id=17028971`
+    - Контейнер для детского питания `type_id=93006` `description_category_id=17028971`
+    - Футляр для пустышки `type_id=93025` `description_category_id=17028971`
+    - Соска `type_id=93022` `description_category_id=17028971`
+    - Слюнявчик `type_id=93010` `description_category_id=17028971`
+    - Сетка для ниблера `type_id=93020` `description_category_id=17028971`
+    - Бутылочка для кормления `type_id=93002` `description_category_id=17028971`
+    - Пустышка `type_id=93018` `description_category_id=17028971`
+    - Ниблер `type_id=93013` `description_category_id=17028971`
+    - Прорезыватель `type_id=93017` `description_category_id=17028971`
+    - Поильник `type_id=93016` `description_category_id=17028971`
+    - Пакет для сбора молока `type_id=93014` `description_category_id=17028971`
+    - Аксессуар для бутылочки, поильника `type_id=93005` `description_category_id=17028971`
+    - Прищепка для пустышки `type_id=93003` `description_category_id=17028971`
+  - Манеж `description_category_id=17028977`
+    - Ворота безопасности `type_id=96448` `description_category_id=17028977`
+    - Барьер для детской кроватки `type_id=96447` `description_category_id=17028977`
+    - Аксессуары, запчасти для ворот безопасности `type_id=970577498` `description_category_id=17028977`
+    - Манеж `type_id=96450` `description_category_id=17028977`
+    - Аксессуары, запчасти для манежа `type_id=96449` `description_category_id=17028977`
+  - Стерилизаторы и подогреватели для бутылочек `description_category_id=17028677`
+    - Стерилизатор `type_id=93000` `description_category_id=17028677`
+    - Подогреватель `type_id=92998` `description_category_id=17028677`
+    - Пакеты для стерилизации в микроволновой печи `type_id=92997` `description_category_id=17028677`
+  - Велосипеды, беговелы и самокаты `description_category_id=78284142`
+    - Аксессуар для детского транспорта `type_id=971046367` `description_category_id=78284142`
+    - Велосипед-коляска `type_id=971014516` `description_category_id=78284142`
+    - Беговел `type_id=94327` `description_category_id=78284142`
+    - Детский велосипед `type_id=971739850` `description_category_id=78284142`
+  - Детские автокресла `description_category_id=17028970`
+    - Аксессуар для автокресла `type_id=92980` `description_category_id=17028970`
+    - Автокресло `type_id=92979` `description_category_id=17028970`
+    - Бустер `type_id=92983` `description_category_id=17028970`
+  - Товары для кормления `description_category_id=92413439`
+    - Присоска для детской посуды `type_id=971147797` `description_category_id=92413439`
+    - Детские приборы для кормления `type_id=92560` `description_category_id=92413439`
+    - Набор посуды для кормления `type_id=92512` `description_category_id=92413439`
+  - Детские музыкальные инструменты `description_category_id=17028686`
+    - Детский музыкальный инструмент `type_id=96036` `description_category_id=17028686`
+  - Радиоуправляемые игрушки `description_category_id=17028981`
+    - Аксессуары, запчасти для радиоуправляемой модели `type_id=970988171` `description_category_id=17028981`
+    - Игрушка радиоуправляемая `type_id=95528` `description_category_id=17028981`
+  - Коляски и аксессуары к ним `description_category_id=200000323`
+    - Коляска-люлька `type_id=92964` `description_category_id=200000323`
+    - Коляска универсальная `type_id=92963` `description_category_id=200000323`
+    - Коляска прогулочная `type_id=92962` `description_category_id=200000323`
+    - Аксессуар для коляски `type_id=971036929` `description_category_id=200000323`
+    - Санки-коляска `type_id=93602` `description_category_id=200000323`
+    - Коляска-трансформер `type_id=92965` `description_category_id=200000323`
+  - Радио- и видеоняни `description_category_id=17028683`
+    - Радионяня `type_id=95467` `description_category_id=17028683`
+    - Видеоняня `type_id=95465` `description_category_id=17028683`
+    - Монитор дыхания `type_id=971748875` `description_category_id=17028683`
+    - Генератор белого шума `type_id=971409187` `description_category_id=17028683`
+    - Аксессуары для радио-, видеоняни `type_id=971045482` `description_category_id=17028683`
+  - Обучающие игры `description_category_id=17028974`
+    - Диапроектор `type_id=92886` `description_category_id=17028974`
+    - Интерактивный плакат `type_id=971749720` `description_category_id=17028974`
+    - Обучающая игра `type_id=92894` `description_category_id=17028974`
+    - Диафильм `type_id=92887` `description_category_id=17028974`
+  - Горшки и сиденья детские `description_category_id=17028684`
+    - Горшок для ребенка `type_id=94472` `description_category_id=17028684`
+    - Аксессуары для детского горшка `type_id=94467` `description_category_id=17028684`
+  - Детские весы `description_category_id=92417504`
+    - Весы для новорожденных `type_id=91417` `description_category_id=92417504`
+- Обувь `description_category_id=15621032`
+  - Спортивная и рабочая обувь `description_category_id=15621049`
+    - Ботинки для картинга `type_id=971100766` `description_category_id=15621049`
+    - Обувь для верховой езды `type_id=970896141` `description_category_id=15621049`
+    - Пуанты `type_id=970670091` `description_category_id=15621049`
+    - Коньки `type_id=115951153` `description_category_id=15621049`
+    - Мотообувь `type_id=970687308` `description_category_id=15621049`
+    - Обувь для керлинга `type_id=971983839` `description_category_id=15621049`
+    - Чешки `type_id=91276` `description_category_id=15621049`
+    - Сапоги резиновые `type_id=91260` `description_category_id=15621049`
+    - Обувь эротическая `type_id=971869072` `description_category_id=15621049`
+    - Аквашуз `type_id=91234` `description_category_id=15621049`
+    - Сапожки для разогрева `type_id=970575627` `description_category_id=15621049`
+    - Обувь для ушу, кунг-фу `type_id=971124926` `description_category_id=15621049`
+    - Рабочая обувь `type_id=115951170` `description_category_id=15621049`
+    - Ботинки лыжные `type_id=115951164` `description_category_id=15621049`
+    - Скальники `type_id=98382` `description_category_id=15621049`
+    - Велотуфли `type_id=98224` `description_category_id=15621049`
+    - Штангетки `type_id=115951147` `description_category_id=15621049`
+    - Обувь для танцев `type_id=970696416` `description_category_id=15621049`
+    - Шиповки легкоатлетические `type_id=970697953` `description_category_id=15621049`
+    - Полупальцы `type_id=970686287` `description_category_id=15621049`
+    - Ролики `type_id=115951155` `description_category_id=15621049`
+    - Обувь для боулинга `type_id=970800622` `description_category_id=15621049`
+    - Ласты `type_id=99051` `description_category_id=15621049`
+    - Ботинки горнолыжные `type_id=115951167` `description_category_id=15621049`
+    - Боксерки `type_id=96702` `description_category_id=15621049`
+    - Ботинки для лыжероллеров `type_id=970707312` `description_category_id=15621049`
+    - Ботинки для сноуборда `type_id=115951165` `description_category_id=15621049`
+    - Бутсы `type_id=115951162` `description_category_id=15621049`
+    - Обувь карнавальная `type_id=96731` `description_category_id=15621049`
+    - Борцовки `type_id=96703` `description_category_id=15621049`
+    - Запчасть для мотообуви `type_id=970785887` `description_category_id=15621049`
+  - Повседневная обувь `description_category_id=15621048`
+    - Ботильоны `type_id=91238` `description_category_id=15621048`
+    - Сабо `type_id=91262` `description_category_id=15621048`
+    - Кеды `type_id=91247` `description_category_id=15621048`
+    - Валенки `type_id=91242` `description_category_id=15621048`
+    - Балетки `type_id=91235` `description_category_id=15621048`
+    - Тапочки `type_id=96766` `description_category_id=15621048`
+    - Слипоны `type_id=91270` `description_category_id=15621048`
+    - Босоножки `type_id=91236` `description_category_id=15621048`
+    - Тапочки одноразовые `type_id=970807580` `description_category_id=15621048`
+    - Туфли `type_id=91273` `description_category_id=15621048`
+    - Сапоги `type_id=91266` `description_category_id=15621048`
+    - Сапоги резиновые `type_id=91260` `description_category_id=15621048`
+    - Угги `type_id=91274` `description_category_id=15621048`
+    - Сандалии `type_id=91264` `description_category_id=15621048`
+    - Шлепанцы `type_id=91277` `description_category_id=15621048`
+    - Ботинки `type_id=91239` `description_category_id=15621048`
+    - Галоши `type_id=91244` `description_category_id=15621048`
+    - Эспадрильи `type_id=91278` `description_category_id=15621048`
+    - Кроссовки `type_id=91248` `description_category_id=15621048`
+    - Лоферы `type_id=91249` `description_category_id=15621048`
+    - Дутики `type_id=91246` `description_category_id=15621048`
+    - Мокасины `type_id=91251` `description_category_id=15621048`
+- Музыкальные инструменты `description_category_id=92130764`
+  - Электронные музыкальные инструменты `description_category_id=17028949`
+    - MIDI-клавиатура `type_id=95853` `description_category_id=17028949`
+    - MIDI-контроллер `type_id=95854` `description_category_id=17028949`
+    - Секвенсор `type_id=971107922` `description_category_id=17028949`
+    - Кроссфейдер для микшера `type_id=970964751` `description_category_id=17028949`
+    - Микшер `type_id=91908` `description_category_id=17028949`
+    - Виртуальный басовый модуль `type_id=99298` `description_category_id=17028949`
+    - Таймкод для диджеинга `type_id=971106095` `description_category_id=17028949`
+    - Грувбокс `type_id=971107919` `description_category_id=17028949`
+    - Диджейский пульт `type_id=91906` `description_category_id=17028949`
+    - Сэмплер `type_id=971107921` `description_category_id=17028949`
+    - Драм-машина `type_id=971107918` `description_category_id=17028949`
+  - Аксессуары к музыкальным инструментам `description_category_id=17028927`
+    - Подставка для музыкальных инструментов `type_id=971156243` `description_category_id=17028927`
+    - Аксессуар для защиты музыкальных инструментов `type_id=971116952` `description_category_id=17028927`
+    - Аксессуар для дирижера `type_id=971065372` `description_category_id=17028927`
+    - Аксессуар для духовых инструментов `type_id=96829` `description_category_id=17028927`
+    - Педаль для гитарного усилителя `type_id=970693383` `description_category_id=17028927`
+    - Камертон `type_id=97619` `description_category_id=17028927`
+    - Процессор эффектов `type_id=97660` `description_category_id=17028927`
+    - Контроллер для гитарного усилителя `type_id=970693384` `description_category_id=17028927`
+    - Аксессуар для струнных инструментов `type_id=97592` `description_category_id=17028927`
+    - Тюнер музыкальный `type_id=95826` `description_category_id=17028927`
+    - Чехол для музыкального инструмента `type_id=592744674` `description_category_id=17028927`
+    - Аксессуар для ударных инструментов `type_id=97399` `description_category_id=17028927`
+    - Метроном `type_id=97398` `description_category_id=17028927`
+    - Аксессуары для педали эффектов `type_id=971060136` `description_category_id=17028927`
+    - Гитарный комбоусилитель `type_id=95661` `description_category_id=17028927`
+    - Подставка для ног музыканта `type_id=971012075` `description_category_id=17028927`
+    - Педаль эффектов `type_id=95823` `description_category_id=17028927`
+    - Сумка для музыкального оборудования `type_id=445125483` `description_category_id=17028927`
+    - Средство для ухода за музыкальными инструментами `type_id=97620` `description_category_id=17028927`
+    - Аксессуар для клавишных инструментов `type_id=971422234` `description_category_id=17028927`
+  - Клавишные инструменты `description_category_id=17028920`
+    - Цифровое фортепиано `type_id=95856` `description_category_id=17028920`
+    - Аккордеон `type_id=97394` `description_category_id=17028920`
+    - Акустическое пианино `type_id=971323698` `description_category_id=17028920`
+    - Модульная система `type_id=971123121` `description_category_id=17028920`
+    - Акустический рояль `type_id=971067225` `description_category_id=17028920`
+    - Гармонь `type_id=970896658` `description_category_id=17028920`
+    - Баян `type_id=970896657` `description_category_id=17028920`
+    - Синтезатор `type_id=95857` `description_category_id=17028920`
+  - Струнные инструменты `description_category_id=17028622`
+    - Укулеле `type_id=95861` `description_category_id=17028622`
+    - Электроскрипка `type_id=972936746` `description_category_id=17028622`
+    - Виолончель `type_id=972936741` `description_category_id=17028622`
+    - Электровиолончель `type_id=972936743` `description_category_id=17028622`
+    - Бас-гитара `type_id=95860` `description_category_id=17028622`
+    - Альт `type_id=972936740` `description_category_id=17028622`
+    - Народный струнный инструмент `type_id=96848` `description_category_id=17028622`
+    - Акустическая гитара `type_id=95859` `description_category_id=17028622`
+    - Электрогитара `type_id=95863` `description_category_id=17028622`
+    - Скрипка `type_id=972936738` `description_category_id=17028622`
+    - Контрабас `type_id=972936742` `description_category_id=17028622`
+  - Ударные инструменты и перкуссия `description_category_id=18262714`
+    - Гонг `type_id=96834` `description_category_id=18262714`
+    - Музыкальный колокольчик `type_id=96833` `description_category_id=18262714`
+    - Ксилофон `type_id=96832` `description_category_id=18262714`
+    - Народный ударный инструмент `type_id=96831` `description_category_id=18262714`
+    - Перкуссионный инструмент `type_id=96830` `description_category_id=18262714`
+    - Ударная тарелка `type_id=96837` `description_category_id=18262714`
+    - Ударная установка `type_id=96836` `description_category_id=18262714`
+    - Барабан `type_id=96835` `description_category_id=18262714`
+  - Духовые инструменты `description_category_id=18262713`
+    - Корнет `type_id=96820` `description_category_id=18262713`
+    - Гобой `type_id=96824` `description_category_id=18262713`
+    - Альт духовой `type_id=96828` `description_category_id=18262713`
+    - Фагот `type_id=96811` `description_category_id=18262713`
+    - Валторна `type_id=96825` `description_category_id=18262713`
+    - Тенор `type_id=96815` `description_category_id=18262713`
+    - Кларнет `type_id=96821` `description_category_id=18262713`
+    - Народный духовой инструмент `type_id=96818` `description_category_id=18262713`
+    - Блокфлейта `type_id=96826` `description_category_id=18262713`
+    - Мелодика `type_id=96819` `description_category_id=18262713`
+    - Тромбон `type_id=96814` `description_category_id=18262713`
+    - Геликон `type_id=96809` `description_category_id=18262713`
+    - Флейта `type_id=96810` `description_category_id=18262713`
+    - Труба `type_id=96813` `description_category_id=18262713`
+    - Саксофон `type_id=96816` `description_category_id=18262713`
+    - Горн `type_id=96823` `description_category_id=18262713`
+    - Туба `type_id=96812` `description_category_id=18262713`
+    - Губная гармошка `type_id=96822` `description_category_id=18262713`
+    - Баритон `type_id=96827` `description_category_id=18262713`
+- Одежда `description_category_id=15621031`
+  - Одежда для малышей `description_category_id=200001519`
+    - Блузка для малышей `type_id=972076190` `description_category_id=200001519`
+    - Лонгслив для малышей `type_id=972076207` `description_category_id=200001519`
+    - Халат для малышей `type_id=972076180` `description_category_id=200001519`
+    - Рубашка для малышей `type_id=972076192` `description_category_id=200001519`
+    - Пинетки `type_id=115944685` `description_category_id=200001519`
+    - Легинсы для малышей `type_id=972076196` `description_category_id=200001519`
+    - Крестильная одежда для малышей `type_id=972076199` `description_category_id=200001519`
+    - Куртка для малышей `type_id=972076162` `description_category_id=200001519`
+    - Пиджак для малышей `type_id=972076201` `description_category_id=200001519`
+    - Жилет для малышей `type_id=972076182` `description_category_id=200001519`
+    - Юбка для малышей `type_id=972076210` `description_category_id=200001519`
+    - Джинсы для малышей `type_id=972076152` `description_category_id=200001519`
+    - Майка для малышей `type_id=972076197` `description_category_id=200001519`
+    - Распашонка `type_id=93207` `description_category_id=200001519`
+    - Комбинезон для малышей `type_id=972076185` `description_category_id=200001519`
+    - Комплект нательный для малышей `type_id=972076188` `description_category_id=200001519`
+    - Песочник `type_id=970672107` `description_category_id=200001519`
+    - Футболка для малышей `type_id=972076209` `description_category_id=200001519`
+    - Кофточка для новорожденного `type_id=970744798` `description_category_id=200001519`
+    - Костюм для малышей `type_id=972076189` `description_category_id=200001519`
+    - Ползунки `type_id=93193` `description_category_id=200001519`
+    - Свитшот для малышей `type_id=972076204` `description_category_id=200001519`
+    - Кигуруми для малышей `type_id=972076184` `description_category_id=200001519`
+    - Пижама для малышей `type_id=972076179` `description_category_id=200001519`
+    - Полукомбинезон для малышей `type_id=972076186` `description_category_id=200001519`
+    - Брюки для малышей `type_id=972076150` `description_category_id=200001519`
+    - Толстовка для малышей `type_id=972076205` `description_category_id=200001519`
+    - Карнавальный костюм для малышей `type_id=972076183` `description_category_id=200001519`
+    - Шорты для малышей `type_id=972076154` `description_category_id=200001519`
+    - Платье для малышей `type_id=972076202` `description_category_id=200001519`
+  - Белье для малышей `description_category_id=200001518`
+    - Майка бельевая для малышей `type_id=972076144` `description_category_id=200001518`
+    - Комплект белья для малышей `type_id=972076140` `description_category_id=200001518`
+    - Термошорты для малышей `type_id=972076133` `description_category_id=200001518`
+    - Термокофта для малышей `type_id=972076126` `description_category_id=200001518`
+    - Термокомплект для малышей `type_id=972076128` `description_category_id=200001518`
+    - Носки для малышей `type_id=972076141` `description_category_id=200001518`
+    - Термомайка для малышей `type_id=972076130` `description_category_id=200001518`
+    - Боди для малышей `type_id=972076145` `description_category_id=200001518`
+    - Колготки для малышей `type_id=972076134` `description_category_id=200001518`
+    - Термокомбинезон для малышей `type_id=972076127` `description_category_id=200001518`
+    - Купальник для малышей `type_id=972076125` `description_category_id=200001518`
+    - Удлинитель для боди `type_id=972076146` `description_category_id=200001518`
+    - Трусы для малышей `type_id=972076137` `description_category_id=200001518`
+  - Белье `description_category_id=200001517`
+    - Гетры `type_id=93075` `description_category_id=200001517`
+    - Подвязка `type_id=93189` `description_category_id=200001517`
+    - Кальсоны `type_id=93091` `description_category_id=200001517`
+    - Бюстгальтер `type_id=93065` `description_category_id=200001517`
+    - Корсет `type_id=970948371` `description_category_id=200001517`
+    - Баска `type_id=971151880` `description_category_id=200001517`
+    - Белье корректирующее `type_id=93120` `description_category_id=200001517`
+    - Бандалетки `type_id=970630836` `description_category_id=200001517`
+    - Комплект трусов `type_id=970617577` `description_category_id=200001517`
+    - Термомайка `type_id=98443` `description_category_id=200001517`
+    - Плавки купальные `type_id=93179` `description_category_id=200001517`
+    - Пеньюар `type_id=93170` `description_category_id=200001517`
+    - Чулки `type_id=93256` `description_category_id=200001517`
+    - Майка бельевая `type_id=97501` `description_category_id=200001517`
+    - Комплект нижнего белья `type_id=93107` `description_category_id=200001517`
+    - Колготки `type_id=93100` `description_category_id=200001517`
+    - Комплект термобелья `type_id=93225` `description_category_id=200001517`
+    - Термолонгслив `type_id=970675143` `description_category_id=200001517`
+    - Боди `type_id=93049` `description_category_id=200001517`
+    - Носки `type_id=93157` `description_category_id=200001517`
+    - Трусы `type_id=93238` `description_category_id=200001517`
+    - Портянки `type_id=970662328` `description_category_id=200001517`
+    - Бандаж для беременных `type_id=99523` `description_category_id=200001517`
+    - Подследники `type_id=93190` `description_category_id=200001517`
+    - Аксессуар для бюстгальтера `type_id=970669865` `description_category_id=200001517`
+    - Гольфы `type_id=93077` `description_category_id=200001517`
+    - Термошорты `type_id=93229` `description_category_id=200001517`
+    - Купальник `type_id=93134` `description_category_id=200001517`
+    - Термобрюки `type_id=93224` `description_category_id=200001517`
+    - Термокомбинезон `type_id=97197` `description_category_id=200001517`
+    - Комбинация `type_id=93102` `description_category_id=200001517`
+    - Лиф купальный `type_id=59227236` `description_category_id=200001517`
+    - Пояс для чулок `type_id=93203` `description_category_id=200001517`
+  - Одежда и аксессуары эротические `description_category_id=200001479`
+    - Портупея эротическая `type_id=970877574` `description_category_id=200001479`
+    - БДСМ одежда `type_id=96507` `description_category_id=200001479`
+    - Эротическое белье `type_id=93281` `description_category_id=200001479`
+    - Пэстисы `type_id=93206` `description_category_id=200001479`
+    - Платье гоу-гоу `type_id=93183` `description_category_id=200001479`
+    - Костюм для ролевых игр `type_id=93125` `description_category_id=200001479`
+  - Одежда `description_category_id=200000933`
+    - Комбинезон утепленный `type_id=93105` `description_category_id=200000933`
+    - Комбинезон `type_id=93103` `description_category_id=200000933`
+    - Свитшот `type_id=93216` `description_category_id=200000933`
+    - Пальто `type_id=93166` `description_category_id=200000933`
+    - Одежда для крещения `type_id=93133` `description_category_id=200000933`
+    - Халат `type_id=93251` `description_category_id=200000933`
+    - Брюки `type_id=93055` `description_category_id=200000933`
+    - Фартук школьный `type_id=608042980` `description_category_id=200000933`
+    - Компрессионные носки `type_id=94185` `description_category_id=200000933`
+    - Дождевик `type_id=93082` `description_category_id=200000933`
+    - Болеро `type_id=93051` `description_category_id=200000933`
+    - Ростовая кукла `type_id=970943350` `description_category_id=200000933`
+    - Форма баскетбольная `type_id=971011003` `description_category_id=200000933`
+    - Майка `type_id=93150` `description_category_id=200000933`
+    - Футболка `type_id=93244` `description_category_id=200000933`
+    - Пиджак `type_id=93175` `description_category_id=200000933`
+    - Пеленка-кокон `type_id=970785888` `description_category_id=200000933`
+    - Килт `type_id=971061641` `description_category_id=200000933`
+    - Комплект одежды `type_id=93112` `description_category_id=200000933`
+    - Топ `type_id=93236` `description_category_id=200000933`
+    - Пижама `type_id=93176` `description_category_id=200000933`
+    - Велосипедки `type_id=785353054` `description_category_id=200000933`
+    - Дубленка натуральная `type_id=93084` `description_category_id=200000933`
+    - Шуба искусственная `type_id=971979782` `description_category_id=200000933`
+    - Платье `type_id=93182` `description_category_id=200000933`
+    - Водолазка `type_id=93072` `description_category_id=200000933`
+    - Парео `type_id=93168` `description_category_id=200000933`
+    - Форма волейбольная `type_id=970696767` `description_category_id=200000933`
+    - Сарафан `type_id=93211` `description_category_id=200000933`
+    - Комплект на выписку `type_id=93109` `description_category_id=200000933`
+    - Пуховик `type_id=93205` `description_category_id=200000933`
+    - Блузка `type_id=93048` `description_category_id=200000933`
+    - Воротник съемный `type_id=970996947` `description_category_id=200000933`
+    - Рубашка `type_id=93209` `description_category_id=200000933`
+    - Колготки компрессионные `type_id=115951186` `description_category_id=200000933`
+    - Гольфы компрессионные `type_id=93115` `description_category_id=200000933`
+    - Костюм классический `type_id=970707326` `description_category_id=200000933`
+    - Ночная сорочка `type_id=970960142` `description_category_id=200000933`
+    - Чулки компрессионные `type_id=30802055` `description_category_id=200000933`
+    - Бомбер `type_id=97183` `description_category_id=200000933`
+    - Пончо `type_id=97151` `description_category_id=200000933`
+    - Комплект верхней одежды `type_id=93108` `description_category_id=200000933`
+    - Свитер `type_id=93214` `description_category_id=200000933`
+    - Пеленка для малышей `type_id=93493` `description_category_id=200000933`
+    - Манжет одежный `type_id=971405351` `description_category_id=200000933`
+    - Парка `type_id=97010` `description_category_id=200000933`
+    - Карнавальная одежда `type_id=96729` `description_category_id=200000933`
+    - Куртка `type_id=93137` `description_category_id=200000933`
+    - Легинсы `type_id=93144` `description_category_id=200000933`
+    - Полукомбинезон утепленный `type_id=93199` `description_category_id=200000933`
+    - Шуба натуральная `type_id=93279` `description_category_id=200000933`
+    - Подъюбник `type_id=971107305` `description_category_id=200000933`
+    - Юбка `type_id=93283` `description_category_id=200000933`
+    - Лонгслив `type_id=93148` `description_category_id=200000933`
+    - Туника `type_id=93241` `description_category_id=200000933`
+    - Ветровка `type_id=93067` `description_category_id=200000933`
+    - Гетры компрессионные `type_id=93114` `description_category_id=200000933`
+    - Анорак `type_id=970585480` `description_category_id=200000933`
+    - Шорты `type_id=93272` `description_category_id=200000933`
+    - Олимпийка `type_id=97009` `description_category_id=200000933`
+    - Худи `type_id=93253` `description_category_id=200000933`
+    - Толстовка `type_id=93232` `description_category_id=200000933`
+    - Поло `type_id=93194` `description_category_id=200000933`
+    - Фата `type_id=970658743` `description_category_id=200000933`
+    - Полукомбинезон `type_id=970590515` `description_category_id=200000933`
+    - Кигуруми `type_id=504866259` `description_category_id=200000933`
+    - Дубленка искусственная `type_id=971979781` `description_category_id=200000933`
+    - Плащ `type_id=93186` `description_category_id=200000933`
+    - Форма футбольная `type_id=971079131` `description_category_id=200000933`
+    - Конверт для новорожденного `type_id=93118` `description_category_id=200000933`
+    - Кардиган `type_id=93092` `description_category_id=200000933`
+    - Рашгард `type_id=115949936` `description_category_id=200000933`
+    - Жилет `type_id=93086` `description_category_id=200000933`
+    - Бриджи `type_id=93053` `description_category_id=200000933`
+    - Джемпер `type_id=93079` `description_category_id=200000933`
+    - Джинсы `type_id=93080` `description_category_id=200000933`
+    - Костюм спортивный `type_id=93221` `description_category_id=200000933`
+    - Накидка пляжная `type_id=970988994` `description_category_id=200000933`
+  - Аксессуары `description_category_id=41777465`
+    - Наушники меховые `type_id=93155` `description_category_id=41777465`
+    - Кепка `type_id=93093` `description_category_id=41777465`
+    - Шапка `type_id=93258` `description_category_id=41777465`
+    - Чепчик для новорожденных `type_id=93254` `description_category_id=41777465`
+    - Бейсболка `type_id=93040` `description_category_id=41777465`
+    - Платок `type_id=93181` `description_category_id=41777465`
+    - Муфта для рук `type_id=971102345` `description_category_id=41777465`
+    - Шарф `type_id=93263` `description_category_id=41777465`
+    - Маска-повязка на лицо `type_id=970676618` `description_category_id=41777465`
+    - Берет `type_id=93045` `description_category_id=41777465`
+    - Панама `type_id=93167` `description_category_id=41777465`
+    - Козырек `type_id=93099` `description_category_id=41777465`
+    - Балаклава `type_id=97199` `description_category_id=41777465`
+    - Бабочка `type_id=93037` `description_category_id=41777465`
+    - Головной убор форменный `type_id=970877531` `description_category_id=41777465`
+    - Перчатки `type_id=93171` `description_category_id=41777465`
+    - Варежки `type_id=93066` `description_category_id=41777465`
+    - Пояс `type_id=93201` `description_category_id=41777465`
+    - Напульсник `type_id=93154` `description_category_id=41777465`
+    - Портупея `type_id=762509127` `description_category_id=41777465`
+    - Шляпа `type_id=93270` `description_category_id=41777465`
+    - Хиджаб `type_id=127068840` `description_category_id=41777465`
+    - Горжетка `type_id=93078` `description_category_id=41777465`
+    - Косынка `type_id=93131` `description_category_id=41777465`
+    - Палантин `type_id=93165` `description_category_id=41777465`
+    - Рукавички-антицарапки `type_id=93210` `description_category_id=41777465`
+    - Манишка `type_id=93152` `description_category_id=41777465`
+    - Докер `type_id=971302346` `description_category_id=41777465`
+    - Повязка на голову `type_id=93188` `description_category_id=41777465`
+    - Шаль `type_id=93257` `description_category_id=41777465`
+    - Ремень `type_id=93208` `description_category_id=41777465`
+    - Подтяжки `type_id=93191` `description_category_id=41777465`
+    - Митенки `type_id=93153` `description_category_id=41777465`
+    - Галстук `type_id=93073` `description_category_id=41777465`
+    - Капор `type_id=970886196` `description_category_id=41777465`
+  - Спецодежда `description_category_id=200001521`
+    - Фартук рабочий `type_id=970685040` `description_category_id=200001521`
+    - Брюки тактические `type_id=970806010` `description_category_id=200001521`
+    - Брюки рабочие `type_id=93059` `description_category_id=200001521`
+    - Халат рабочий `type_id=97337` `description_category_id=200001521`
+    - Китель `type_id=504970136` `description_category_id=200001521`
+    - Аксессуары для спецодежды, униформы `type_id=970685743` `description_category_id=200001521`
+    - Рубашка тактическая `type_id=970806009` `description_category_id=200001521`
+    - Куртка рабочая `type_id=93139` `description_category_id=200001521`
+    - Форма военная `type_id=970859605` `description_category_id=200001521`
+    - Головной убор рабочий `type_id=971447083` `description_category_id=200001521`
+    - Полукомбинезон рабочий `type_id=93198` `description_category_id=200001521`
+    - Костюм антиклещевой `type_id=970948321` `description_category_id=200001521`
+    - Форма силовых структур `type_id=93243` `description_category_id=200001521`
+    - Одежда антимоскитная `type_id=970851878` `description_category_id=200001521`
+    - Блузка рабочая `type_id=970685019` `description_category_id=200001521`
+    - Костюм тактический `type_id=93124` `description_category_id=200001521`
+    - Комбинезон рабочий `type_id=970685035` `description_category_id=200001521`
+    - Одежда для священнослужителя `type_id=971369518` `description_category_id=200001521`
+    - Костюм рабочий `type_id=93129` `description_category_id=200001521`
+  - Спортивная одежда `description_category_id=200001520`
+    - Пояс для единоборств `type_id=93202` `description_category_id=200001520`
+    - Одежда для фехтования `type_id=970667771` `description_category_id=200001520`
+    - Одежда для гандбола `type_id=972076120` `description_category_id=200001520`
+    - Куртка горнолыжная `type_id=972079085` `description_category_id=200001520`
+    - Форма хоккейная `type_id=110995367` `description_category_id=200001520`
+    - Манишка спортивная `type_id=98449` `description_category_id=200001520`
+    - Одежда для триатлона `type_id=970695812` `description_category_id=200001520`
+    - Белье для танцев, гимнастики `type_id=970670120` `description_category_id=200001520`
+    - Одежда для роликобежного спорта `type_id=970989375` `description_category_id=200001520`
+    - Куртка сноубордическая `type_id=972079086` `description_category_id=200001520`
+    - Одежда для единоборств `type_id=99536` `description_category_id=200001520`
+    - Одежда для фигурного катания `type_id=970702269` `description_category_id=200001520`
+    - Кимоно `type_id=971102910` `description_category_id=200001520`
+    - Пояс для похудения `type_id=94219` `description_category_id=200001520`
+    - Одежда для гребли `type_id=970984829` `description_category_id=200001520`
+    - Вейдерсы `type_id=96718` `description_category_id=200001520`
+    - Одежда для конькобежного спорта `type_id=970963738` `description_category_id=200001520`
+    - Форма волейбольная `type_id=970696767` `description_category_id=200001520`
+    - Костюм горнолыжный `type_id=972079096` `description_category_id=200001520`
+    - Одежда для танцев `type_id=970670105` `description_category_id=200001520`
+    - Костюм сноубордический `type_id=972079098` `description_category_id=200001520`
+    - Костюм-сауна для похудения `type_id=94188` `description_category_id=200001520`
+    - Одежда для мотоспорта `type_id=970684972` `description_category_id=200001520`
+    - Форма футбольная `type_id=971079131` `description_category_id=200001520`
+    - Гамаши `type_id=93074` `description_category_id=200001520`
+    - Форма баскетбольная `type_id=971011003` `description_category_id=200001520`
+    - Одежда для гимнастики `type_id=93076` `description_category_id=200001520`
+    - Одежда для верховой езды `type_id=971101865` `description_category_id=200001520`
+    - Одежда для бокса `type_id=970673964` `description_category_id=200001520`
+    - Комбинезон горнолыжный `type_id=972079092` `description_category_id=200001520`
+    - Комбинезон сноубордический `type_id=972079093` `description_category_id=200001520`
+    - Одежда для велоспорта `type_id=971010854` `description_category_id=200001520`
+    - Бахилы зимние `type_id=115951169` `description_category_id=200001520`
+- Книги `description_category_id=200001482`
+  - Аудиокниги на физическом носителе `description_category_id=200001293`
+    - Аудиокнига на физическом носителе `type_id=971445086` `description_category_id=200001293`
+  - Антикварные издания (до 1941 г. включительно) `description_category_id=200001486`
+    - Журнал `type_id=971445088` `description_category_id=200001486`
+    - Печатная книга `type_id=971445087` `description_category_id=200001486`
+    - Газета `type_id=971445089` `description_category_id=200001486`
+  - Букинистические издания (1942-2010 гг.) `description_category_id=200001485`
+    - Газета `type_id=971445089` `description_category_id=200001485`
+    - Журнал `type_id=971445088` `description_category_id=200001485`
+    - Печатная книга `type_id=971445087` `description_category_id=200001485`
+  - Современные печатные издания (с 2011 г.) `description_category_id=200001483`
+    - Журнал `type_id=971445088` `description_category_id=200001483`
+    - Печатная книга `type_id=971445087` `description_category_id=200001483`
+    - Газета `type_id=971445089` `description_category_id=200001483`
+- Красота и гигиена `description_category_id=17027489`
+  - Бритвенные принадлежности `description_category_id=200001239`
+    - Бритва `type_id=97318` `description_category_id=200001239`
+    - Сменные кассеты для бритвы `type_id=97317` `description_category_id=200001239`
+    - Набор для бритья `type_id=97315` `description_category_id=200001239`
+    - Пилка-депилятор `type_id=971404997` `description_category_id=200001239`
+    - Лезвие для бритвы `type_id=412915549` `description_category_id=200001239`
+    - Аксессуар для бритвы `type_id=97322` `description_category_id=200001239`
+    - Помазок `type_id=97321` `description_category_id=200001239`
+  - Косметика для ухода `description_category_id=17028991`
+    - Парафин косметический `type_id=93894` `description_category_id=17028991`
+    - Сыворотка для ухода за кожей `type_id=93913` `description_category_id=17028991`
+    - Косметический адвент-календарь `type_id=970626197` `description_category_id=17028991`
+    - Набор уходовой косметики `type_id=93882` `description_category_id=17028991`
+    - Активатор загара `type_id=970983098` `description_category_id=17028991`
+    - Гель для ухода за кожей `type_id=93876` `description_category_id=17028991`
+    - Автозагар `type_id=97881` `description_category_id=17028991`
+    - Гидролат `type_id=93878` `description_category_id=17028991`
+    - Средство солнцезащитное `type_id=629618165` `description_category_id=17028991`
+    - Моделирующее средство `type_id=971068009` `description_category_id=17028991`
+    - Масло косметическое `type_id=93887` `description_category_id=17028991`
+    - Масло для массажа `type_id=97707` `description_category_id=17028991`
+    - Крем массажный `type_id=971447124` `description_category_id=17028991`
+    - Средство антицеллюлитное `type_id=970573561` `description_category_id=17028991`
+    - Плитка массажная `type_id=971098089` `description_category_id=17028991`
+    - Массажная свеча `type_id=971081366` `description_category_id=17028991`
+    - Крем для загара в солярии `type_id=97443` `description_category_id=17028991`
+    - Вода мицеллярная `type_id=97703` `description_category_id=17028991`
+    - Эликсир для ухода за кожей `type_id=93917` `description_category_id=17028991`
+    - Паста для массажа `type_id=971300777` `description_category_id=17028991`
+    - Флюид `type_id=93916` `description_category_id=17028991`
+    - Вода косметическая `type_id=93874` `description_category_id=17028991`
+    - Термальная вода `type_id=97702` `description_category_id=17028991`
+    - Скраб `type_id=93902` `description_category_id=17028991`
+    - Спрей для ухода за кожей `type_id=93904` `description_category_id=17028991`
+    - Средство для ногтей, кутикулы `type_id=93884` `description_category_id=17028991`
+    - Стик `type_id=93912` `description_category_id=17028991`
+    - Эмульсия для ухода за кожей `type_id=93918` `description_category_id=17028991`
+    - Тоник для ухода за кожей `type_id=93915` `description_category_id=17028991`
+    - Эссенция для ухода за кожей `type_id=93919` `description_category_id=17028991`
+    - Крем для ухода за кожей `type_id=93883` `description_category_id=17028991`
+    - Средство от солнечных ожогов `type_id=971751234` `description_category_id=17028991`
+    - Средство для умывания `type_id=93897` `description_category_id=17028991`
+    - Средство для ножных ванн `type_id=93906` `description_category_id=17028991`
+    - Вазелин косметический `type_id=970992159` `description_category_id=17028991`
+    - Концентрат для ухода за кожей `type_id=93881` `description_category_id=17028991`
+    - Пилинг `type_id=93898` `description_category_id=17028991`
+    - Средство после загара `type_id=708190925` `description_category_id=17028991`
+    - Нейтрализатор пилинга `type_id=971095452` `description_category_id=17028991`
+    - Бальзам, лосьон, молочко для ухода за кожей `type_id=93873` `description_category_id=17028991`
+    - Средство от растяжек `type_id=970575415` `description_category_id=17028991`
+    - Средство для снятия макияжа `type_id=93909` `description_category_id=17028991`
+    - Контактный гель `type_id=970686301` `description_category_id=17028991`
+  - Аппараты косметологические `description_category_id=59968946`
+    - Дарсонваль `type_id=91823` `description_category_id=59968946`
+    - Разогреватель воска `type_id=93983` `description_category_id=59968946`
+    - Аэрограф для маникюра `type_id=971281322` `description_category_id=59968946`
+    - Фототерапия `type_id=97752` `description_category_id=59968946`
+    - Парафиновая ванна `type_id=91845` `description_category_id=59968946`
+    - Лазерное омоложение `type_id=97749` `description_category_id=59968946`
+    - Портативная паровая сауна `type_id=970946397` `description_category_id=59968946`
+    - Вентилятор для сушки лака `type_id=971013427` `description_category_id=59968946`
+    - Аксессуары, запчасти для солярия `type_id=971472518` `description_category_id=59968946`
+    - Роликовая электропилка `type_id=971306471` `description_category_id=59968946`
+    - Мезотерапия `type_id=97751` `description_category_id=59968946`
+    - Лазерный терапевтический аппарат `type_id=91834` `description_category_id=59968946`
+    - Косметологический комбайн `type_id=91831` `description_category_id=59968946`
+    - Гальваника `type_id=91820` `description_category_id=59968946`
+    - Запчасть к маникюрно-педикюрному аппарату `type_id=971313891` `description_category_id=59968946`
+    - Увлажнитель для кожи `type_id=91862` `description_category_id=59968946`
+    - Очиститель вакуумный `type_id=970853368` `description_category_id=59968946`
+    - Лампа для маникюра `type_id=93964` `description_category_id=59968946`
+    - Измеритель влажности кожи `type_id=97750` `description_category_id=59968946`
+    - Дермабразия `type_id=97746` `description_category_id=59968946`
+    - Инструмент для механической чистки лица `type_id=602717823` `description_category_id=59968946`
+    - Аппарат для изготовления масок `type_id=97753` `description_category_id=59968946`
+    - Электрощетка для очищения лица `type_id=91844` `description_category_id=59968946`
+    - RF-лифтинг `type_id=97754` `description_category_id=59968946`
+    - Принтер для ногтей `type_id=970623765` `description_category_id=59968946`
+    - Ультразвуковая чистка `type_id=91813` `description_category_id=59968946`
+    - Вапоризатор `type_id=91817` `description_category_id=59968946`
+    - Микротоки `type_id=97755` `description_category_id=59968946`
+    - Пылесос для маникюра, педикюра `type_id=91836` `description_category_id=59968946`
+    - Аксессуары для косметологического аппарата `type_id=971311427` `description_category_id=59968946`
+    - Аппарат вакуумного массажа `type_id=971365882` `description_category_id=59968946`
+    - Аппарат для маникюра, педикюра `type_id=91812` `description_category_id=59968946`
+    - Система для термопохудения `type_id=970599026` `description_category_id=59968946`
+  - Щетка для сухого массажа `description_category_id=87504219`
+    - Щетка для сухого массажа `type_id=352274038` `description_category_id=87504219`
+  - Средства по уходу за бровями и ресницами `description_category_id=77756587`
+    - Шампунь для бровей `type_id=99373` `description_category_id=77756587`
+    - Набор для нанонапыления, перманетного макияжа `type_id=970826418` `description_category_id=77756587`
+    - Средство для роста ресниц, бровей `type_id=93907` `description_category_id=77756587`
+    - Пигмент для перманентного макияжа `type_id=970683214` `description_category_id=77756587`
+    - Набор для ламинирования, биозавивки ресниц `type_id=97368` `description_category_id=77756587`
+    - Средство для долговременной укладки бровей `type_id=970669164` `description_category_id=77756587`
+    - Краска для бровей, ресниц `type_id=93931` `description_category_id=77756587`
+    - Состав для протеиновой реконструкции бровей, ресниц `type_id=970965328` `description_category_id=77756587`
+    - Обезжириватель для бровей `type_id=970672011` `description_category_id=77756587`
+    - Паста контурная для бровей `type_id=970863837` `description_category_id=77756587`
+    - Праймер для ресниц, бровей `type_id=970723155` `description_category_id=77756587`
+    - Набор для окрашивания бровей, ресниц `type_id=970939842` `description_category_id=77756587`
+    - Хна для окрашивания бровей `type_id=971303900` `description_category_id=77756587`
+    - Средство для ламинирования, биозавивки ресниц `type_id=14907073` `description_category_id=77756587`
+    - Раствор для разведения хны `type_id=971310053` `description_category_id=77756587`
+    - База под окрашивание бровей `type_id=970671292` `description_category_id=77756587`
+    - Инструмент для ламинирования ресниц `type_id=971290244` `description_category_id=77756587`
+  - Бигуди `description_category_id=77868479`
+    - Бигуди `type_id=93955` `description_category_id=77868479`
+  - Мебель и оборудование для салонов красоты `description_category_id=56253863`
+    - Вытяжка для салона красоты `type_id=971220315` `description_category_id=56253863`
+    - Аксессуар для парикмахера `type_id=970782437` `description_category_id=56253863`
+    - Аксессуары для стерилизации маникюрных инструментов `type_id=971136567` `description_category_id=56253863`
+    - Климазон `type_id=970915535` `description_category_id=56253863`
+    - Перчатки парикмахерские `type_id=970713457` `description_category_id=56253863`
+    - Гримерный стол `type_id=970994883` `description_category_id=56253863`
+    - Пеньюар для стрижки `type_id=93977` `description_category_id=56253863`
+    - Запчасти для парикмахерской мойки `type_id=970976184` `description_category_id=56253863`
+    - Тележка для салона красоты `type_id=95091` `description_category_id=56253863`
+    - Маникюрный стол `type_id=95007` `description_category_id=56253863`
+    - Подставка для педикюра `type_id=95094` `description_category_id=56253863`
+    - Мобильная студия визажиста `type_id=970994884` `description_category_id=56253863`
+    - Сухожаровой шкаф `type_id=91858` `description_category_id=56253863`
+    - Полотенце одноразовое `type_id=971151112` `description_category_id=56253863`
+    - Парикмахерский набор `type_id=970939282` `description_category_id=56253863`
+    - Термошапка `type_id=970623764` `description_category_id=56253863`
+    - Инструменты, материалы для наращивания волос `type_id=970948805` `description_category_id=56253863`
+    - Стерилизатор маникюрных инструментов `type_id=91855` `description_category_id=56253863`
+    - Сушуар `type_id=970994639` `description_category_id=56253863`
+    - Запчасти для парикмахерского кресла `type_id=970976185` `description_category_id=56253863`
+  - Косметика для ухода за волосами `description_category_id=17028992`
+    - Средство для химического выпрямления `type_id=97763` `description_category_id=17028992`
+    - Эликсир для волос `type_id=93951` `description_category_id=17028992`
+    - Масло для волос `type_id=93936` `description_category_id=17028992`
+    - Осветлитель для волос `type_id=97765` `description_category_id=17028992`
+    - Тоник для волос `type_id=93946` `description_category_id=17028992`
+    - Сыворотка для волос `type_id=93945` `description_category_id=17028992`
+    - Загуститель для волос `type_id=341668697` `description_category_id=17028992`
+    - Воск для волос `type_id=93923` `description_category_id=17028992`
+    - Маска для волос `type_id=93935` `description_category_id=17028992`
+    - Хна для волос `type_id=98375` `description_category_id=17028992`
+    - Спрей для укладки волос `type_id=97910` `description_category_id=17028992`
+    - Паста для укладки волос `type_id=93939` `description_category_id=17028992`
+    - Пилинг для кожи головы `type_id=971217759` `description_category_id=17028992`
+    - Окислитель `type_id=97764` `description_category_id=17028992`
+    - Кератин `type_id=93926` `description_category_id=17028992`
+    - Шампунь твердый `type_id=707147362` `description_category_id=17028992`
+    - Крем для волос `type_id=93932` `description_category_id=17028992`
+    - Средство тонирующее `type_id=93947` `description_category_id=17028992`
+    - Смывка краски с волос `type_id=97767` `description_category_id=17028992`
+    - Лак для волос `type_id=93933` `description_category_id=17028992`
+    - Эссенция для волос `type_id=93952` `description_category_id=17028992`
+    - Средство для химической завивки `type_id=97645` `description_category_id=17028992`
+    - Лосьон для волос `type_id=93934` `description_category_id=17028992`
+    - Филлер для волос `type_id=97768` `description_category_id=17028992`
+    - Пудра для укладки волос `type_id=93941` `description_category_id=17028992`
+    - Шампунь сухой `type_id=97700` `description_category_id=17028992`
+    - Краска для волос `type_id=93930` `description_category_id=17028992`
+    - Средство для долговременной укладки волос `type_id=970702667` `description_category_id=17028992`
+    - Глина для волос `type_id=97247` `description_category_id=17028992`
+    - Тушь для волос `type_id=93948` `description_category_id=17028992`
+    - Средство для удаления краски с кожи `type_id=97766` `description_category_id=17028992`
+    - Молочко для волос `type_id=970951258` `description_category_id=17028992`
+    - Праймер для волос `type_id=970859603` `description_category_id=17028992`
+    - Мусс для волос `type_id=93938` `description_category_id=17028992`
+    - Бальзам для волос `type_id=93920` `description_category_id=17028992`
+    - Ботокс для волос `type_id=971004398` `description_category_id=17028992`
+    - Флюид для волос `type_id=93949` `description_category_id=17028992`
+    - Мелки для волос `type_id=93937` `description_category_id=17028992`
+    - Косметический набор для волос `type_id=93929` `description_category_id=17028992`
+    - Средство для снятия наращенных волос `type_id=970593719` `description_category_id=17028992`
+    - Средство для защиты кожи при окрашивании `type_id=970955993` `description_category_id=17028992`
+    - Пенка для волос `type_id=93940` `description_category_id=17028992`
+    - Средство для ламинирования волос `type_id=97762` `description_category_id=17028992`
+    - Гель для волос `type_id=93924` `description_category_id=17028992`
+    - Краска для бороды `type_id=971306429` `description_category_id=17028992`
+    - Спрей для ухода за волосами `type_id=93942` `description_category_id=17028992`
+    - Помада для укладки волос `type_id=970667891` `description_category_id=17028992`
+    - Груминг-тоник `type_id=971408170` `description_category_id=17028992`
+    - Скраб для кожи головы `type_id=971049457` `description_category_id=17028992`
+    - Шампунь для волос `type_id=93950` `description_category_id=17028992`
+    - Плекс для осветления `type_id=970824555` `description_category_id=17028992`
+    - Мастика для волос `type_id=971036246` `description_category_id=17028992`
+  - Маска косметическая `description_category_id=77857885`
+    - Лифтинг-полоски `type_id=970829682` `description_category_id=77857885`
+    - Средство для удаления натоптышей `type_id=93910` `description_category_id=77857885`
+    - Маска-бандаж `type_id=971227786` `description_category_id=77857885`
+    - Основа для косметической маски `type_id=970975126` `description_category_id=77857885`
+    - Патчи `type_id=93895` `description_category_id=77857885`
+    - Очищающие полоски `type_id=93893` `description_category_id=77857885`
+    - Маска косметическая `type_id=93886` `description_category_id=77857885`
+    - Набор для косметических масок `type_id=97441` `description_category_id=77857885`
+    - Салфетки матирующие `type_id=93429` `description_category_id=77857885`
+    - Носочки для педикюра `type_id=93892` `description_category_id=77857885`
+  - Средства для принятия ванны `description_category_id=87505480`
+    - Средство для приготовления ванн `type_id=970966454` `description_category_id=87505480`
+    - Соль для ванны `type_id=93903` `description_category_id=87505480`
+    - Пена для ванны `type_id=93896` `description_category_id=87505480`
+    - Бомбочка для ванны `type_id=971000672` `description_category_id=87505480`
+  - Парфюмерия `description_category_id=17028988`
+    - Парфюмированный мист `type_id=971214875` `description_category_id=17028988`
+    - Духи сухие `type_id=970681401` `description_category_id=17028988`
+    - Одеколон `type_id=93402` `description_category_id=17028988`
+    - Вода душистая `type_id=93398` `description_category_id=17028988`
+    - Вода парфюмерная `type_id=93403` `description_category_id=17028988`
+    - Туалетная вода `type_id=93405` `description_category_id=17028988`
+    - Набор парфюмерный `type_id=93404` `description_category_id=17028988`
+    - Духи `type_id=93397` `description_category_id=17028988`
+    - Духи-масло `type_id=970674005` `description_category_id=17028988`
+    - Наливная парфюмерия `type_id=970681400` `description_category_id=17028988`
+    - Растворитель для парфюмерии `type_id=971429833` `description_category_id=17028988`
+  - Декоративная косметика `description_category_id=17028990`
+    - Средство для снятия лака `type_id=93908` `description_category_id=17028990`
+    - Набор для наращивания ресниц `type_id=971147305` `description_category_id=17028990`
+    - DD-средство `type_id=971074674` `description_category_id=17028990`
+    - Аджастер `type_id=971306476` `description_category_id=17028990`
+    - Гель-лак `type_id=93415` `description_category_id=17028990`
+    - Праймер для век `type_id=93441` `description_category_id=17028990`
+    - Бальзам для губ `type_id=93411` `description_category_id=17028990`
+    - Подводка для глаз `type_id=93439` `description_category_id=17028990`
+    - Тональный крем `type_id=93450` `description_category_id=17028990`
+    - Карандаш для глаз `type_id=93419` `description_category_id=17028990`
+    - Палетка для контуринга `type_id=97735` `description_category_id=17028990`
+    - Тушь для ресниц `type_id=93453` `description_category_id=17028990`
+    - Бронзер `type_id=93413` `description_category_id=17028990`
+    - Карандаш для губ `type_id=93420` `description_category_id=17028990`
+    - Хайлайтер `type_id=93454` `description_category_id=17028990`
+    - Набор средств для маникюра `type_id=971080583` `description_category_id=17028990`
+    - Тени для век `type_id=93448` `description_category_id=17028990`
+    - Блеск для губ `type_id=93412` `description_category_id=17028990`
+    - Клей для ногтей `type_id=93422` `description_category_id=17028990`
+    - Тушь для бровей `type_id=93452` `description_category_id=17028990`
+    - Глиттер для лица, тела `type_id=289778311` `description_category_id=17028990`
+    - Тинт для губ `type_id=93449` `description_category_id=17028990`
+    - Пудра акриловая `type_id=760986346` `description_category_id=17028990`
+    - Основа под макияж `type_id=93436` `description_category_id=17028990`
+    - Шелк для ремонта ногтей `type_id=971301561` `description_category_id=17028990`
+    - Временная татуировка `type_id=93437` `description_category_id=17028990`
+    - BB-средство `type_id=93409` `description_category_id=17028990`
+    - Средство для наращивания ресниц `type_id=97938` `description_category_id=17028990`
+    - Втирка для ногтей `type_id=796002985` `description_category_id=17028990`
+    - Стразы для лица, тела `type_id=970865887` `description_category_id=17028990`
+    - Моделирующий гель `type_id=253861770` `description_category_id=17028990`
+    - Набор для бровей `type_id=970948820` `description_category_id=17028990`
+    - Средство для очищения косметических принадлежностей `type_id=93991` `description_category_id=17028990`
+    - Гель-пудра `type_id=970807543` `description_category_id=17028990`
+    - Фиксатор макияжа `type_id=97927` `description_category_id=17028990`
+    - Гель для бровей `type_id=93414` `description_category_id=17028990`
+    - Пудра `type_id=93442` `description_category_id=17028990`
+    - Скульптор для лица `type_id=970915534` `description_category_id=17028990`
+    - Карандаш для бровей `type_id=93418` `description_category_id=17028990`
+    - Средство для удаления кутикулы `type_id=93445` `description_category_id=17028990`
+    - Топовое покрытие для ногтей `type_id=93417` `description_category_id=17028990`
+    - Средство для быстрого высыхания лака `type_id=93444` `description_category_id=17028990`
+    - Обезжириватель для ногтей `type_id=970681973` `description_category_id=17028990`
+    - Румяна `type_id=93443` `description_category_id=17028990`
+    - Консилер `type_id=93424` `description_category_id=17028990`
+    - Губная помада `type_id=93440` `description_category_id=17028990`
+    - Тени для бровей `type_id=93447` `description_category_id=17028990`
+    - Лак для ногтей `type_id=93427` `description_category_id=17028990`
+    - Основа под лак `type_id=93435` `description_category_id=17028990`
+    - Набор декоративной косметики `type_id=93431` `description_category_id=17028990`
+    - Мономер для акриловой пудры `type_id=971229766` `description_category_id=17028990`
+    - Разбавитель лака для ногтей `type_id=93416` `description_category_id=17028990`
+    - Воск для бровей `type_id=970945765` `description_category_id=17028990`
+    - CC-средство `type_id=93410` `description_category_id=17028990`
+  - Средства для гигиены тела `description_category_id=17028983`
+    - Дезодорант `type_id=93466` `description_category_id=17028983`
+    - Средство для интимной гигиены `type_id=93465` `description_category_id=17028983`
+    - Набор средств для гигиены `type_id=93483` `description_category_id=17028983`
+    - Средство для душа `type_id=97704` `description_category_id=17028983`
+    - Твердое мыло `type_id=93482` `description_category_id=17028983`
+    - Средство для купания детей `type_id=97624` `description_category_id=17028983`
+    - Тальк `type_id=93505` `description_category_id=17028983`
+    - Жидкое мыло `type_id=97769` `description_category_id=17028983`
+    - Крем под подгузник `type_id=970838691` `description_category_id=17028983`
+    - Присыпка `type_id=93499` `description_category_id=17028983`
+  - Инструменты для макияжа, маникюра, бани и солярия `description_category_id=17028985`
+    - Ножницы для бровей `type_id=563529488` `description_category_id=17028985`
+    - Терка педикюрная `type_id=93992` `description_category_id=17028985`
+    - Аксессуар для парафинотерапии `type_id=971101542` `description_category_id=17028985`
+    - Штаны для прессотерапии `type_id=970576838` `description_category_id=17028985`
+    - Очки для солярия `type_id=97262` `description_category_id=17028985`
+    - Разделитель пальцев ног `type_id=93982` `description_category_id=17028985`
+    - Аксессуар для наращивания ногтей `type_id=971118012` `description_category_id=17028985`
+    - Аксессуар для перманентного макияжа `type_id=970683192` `description_category_id=17028985`
+    - Типсы для наращивания `type_id=971105615` `description_category_id=17028985`
+    - Аксессуар для маникюра `type_id=970796687` `description_category_id=17028985`
+    - Лезвия для опасной бритвы `type_id=97320` `description_category_id=17028985`
+    - Щетка косметическая `type_id=568954307` `description_category_id=17028985`
+    - Кусачки маникюрные `type_id=93959` `description_category_id=17028985`
+    - Налокотники косметические `type_id=97436` `description_category_id=17028985`
+    - Бюстье одноразовое `type_id=971150971` `description_category_id=17028985`
+    - Набор аксессуаров для макияжа `type_id=97494` `description_category_id=17028985`
+    - Аксессуары для ламинирования бровей, ресниц `type_id=971200274` `description_category_id=17028985`
+    - Ножницы парикмахерские `type_id=93974` `description_category_id=17028985`
+    - Стикини `type_id=97263` `description_category_id=17028985`
+    - Аксессуар для флакона `type_id=971004194` `description_category_id=17028985`
+    - Пинцет `type_id=93979` `description_category_id=17028985`
+    - Накладные ногти `type_id=93433` `description_category_id=17028985`
+    - Аксессуар для наращивания ресниц `type_id=412991025` `description_category_id=17028985`
+    - Лезвия для педикюра `type_id=93966` `description_category_id=17028985`
+    - Футляр для косметических инструментов `type_id=970683154` `description_category_id=17028985`
+    - Коврик одноразовый `type_id=970987375` `description_category_id=17028985`
+    - Трафарет для стрелок `type_id=971108810` `description_category_id=17028985`
+    - Варежка косметическая `type_id=93901` `description_category_id=17028985`
+    - Повязка косметическая `type_id=98192` `description_category_id=17028985`
+    - Пилка для маникюра `type_id=93968` `description_category_id=17028985`
+    - Шпатель косметический `type_id=970849831` `description_category_id=17028985`
+    - Силиконовые носочки `type_id=971304946` `description_category_id=17028985`
+    - Банка косметическая `type_id=970943341` `description_category_id=17028985`
+    - Косметическая чаша `type_id=93998` `description_category_id=17028985`
+    - Бьюти-кейс `type_id=970850387` `description_category_id=17028985`
+    - Станок для педикюра `type_id=93975` `description_category_id=17028985`
+    - Пленка для обертывания `type_id=93990` `description_category_id=17028985`
+    - Точилка для косметического карандаша `type_id=93993` `description_category_id=17028985`
+    - Аэрограф для макияжа `type_id=970623766` `description_category_id=17028985`
+    - Блоттер `type_id=971053339` `description_category_id=17028985`
+    - Декор для ногтей `type_id=970829683` `description_category_id=17028985`
+    - Штамп для стемпинга `type_id=971814509` `description_category_id=17028985`
+    - Подставка для маникюра `type_id=970956109` `description_category_id=17028985`
+    - Набор для солярия `type_id=970601734` `description_category_id=17028985`
+    - Нить для коррекции бровей `type_id=971306444` `description_category_id=17028985`
+    - Стекловолокно для наращивания ногтей `type_id=970957529` `description_category_id=17028985`
+    - Расческа `type_id=93999` `description_category_id=17028985`
+    - Микробраши `type_id=971200269` `description_category_id=17028985`
+    - Шапочка для солярия `type_id=97260` `description_category_id=17028985`
+    - Шапочка для душа `type_id=97267` `description_category_id=17028985`
+    - Ножницы маникюрные `type_id=93969` `description_category_id=17028985`
+    - Нож для кутикулы `type_id=93995` `description_category_id=17028985`
+    - Трафарет для бровей `type_id=93994` `description_category_id=17028985`
+    - Распылитель косметический `type_id=97985` `description_category_id=17028985`
+    - Инструмент для ламинирования ресниц `type_id=971290244` `description_category_id=17028985`
+    - Перчатки для ухода за кожей рук `type_id=93978` `description_category_id=17028985`
+    - Флакон косметический `type_id=970942613` `description_category_id=17028985`
+    - Пемза `type_id=93976` `description_category_id=17028985`
+    - Аксессуар для очищения косметических принадлежностей `type_id=971026575` `description_category_id=17028985`
+    - Палитра для макияжа `type_id=98367` `description_category_id=17028985`
+    - Миксер косметический `type_id=644957738` `description_category_id=17028985`
+    - Прибор для завивки ресниц `type_id=93981` `description_category_id=17028985`
+    - Набор инструментов для маникюра, педикюра `type_id=93972` `description_category_id=17028985`
+  - Насадки для аппаратного маникюра `description_category_id=78022699`
+    - Диск для педикюрного аппарата `type_id=971393544` `description_category_id=78022699`
+    - Фреза для аппаратного маникюра `type_id=702556871` `description_category_id=78022699`
+    - Сменный файл для педикюрного диска `type_id=971393548` `description_category_id=78022699`
+  - Принадлежности для гигиены полости рта `description_category_id=200001241`
+    - Скребок для языка `type_id=97210` `description_category_id=200001241`
+    - Монопучковая зубная щетка `type_id=970973487` `description_category_id=200001241`
+    - Зубная нить `type_id=93468` `description_category_id=200001241`
+    - Зубная щетка `type_id=93470` `description_category_id=200001241`
+    - Набор для ухода за полостью рта `type_id=97225` `description_category_id=200001241`
+    - Насадка для монопучковой щетки `type_id=93481` `description_category_id=200001241`
+    - Межзубные ершики `type_id=93479` `description_category_id=200001241`
+    - Подставка для зубочисток `type_id=97595` `description_category_id=200001241`
+    - Зубочистки `type_id=92364` `description_category_id=200001241`
+  - Средства для бритья и груминг `description_category_id=17054869`
+    - Средство после бритья `type_id=97311` `description_category_id=17054869`
+    - Средство для бритья `type_id=97309` `description_category_id=17054869`
+    - Стайлинг для бороды `type_id=970702979` `description_category_id=17054869`
+    - Набор для ухода за бородой `type_id=970678875` `description_category_id=17054869`
+    - Средство для ухода за бородой `type_id=970593490` `description_category_id=17054869`
+  - Кисти косметические `description_category_id=78032222`
+    - Набор для окрашивания волос `type_id=971202447` `description_category_id=78032222`
+    - Косметический аппликатор `type_id=93963` `description_category_id=78032222`
+    - Кисть косметическая `type_id=93961` `description_category_id=78032222`
+    - Кисть для окрашивания волос `type_id=97336` `description_category_id=78032222`
+  - Ароматерапия `description_category_id=88581504`
+    - Запарка для бани `type_id=93399` `description_category_id=88581504`
+    - Ароматизатор для бани `type_id=93396` `description_category_id=88581504`
+    - Ароматический воск для тела `type_id=970896715` `description_category_id=88581504`
+    - Соль для бани `type_id=970589360` `description_category_id=88581504`
+    - Эфирное масло `type_id=93408` `description_category_id=88581504`
+    - Набор для ароматерапии `type_id=93401` `description_category_id=88581504`
+  - Парики и шиньоны `description_category_id=22778913`
+    - Аксессуар для парика `type_id=97643` `description_category_id=22778913`
+    - Канекалон `type_id=97642` `description_category_id=22778913`
+    - Шиньон `type_id=97641` `description_category_id=22778913`
+    - Волосы для наращивания `type_id=971151445` `description_category_id=22778913`
+    - Штатив для учебной головы `type_id=970702676` `description_category_id=22778913`
+    - Накладные усы, бороды, брови `type_id=970626281` `description_category_id=22778913`
+    - Учебная голова для причесок `type_id=94856` `description_category_id=22778913`
+    - Парик `type_id=115949136` `description_category_id=22778913`
+  - Эпиляторы `description_category_id=77868900`
+    - Эпилятор `type_id=91688` `description_category_id=77868900`
+    - Фотоэпилятор `type_id=91686` `description_category_id=77868900`
+    - Насадка эпилятора `type_id=91680` `description_category_id=77868900`
+    - Эпилятор лазерный `type_id=96767` `description_category_id=77868900`
+  - Ресницы накладные и для наращивания `description_category_id=77797831`
+    - Ресницы для наращивания `type_id=625346539` `description_category_id=77797831`
+    - Ресницы накладные `type_id=93434` `description_category_id=77797831`
+  - Товары личной гигиены `description_category_id=200001243`
+    - Накладка для кормления `type_id=93011` `description_category_id=200001243`
+    - Прокладки послеродовые `type_id=99440` `description_category_id=200001243`
+    - Фиксирующие штанишки `type_id=93508` `description_category_id=200001243`
+    - Туалетная бумага влажная `type_id=93461` `description_category_id=200001243`
+    - Чехол для средств личной гигиены `type_id=970715586` `description_category_id=200001243`
+    - Прокладки многоразовые `type_id=99439` `description_category_id=200001243`
+    - Влажные салфетки `type_id=93462` `description_category_id=200001243`
+    - Прокладки женские `type_id=93500` `description_category_id=200001243`
+    - Туалетная бумага `type_id=93507` `description_category_id=200001243`
+    - Вкладыши для груди `type_id=93463` `description_category_id=200001243`
+    - Трусы менструальные `type_id=970940079` `description_category_id=200001243`
+    - Тампоны `type_id=93506` `description_category_id=200001243`
+  - Средства для депиляции `description_category_id=17028989`
+    - Средство для депиляции `type_id=94001` `description_category_id=17028989`
+    - Средство до депиляции `type_id=970806268` `description_category_id=17028989`
+    - Набор для депиляции `type_id=94007` `description_category_id=17028989`
+    - Средство после депиляции `type_id=94004` `description_category_id=17028989`
+  - Аксессуары для массажного стола `description_category_id=200000681`
+    - Аксессуар для массажного стола, кушетки `type_id=971151950` `description_category_id=200000681`
+  - Оборудование и материалы для тату-салона `description_category_id=61849727`
+    - Лазер для осветления тату `type_id=970693194` `description_category_id=61849727`
+    - Мебель для тату-салона `type_id=970585024` `description_category_id=61849727`
+    - Средство для ухода за пирсингом `type_id=971098009` `description_category_id=61849727`
+    - Пигмент для татуажа `type_id=971391523` `description_category_id=61849727`
+    - Трансферные расходники `type_id=970972560` `description_category_id=61849727`
+    - Концентрат антибактериального мыла `type_id=970857454` `description_category_id=61849727`
+    - Игла для микроблейдинга `type_id=970976084` `description_category_id=61849727`
+    - Иглы для пирсинга `type_id=970575710` `description_category_id=61849727`
+    - Абсорбирующий порошок `type_id=970939390` `description_category_id=61849727`
+    - Очищающая пена для тату `type_id=970915221` `description_category_id=61849727`
+    - Свет для тату салона `type_id=971806526` `description_category_id=61849727`
+    - Колпачок для краски `type_id=970970170` `description_category_id=61849727`
+    - Охлаждающий крем для тату `type_id=971010737` `description_category_id=61849727`
+    - Средство для заживления татуировки `type_id=970575711` `description_category_id=61849727`
+    - Барьерная защита для тату-оборудования `type_id=971010741` `description_category_id=61849727`
+    - Тату-набор `type_id=970575698` `description_category_id=61849727`
+    - Краска для тату `type_id=970576969` `description_category_id=61849727`
+    - Бинт бандажный `type_id=970575712` `description_category_id=61849727`
+    - Инструмент для пирсинга `type_id=970586898` `description_category_id=61849727`
+    - Трансферный принтер `type_id=971854174` `description_category_id=61849727`
+    - Аксессуары, запчасти для тату-машинки `type_id=971806556` `description_category_id=61849727`
+    - Средство для удаления тату `type_id=970824579` `description_category_id=61849727`
+    - Вазелин, масло для тату `type_id=970915220` `description_category_id=61849727`
+    - Анестетик `type_id=970803627` `description_category_id=61849727`
+    - Иглы для тату-машинки `type_id=970575704` `description_category_id=61849727`
+    - Искусственная кожа для тату `type_id=970825489` `description_category_id=61849727`
+    - Тату-машинка `type_id=970575699` `description_category_id=61849727`
+  - Мочалки и спонжи `description_category_id=78021424`
+    - Мочалка `type_id=93971` `description_category_id=78021424`
+    - Щеточка для лица `type_id=971410054` `description_category_id=78021424`
+    - Спонж косметический `type_id=93989` `description_category_id=78021424`
+  - Средства для гигиены полости рта `description_category_id=200001240`
+    - Ополаскиватель для полости рта `type_id=93488` `description_category_id=200001240`
+    - Зубной порошок `type_id=93472` `description_category_id=200001240`
+    - Зубной гель `type_id=93471` `description_category_id=200001240`
+    - Зубная паста `type_id=93469` `description_category_id=200001240`
+    - Влажные салфетки для зубов `type_id=971298666` `description_category_id=200001240`
+    - Спрей для полости рта `type_id=970593718` `description_category_id=200001240`
+  - Массаж `description_category_id=30960284`
+    - Массажный матрас `type_id=97896` `description_category_id=30960284`
+    - Миостимулятор `type_id=91838` `description_category_id=30960284`
+    - Массажер электрический `type_id=97897` `description_category_id=30960284`
+    - Массажное кресло `type_id=97895` `description_category_id=30960284`
+    - Аксессуар для массажа `type_id=971003856` `description_category_id=30960284`
+    - Костюм для массажа `type_id=970824557` `description_category_id=30960284`
+    - Массажная кровать `type_id=98990` `description_category_id=30960284`
+    - Гидромассажная ванна `type_id=91821` `description_category_id=30960284`
+    - Камни для массажа `type_id=971049181` `description_category_id=30960284`
+    - Механический массажер для головы `type_id=970983727` `description_category_id=30960284`
+    - Массажный стол `type_id=97898` `description_category_id=30960284`
+    - Массажная подушка `type_id=97894` `description_category_id=30960284`
+    - Массажный роллер для лица `type_id=970977928` `description_category_id=30960284`
+    - Аксессуар для массажера `type_id=970678130` `description_category_id=30960284`
+    - Массажер для Гуаша `type_id=93985` `description_category_id=30960284`
+    - Мезороллер `type_id=91837` `description_category_id=30960284`
+  - Ватно-бумажная продукция `description_category_id=200001242`
+    - Ватные подушечки `type_id=93459` `description_category_id=200001242`
+    - Вкладыши от пота `type_id=99437` `description_category_id=200001242`
+    - Инструмент для чистки ушей, носа `type_id=970876555` `description_category_id=200001242`
+    - Бумажные полотенца `type_id=93456` `description_category_id=200001242`
+    - Покрытие на сиденье унитаза `type_id=970713340` `description_category_id=200001242`
+    - Бумажные салфетки `type_id=96019` `description_category_id=200001242`
+    - Ватные шарики `type_id=93460` `description_category_id=200001242`
+    - Бумажные платки `type_id=93455` `description_category_id=200001242`
+    - Ватные палочки `type_id=93458` `description_category_id=200001242`
+    - Ватные диски `type_id=93457` `description_category_id=200001242`
+- Товары для животных `description_category_id=17027487`
+  - Химия для аквариума `description_category_id=78360021`
+    - Соль для аквариума `type_id=970969702` `description_category_id=78360021`
+    - Средство для воды в аквариуме `type_id=99423` `description_category_id=78360021`
+    - Удобрение для аквариумных растений `type_id=97206` `description_category_id=78360021`
+  - Ветаптека (расходные материалы) `description_category_id=17028669`
+    - Попона послеоперационная `type_id=95959` `description_category_id=17028669`
+    - Бинт для животных `type_id=95939` `description_category_id=17028669`
+    - Ходунки для собак `type_id=971079223` `description_category_id=17028669`
+    - Микрочип для животных `type_id=971006605` `description_category_id=17028669`
+    - Паспорт ветеринарный `type_id=95944` `description_category_id=17028669`
+    - Мочесборник для животных `type_id=95953` `description_category_id=17028669`
+    - Инвалидная коляска для животных `type_id=95945` `description_category_id=17028669`
+    - Бандаж ортопедический для животных `type_id=95938` `description_category_id=17028669`
+    - Аптечка ветеринарная `type_id=971362426` `description_category_id=17028669`
+    - Электрокардиограф для животных `type_id=970960465` `description_category_id=17028669`
+    - Воротник для животных `type_id=95942` `description_category_id=17028669`
+    - Инструмент ветеринарный `type_id=95946` `description_category_id=17028669`
+    - Термометр для животных `type_id=95969` `description_category_id=17028669`
+    - Экспресс-тест для животных `type_id=970951150` `description_category_id=17028669`
+  - Средство по уходу за животными `description_category_id=17028967`
+    - Песок для купания `type_id=95171` `description_category_id=17028967`
+    - Средство для ухода за шерстью `type_id=95154` `description_category_id=17028967`
+    - Средство для ухода за ротовой полостью животных `type_id=970865393` `description_category_id=17028967`
+    - Набор косметический для животных `type_id=970987191` `description_category_id=17028967`
+    - Корректор поведения для животных `type_id=970841535` `description_category_id=17028967`
+    - Шампунь для животных `type_id=95182` `description_category_id=17028967`
+    - Средство для уборки за животными `type_id=95178` `description_category_id=17028967`
+    - Влажные салфетки для животных `type_id=95157` `description_category_id=17028967`
+    - Средство для нейтрализации запахов `type_id=95181` `description_category_id=17028967`
+    - Кондиционер для животных `type_id=95162` `description_category_id=17028967`
+    - Зубная паста для животных `type_id=970969743` `description_category_id=17028967`
+    - Воск для лап `type_id=95158` `description_category_id=17028967`
+    - Наполнитель `type_id=95168` `description_category_id=17028967`
+    - Парфюм для животных `type_id=95161` `description_category_id=17028967`
+    - Мыло для животных `type_id=95167` `description_category_id=17028967`
+    - Косметика для животных `type_id=95153` `description_category_id=17028967`
+  - Товар для ухода за животными `description_category_id=17028968`
+    - Игрушка для животных `type_id=95238` `description_category_id=17028968`
+    - Подстилочный материал для домашних животных `type_id=971110206` `description_category_id=17028968`
+    - Душ для животных `type_id=970580612` `description_category_id=17028968`
+    - Удалитель клещей `type_id=115946763` `description_category_id=17028968`
+    - Туалет для животных `type_id=95242` `description_category_id=17028968`
+    - Машинка для стрижки животных `type_id=95243` `description_category_id=17028968`
+    - Беговое колесо для животных `type_id=971053076` `description_category_id=17028968`
+    - Сменный блок для когтеточек `type_id=971066730` `description_category_id=17028968`
+    - Насадка для стрижки животных `type_id=95244` `description_category_id=17028968`
+    - Губка для мытья животных `type_id=95236` `description_category_id=17028968`
+    - Бассейн для животных `type_id=884550590` `description_category_id=17028968`
+    - Расческа для животных `type_id=95249` `description_category_id=17028968`
+    - Многоразовая пеленка для животных `type_id=95166` `description_category_id=17028968`
+    - Колтунорез `type_id=95241` `description_category_id=17028968`
+    - Лоток на унитаз `type_id=95252` `description_category_id=17028968`
+    - Ванночка для животных `type_id=95235` `description_category_id=17028968`
+    - Аккумулятор к машинке для стрижки животных `type_id=970583363` `description_category_id=17028968`
+    - Когтеточка `type_id=95240` `description_category_id=17028968`
+    - Зубная щетка для животных `type_id=95237` `description_category_id=17028968`
+    - Ватные палочки для животных `type_id=95156` `description_category_id=17028968`
+    - Пилка для животных `type_id=95246` `description_category_id=17028968`
+    - Фонарик для обнаружения меток животных `type_id=971026449` `description_category_id=17028968`
+    - Тоннель для животных `type_id=970944599` `description_category_id=17028968`
+    - Фильтр для кошачьего туалета `type_id=971962784` `description_category_id=17028968`
+    - Когтерез `type_id=95239` `description_category_id=17028968`
+    - Прокладки для животных `type_id=563432910` `description_category_id=17028968`
+    - Точильный камень для гриндера `type_id=971065949` `description_category_id=17028968`
+    - Сетка-фиксатор для мытья кошек `type_id=97951` `description_category_id=17028968`
+    - Совок для туалета `type_id=95254` `description_category_id=17028968`
+    - Полотенце для животных `type_id=95247` `description_category_id=17028968`
+    - Нож для машинки для стрижки животных `type_id=970990327` `description_category_id=17028968`
+    - Оборудование для груминга `type_id=95255` `description_category_id=17028968`
+    - Адаптер питания для автоматического лотка `type_id=971472428` `description_category_id=17028968`
+    - Фен для сушки шерсти животных `type_id=63569940` `description_category_id=17028968`
+    - Коврик под лоток `type_id=970721693` `description_category_id=17028968`
+    - Лапомойка `type_id=504866268` `description_category_id=17028968`
+    - Одноразовая пеленка для животных `type_id=95170` `description_category_id=17028968`
+    - Аксессуары для груминга `type_id=971155138` `description_category_id=17028968`
+    - Ножницы для стрижки животных `type_id=95245` `description_category_id=17028968`
+    - Подгузники для животных `type_id=95172` `description_category_id=17028968`
+    - Игровой комплекс для животных `type_id=97667` `description_category_id=17028968`
+  - Посуда для животных `description_category_id=17028673`
+    - Миска для животных `type_id=95189` `description_category_id=17028673`
+    - Пресс для влажного корма `type_id=971435190` `description_category_id=17028673`
+    - Поилка для животных `type_id=95192` `description_category_id=17028673`
+    - Коврик под миску `type_id=95187` `description_category_id=17028673`
+    - Бутылочка для животных `type_id=95185` `description_category_id=17028673`
+    - Автокормушка `type_id=95183` `description_category_id=17028673`
+    - Совок для корма `type_id=95193` `description_category_id=17028673`
+    - Аксессуары для поилки, автокормушки `type_id=95195` `description_category_id=17028673`
+    - Стерилизатор воды `type_id=970872421` `description_category_id=17028673`
+    - Кормушка для птиц, грызунов `type_id=95188` `description_category_id=17028673`
+    - Подставка для миски `type_id=95191` `description_category_id=17028673`
+    - Набор для вскармливания `type_id=95190` `description_category_id=17028673`
+    - Контейнер для корма `type_id=95186` `description_category_id=17028673`
+  - Ветаптека (парафармацевтика) `description_category_id=200001150`
+    - Мальт-паста для выведения шерсти `type_id=971874820` `description_category_id=200001150`
+    - Дерматологическое средство для животных `type_id=971457037` `description_category_id=200001150`
+    - Успокоительное средство для животных `type_id=971452843` `description_category_id=200001150`
+    - Гомеопатическое средство для животных `type_id=971452830` `description_category_id=200001150`
+    - Антипаразитарное средство для животных `type_id=971451526` `description_category_id=200001150`
+    - Кормовая добавка `type_id=91922` `description_category_id=200001150`
+  - Аксессуар для прогулки и дрессировки `description_category_id=17028668`
+    - Диспенсер для гигиенических пакетов для животных `type_id=308023` `description_category_id=17028668`
+    - Брелок на ошейник `type_id=95216` `description_category_id=17028668`
+    - Адресник `type_id=95213` `description_category_id=17028668`
+    - Антилай для собак `type_id=971080245` `description_category_id=17028668`
+    - Фурнитура для ошейника, поводка `type_id=970710040` `description_category_id=17028668`
+    - Пакет гигиенический для животных `type_id=95225` `description_category_id=17028668`
+    - Аксессуары для дрессировки `type_id=95231` `description_category_id=17028668`
+    - Тренажер для отработки выставочной стойки `type_id=971083530` `description_category_id=17028668`
+    - Поводок `type_id=95226` `description_category_id=17028668`
+    - Ошейник `type_id=95224` `description_category_id=17028668`
+    - Шлейка `type_id=95234` `description_category_id=17028668`
+    - Шнурок для адресника `type_id=970957412` `description_category_id=17028668`
+    - Намордник `type_id=95221` `description_category_id=17028668`
+    - Штырь для привязи собак `type_id=970879109` `description_category_id=17028668`
+    - Сумочка для лакомств `type_id=95194` `description_category_id=17028668`
+  - Аксессуары для аквариумов и террариумов `description_category_id=17028672`
+    - Крышка для аквариума `type_id=95281` `description_category_id=17028672`
+    - Декорация для аквариума, террариума `type_id=95277` `description_category_id=17028672`
+    - Грунт для аквариума, террариума `type_id=95274` `description_category_id=17028672`
+    - Наполнитель для аквариумного фильтра `type_id=324689474` `description_category_id=17028672`
+    - Освещение для аквариума, террариума `type_id=95292` `description_category_id=17028672`
+    - Климатическая система для террариума `type_id=970798055` `description_category_id=17028672`
+    - Аксессуары для аквариума, террариума `type_id=95279` `description_category_id=17028672`
+    - Оборудование для обогрева террариума `type_id=970798020` `description_category_id=17028672`
+    - Тест для аквариума `type_id=95298` `description_category_id=17028672`
+    - Стерилизатор для аквариума `type_id=95300` `description_category_id=17028672`
+    - Скиммер для аквариума `type_id=971215822` `description_category_id=17028672`
+    - Погружная помпа для аквариума `type_id=95286` `description_category_id=17028672`
+    - Инкубатор для рептилий `type_id=970798024` `description_category_id=17028672`
+    - Распылитель для аквариума `type_id=95289` `description_category_id=17028672`
+    - Оборудование СО₂ для аквариума `type_id=95283` `description_category_id=17028672`
+    - Фильтр для аквариума, террариума `type_id=95301` `description_category_id=17028672`
+    - Нагреватель воды для аквариума `type_id=95282` `description_category_id=17028672`
+    - Компрессор для аквариума `type_id=95280` `description_category_id=17028672`
+  - Муравьиная ферма `description_category_id=89901233`
+    - Икра для разведения аквариумных рыб `type_id=971079262` `description_category_id=89901233`
+    - Муравьиная ферма `type_id=193084523` `description_category_id=89901233`
+  - Одежда и обувь для животных `description_category_id=17028966`
+    - Спасательный жилет для животных `type_id=863256801` `description_category_id=17028966`
+    - Антицарапки `type_id=98983` `description_category_id=17028966`
+    - Украшение для животных `type_id=971929672` `description_category_id=17028966`
+    - Манекен животного `type_id=971813657` `description_category_id=17028966`
+    - Одежда для животных `type_id=96063` `description_category_id=17028966`
+    - Обувь для собак `type_id=96062` `description_category_id=17028966`
+  - Гаджеты для животных `description_category_id=92310197`
+    - Отпугиватель вредителей `type_id=95223` `description_category_id=92310197`
+  - Аксессуар для перевозки и сна `description_category_id=17028674`
+    - Коврик для животных `type_id=95201` `description_category_id=17028674`
+    - Автокресло для животных `type_id=796002986` `description_category_id=17028674`
+    - Домик для животных `type_id=95199` `description_category_id=17028674`
+    - Чехол для переноски `type_id=95212` `description_category_id=17028674`
+    - Аксессуары для клетки `type_id=971035250` `description_category_id=17028674`
+    - Ремень безопасности для собак `type_id=95210` `description_category_id=17028674`
+    - Жердочка `type_id=971323353` `description_category_id=17028674`
+    - Вольер `type_id=95197` `description_category_id=17028674`
+    - Гамак для животных `type_id=95198` `description_category_id=17028674`
+    - Покрывало для животных `type_id=95209` `description_category_id=17028674`
+    - Сетка для перевозки животных `type_id=95211` `description_category_id=17028674`
+    - Урна для праха животных `type_id=970995760` `description_category_id=17028674`
+    - Лестница для животных `type_id=95204` `description_category_id=17028674`
+    - Палатка для животных `type_id=95207` `description_category_id=17028674`
+    - Запчасть для переноски `type_id=971366829` `description_category_id=17028674`
+    - Будка для собак `type_id=95196` `description_category_id=17028674`
+    - Секция для вольера `type_id=970971161` `description_category_id=17028674`
+    - Дверца для животных `type_id=504866297` `description_category_id=17028674`
+    - Пандус для животных `type_id=971079222` `description_category_id=17028674`
+    - Клетка для животных `type_id=95200` `description_category_id=17028674`
+    - Освещение для декоративных птиц `type_id=971118030` `description_category_id=17028674`
+    - Автогамак для животных `type_id=98056` `description_category_id=17028674`
+    - Лежак для животных `type_id=95203` `description_category_id=17028674`
+    - Матрас для животных `type_id=95205` `description_category_id=17028674`
+    - Переноска для животных `type_id=95208` `description_category_id=17028674`
+    - Инструмент для отлова животных `type_id=971025111` `description_category_id=17028674`
+    - Ограждение для животных `type_id=95206` `description_category_id=17028674`
+  - Аквариумы и террариумы `description_category_id=17028969`
+    - Террариумный набор `type_id=326660806` `description_category_id=17028969`
+    - Террариум `type_id=95265` `description_category_id=17028969`
+    - Аквариумный набор `type_id=95264` `description_category_id=17028969`
+    - Аквариум `type_id=95263` `description_category_id=17028969`
+  - Инсектологическая ферма `description_category_id=99735335`
+    - Инсектологическая ферма `type_id=971012213` `description_category_id=99735335`
+    - Ферма бабочек `type_id=971326596` `description_category_id=99735335`
+- Бытовая химия `description_category_id=75021418`
+  - Освежители воздуха `description_category_id=17027922`
+    - Освежитель воздуха `type_id=92720` `description_category_id=17027922`
+    - Поглотитель запаха в холодильнике `type_id=92716` `description_category_id=17027922`
+  - Моющие и чистящие средства `description_category_id=17027920`
+    - Чистящее средство `type_id=92701` `description_category_id=17027920`
+    - Жидкое средство для стирки `type_id=92695` `description_category_id=17027920`
+    - Порошок для посудомоечной машины `type_id=971013000` `description_category_id=17027920`
+    - Полироль для мебели `type_id=971750190` `description_category_id=17027920`
+    - Соль для посудомоечной машины `type_id=970617626` `description_category_id=17027920`
+    - Таблетки для стирки `type_id=971277715` `description_category_id=17027920`
+    - Гель для посудомоечной машины `type_id=971013001` `description_category_id=17027920`
+    - Средство ручного мытья посуды `type_id=92704` `description_category_id=17027920`
+    - Средство от засоров `type_id=971083507` `description_category_id=17027920`
+    - Пергидроль концентрат `type_id=971073328` `description_category_id=17027920`
+    - Капсулы для посудомоечной машины `type_id=971013007` `description_category_id=17027920`
+    - Кондиционер для стирки белья `type_id=92697` `description_category_id=17027920`
+    - Очиститель для посудомоечной машины `type_id=971013190` `description_category_id=17027920`
+    - Средство для септика, биотуалета `type_id=92706` `description_category_id=17027920`
+    - Антиклей, антискотч `type_id=94071` `description_category_id=17027920`
+    - Средство для глажки `type_id=970976080` `description_category_id=17027920`
+    - Мыло хозяйственное `type_id=697962595` `description_category_id=17027920`
+    - Стиральный порошок `type_id=92713` `description_category_id=17027920`
+    - Краска для ткани `type_id=970677678` `description_category_id=17027920`
+    - Пятновыводитель `type_id=92700` `description_category_id=17027920`
+    - Средство против запотевания стекол `type_id=971061806` `description_category_id=17027920`
+    - Средство для бассейна `type_id=97583` `description_category_id=17027920`
+    - Ловушка цвета для стирки `type_id=970788025` `description_category_id=17027920`
+    - Таблетки для посудомоечной машины `type_id=509837604` `description_category_id=17027920`
+    - Средство для очистки рук `type_id=92264` `description_category_id=17027920`
+    - Ополаскиватель для посудомоечной машины `type_id=970630176` `description_category_id=17027920`
+    - Усилитель стирки `type_id=971751428` `description_category_id=17027920`
+    - Средство для смягчения воды `type_id=92707` `description_category_id=17027920`
+    - Капсулы для стирки `type_id=92696` `description_category_id=17027920`
+    - Влажные салфетки для уборки `type_id=971092221` `description_category_id=17027920`
+    - Отбеливатель `type_id=92699` `description_category_id=17027920`
+  - Средства от вредителей `description_category_id=17028747`
+    - Мухобойка `type_id=95639` `description_category_id=17028747`
+    - Лампа от насекомых `type_id=95634` `description_category_id=17028747`
+    - Средство от насекомых `type_id=99385` `description_category_id=17028747`
+    - Средство после укусов насекомых `type_id=971751450` `description_category_id=17028747`
+    - Аксессуары для борьбы с насекомыми, грызунами `type_id=971091912` `description_category_id=17028747`
+    - Средство от грызунов `type_id=970842803` `description_category_id=17028747`
+    - Фумигатор `type_id=95657` `description_category_id=17028747`
+    - Мышеловка, крысоловка `type_id=95640` `description_category_id=17028747`
+- Фермерское хозяйство `description_category_id=88976462`
+  - Виноградарство `description_category_id=200000240`
+    - Дробилка для ягод, фруктов `type_id=970997473` `description_category_id=200000240`
+  - Товары санитарно-пищевого контроля `description_category_id=93548041`
+    - Средство санитарно-пищевого контроля `type_id=970971435` `description_category_id=93548041`
+  - Ручной инвентарь пчеловода `description_category_id=88979659`
+    - Средство для лечения пчел `type_id=970945540` `description_category_id=88979659`
+    - Ручной инвентарь пчеловода `type_id=970861227` `description_category_id=88979659`
+  - Ветеринарные товары для с/х животных и птиц `description_category_id=88979264`
+    - Инсектицид, акарицид для обработки животноводческих помещений `type_id=970853967` `description_category_id=88979264`
+    - Весы для животных `type_id=970685224` `description_category_id=88979264`
+    - Репеллент для сельскохозяйственных животных `type_id=971751441` `description_category_id=88979264`
+    - Тест для сельскохозяйственных животных `type_id=971393534` `description_category_id=88979264`
+  - Оборудование для комбайнов `description_category_id=92265255`
+    - Режущий аппарат для жаток комбайнов `type_id=970943566` `description_category_id=92265255`
+  - Обогрев и вентиляция для с/х животных и птиц `description_category_id=88979257`
+    - Брудер `type_id=95996` `description_category_id=88979257`
+    - Вентиляция для сельскохозяйственных животных `type_id=115947501` `description_category_id=88979257`
+    - Сушилка для телят `type_id=970885666` `description_category_id=88979257`
+    - Оборудование для обогрева сельскохозяйственных животных `type_id=970867277` `description_category_id=88979257`
+    - Рефлектор для фермерского хозяйства `type_id=96001` `description_category_id=88979257`
+  - Товары для голубеводства `description_category_id=94088844`
+    - Насест для голубей `type_id=970974757` `description_category_id=94088844`
+  - Доильное оборудование `description_category_id=88979116`
+    - Доильный аппарат `type_id=970859868` `description_category_id=88979116`
+    - Аксессуары для доильного аппарата `type_id=970859866` `description_category_id=88979116`
+  - Оборудование для убоя и ощипа `description_category_id=88979115`
+    - Бильные пальцы `type_id=970859897` `description_category_id=88979115`
+    - Инструмент для забоя, ощипа `type_id=970859895` `description_category_id=88979115`
+    - Шпарчан для птицы `type_id=970859894` `description_category_id=88979115`
+    - Перосъемная машина `type_id=970831230` `description_category_id=88979115`
+  - Вывод пчелиных маток `description_category_id=88979652`
+    - Оборудование для мечения пчелиных маток `type_id=970861199` `description_category_id=88979652`
+    - Оборудование для вывода пчелиных маток `type_id=970861198` `description_category_id=88979652`
+  - Электропастухи и комплектующие `description_category_id=88979112`
+    - Электропастух `type_id=970859961` `description_category_id=88979112`
+    - Заземление для электропастуха `type_id=970859966` `description_category_id=88979112`
+    - Электропогонялка для скота `type_id=971297046` `description_category_id=88979112`
+    - Ворота для электропастуха `type_id=970859968` `description_category_id=88979112`
+    - Громоотвод для электропастуха `type_id=970859965` `description_category_id=88979112`
+    - Запчасть для электропастуха `type_id=970859964` `description_category_id=88979112`
+    - Сеть для сельскохозяйственных птиц `type_id=970859963` `description_category_id=88979112`
+    - Столб для электропастуха `type_id=970859962` `description_category_id=88979112`
+  - Транспортировка с/х птиц и яиц `description_category_id=88979258`
+    - Коробка для транспортировки яиц `type_id=971072814` `description_category_id=88979258`
+    - Контейнер для перевозки сельскохозяйственных птиц `type_id=970860344` `description_category_id=88979258`
+  - Медогонки и аксессуары `description_category_id=88979656`
+    - Медогонка `type_id=970861210` `description_category_id=88979656`
+    - Аксессуары для медогонки `type_id=970861212` `description_category_id=88979656`
+  - Маркировка с/х животных и птиц `description_category_id=88979259`
+    - Инструмент для маркировки сельскохозяйственных животных `type_id=970860357` `description_category_id=88979259`
+    - Маркировка сельскохозяйственных животных `type_id=970860358` `description_category_id=88979259`
+  - Инкубаторы и овоскопы `description_category_id=88979210`
+    - Инкубатор для яиц `type_id=95998` `description_category_id=88979210`
+    - Запчасть для инкубатора яиц `type_id=970859893` `description_category_id=88979210`
+    - Овоскоп `type_id=970831229` `description_category_id=88979210`
+  - Изготовление меда `description_category_id=88979662`
+    - Рефрактометр для меда `type_id=970861262` `description_category_id=88979662`
+    - Оборудование для переработки меда `type_id=970861260` `description_category_id=88979662`
+    - Станок-стол для распечатки сотовых рамок `type_id=970861265` `description_category_id=88979662`
+  - Системы кормления и поения для с/х животных и птиц `description_category_id=88979107`
+    - Рептух для сена `type_id=971111142` `description_category_id=88979107`
+    - Соска для вскармливания сельскохозяйственных животных `type_id=970886140` `description_category_id=88979107`
+    - Пенсильванское сито `type_id=970867287` `description_category_id=88979107`
+    - Кормушка для сельскохозяйственных животных `type_id=970859958` `description_category_id=88979107`
+    - Поилка для сельскохозяйственных животных `type_id=970859957` `description_category_id=88979107`
+    - Запчасть для системы кормления сельскохозяйственных животных `type_id=970859952` `description_category_id=88979107`
+    - Медикатор `type_id=970859949` `description_category_id=88979107`
+  - Изготовление кормов для с/х животных и птиц `description_category_id=88979114`
+    - Гранулятор для комбикорма `type_id=970859871` `description_category_id=88979114`
+    - Зернодробилка `type_id=253025785` `description_category_id=88979114`
+    - Плющилка зерна `type_id=971425755` `description_category_id=88979114`
+    - Бур-пробоотборник для сельскохозяйственных кормов `type_id=970862378` `description_category_id=88979114`
+    - Запчасть для пресс-подборщика `type_id=971150588` `description_category_id=88979114`
+    - Анализатор зерна `type_id=971042092` `description_category_id=88979114`
+    - Экструдер для кормов `type_id=970859870` `description_category_id=88979114`
+    - Запчасть для зернодробилки `type_id=970831233` `description_category_id=88979114`
+    - Запчасть для сенокосилки `type_id=971151140` `description_category_id=88979114`
+    - Кормоизмельчитель `type_id=970702233` `description_category_id=88979114`
+    - Биоконсервант для сельскохозяйственных кормов `type_id=970862377` `description_category_id=88979114`
+    - Запчасти для кормоизмельчителя, гранулятора `type_id=970867501` `description_category_id=88979114`
+  - Оборудование для удаления навоза `description_category_id=88979119`
+    - Транспортер навозоуборочный `type_id=970859913` `description_category_id=88979119`
+    - Скребок, вилы для удаления навоза `type_id=970859916` `description_category_id=88979119`
+    - Запчасть транспортера для удаления навоза `type_id=970859914` `description_category_id=88979119`
+  - Для лошадей `description_category_id=89885847`
+    - Железо для лошади `type_id=970703603` `description_category_id=89885847`
+    - Подковы `type_id=98321` `description_category_id=89885847`
+    - Колокольчик для сельскохозяйственных животных `type_id=971751398` `description_category_id=89885847`
+    - Оборудование для конюшни `type_id=970867984` `description_category_id=89885847`
+    - Инструмент для ковки лошадей `type_id=970860598` `description_category_id=89885847`
+  - Товары для гигиены с/х животных `description_category_id=88979263`
+    - Щетка для сельскохозяйственных животных `type_id=971407011` `description_category_id=88979263`
+    - Средство для ухода за сельскохозяйственными животными `type_id=970848563` `description_category_id=88979263`
+    - Дезинфекция, моющие средство для животноводства `type_id=970848561` `description_category_id=88979263`
+    - Осушитель для подстилки `type_id=970684941` `description_category_id=88979263`
+    - Бактерии для подстилки `type_id=970683271` `description_category_id=88979263`
+  - Тара и упаковка для меда `description_category_id=88979665`
+    - Емкость для работы с медом `type_id=970861261` `description_category_id=88979665`
+    - Пробник для меда `type_id=970861239` `description_category_id=88979665`
+    - Куботейнер для меда `type_id=970861238` `description_category_id=88979665`
+    - Упаковка для меда `type_id=971008111` `description_category_id=88979665`
+  - Груминг с/х животных `description_category_id=88979261`
+    - Запчасть для стригального агрегата `type_id=970867275` `description_category_id=88979261`
+    - Ножницы для стрижки сельскохозяйственных животных `type_id=970860604` `description_category_id=88979261`
+    - Станок по заточке лезвий для стрижки животных `type_id=970860603` `description_category_id=88979261`
+    - Стригальный агрегат `type_id=970860602` `description_category_id=88979261`
+  - Ульи и комлектующие `description_category_id=88979640`
+    - Аксессуары для улья `type_id=970861259` `description_category_id=88979640`
+    - Улей `type_id=97664` `description_category_id=88979640`
+  - Оборудование для хранения и переработки молока `description_category_id=88979121`
+    - Сепаратор молока `type_id=193084522` `description_category_id=88979121`
+    - Форма для масла `type_id=971156397` `description_category_id=88979121`
+    - Оборудование для хранения, переработки молока `type_id=970859932` `description_category_id=88979121`
+    - Оборудование для сыроварни `type_id=970859930` `description_category_id=88979121`
+    - Лавсановый мешок `type_id=970850179` `description_category_id=88979121`
+    - Сыроварня `type_id=970620171` `description_category_id=88979121`
+    - Маслобойка `type_id=91483` `description_category_id=88979121`
+  - Вощина, рамки и аксессуары `description_category_id=88979645`
+    - Инструмент для пчелиной рамки `type_id=970861128` `description_category_id=88979645`
+    - Аксессуары для пчелиной рамки `type_id=970861127` `description_category_id=88979645`
+    - Рамка пчелиная `type_id=970861126` `description_category_id=88979645`
+    - Вощина `type_id=970628455` `description_category_id=88979645`
+  - Клетки и комплектующие для с/х животных и птиц `description_category_id=88979211`
+    - Инструмент для клеток сельскохозяйственных животных `type_id=970860393` `description_category_id=88979211`
+    - Аксессуары для курятника, птичника `type_id=971081516` `description_category_id=88979211`
+    - Подкладное яйцо для птиц `type_id=970860403` `description_category_id=88979211`
+    - Курятник `type_id=970860398` `description_category_id=88979211`
+    - Клетка для сельскохозяйственных животных `type_id=970860397` `description_category_id=88979211`
+    - Гнездо для сельскохозяйственных птиц `type_id=970860395` `description_category_id=88979211`
+    - Аксессуар для клеток сельскохозяйственных животных `type_id=970860392` `description_category_id=88979211`
+    - Мат для КРС `type_id=971439409` `description_category_id=88979211`
+    - Решетка для пола клетки `type_id=970860404` `description_category_id=88979211`
+    - Цепь для привязи скота `type_id=970944645` `description_category_id=88979211`
+    - Измеритель влажности, температуры сена `type_id=970860394` `description_category_id=88979211`
+    - Защита от расклева для птиц `type_id=970860402` `description_category_id=88979211`
+  - Оборудование для пасеки `description_category_id=88979668`
+    - Оборудование для пасеки `type_id=970861280` `description_category_id=88979668`
+  - Вакуумное оборудование для с/х животных `description_category_id=88979117`
+    - Вакуумная установка для фермы `type_id=970859821` `description_category_id=88979117`
+    - Запчасть для вакуумной установки `type_id=970859824` `description_category_id=88979117`
+- Строительство и ремонт `description_category_id=17027482`
+  - Станок `description_category_id=17028942`
+    - Трубогибочный станок `type_id=97982` `description_category_id=17028942`
+    - Вытяжная установка `type_id=971749136` `description_category_id=17028942`
+    - Наплавочный станок `type_id=971403152` `description_category_id=17028942`
+    - Кромкооблицовочный станок `type_id=971083521` `description_category_id=17028942`
+    - Верстак `type_id=504866278` `description_category_id=17028942`
+    - Распиловочный станок `type_id=94713` `description_category_id=17028942`
+    - Клепальный станок для пильных цепей `type_id=970969876` `description_category_id=17028942`
+    - Аксессуар для промышленного стола `type_id=970984437` `description_category_id=17028942`
+    - Станок для дрели, УШМ `type_id=92133` `description_category_id=17028942`
+    - Лобзиковый станок `type_id=970777022` `description_category_id=17028942`
+    - Оснастка для станка `type_id=970678632` `description_category_id=17028942`
+    - Станок для обработки листового металла `type_id=971478420` `description_category_id=17028942`
+    - Подставка для станка `type_id=971749634` `description_category_id=17028942`
+    - Заточной станок `type_id=94958` `description_category_id=17028942`
+    - Сверлильный станок `type_id=94959` `description_category_id=17028942`
+    - Станок для лазерной гравировки, резки `type_id=971053172` `description_category_id=17028942`
+    - Угловысечной станок `type_id=971478393` `description_category_id=17028942`
+    - Станок для разделки кабеля `type_id=971277584` `description_category_id=17028942`
+    - Камнерезный станок `type_id=94712` `description_category_id=17028942`
+    - Резьбонарезной станок `type_id=970983185` `description_category_id=17028942`
+    - Стол промышленный `type_id=970984436` `description_category_id=17028942`
+    - Форматно-раскроечный станок `type_id=971409718` `description_category_id=17028942`
+    - Расточный станок `type_id=971402795` `description_category_id=17028942`
+    - Станок для холодной ковки `type_id=97953` `description_category_id=17028942`
+  - Лампочка `description_category_id=17028609`
+    - Лампочка `type_id=91309` `description_category_id=17028609`
+    - Патрон для лампы `type_id=898304758` `description_category_id=17028609`
+    - Стартеры для люминесцентных ламп `type_id=970625351` `description_category_id=17028609`
+  - Средства защиты и пожаротушения `description_category_id=72163739`
+    - Аксессуар для защитных очков `type_id=970583310` `description_category_id=72163739`
+    - Аксессуар для системы пожаротушения `type_id=971000658` `description_category_id=72163739`
+    - Каскетка защитная `type_id=970829767` `description_category_id=72163739`
+    - Краскоступы `type_id=970693193` `description_category_id=72163739`
+    - Тележка, сидение плиточника `type_id=971414430` `description_category_id=72163739`
+    - Аксессуары для сварочной маски `type_id=970682728` `description_category_id=72163739`
+    - Когти, лазы монтерские `type_id=970889553` `description_category_id=72163739`
+    - Комплект защиты `type_id=970708360` `description_category_id=72163739`
+    - Фильтр для респиратора, маски `type_id=558631551` `description_category_id=72163739`
+    - Наушники противошумные `type_id=93862` `description_category_id=72163739`
+    - Наколенники строительные `type_id=893121588` `description_category_id=72163739`
+    - Аксессуар для противошумных наушников `type_id=970942611` `description_category_id=72163739`
+    - Противогаз `type_id=970714382` `description_category_id=72163739`
+    - Защитно-улавливающая система `type_id=971436844` `description_category_id=72163739`
+    - Антипрокольная стелька `type_id=971292369` `description_category_id=72163739`
+    - Аксессуары для огнетушителя `type_id=971109638` `description_category_id=72163739`
+    - Коврик диэлектрический `type_id=970861110` `description_category_id=72163739`
+    - Перчатки, рукавицы защитные `type_id=888258667` `description_category_id=72163739`
+    - Маска сварщика `type_id=93860` `description_category_id=72163739`
+    - Пожарный инвентарь `type_id=971024984` `description_category_id=72163739`
+    - Строп страховочный `type_id=970832315` `description_category_id=72163739`
+    - Пояс страховочный `type_id=93867` `description_category_id=72163739`
+    - Устройство позиционирования страховочное `type_id=970863016` `description_category_id=72163739`
+    - Экзоскелет промышленный `type_id=971814538` `description_category_id=72163739`
+    - Беруши противошумные `type_id=970831661` `description_category_id=72163739`
+    - Респиратор профессиональный `type_id=970702246` `description_category_id=72163739`
+    - Страховочное средство для инструмента `type_id=971053867` `description_category_id=72163739`
+    - Аксессуары для респиратора `type_id=970702638` `description_category_id=72163739`
+    - Очки защитные `type_id=93864` `description_category_id=72163739`
+    - Жилет монтажника `type_id=970863643` `description_category_id=72163739`
+    - Съемный защитный подносок `type_id=970855810` `description_category_id=72163739`
+    - Анкерное страховочное устройство `type_id=970863015` `description_category_id=72163739`
+    - Щиток защитный `type_id=93872` `description_category_id=72163739`
+    - Держатель для перчаток `type_id=970855809` `description_category_id=72163739`
+    - Аксессуар для каски `type_id=970682684` `description_category_id=72163739`
+    - Нарукавники защитные `type_id=92763` `description_category_id=72163739`
+    - Каска строительная `type_id=93859` `description_category_id=72163739`
+    - Краги сварщика `type_id=96003` `description_category_id=72163739`
+  - Изоляционные материалы `description_category_id=79560974`
+    - Демпферная лента `type_id=99470` `description_category_id=79560974`
+    - Уплотнительный шнур `type_id=970990328` `description_category_id=79560974`
+    - Шумоизоляция для сантехники `type_id=970976336` `description_category_id=79560974`
+    - Аксессуары для звукоизоляции `type_id=970972234` `description_category_id=79560974`
+    - Звукоизоляционный материал `type_id=313773778` `description_category_id=79560974`
+    - Изоляционное покрытие `type_id=97455` `description_category_id=79560974`
+    - Теплоизоляционный материал `type_id=99473` `description_category_id=79560974`
+    - Сантехническая нить `type_id=99498` `description_category_id=79560974`
+    - Сантехнический лен `type_id=99491` `description_category_id=79560974`
+    - Акустическая панель `type_id=970865094` `description_category_id=79560974`
+    - Акустический поролон `type_id=970972231` `description_category_id=79560974`
+    - Уплотнитель для окон, дверей `type_id=94945` `description_category_id=79560974`
+    - Лента для поликарбоната `type_id=971097523` `description_category_id=79560974`
+    - Гидроизоляционный материал `type_id=970691422` `description_category_id=79560974`
+    - Лента ФУМ `type_id=970669866` `description_category_id=79560974`
+    - Пароизоляционный материал `type_id=970694048` `description_category_id=79560974`
+    - Утеплитель для теплого пола `type_id=99474` `description_category_id=79560974`
+  - Электрика `description_category_id=88265327`
+    - Терморегулятор, термостат `type_id=95402` `description_category_id=88265327`
+    - Аксессуары для заземления `type_id=971015745` `description_category_id=88265327`
+    - Гофра для кабеля `type_id=99038` `description_category_id=88265327`
+    - Изолента `type_id=94549` `description_category_id=88265327`
+    - Трубка для маркировки кабеля `type_id=971032499` `description_category_id=88265327`
+    - Термоусадочная трубка `type_id=99036` `description_category_id=88265327`
+    - Кнопка для звонка `type_id=94539` `description_category_id=88265327`
+    - Кабель-канал `type_id=859372952` `description_category_id=88265327`
+    - Соединитель для кабель-каналов `type_id=970859695` `description_category_id=88265327`
+    - Звонок дверной `type_id=94537` `description_category_id=88265327`
+    - Труба ПНД для кабеля `type_id=970952654` `description_category_id=88265327`
+    - Молниеприемник `type_id=970965354` `description_category_id=88265327`
+    - Комплект молниезащиты `type_id=971012068` `description_category_id=88265327`
+    - Комплект заземления `type_id=970689886` `description_category_id=88265327`
+    - Дверной гибкий переход для кабеля `type_id=971149511` `description_category_id=88265327`
+    - Аксессуары для молниезащиты `type_id=971012849` `description_category_id=88265327`
+    - Аксессуары для звонков `type_id=971457609` `description_category_id=88265327`
+  - Теплый пол `description_category_id=17028744`
+    - Датчик температуры теплого пола `type_id=800397032` `description_category_id=17028744`
+    - Сальник для ввода в трубу `type_id=630154642` `description_category_id=17028744`
+    - Теплый плинтус `type_id=970960210` `description_category_id=17028744`
+    - Теплый пол `type_id=95401` `description_category_id=17028744`
+    - Греющая сетка `type_id=970826285` `description_category_id=17028744`
+    - Нагревательный мат `type_id=99468` `description_category_id=17028744`
+    - Аксессуары для теплого плинтуса `type_id=970960211` `description_category_id=17028744`
+    - Дополнительный комплект монтажа теплого пола `type_id=800397033` `description_category_id=17028744`
+  - Газоснабжение `description_category_id=200000202`
+    - Арматура для газгольдеров `type_id=971681170` `description_category_id=200000202`
+    - Газорегуляторный пункт `type_id=971156454` `description_category_id=200000202`
+  - Крепеж и фурнитура `description_category_id=87889854`
+    - Основание столба `type_id=971327049` `description_category_id=87889854`
+    - Шайба `type_id=94562` `description_category_id=87889854`
+    - Почтовый ящик `type_id=99482` `description_category_id=87889854`
+    - Подвес крепежный `type_id=98769` `description_category_id=87889854`
+    - Зажим для греющего кабеля `type_id=970966537` `description_category_id=87889854`
+    - Шплинтовое крепление `type_id=970843509` `description_category_id=87889854`
+    - Стеклодержатель `type_id=98758` `description_category_id=87889854`
+    - Площадка под хомуты `type_id=98596` `description_category_id=87889854`
+    - Аксессуары для опалубки `type_id=971880440` `description_category_id=87889854`
+    - Анкер химический `type_id=94560` `description_category_id=87889854`
+    - Пластина перфорированная крепежная `type_id=98770` `description_category_id=87889854`
+    - Заклепка `type_id=94548` `description_category_id=87889854`
+    - Шурупы `type_id=94565` `description_category_id=87889854`
+    - Клин, спейсер монтажный `type_id=970851065` `description_category_id=87889854`
+    - Лента с саморезами `type_id=971051882` `description_category_id=87889854`
+    - Уголок перфорированный крепежный `type_id=94553` `description_category_id=87889854`
+    - Гвозди `type_id=94545` `description_category_id=87889854`
+    - Стойка-основание для СВП `type_id=970675227` `description_category_id=87889854`
+    - Гайка `type_id=94544` `description_category_id=87889854`
+    - Подушка монтажная `type_id=970725933` `description_category_id=87889854`
+    - Скоба строительная `type_id=98771` `description_category_id=87889854`
+    - Регулятор высоты настенной плитки `type_id=971279599` `description_category_id=87889854`
+    - Профиль для поликарбоната `type_id=970825250` `description_category_id=87889854`
+    - Присоска крепежная `type_id=98766` `description_category_id=87889854`
+    - Комплект крепежа строительного `type_id=94552` `description_category_id=87889854`
+    - Стыковочный профиль для полов `type_id=504866217` `description_category_id=87889854`
+    - Анкер `type_id=94541` `description_category_id=87889854`
+    - Винт `type_id=94543` `description_category_id=87889854`
+    - Профиль деревянный `type_id=970862851` `description_category_id=87889854`
+    - Дюбель `type_id=94547` `description_category_id=87889854`
+    - Кляймер `type_id=94551` `description_category_id=87889854`
+    - Штифт для крепления `type_id=971196533` `description_category_id=87889854`
+    - Крепления для маяков для штукатурки `type_id=971034067` `description_category_id=87889854`
+    - Пружинный узел `type_id=970871920` `description_category_id=87889854`
+    - Рондоль дожимная `type_id=970857833` `description_category_id=87889854`
+    - Полоса установочная `type_id=94554` `description_category_id=87889854`
+    - Гибкая связь для кладки `type_id=970882085` `description_category_id=87889854`
+    - Монтажный патрон `type_id=971313496` `description_category_id=87889854`
+    - Профиль для светодиодной ленты `type_id=405801077` `description_category_id=87889854`
+    - Элемент трубной системы `type_id=971747509` `description_category_id=87889854`
+    - Крепление для труб `type_id=98781` `description_category_id=87889854`
+    - Втулка крепежная `type_id=971216373` `description_category_id=87889854`
+    - Болт `type_id=94542` `description_category_id=87889854`
+    - Клиппер крепежный `type_id=970859618` `description_category_id=87889854`
+    - Система выравнивания плитки `type_id=970842086` `description_category_id=87889854`
+    - Сетка антимоскитная `type_id=95652` `description_category_id=87889854`
+    - Аксессуар для анкера `type_id=970868758` `description_category_id=87889854`
+    - Стойка установочная крепежная `type_id=971296389` `description_category_id=87889854`
+    - Зажим для выравнивания плитки `type_id=970675228` `description_category_id=87889854`
+    - Скобы для строительного степлера `type_id=94557` `description_category_id=87889854`
+    - Аксессуары для антимоскитной сетки `type_id=970802095` `description_category_id=87889854`
+    - Саморезы `type_id=94556` `description_category_id=87889854`
+    - Профиль для потолка `type_id=970689935` `description_category_id=87889854`
+    - Крестик для плитки `type_id=98774` `description_category_id=87889854`
+    - Клин, подложка для СВП `type_id=970675271` `description_category_id=87889854`
+    - Крепление для зеркала `type_id=98783` `description_category_id=87889854`
+    - Крепеж для поликарбоната `type_id=970825248` `description_category_id=87889854`
+    - Стяжка `type_id=94559` `description_category_id=87889854`
+    - Опора бруса `type_id=970862354` `description_category_id=87889854`
+    - Кронштейн крепежный `type_id=779860078` `description_category_id=87889854`
+    - Хомут `type_id=94561` `description_category_id=87889854`
+    - Шпилька крепежная `type_id=94564` `description_category_id=87889854`
+    - Крюк крепежный `type_id=98773` `description_category_id=87889854`
+    - Набор для клиппера крепежного `type_id=970859619` `description_category_id=87889854`
+  - Декор и лепнина `description_category_id=81865080`
+    - Плинтус потолочный `type_id=970806789` `description_category_id=81865080`
+    - Молдинг для стен `type_id=970709772` `description_category_id=81865080`
+    - Элемент кованый `type_id=970939145` `description_category_id=81865080`
+    - Элемент лепного декора `type_id=970854091` `description_category_id=81865080`
+  - Души и душевые кабины `description_category_id=17028660`
+    - Душевой уголок `type_id=96669` `description_category_id=17028660`
+    - Душевой поддон `type_id=96668` `description_category_id=17028660`
+    - Душевая кабина `type_id=96666` `description_category_id=17028660`
+    - Душевая дверь `type_id=96624` `description_category_id=17028660`
+    - Аксессуары, запчасти для душевой кабины `type_id=970680555` `description_category_id=17028660`
+    - Ограждение, экран для ванны, душа `type_id=96670` `description_category_id=17028660`
+  - Расходники для инструмента `description_category_id=17028734`
+    - Губка шлифовальная `type_id=94870` `description_category_id=17028734`
+    - Цепь для пилы `type_id=94948` `description_category_id=17028734`
+    - Очиститель шлифовальных абразивов `type_id=971095445` `description_category_id=17028734`
+    - Набор для полировки `type_id=971049471` `description_category_id=17028734`
+    - Головка шлифовальная `type_id=971095451` `description_category_id=17028734`
+    - Лезвие для строительного ножа `type_id=94920` `description_category_id=17028734`
+    - Полотно `type_id=94936` `description_category_id=17028734`
+    - Нож для фрезы `type_id=971315195` `description_category_id=17028734`
+    - Сменная пластина для резца `type_id=639026110` `description_category_id=17028734`
+    - Фреза `type_id=94947` `description_category_id=17028734`
+    - Блок шлифовальный `type_id=98244` `description_category_id=17028734`
+    - Корщетка `type_id=94913` `description_category_id=17028734`
+    - Клеевой стержень `type_id=94909` `description_category_id=17028734`
+    - Франкфурт `type_id=99514` `description_category_id=17028734`
+    - Стальная вата `type_id=971081399` `description_category_id=17028734`
+    - Режущий ролик для трубореза `type_id=970851106` `description_category_id=17028734`
+    - Диск алмазный `type_id=970826290` `description_category_id=17028734`
+    - Лента пильная `type_id=94922` `description_category_id=17028734`
+    - Наполнитель для галтовки `type_id=971364942` `description_category_id=17028734`
+    - Зенкер `type_id=92070` `description_category_id=17028734`
+    - Сетка абразивная `type_id=94942` `description_category_id=17028734`
+    - Лист шлифовальный, шкурка `type_id=94925` `description_category_id=17028734`
+    - Патрон для дрели `type_id=94882` `description_category_id=17028734`
+    - Круг отрезной `type_id=94916` `description_category_id=17028734`
+    - Щетка для щеточных шлифмашин `type_id=971015948` `description_category_id=17028734`
+    - Диск пильный `type_id=94917` `description_category_id=17028734`
+    - Круг шлифовальный `type_id=94919` `description_category_id=17028734`
+    - Диск зачистной `type_id=97520` `description_category_id=17028734`
+    - Чашка шлифовальная `type_id=94949` `description_category_id=17028734`
+    - Лента шлифовальная `type_id=94923` `description_category_id=17028734`
+    - Сверло `type_id=94940` `description_category_id=17028734`
+    - Нож для рубанка `type_id=98491` `description_category_id=17028734`
+    - Бур `type_id=94905` `description_category_id=17028734`
+    - Коронка сверлильная `type_id=94912` `description_category_id=17028734`
+    - Резец для плиткореза `type_id=863783610` `description_category_id=17028734`
+  - Кровля `description_category_id=44407045`
+    - Комплект кровельной вентиляции `type_id=970977912` `description_category_id=44407045`
+    - Кровельный элемент `type_id=970880162` `description_category_id=44407045`
+    - Кровля `type_id=99481` `description_category_id=44407045`
+    - Черепица `type_id=99480` `description_category_id=44407045`
+    - Кровельный профнастил `type_id=99476` `description_category_id=44407045`
+    - Аксессуар для кровли `type_id=971420199` `description_category_id=44407045`
+  - Пиломатериал `description_category_id=80202912`
+    - Мебельный щит `type_id=970831235` `description_category_id=80202912`
+    - Рейка деревянная `type_id=971220360` `description_category_id=80202912`
+    - Двутавровая балка `type_id=971034598` `description_category_id=80202912`
+    - Вагонка `type_id=970825221` `description_category_id=80202912`
+    - Раскладка деревянная `type_id=970862852` `description_category_id=80202912`
+    - Брусок `type_id=970825223` `description_category_id=80202912`
+    - Лодочка-заглушка `type_id=971743364` `description_category_id=80202912`
+    - Галтель `type_id=970862849` `description_category_id=80202912`
+    - Штапик `type_id=970862853` `description_category_id=80202912`
+    - Брус `type_id=970825222` `description_category_id=80202912`
+    - Доска `type_id=970825235` `description_category_id=80202912`
+    - Шпон `type_id=971014468` `description_category_id=80202912`
+    - Уголок деревянный `type_id=970831236` `description_category_id=80202912`
+    - Нащельник `type_id=970862363` `description_category_id=80202912`
+  - Магниты `description_category_id=41577013`
+    - Магнитный держатель для инструмента `type_id=92094` `description_category_id=41577013`
+    - Ферритовый магнит `type_id=99102` `description_category_id=41577013`
+    - Магнитная лента, лист `type_id=99092` `description_category_id=41577013`
+  - Ревизионный люк `description_category_id=86491405`
+    - Ревизионный люк `type_id=98295` `description_category_id=86491405`
+  - Межкомнатные двери и арки `description_category_id=17028953`
+    - Дверное полотно `type_id=97172` `description_category_id=17028953`
+    - Коробка дверная `type_id=970694443` `description_category_id=17028953`
+    - Наличник `type_id=97149` `description_category_id=17028953`
+    - Дверь противопожарная `type_id=970861082` `description_category_id=17028953`
+    - Сводорасширитель для арки `type_id=971115455` `description_category_id=17028953`
+    - Дверь межкомнатная `type_id=97102` `description_category_id=17028953`
+    - Арка межкомнатная `type_id=970726034` `description_category_id=17028953`
+    - Дверь жалюзийная `type_id=970859595` `description_category_id=17028953`
+    - Доборы дверные `type_id=898740471` `description_category_id=17028953`
+  - Напольные покрытия `description_category_id=19863187`
+    - Плитка ПВХ `type_id=970578154` `description_category_id=19863187`
+    - Резиновое рулонное покрытие `type_id=970684612` `description_category_id=19863187`
+    - Решетчатый настил `type_id=971807923` `description_category_id=19863187`
+    - Резиновое бесшовное покрытие `type_id=970834647` `description_category_id=19863187`
+    - Плинтус `type_id=115950808` `description_category_id=19863187`
+    - Линолеум `type_id=97564` `description_category_id=19863187`
+    - Композитный уголок `type_id=971278448` `description_category_id=19863187`
+    - Порог напольный `type_id=970797781` `description_category_id=19863187`
+    - Подложка под напольные покрытия `type_id=115950809` `description_category_id=19863187`
+    - Брус лавочный полимерный `type_id=971053798` `description_category_id=19863187`
+    - Резиновая плитка `type_id=970672225` `description_category_id=19863187`
+    - Ковролин `type_id=97568` `description_category_id=19863187`
+    - Полимерная доска `type_id=971061663` `description_category_id=19863187`
+    - Террасная доска `type_id=970950653` `description_category_id=19863187`
+    - Аксессуар для террасной доски `type_id=970996980` `description_category_id=19863187`
+    - Линолеум на отрез `type_id=971110201` `description_category_id=19863187`
+    - Пробковый пол `type_id=97566` `description_category_id=19863187`
+    - Композитная доска `type_id=99318` `description_category_id=19863187`
+    - Ламинат `type_id=97565` `description_category_id=19863187`
+    - Аксессуар для плинтуса `type_id=970991742` `description_category_id=19863187`
+    - Инженерная доска `type_id=970689894` `description_category_id=19863187`
+    - Паркет штучный `type_id=970855236` `description_category_id=19863187`
+    - Композитная лага `type_id=971278449` `description_category_id=19863187`
+  - Грузоподъемное оборудование `description_category_id=86491609`
+    - Запчасти для грузоподъемного оборудования `type_id=971364389` `description_category_id=86491609`
+    - Таль `type_id=95895` `description_category_id=86491609`
+    - Растариватель `type_id=971025808` `description_category_id=86491609`
+    - Кран строительный `type_id=970661657` `description_category_id=86491609`
+    - Колесо промышленное `type_id=970793548` `description_category_id=86491609`
+    - Тележка грузовая `type_id=970793547` `description_category_id=86491609`
+    - Пульт для тельфера, тали `type_id=970859601` `description_category_id=86491609`
+    - Крюк грузовой `type_id=970857841` `description_category_id=86491609`
+    - Захват подъемный `type_id=971421391` `description_category_id=86491609`
+    - Штабелер `type_id=970892540` `description_category_id=86491609`
+    - Подъемник для листовых материалов `type_id=971084405` `description_category_id=86491609`
+    - Тельфер `type_id=95896` `description_category_id=86491609`
+    - Лебедка `type_id=92091` `description_category_id=86491609`
+  - Строительные фены `description_category_id=17028658`
+    - Строительный фен `type_id=95576` `description_category_id=17028658`
+  - Складское оборудование `description_category_id=43434356`
+    - Паллета `type_id=971007521` `description_category_id=43434356`
+  - Строительная химия `description_category_id=17028952`
+    - Порошковая краска `type_id=971683290` `description_category_id=17028952`
+    - Воск для мебели `type_id=504866200` `description_category_id=17028952`
+    - Напыляемый утеплитель `type_id=970692159` `description_category_id=17028952`
+    - Грунт-эмаль `type_id=970965004` `description_category_id=17028952`
+    - Масло-воск `type_id=970808235` `description_category_id=17028952`
+    - Гелькоут `type_id=971807694` `description_category_id=17028952`
+    - Толуол `type_id=970797101` `description_category_id=17028952`
+    - Состав для теплоизоляции `type_id=99108` `description_category_id=17028952`
+    - Олифа `type_id=970808236` `description_category_id=17028952`
+    - Разбавитель строительный `type_id=970971252` `description_category_id=17028952`
+    - Защитное средство систем отопления `type_id=970867131` `description_category_id=17028952`
+    - Масло для дерева `type_id=970636115` `description_category_id=17028952`
+    - Заполнитель для дерева `type_id=97202` `description_category_id=17028952`
+    - Масло, смазка строительная `type_id=94926` `description_category_id=17028952`
+    - Монтажная пена `type_id=99526` `description_category_id=17028952`
+    - Комплект лакокрасочных материалов `type_id=971424457` `description_category_id=17028952`
+    - Жидкое противоскользящее покрытие `type_id=970851837` `description_category_id=17028952`
+    - Разделитель для смол `type_id=971807689` `description_category_id=17028952`
+    - Ксилол `type_id=970797102` `description_category_id=17028952`
+    - Декоративная лазурь `type_id=97201` `description_category_id=17028952`
+    - Полиэфирная смола `type_id=970797561` `description_category_id=17028952`
+    - Керосин `type_id=970797146` `description_category_id=17028952`
+    - Контактная проводящая паста `type_id=970995930` `description_category_id=17028952`
+    - Полиуретан литьевой `type_id=970824559` `description_category_id=17028952`
+    - Защитная лазурь `type_id=97203` `description_category_id=17028952`
+    - Герметик `type_id=97438` `description_category_id=17028952`
+    - Маркер для мебели `type_id=504866203` `description_category_id=17028952`
+    - Средство для промывки теплообменников `type_id=970579655` `description_category_id=17028952`
+    - Морилка `type_id=97204` `description_category_id=17028952`
+    - Меловой порошок, краска `type_id=94927` `description_category_id=17028952`
+    - Строительный антисептик `type_id=96657` `description_category_id=17028952`
+    - Набор для реставрации поверхности `type_id=971046226` `description_category_id=17028952`
+    - Охлаждающая жидкость для сварки, резки `type_id=971014879` `description_category_id=17028952`
+    - Аэрозольная краска `type_id=138839282` `description_category_id=17028952`
+    - Штрих мебельный `type_id=504866204` `description_category_id=17028952`
+    - Компаунд `type_id=99117` `description_category_id=17028952`
+    - Обезжириватель поверхности `type_id=970943338` `description_category_id=17028952`
+    - Воск интерьерный `type_id=970955994` `description_category_id=17028952`
+    - Замазка оконная `type_id=970947049` `description_category_id=17028952`
+    - Литьевой мрамор для ванн `type_id=970975861` `description_category_id=17028952`
+    - Уплотнительная паста `type_id=99492` `description_category_id=17028952`
+    - Грунтовка `type_id=97205` `description_category_id=17028952`
+    - Ацетон технический `type_id=970797145` `description_category_id=17028952`
+    - Эпоксидная смола `type_id=869341679` `description_category_id=17028952`
+    - Покрытие липкое противопылевое `type_id=971080318` `description_category_id=17028952`
+    - Активатор монтажной пены, герметика `type_id=970809111` `description_category_id=17028952`
+    - Разглаживающее средство для герметиков `type_id=970987620` `description_category_id=17028952`
+    - Скипидар `type_id=970797098` `description_category_id=17028952`
+    - Краска `type_id=96659` `description_category_id=17028952`
+    - Жидкий акрил для ванн `type_id=970835974` `description_category_id=17028952`
+    - Реагент для систем отопления `type_id=970862369` `description_category_id=17028952`
+    - Состав для холодного цинкования `type_id=971007517` `description_category_id=17028952`
+    - Жидкость для резки стекла `type_id=971075407` `description_category_id=17028952`
+    - Паста реставрационная `type_id=971004223` `description_category_id=17028952`
+    - Растворитель строительный `type_id=96663` `description_category_id=17028952`
+    - Наполнитель для смол `type_id=971807683` `description_category_id=17028952`
+    - Функциональная добавка к ЛКМ `type_id=971167419` `description_category_id=17028952`
+    - Уайт-спирит `type_id=970797099` `description_category_id=17028952`
+    - Теплоноситель `type_id=970579636` `description_category_id=17028952`
+    - Маркер для плиточных швов `type_id=970800574` `description_category_id=17028952`
+    - Сольвент `type_id=970797144` `description_category_id=17028952`
+    - Затирка `type_id=97434` `description_category_id=17028952`
+    - Раствор для расшивки `type_id=970675291` `description_category_id=17028952`
+    - Отвердитель строительный `type_id=970859648` `description_category_id=17028952`
+    - Отбеливатель для древесины `type_id=970797097` `description_category_id=17028952`
+    - Колер `type_id=96658` `description_category_id=17028952`
+    - Эмаль `type_id=96664` `description_category_id=17028952`
+    - Пропитка `type_id=971425793` `description_category_id=17028952`
+    - Паста полировальная `type_id=94932` `description_category_id=17028952`
+    - Очиститель строительный `type_id=115949781` `description_category_id=17028952`
+    - Набор тестеров краски `type_id=970802313` `description_category_id=17028952`
+    - Лак строительный `type_id=96660` `description_category_id=17028952`
+  - Окна и комплектующие к окнам `description_category_id=82851653`
+    - Аксессуары для рольставней `type_id=971099415` `description_category_id=82851653`
+    - Рольставни `type_id=971099414` `description_category_id=82851653`
+    - Балконная дверь `type_id=970972510` `description_category_id=82851653`
+    - Подоконник `type_id=888805947` `description_category_id=82851653`
+    - Аксессуар для окон по индивидуальным размерам `type_id=971818049` `description_category_id=82851653`
+    - Окно `type_id=970726501` `description_category_id=82851653`
+    - Окно по индивидуальным размерам `type_id=971100224` `description_category_id=82851653`
+    - Стеклопакет без рамы `type_id=971682690` `description_category_id=82851653`
+    - Решетка на окно, дверь `type_id=629727955` `description_category_id=82851653`
+  - Вентиляция `description_category_id=17028957`
+    - Вентилятор приточный `type_id=97274` `description_category_id=17028957`
+    - Канальный воздухонагреватель `type_id=971124190` `description_category_id=17028957`
+    - Приточно-вытяжная установка `type_id=97286` `description_category_id=17028957`
+    - Вентилятор приточно-вытяжной `type_id=97304` `description_category_id=17028957`
+    - Вентилятор канальный `type_id=97273` `description_category_id=17028957`
+    - Вентилятор вытяжной `type_id=97272` `description_category_id=17028957`
+    - Активированный уголь для фильтров `type_id=970806228` `description_category_id=17028957`
+    - Чиллер промышленный `type_id=971684552` `description_category_id=17028957`
+    - Сменный фильтрующий элемент для вентиляции `type_id=970955701` `description_category_id=17028957`
+    - Вентилятор промышленный `type_id=970780832` `description_category_id=17028957`
+    - Компрессорно-конденсаторный блок `type_id=971323321` `description_category_id=17028957`
+    - Приточная установка `type_id=971948446` `description_category_id=17028957`
+    - Канальный воздухоохладитель `type_id=971124191` `description_category_id=17028957`
+  - Ручки, замки и фурнитура `description_category_id=17027911`
+    - Ограничитель оконный `type_id=405015796` `description_category_id=17027911`
+    - Петля для двери `type_id=94529` `description_category_id=17027911`
+    - Ручка для двери `type_id=94531` `description_category_id=17027911`
+    - Автоматический порог `type_id=970664218` `description_category_id=17027911`
+    - Опечатывающее устройство `type_id=970579549` `description_category_id=17027911`
+    - Запчасть для замка `type_id=971108827` `description_category_id=17027911`
+    - Крючок, засов дверной `type_id=504866240` `description_category_id=17027911`
+    - Подножка для открывания двери `type_id=970835649` `description_category_id=17027911`
+    - Накладка дверная `type_id=94528` `description_category_id=17027911`
+    - Фурнитура для раздвижных дверей `type_id=971433413` `description_category_id=17027911`
+    - Тарная фурнитура `type_id=970855771` `description_category_id=17027911`
+    - Ручка для окна `type_id=94533` `description_category_id=17027911`
+    - Доводчик дверной `type_id=98055` `description_category_id=17027911`
+    - Аксессуары для дверного доводчика `type_id=970851000` `description_category_id=17027911`
+    - Цилиндр для замка `type_id=94534` `description_category_id=17027911`
+    - Завертка `type_id=461157731` `description_category_id=17027911`
+    - Замок `type_id=94526` `description_category_id=17027911`
+    - Защелка дверная `type_id=970676247` `description_category_id=17027911`
+    - Пломба опечатывающая `type_id=970691414` `description_category_id=17027911`
+    - Раздвижная система для двери `type_id=970664219` `description_category_id=17027911`
+    - Дверной молоток `type_id=970595103` `description_category_id=17027911`
+    - Замок для ворот `type_id=970941701` `description_category_id=17027911`
+    - Ручка для балконной двери `type_id=971116629` `description_category_id=17027911`
+    - Шпингалет, задвижка `type_id=461044328` `description_category_id=17027911`
+    - Набор заготовок дверных ключей `type_id=970956802` `description_category_id=17027911`
+    - Фурнитура для ворот `type_id=970941706` `description_category_id=17027911`
+    - Ручка для люка `type_id=970888940` `description_category_id=17027911`
+    - Складная система для двери `type_id=970984898` `description_category_id=17027911`
+    - Аксессуары для окна `type_id=971448385` `description_category_id=17027911`
+    - Глазок дверной `type_id=970664222` `description_category_id=17027911`
+  - Такелаж `description_category_id=88678206`
+    - Вертлюг крепежный `type_id=743378981` `description_category_id=88678206`
+    - Талреп `type_id=98760` `description_category_id=88678206`
+    - Коуш `type_id=98779` `description_category_id=88678206`
+    - Наконечник троса `type_id=970861157` `description_category_id=88678206`
+    - Фал крепежный `type_id=970865206` `description_category_id=88678206`
+    - Скоба такелажная `type_id=98755` `description_category_id=88678206`
+    - Крюк такелажный `type_id=970863164` `description_category_id=88678206`
+    - Шпагат крепежный `type_id=98763` `description_category_id=88678206`
+    - Карабин крепежный `type_id=98782` `description_category_id=88678206`
+    - Веревка `type_id=92739` `description_category_id=88678206`
+    - Зажим троса `type_id=98787` `description_category_id=88678206`
+    - Цепь крепежная `type_id=115950276` `description_category_id=88678206`
+    - Такелажный блок крепежный `type_id=98792` `description_category_id=88678206`
+    - Рым-гайка `type_id=98793` `description_category_id=88678206`
+    - Рым-болт `type_id=98794` `description_category_id=88678206`
+    - Строп грузоподъемный `type_id=761910059` `description_category_id=88678206`
+    - Канат `type_id=743505105` `description_category_id=88678206`
+    - Кольцо сварное `type_id=971052268` `description_category_id=88678206`
+    - Проволока `type_id=98765` `description_category_id=88678206`
+    - Ременная лента `type_id=970865205` `description_category_id=88678206`
+    - Соединитель цепей `type_id=98757` `description_category_id=88678206`
+    - Трос `type_id=98786` `description_category_id=88678206`
+  - Паяльное оборудование `description_category_id=19173618`
+    - Хлорное железо `type_id=99114` `description_category_id=19173618`
+    - Лабораторный блок питания `type_id=97761` `description_category_id=19173618`
+    - Паяльник `type_id=96145` `description_category_id=19173618`
+    - Припой `type_id=94937` `description_category_id=19173618`
+    - Паяльная станция `type_id=96142` `description_category_id=19173618`
+    - Аксессуар для пайки `type_id=971883192` `description_category_id=19173618`
+    - Паяльная паста `type_id=971770791` `description_category_id=19173618`
+    - Набор для пайки `type_id=96139` `description_category_id=19173618`
+    - Очиститель электронных компонентов `type_id=970878641` `description_category_id=19173618`
+    - Паяльный фен `type_id=97760` `description_category_id=19173618`
+    - Насадка для строительного фена `type_id=970969914` `description_category_id=19173618`
+  - Техническое освещение `description_category_id=200001697`
+    - Техническое освещение `type_id=970868638` `description_category_id=200001697`
+    - Фитосветильник `type_id=970715573` `description_category_id=200001697`
+  - Водоснабжение и инженерная сантехника `description_category_id=87726268`
+    - Комплектующие для коллекторов `type_id=971738627` `description_category_id=87726268`
+    - Коллекторный шкаф `type_id=970743746` `description_category_id=87726268`
+    - Группа безопасности `type_id=970827709` `description_category_id=87726268`
+    - Коллектор сантехнический `type_id=96102` `description_category_id=87726268`
+    - Гидравлический разделитель `type_id=971162360` `description_category_id=87726268`
+    - Байпас для системы отопления `type_id=971395960` `description_category_id=87726268`
+    - Коллекторная группа `type_id=96103` `description_category_id=87726268`
+    - Шток телескопический для задвижек `type_id=971326612` `description_category_id=87726268`
+    - Фитинг сантехнический `type_id=96118` `description_category_id=87726268`
+  - Инструменты для ремонта и строительства `description_category_id=17028653`
+    - Пассатижи, плоскогубцы `type_id=92110` `description_category_id=17028653`
+    - Правило `type_id=92118` `description_category_id=17028653`
+    - Лобзик ручной `type_id=92092` `description_category_id=17028653`
+    - Клин для колки `type_id=970957178` `description_category_id=17028653`
+    - Кримпер `type_id=92119` `description_category_id=17028653`
+    - Вороток `type_id=92060` `description_category_id=17028653`
+    - Труборез `type_id=92150` `description_category_id=17028653`
+    - Намагничиватель `type_id=971439139` `description_category_id=17028653`
+    - Кельма, мастерок `type_id=92074` `description_category_id=17028653`
+    - Степлер строительный `type_id=970805654` `description_category_id=17028653`
+    - Бокорезы `type_id=92054` `description_category_id=17028653`
+    - Чертилка `type_id=92154` `description_category_id=17028653`
+    - Инструмент для очистки валиков, кистей `type_id=971113090` `description_category_id=17028653`
+    - Мелок разметочный `type_id=971113001` `description_category_id=17028653`
+    - Рубанок `type_id=92128` `description_category_id=17028653`
+    - Карандаш разметочный `type_id=970848811` `description_category_id=17028653`
+    - Пневмозубило `type_id=94781` `description_category_id=17028653`
+    - Развертка `type_id=504866191` `description_category_id=17028653`
+    - Захват `type_id=97524` `description_category_id=17028653`
+    - Листогиб ручной `type_id=970998176` `description_category_id=17028653`
+    - Пистолет пороховой монтажный `type_id=971048964` `description_category_id=17028653`
+    - Сменный блок для шпателя `type_id=970834490` `description_category_id=17028653`
+    - Ручной зажим `type_id=92068` `description_category_id=17028653`
+    - Пистолет для герметика `type_id=92113` `description_category_id=17028653`
+    - Пила ленточная `type_id=94705` `description_category_id=17028653`
+    - Антистеплер строительный `type_id=934414943` `description_category_id=17028653`
+    - Клипсатор `type_id=970672704` `description_category_id=17028653`
+    - Молоток `type_id=92099` `description_category_id=17028653`
+    - Шило `type_id=92155` `description_category_id=17028653`
+    - Кабелерез, НУСК `type_id=92072` `description_category_id=17028653`
+    - Скобель `type_id=970892691` `description_category_id=17028653`
+    - Прижимной ролик `type_id=970960608` `description_category_id=17028653`
+    - Магнитный угольник для сварки `type_id=971079306` `description_category_id=17028653`
+    - Длинногубцы, утконосы `type_id=97521` `description_category_id=17028653`
+    - Багор для бревен `type_id=92053` `description_category_id=17028653`
+    - Инструмент для разводки зубьев пил `type_id=971454832` `description_category_id=17028653`
+    - Зачистка для труб `type_id=971369941` `description_category_id=17028653`
+    - Губка малярная `type_id=970827357` `description_category_id=17028653`
+    - Пневмокромкогиб `type_id=971118629` `description_category_id=17028653`
+    - Мешалка ручная `type_id=970740235` `description_category_id=17028653`
+    - Гвоздодер `type_id=92062` `description_category_id=17028653`
+    - Кромкогиб ручной `type_id=971279989` `description_category_id=17028653`
+    - Набор отверток `type_id=504866257` `description_category_id=17028653`
+    - Гратосниматель `type_id=98252` `description_category_id=17028653`
+    - Тонкогубцы `type_id=92143` `description_category_id=17028653`
+    - Киянка `type_id=92077` `description_category_id=17028653`
+    - Отвертка `type_id=92108` `description_category_id=17028653`
+    - Шпатель `type_id=92156` `description_category_id=17028653`
+    - Инструмент для натяжения, резки стальной ленты `type_id=971045923` `description_category_id=17028653`
+    - Стеклодомкрат `type_id=92134` `description_category_id=17028653`
+    - Рашпиль `type_id=92125` `description_category_id=17028653`
+    - Лупа монтажная `type_id=970870336` `description_category_id=17028653`
+    - Струбцина `type_id=92137` `description_category_id=17028653`
+    - Набор для монтажа окон `type_id=970947048` `description_category_id=17028653`
+    - Кернер `type_id=92075` `description_category_id=17028653`
+    - Просекатель `type_id=92121` `description_category_id=17028653`
+    - Надфиль `type_id=92103` `description_category_id=17028653`
+    - Стусло `type_id=92139` `description_category_id=17028653`
+    - Набор ключей `type_id=92102` `description_category_id=17028653`
+    - Расшивка `type_id=970675321` `description_category_id=17028653`
+    - Трещотка `type_id=92147` `description_category_id=17028653`
+    - Стеклорез `type_id=92135` `description_category_id=17028653`
+    - Прижим рычажный `type_id=971048873` `description_category_id=17028653`
+    - Болторез `type_id=92055` `description_category_id=17028653`
+    - Инструмент для заклепки, расклепки цепи `type_id=970874523` `description_category_id=17028653`
+    - Ванночка малярная `type_id=92058` `description_category_id=17028653`
+    - Терка строительная `type_id=92141` `description_category_id=17028653`
+    - Кисть малярная `type_id=92076` `description_category_id=17028653`
+    - Термонож `type_id=971454608` `description_category_id=17028653`
+    - Ножовка `type_id=92107` `description_category_id=17028653`
+    - Маркер строительный `type_id=92095` `description_category_id=17028653`
+    - Магнит телескопический `type_id=970978796` `description_category_id=17028653`
+    - Наковальня `type_id=99297` `description_category_id=17028653`
+    - Стрипперы `type_id=92079` `description_category_id=17028653`
+    - Бородок слесарный `type_id=970966085` `description_category_id=17028653`
+    - Ерш для труб `type_id=970664307` `description_category_id=17028653`
+    - Аксессуары для разметочного инструмента `type_id=971369424` `description_category_id=17028653`
+    - Круглогубцы `type_id=92087` `description_category_id=17028653`
+    - Ручной штроборез по газобетону `type_id=970988961` `description_category_id=17028653`
+    - Резец по дереву `type_id=98560` `description_category_id=17028653`
+    - Ручной разбрасыватель штукатурных смесей `type_id=970681735` `description_category_id=17028653`
+    - Гребенка `type_id=97515` `description_category_id=17028653`
+    - Пакет для затирки `type_id=970800573` `description_category_id=17028653`
+    - Выколотка `type_id=504866190` `description_category_id=17028653`
+    - Плиткорез ручной `type_id=92116` `description_category_id=17028653`
+    - Клупп трубный `type_id=92081` `description_category_id=17028653`
+    - Нож строительно-ремонтный `type_id=92105` `description_category_id=17028653`
+    - Тиски `type_id=92142` `description_category_id=17028653`
+    - Ковш штукатурный `type_id=92085` `description_category_id=17028653`
+    - Трубогиб `type_id=92149` `description_category_id=17028653`
+    - Набор малярного инструмента `type_id=970871837` `description_category_id=17028653`
+    - Пистолет гвоздезабивной `type_id=970944397` `description_category_id=17028653`
+    - Полосогиб, крюкогиб `type_id=971056725` `description_category_id=17028653`
+    - Резец токарный `type_id=970943545` `description_category_id=17028653`
+    - Зубило `type_id=92071` `description_category_id=17028653`
+    - Циркуль разметочный `type_id=91714` `description_category_id=17028653`
+    - Гладилка `type_id=92063` `description_category_id=17028653`
+    - Лом `type_id=92093` `description_category_id=17028653`
+    - Набор пневмоинструмента `type_id=970671569` `description_category_id=17028653`
+    - Пинцет технический `type_id=92112` `description_category_id=17028653`
+    - Добойник `type_id=92064` `description_category_id=17028653`
+    - Кровельный инструмент `type_id=971072658` `description_category_id=17028653`
+    - Штанга телескопическая распорная `type_id=970961565` `description_category_id=17028653`
+    - Пневмотрещотка `type_id=94775` `description_category_id=17028653`
+    - Фильтр-воронка для краски `type_id=970798565` `description_category_id=17028653`
+    - Пневмомолоток `type_id=97549` `description_category_id=17028653`
+    - Щипцы строительные `type_id=92158` `description_category_id=17028653`
+    - Набор инструментов `type_id=92101` `description_category_id=17028653`
+    - Ключ `type_id=92082` `description_category_id=17028653`
+    - Инструмент для монтажа стяжек `type_id=970838694` `description_category_id=17028653`
+    - Центрирующая головка `type_id=971944825` `description_category_id=17028653`
+    - Инструмент для ремонта часов `type_id=970985207` `description_category_id=17028653`
+    - Маяк реперный `type_id=970791899` `description_category_id=17028653`
+    - Пистолет двухкомпонентный `type_id=971061664` `description_category_id=17028653`
+    - Крюк для слесарных работ `type_id=971473933` `description_category_id=17028653`
+    - Пневмоножовка `type_id=97548` `description_category_id=17028653`
+    - Инструмент для работы с гипсокартоном `type_id=214605477` `description_category_id=17028653`
+    - Буравчик `type_id=92056` `description_category_id=17028653`
+    - Стамеска, долото `type_id=92132` `description_category_id=17028653`
+    - Размотчик для труб `type_id=970896687` `description_category_id=17028653`
+    - Ручка для валика `type_id=364200921` `description_category_id=17028653`
+    - Валик малярный `type_id=92057` `description_category_id=17028653`
+    - Пила садовая `type_id=970581806` `description_category_id=17028653`
+    - Топор `type_id=92144` `description_category_id=17028653`
+    - Пистолет для монтажной пены `type_id=92114` `description_category_id=17028653`
+    - Набор электроинструмента `type_id=96064` `description_category_id=17028653`
+    - Метчик `type_id=97538` `description_category_id=17028653`
+    - Установочное кольцо `type_id=971407037` `description_category_id=17028653`
+    - Клинья отделительные для СИП `type_id=971747697` `description_category_id=17028653`
+    - Щетка строительная `type_id=92157` `description_category_id=17028653`
+    - Набор для восстановления свечной резьбы `type_id=971053231` `description_category_id=17028653`
+    - Кувалда `type_id=92089` `description_category_id=17028653`
+    - Рамка кровельная `type_id=970998174` `description_category_id=17028653`
+    - Скребок строительный `type_id=92131` `description_category_id=17028653`
+    - Клеевой пистолет строительный `type_id=970969913` `description_category_id=17028653`
+    - Кусачки `type_id=92090` `description_category_id=17028653`
+    - Аксессуар для малярных работ `type_id=971155201` `description_category_id=17028653`
+    - Съемник фасадной крышки (Капотосъемник) `type_id=971151174` `description_category_id=17028653`
+    - Пружина для гибки труб `type_id=92122` `description_category_id=17028653`
+    - Развальцовщик `type_id=92123` `description_category_id=17028653`
+    - Емкость строительная `type_id=970807558` `description_category_id=17028653`
+    - Монтировка `type_id=92100` `description_category_id=17028653`
+    - Напильник `type_id=92104` `description_category_id=17028653`
+    - Стреппинг инструмент `type_id=971004513` `description_category_id=17028653`
+    - Резак строительный `type_id=971116852` `description_category_id=17028653`
+    - Фаскосниматель `type_id=98242` `description_category_id=17028653`
+    - Клещи `type_id=92078` `description_category_id=17028653`
+    - Ножницы строительные `type_id=92106` `description_category_id=17028653`
+  - Радиаторы, конвекторы `description_category_id=17028955`
+    - Панельный радиатор `type_id=96697` `description_category_id=17028955`
+    - Монтажный комплект для радиатора `type_id=96696` `description_category_id=17028955`
+    - Решетки для конвектора в пол `type_id=96695` `description_category_id=17028955`
+    - Регистр отопления `type_id=971425882` `description_category_id=17028955`
+    - Экран для радиатора `type_id=970806801` `description_category_id=17028955`
+    - Трубчатый радиатор `type_id=970679638` `description_category_id=17028955`
+    - Конвектор отопительный `type_id=970631321` `description_category_id=17028955`
+    - Секционный радиатор `type_id=96700` `description_category_id=17028955`
+  - Хранение и организация рабочего места `description_category_id=88791474`
+    - Органайзер строительный `type_id=115946994` `description_category_id=88791474`
+    - Сумка для строительных инструментов `type_id=95500` `description_category_id=88791474`
+    - Ящик для инструментов `type_id=115947013` `description_category_id=88791474`
+    - Аксессуар для инструментального ящика `type_id=971168715` `description_category_id=88791474`
+    - Пояс для инструментов `type_id=95494` `description_category_id=88791474`
+    - Перфопанель `type_id=970879045` `description_category_id=88791474`
+    - Система хранения инструментов `type_id=95497` `description_category_id=88791474`
+    - Держатель для инструментов `type_id=93672` `description_category_id=88791474`
+    - Инструментальная тележка `type_id=504866277` `description_category_id=88791474`
+  - Гипсокартон и листовые материалы `description_category_id=89121723`
+    - Гипсоволокнистый лист `type_id=970857805` `description_category_id=89121723`
+    - Гипсокартонный лист `type_id=970857806` `description_category_id=89121723`
+  - Промышленное оборудование и комплектующие `description_category_id=43434359`
+    - Площадочный вибратор `type_id=971148042` `description_category_id=43434359`
+    - Дисковый поворотный затвор `type_id=971147964` `description_category_id=43434359`
+    - Маркиратор промышленный `type_id=970985545` `description_category_id=43434359`
+    - Арматура промышленная `type_id=971086145` `description_category_id=43434359`
+    - Оборудование для розлива жидкостей `type_id=970985544` `description_category_id=43434359`
+    - Комплект для бурения скважин `type_id=971298296` `description_category_id=43434359`
+    - Скиммер-нефтесборщик `type_id=971405519` `description_category_id=43434359`
+    - Армированная манжета, сальник `type_id=971149900` `description_category_id=43434359`
+    - Фитинг трубный промышленный `type_id=971086146` `description_category_id=43434359`
+    - Пневмоцилиндр промышленный `type_id=971148005` `description_category_id=43434359`
+    - Промышленный рукав `type_id=971086144` `description_category_id=43434359`
+    - Пружина сжатия промышленная `type_id=971300086` `description_category_id=43434359`
+    - Автоматический лубрикатор промышленный `type_id=971149516` `description_category_id=43434359`
+    - Промышленная автоматика `type_id=971148054` `description_category_id=43434359`
+    - Реактор лабораторный промышленный `type_id=971840129` `description_category_id=43434359`
+    - Калибр промышленный `type_id=971293378` `description_category_id=43434359`
+    - Промышленная химия `type_id=971404868` `description_category_id=43434359`
+    - Фильтр промышленный `type_id=971148028` `description_category_id=43434359`
+  - Потолочные системы `description_category_id=92255676`
+    - Плита потолочная `type_id=970943251` `description_category_id=92255676`
+    - Аксессуары для натяжного потолка `type_id=970689936` `description_category_id=92255676`
+    - Комплект кассетного потолка `type_id=970672062` `description_category_id=92255676`
+    - Комплект реечного потолка `type_id=970672061` `description_category_id=92255676`
+    - Комплект натяжного потолка `type_id=970623303` `description_category_id=92255676`
+    - Рейка для реечного потолка `type_id=971226654` `description_category_id=92255676`
+    - Потолок кассетный `type_id=970943252` `description_category_id=92255676`
+  - Металлопрокат и металлоконструкции `description_category_id=91976992`
+    - Лягушки для арматуры `type_id=971042540` `description_category_id=91976992`
+    - Арматура `type_id=970684872` `description_category_id=91976992`
+    - Фиксатор арматуры `type_id=970623467` `description_category_id=91976992`
+    - Строительные сэндвич панели `type_id=972755312` `description_category_id=91976992`
+    - Металлопрокатное изделие `type_id=971433307` `description_category_id=91976992`
+  - Сантехника `description_category_id=17028737`
+    - Полотенцесушитель `type_id=94634` `description_category_id=17028737`
+    - Донный клапан `type_id=892800734` `description_category_id=17028737`
+    - Отвод для унитаза `type_id=970797081` `description_category_id=17028737`
+    - Сифон сливной `type_id=94635` `description_category_id=17028737`
+    - Слив-перелив `type_id=94636` `description_category_id=17028737`
+    - Инсталляция `type_id=97421` `description_category_id=17028737`
+    - Смеситель `type_id=94637` `description_category_id=17028737`
+    - Арматура для унитаза `type_id=94627` `description_category_id=17028737`
+    - Аксессуары для душевого лотка `type_id=971315893` `description_category_id=17028737`
+    - Монтажный комплект для инсталляции `type_id=970831225` `description_category_id=17028737`
+    - Гофра для сифона `type_id=971168229` `description_category_id=17028737`
+    - Комплект сантехники `type_id=970707316` `description_category_id=17028737`
+    - Трап для душа `type_id=99521` `description_category_id=17028737`
+    - Выпуск для раковины `type_id=99520` `description_category_id=17028737`
+    - Кнопка смыва для инсталляции `type_id=970702359` `description_category_id=17028737`
+    - Кран для писсуара `type_id=971742026` `description_category_id=17028737`
+  - Электродрели `description_category_id=17028945`
+    - Гайковерт `type_id=94768` `description_category_id=17028945`
+    - Отвертка аккумуляторная `type_id=94772` `description_category_id=17028945`
+    - Дрель-шуруповерт `type_id=94770` `description_category_id=17028945`
+    - Дрель ручная `type_id=92067` `description_category_id=17028945`
+    - Строительный миксер `type_id=94782` `description_category_id=17028945`
+    - Дрель `type_id=94769` `description_category_id=17028945`
+    - Шуруповерт `type_id=94783` `description_category_id=17028945`
+    - Перфоратор `type_id=94773` `description_category_id=17028945`
+  - Плитка и керамогранит `description_category_id=17028951`
+    - Мозаика из камня `type_id=97350` `description_category_id=17028951`
+    - Брусчатка `type_id=97344` `description_category_id=17028951`
+    - Натуральный камень `type_id=971429674` `description_category_id=17028951`
+    - Фасадная плитка `type_id=970592245` `description_category_id=17028951`
+    - Плитка тротуарная `type_id=780864957` `description_category_id=17028951`
+    - Решетка газонная `type_id=970868765` `description_category_id=17028951`
+    - Плитка керамическая `type_id=96652` `description_category_id=17028951`
+    - Тротуарный бордюр `type_id=970868766` `description_category_id=17028951`
+    - Керамогранит `type_id=894417881` `description_category_id=17028951`
+    - Плитка из соли `type_id=971008146` `description_category_id=17028951`
+    - Декоративный камень для отделки `type_id=608143597` `description_category_id=17028951`
+    - Бордюр для плитки `type_id=96646` `description_category_id=17028951`
+    - Плитка кварц-виниловая `type_id=970699234` `description_category_id=17028951`
+    - Мозаика плитка `type_id=96649` `description_category_id=17028951`
+  - Элементы колодцев `description_category_id=200001274`
+    - Элемент колодца `type_id=971751460` `description_category_id=200001274`
+  - Ленты монтажные и клейкие `description_category_id=86727623`
+    - Малярная лента `type_id=97954` `description_category_id=86727623`
+    - Монтажная лента `type_id=99467` `description_category_id=86727623`
+    - Термоуплотнительная лента `type_id=970861109` `description_category_id=86727623`
+    - Противоскользящая лента `type_id=96170` `description_category_id=86727623`
+    - Бордюрная лента `type_id=99490` `description_category_id=86727623`
+    - Клейкая лента `type_id=94550` `description_category_id=86727623`
+    - Токопроводящая лента `type_id=970995724` `description_category_id=86727623`
+    - Комплект монтажных лент `type_id=970832341` `description_category_id=86727623`
+    - Алюминиевая лента `type_id=970801781` `description_category_id=86727623`
+    - Армирующая лента `type_id=97944` `description_category_id=86727623`
+  - Клей бытовой и строительный `description_category_id=86790687`
+    - Холодная сварка `type_id=92272` `description_category_id=86790687`
+    - Отвердитель для клея `type_id=971076243` `description_category_id=86790687`
+    - Клей строительный `type_id=970849521` `description_category_id=86790687`
+    - Клей хозяйственный `type_id=970831345` `description_category_id=86790687`
+    - Огнеупорная смесь `type_id=970709002` `description_category_id=86790687`
+    - Жидкий пластик `type_id=970630314` `description_category_id=86790687`
+  - Труба, свая, профиль `description_category_id=200001728`
+    - Свая `type_id=849617971` `description_category_id=200001728`
+    - Труба крепежная `type_id=98761` `description_category_id=200001728`
+    - Оголовок для сваи `type_id=971444245` `description_category_id=200001728`
+    - Труба металлическая `type_id=970693823` `description_category_id=200001728`
+    - Труба профильная `type_id=970618813` `description_category_id=200001728`
+  - Строительные блоки `description_category_id=79531151`
+    - Стеклоблок `type_id=970690466` `description_category_id=79531151`
+    - Облицовочный кирпич `type_id=98291` `description_category_id=79531151`
+    - Строительный кирпич `type_id=971052270` `description_category_id=79531151`
+    - Фундаментный блок `type_id=970690472` `description_category_id=79531151`
+    - Керамзитобетонный блок `type_id=970690471` `description_category_id=79531151`
+    - Пазогребневая плита `type_id=970690470` `description_category_id=79531151`
+    - Газобетонный блок `type_id=970690467` `description_category_id=79531151`
+  - Пневмоинструмент `description_category_id=88317021`
+    - Пневмокраскопульт `type_id=94887` `description_category_id=88317021`
+    - Пневмоаэрограф `type_id=94886` `description_category_id=88317021`
+    - Шуруповерт `type_id=94783` `description_category_id=88317021`
+    - Пистолет для защитных составов `type_id=95839` `description_category_id=88317021`
+    - Пистолет для краскопульта `type_id=98590` `description_category_id=88317021`
+  - Аксессуары, комплектующие для бытового освещения `description_category_id=200001698`
+    - Плафон `type_id=970873235` `description_category_id=200001698`
+    - Аксессуары профиля для светильника `type_id=970854636` `description_category_id=200001698`
+    - Профиль для светильника `type_id=970854635` `description_category_id=200001698`
+    - Абажур `type_id=91931` `description_category_id=200001698`
+    - Трансформатор для бани `type_id=91669` `description_category_id=200001698`
+    - Аксессуары для освещения `type_id=296400617` `description_category_id=200001698`
+  - Водосточные системы `description_category_id=80195569`
+    - Комплект водосточной системы `type_id=971137302` `description_category_id=80195569`
+    - Элемент канализации `type_id=970836869` `description_category_id=80195569`
+    - Грейфер для чистки колодца `type_id=970805680` `description_category_id=80195569`
+    - Уловитель под мойку `type_id=971742367` `description_category_id=80195569`
+    - Труба водосточная `type_id=970859591` `description_category_id=80195569`
+    - Труба канализационная `type_id=970728075` `description_category_id=80195569`
+    - Люк канализационный `type_id=98273` `description_category_id=80195569`
+    - Труба обсадная `type_id=971092313` `description_category_id=80195569`
+    - Аксессуар для водосточной системы `type_id=98277` `description_category_id=80195569`
+    - Элемент водоотвода `type_id=98276` `description_category_id=80195569`
+  - Стеновые панели `description_category_id=59477295`
+    - Аксессуар для фасадной панели `type_id=971150589` `description_category_id=59477295`
+    - Пробковое покрытие для стен `type_id=970961819` `description_category_id=59477295`
+    - Фасадная панель `type_id=970702731` `description_category_id=59477295`
+    - Фартук для кухни `type_id=888911126` `description_category_id=59477295`
+    - Стеновая панель `type_id=801143463` `description_category_id=59477295`
+    - Отбойная доска для стен `type_id=971280315` `description_category_id=59477295`
+  - Лестницы стационарные `description_category_id=87241318`
+    - Элемент лестницы `type_id=971324509` `description_category_id=87241318`
+    - Подступенок `type_id=971084429` `description_category_id=87241318`
+    - Крыльцо дома `type_id=970904987` `description_category_id=87241318`
+    - Пандус для техники, колясок `type_id=970865246` `description_category_id=87241318`
+    - Ступень `type_id=970851809` `description_category_id=87241318`
+    - Перила, поручни `type_id=970828809` `description_category_id=87241318`
+  - Сварочное оборудование `description_category_id=17028656`
+    - Запчасти для газозаправочного оборудования `type_id=971200705` `description_category_id=17028656`
+    - Запчасть для сварочного аппарата `type_id=971045352` `description_category_id=17028656`
+    - Сварочный аппарат `type_id=94581` `description_category_id=17028656`
+    - Сварочные электроды `type_id=94939` `description_category_id=17028656`
+    - Шланг, подводка для газовых систем `type_id=96122` `description_category_id=17028656`
+    - Термитный патрон, шашка `type_id=971870952` `description_category_id=17028656`
+    - Сварочная проволока `type_id=94938` `description_category_id=17028656`
+    - Рукав для газовой сварки `type_id=971125553` `description_category_id=17028656`
+    - Аксессуар для сварки `type_id=970891252` `description_category_id=17028656`
+    - Плазморез `type_id=94579` `description_category_id=17028656`
+    - Сварочная смесь в баллоне `type_id=971010890` `description_category_id=17028656`
+  - Межкомнатные перегородки `description_category_id=43429707`
+    - Межкомнатная перегородка `type_id=971035163` `description_category_id=43429707`
+  - Оборудование для клининга `description_category_id=86674774`
+    - Запчасти для поломоечных машин `type_id=971034597` `description_category_id=86674774`
+    - Поломоечная машина `type_id=970944940` `description_category_id=86674774`
+    - Строительный пылесос `type_id=98393` `description_category_id=86674774`
+    - Аксессуары для мойки фасадов, окон `type_id=971220357` `description_category_id=86674774`
+    - Оборудование для мойки фасадов, окон `type_id=971220355` `description_category_id=86674774`
+  - Оснастка для инструмента `description_category_id=17027923`
+    - Запчасть для электроинструмента `type_id=94891` `description_category_id=17027923`
+    - Набор оснастки `type_id=94877` `description_category_id=17027923`
+    - Ограничитель глубины сверления `type_id=970780405` `description_category_id=17027923`
+    - Запчасть для бензоинструмента `type_id=971016012` `description_category_id=17027923`
+    - Гибкий вал для гравера, вибратора `type_id=94869` `description_category_id=17027923`
+    - Принадлежности для инструментов `type_id=91568` `description_category_id=17027923`
+    - Хвостовик для коронки, патрона `type_id=970779324` `description_category_id=17027923`
+    - Алмазный сегмент для коронок `type_id=971878936` `description_category_id=17027923`
+    - Сопло `type_id=94944` `description_category_id=17027923`
+    - Кондуктор для сверления `type_id=970575688` `description_category_id=17027923`
+    - Держатель для бит, головок `type_id=94871` `description_category_id=17027923`
+    - Зубило для перфоратора `type_id=94907` `description_category_id=17027923`
+    - Набор метчиков, плашек `type_id=970792429` `description_category_id=17027923`
+    - Насадка на пистолет для клея, герметика `type_id=970843305` `description_category_id=17027923`
+    - Ограничитель движения для газонокосилки `type_id=970689732` `description_category_id=17027923`
+    - Виброопора для оборудования `type_id=971045360` `description_category_id=17027923`
+    - Пылесборник для сверления, бурения `type_id=971049423` `description_category_id=17027923`
+    - Насадка-щетка для гравера `type_id=971062475` `description_category_id=17027923`
+    - Топорище `type_id=970956837` `description_category_id=17027923`
+    - Опорная тарелка, оправка `type_id=97545` `description_category_id=17027923`
+    - Точильный камень, точилка `type_id=92146` `description_category_id=17027923`
+    - Цанга `type_id=94894` `description_category_id=17027923`
+    - Устройство для подачи воды в зону сверления `type_id=971065702` `description_category_id=17027923`
+    - Запчасть для станка `type_id=971225270` `description_category_id=17027923`
+    - Направляющая для инструмента `type_id=94878` `description_category_id=17027923`
+    - Координатный стол `type_id=970575608` `description_category_id=17027923`
+    - Торцевая головка `type_id=92145` `description_category_id=17027923`
+    - Патрон токарный `type_id=971305842` `description_category_id=17027923`
+    - Пика для отбойного молотка `type_id=94934` `description_category_id=17027923`
+    - Насадка для монтажной пены `type_id=970618723` `description_category_id=17027923`
+    - Губки для тисков `type_id=970985963` `description_category_id=17027923`
+    - Ремкомплект для гидравлического оборудования `type_id=971287794` `description_category_id=17027923`
+    - Клейма цифровые, буквенные `type_id=504866188` `description_category_id=17027923`
+    - Насадка на миксер `type_id=94868` `description_category_id=17027923`
+    - Плашка метрическая `type_id=92115` `description_category_id=17027923`
+    - Насадка на гайковерт `type_id=317298674` `description_category_id=17027923`
+    - Бита `type_id=94867` `description_category_id=17027923`
+    - Клин для топора `type_id=970973205` `description_category_id=17027923`
+    - Переходник для ключа `type_id=94885` `description_category_id=17027923`
+    - Удлинитель инструмента `type_id=94893` `description_category_id=17027923`
+    - Сменное жало для отвертки `type_id=970994407` `description_category_id=17027923`
+    - Фрезерный стол `type_id=970667836` `description_category_id=17027923`
+    - Шпиндель для шлифовальных кругов `type_id=970939485` `description_category_id=17027923`
+    - Приспособление для фрезерования `type_id=970667837` `description_category_id=17027923`
+    - Ручка для молотка, напильника `type_id=98371` `description_category_id=17027923`
+    - Шланг воздушный `type_id=95847` `description_category_id=17027923`
+    - Адаптер для инструмента `type_id=94865` `description_category_id=17027923`
+  - Отопление `description_category_id=89326084`
+    - Тепловой насос `type_id=971956653` `description_category_id=89326084`
+    - Теплообменник `type_id=96570` `description_category_id=89326084`
+    - Отопительная печь `type_id=970949371` `description_category_id=89326084`
+    - Аксессуары, запчасти для котла `type_id=971037694` `description_category_id=89326084`
+    - Запчасти для тепловой пушки `type_id=971101326` `description_category_id=89326084`
+    - Антиконденсатный чехол `type_id=970849005` `description_category_id=89326084`
+    - Котел отопительный `type_id=96482` `description_category_id=89326084`
+  - Измерительный инструмент `description_category_id=17028629`
+    - Температурный сканер `type_id=99111` `description_category_id=17028629`
+    - Тахометр `type_id=270718135` `description_category_id=17028629`
+    - Расходомер газа `type_id=970858630` `description_category_id=17028629`
+    - Нутромер `type_id=970573155` `description_category_id=17028629`
+    - Склерометр `type_id=91707` `description_category_id=17028629`
+    - Блок контроля температуры `type_id=971038356` `description_category_id=17028629`
+    - Лазерный уровень, нивелир `type_id=91696` `description_category_id=17028629`
+    - Пенетрометр `type_id=971444192` `description_category_id=17028629`
+    - Измерительная головка `type_id=344082162` `description_category_id=17028629`
+    - Зонд измерительный `type_id=970939576` `description_category_id=17028629`
+    - Вакуумметр `type_id=970973769` `description_category_id=17028629`
+    - Динамометр `type_id=270794717` `description_category_id=17028629`
+    - Щуп для измерения зазоров `type_id=97544` `description_category_id=17028629`
+    - Термоманометр `type_id=971113392` `description_category_id=17028629`
+    - Угломер `type_id=91711` `description_category_id=17028629`
+    - Детектор утечек тока `type_id=97518` `description_category_id=17028629`
+    - Толщиномер `type_id=91710` `description_category_id=17028629`
+    - Отвес `type_id=91700` `description_category_id=17028629`
+    - Измерительная лента `type_id=91694` `description_category_id=17028629`
+    - Шнур разметочный `type_id=94953` `description_category_id=17028629`
+    - Пирометр `type_id=91702` `description_category_id=17028629`
+    - Дефектоскоп `type_id=970973206` `description_category_id=17028629`
+    - Приборы для контроля герметичности `type_id=970807545` `description_category_id=17028629`
+    - Штангенциркуль `type_id=91715` `description_category_id=17028629`
+    - Вискозиметр `type_id=971400905` `description_category_id=17028629`
+    - Измерительная рулетка `type_id=91705` `description_category_id=17028629`
+    - Аксессуар для геодезического оборудования `type_id=971304485` `description_category_id=17028629`
+    - Определитель подвижности бетонной смеси `type_id=970886027` `description_category_id=17028629`
+    - Твердомер `type_id=970872285` `description_category_id=17028629`
+    - Оптический нивелир `type_id=970879088` `description_category_id=17028629`
+    - Набор измерительных аксессуаров `type_id=971045335` `description_category_id=17028629`
+    - Испытательный стенд `type_id=971427330` `description_category_id=17028629`
+    - Шкаф для газового счетчика `type_id=971167310` `description_category_id=17028629`
+    - Провод измерительный `type_id=970964209` `description_category_id=17028629`
+    - Рефрактометр `type_id=970672386` `description_category_id=17028629`
+    - Малка `type_id=91699` `description_category_id=17028629`
+    - Спектрометр `type_id=971841741` `description_category_id=17028629`
+    - Уровень строительный `type_id=91712` `description_category_id=17028629`
+    - Резьбомер `type_id=970973768` `description_category_id=17028629`
+    - Счетчик частиц `type_id=970861041` `description_category_id=17028629`
+    - Микрометр `type_id=97499` `description_category_id=17028629`
+    - Измерительный преобразователь давления `type_id=970856634` `description_category_id=17028629`
+    - Влагомер `type_id=270718140` `description_category_id=17028629`
+    - ОВП-метр `type_id=970672388` `description_category_id=17028629`
+    - Линейка, угольник строительный `type_id=91697` `description_category_id=17028629`
+    - Аксессуары для прибора учета `type_id=971118577` `description_category_id=17028629`
+    - Рейсмус разметочный `type_id=91704` `description_category_id=17028629`
+    - Расходомер жидкости `type_id=970858631` `description_category_id=17028629`
+    - Аксессуар для нивелира `type_id=91781` `description_category_id=17028629`
+    - Колориметр `type_id=970941984` `description_category_id=17028629`
+    - Калориметр `type_id=970827182` `description_category_id=17028629`
+    - Счетчик газа `type_id=970671754` `description_category_id=17028629`
+    - Локатор отверстий `type_id=971034143` `description_category_id=17028629`
+    - Высотомер `type_id=970883140` `description_category_id=17028629`
+    - Электрод сравнения `type_id=971093303` `description_category_id=17028629`
+    - Гигрометр `type_id=91691` `description_category_id=17028629`
+    - Измеритель почвы `type_id=92747` `description_category_id=17028629`
+    - Технический термометр `type_id=970957818` `description_category_id=17028629`
+    - Люксметр `type_id=91698` `description_category_id=17028629`
+    - Термопара для измерительного прибора `type_id=970889085` `description_category_id=17028629`
+    - Шумомер `type_id=91716` `description_category_id=17028629`
+    - Копировальный шаблон `type_id=970693408` `description_category_id=17028629`
+    - Кондуктометр `type_id=970672389` `description_category_id=17028629`
+    - Тепловычислитель `type_id=971039261` `description_category_id=17028629`
+    - Глубиномер `type_id=970880684` `description_category_id=17028629`
+    - Терморегистратор `type_id=970879327` `description_category_id=17028629`
+    - Аксессуары для газового счетчика `type_id=971289384` `description_category_id=17028629`
+    - Датчик газа `type_id=91706` `description_category_id=17028629`
+    - Детектор СВЧ излучения `type_id=970861042` `description_category_id=17028629`
+    - Тягомер, напоромер `type_id=971000774` `description_category_id=17028629`
+  - Временные ограждения `description_category_id=62673869`
+    - Аварийное ограждение `type_id=97412` `description_category_id=62673869`
+  - Компрессионное, насосное оборудование `description_category_id=17028950`
+    - Запчасть для мойки высокого давления `type_id=970876252` `description_category_id=17028950`
+    - Минимойка `type_id=91464` `description_category_id=17028950`
+    - Аксессуар для минимоек `type_id=970800895` `description_category_id=17028950`
+    - Компрессор `type_id=91463` `description_category_id=17028950`
+  - Аксессуары для ремонта и инструментов `description_category_id=89202024`
+    - Технический трафарет `type_id=970859597` `description_category_id=89202024`
+    - Каталог отделочных материалов `type_id=970743880` `description_category_id=89202024`
+    - Аксессуар для инструмента `type_id=94875` `description_category_id=89202024`
+    - Форма для бетона `type_id=97473` `description_category_id=89202024`
+    - Держатель для тента `type_id=971053797` `description_category_id=89202024`
+    - Защитная подложка для шлифмашины `type_id=970944591` `description_category_id=89202024`
+    - Укрывной материал для ремонта `type_id=970876104` `description_category_id=89202024`
+  - Шлифовальные машины `description_category_id=17028948`
+    - Гравер `type_id=94784` `description_category_id=17028948`
+    - Электроточило `type_id=94799` `description_category_id=17028948`
+  - Поликарбонат и оргстекло `description_category_id=87570190`
+    - Листовой полипропилен `type_id=270390131` `description_category_id=87570190`
+    - Оргстекло `type_id=970941853` `description_category_id=87570190`
+    - Монолитный поликарбонат `type_id=970825249` `description_category_id=87570190`
+    - Листовой ПВХ вспененный `type_id=971158879` `description_category_id=87570190`
+    - Профилированный поликарбонат `type_id=970905416` `description_category_id=87570190`
+    - Сотовый поликарбонат `type_id=970825251` `description_category_id=87570190`
+    - Листовой полиэтилен `type_id=971058288` `description_category_id=87570190`
+    - Листовой полистирол `type_id=971058289` `description_category_id=87570190`
+    - Лист ПЭТ `type_id=971073464` `description_category_id=87570190`
+  - Входные двери `description_category_id=17028659`
+    - Временная дверь `type_id=970582697` `description_category_id=17028659`
+    - Входная дверь `type_id=96678` `description_category_id=17028659`
+    - Козырек над крыльцом `type_id=939591211` `description_category_id=17028659`
+    - Защитные шторы в рулоне `type_id=971137177` `description_category_id=17028659`
+    - Мягкие окна `type_id=971115279` `description_category_id=17028659`
+    - Аксессуары для полосовой завесы `type_id=971109986` `description_category_id=17028659`
+    - Полосовая завеса ПВХ `type_id=971077140` `description_category_id=17028659`
+  - Арматура и аксессуары для сантехники `description_category_id=17028956`
+    - Термостатическая головка `type_id=99471` `description_category_id=17028956`
+    - Клиновая задвижка `type_id=96101` `description_category_id=17028956`
+    - Аэратор для смесителя `type_id=96091` `description_category_id=17028956`
+    - Клапан с курком `type_id=96100` `description_category_id=17028956`
+    - Пробка для ванны `type_id=92038` `description_category_id=17028956`
+    - Регулятор давления газа `type_id=96112` `description_category_id=17028956`
+    - Кран шаровой `type_id=96105` `description_category_id=17028956`
+    - Сантехнический сервопривод `type_id=970831226` `description_category_id=17028956`
+    - Редуктор давления `type_id=796247840` `description_category_id=17028956`
+    - Вакуумная присоска для плитки `type_id=970850843` `description_category_id=17028956`
+    - Устройство автоматического смыва для унитаза `type_id=971086130` `description_category_id=17028956`
+    - Кран для фильтра питьевой воды `type_id=970587758` `description_category_id=17028956`
+    - Чашка отражатель `type_id=96119` `description_category_id=17028956`
+    - Труба гофрированная водопроводная `type_id=970859738` `description_category_id=17028956`
+    - Шаровый переключатель на душ `type_id=98998` `description_category_id=17028956`
+    - Сантехнический клапан `type_id=96098` `description_category_id=17028956`
+    - Кран Маевского `type_id=96104` `description_category_id=17028956`
+    - Узел подключения радиатора `type_id=971084491` `description_category_id=17028956`
+    - Фурнитура для туалетной перегородки, кабинки `type_id=971054990` `description_category_id=17028956`
+    - Вентиль для радиатора `type_id=96092` `description_category_id=17028956`
+    - Сенсорная насадка на кран `type_id=970683193` `description_category_id=17028956`
+    - Диэлектрическая вставка `type_id=96097` `description_category_id=17028956`
+    - Кран водоразборный `type_id=970678148` `description_category_id=17028956`
+    - Труба ПНД `type_id=346841812` `description_category_id=17028956`
+    - Смесительный термостатический клапан `type_id=971138518` `description_category_id=17028956`
+    - Труба металлопластиковая `type_id=96116` `description_category_id=17028956`
+    - Установочный кронштейн для сантехники `type_id=96106` `description_category_id=17028956`
+    - Жесткая подводка `type_id=96094` `description_category_id=17028956`
+    - Излив `type_id=970590871` `description_category_id=17028956`
+    - Изоляция для труб `type_id=970660388` `description_category_id=17028956`
+    - Барьер для ванны, раковины `type_id=91933` `description_category_id=17028956`
+    - Сантехническая прокладка `type_id=96111` `description_category_id=17028956`
+    - Набор фурнитуры для сантехники `type_id=96107` `description_category_id=17028956`
+    - Форсунка душевая `type_id=970580151` `description_category_id=17028956`
+    - Теплосчетчик `type_id=523918384` `description_category_id=17028956`
+    - Декоративная ручка для ванны `type_id=971116969` `description_category_id=17028956`
+    - Сантехнический эксцентрик `type_id=96123` `description_category_id=17028956`
+    - Фильтр грубой очистки `type_id=96117` `description_category_id=17028956`
+    - Дивертор `type_id=98992` `description_category_id=17028956`
+    - База для установки смесителя `type_id=970897390` `description_category_id=17028956`
+    - Счетчик для воды `type_id=96114` `description_category_id=17028956`
+    - Душирующее устройство для мойки `type_id=970676670` `description_category_id=17028956`
+    - Комплект хромотерапии `type_id=970680798` `description_category_id=17028956`
+    - Шланг заливной `type_id=96120` `description_category_id=17028956`
+    - Шланг для смесителя `type_id=99324` `description_category_id=17028956`
+    - Кран-букса `type_id=98995` `description_category_id=17028956`
+    - Подставка под смеситель `type_id=970826407` `description_category_id=17028956`
+    - Регулятор расхода воды `type_id=971117543` `description_category_id=17028956`
+    - Аксессуары для гидромассажного оборудования `type_id=971109343` `description_category_id=17028956`
+    - Смывная клавиша `type_id=96113` `description_category_id=17028956`
+    - Смесительный узел `type_id=99469` `description_category_id=17028956`
+    - Запорный вентиль `type_id=96096` `description_category_id=17028956`
+    - Гибкая подводка `type_id=96093` `description_category_id=17028956`
+    - Сменный наполнитель для душевой лейки `type_id=971047081` `description_category_id=17028956`
+    - Шиберная задвижка `type_id=971870659` `description_category_id=17028956`
+    - Фильтр для душа `type_id=971079175` `description_category_id=17028956`
+    - ИК-датчик для смесителя `type_id=970788235` `description_category_id=17028956`
+    - Радиаторный клапан `type_id=96099` `description_category_id=17028956`
+    - Металлорукав `type_id=99037` `description_category_id=17028956`
+    - Фиксатор резьбы сантехнический `type_id=971100744` `description_category_id=17028956`
+    - Труба из сшитого полиэтилена `type_id=970964541` `description_category_id=17028956`
+    - Комплект термостатический `type_id=96110` `description_category_id=17028956`
+    - Комплект для гидро- аэромассажа `type_id=970680799` `description_category_id=17028956`
+    - Ножки для ванны `type_id=971074175` `description_category_id=17028956`
+    - Встраиваемый вентиль `type_id=970587760` `description_category_id=17028956`
+    - Труба полипропиленовая `type_id=97502` `description_category_id=17028956`
+    - Термометр для смесителя `type_id=970945766` `description_category_id=17028956`
+    - Шланг сливной `type_id=96121` `description_category_id=17028956`
+    - Ремкомплект для сантехники `type_id=98996` `description_category_id=17028956`
+    - Ручка для смесителя `type_id=98997` `description_category_id=17028956`
+    - Аксессуары для полотенцесушителя `type_id=971161305` `description_category_id=17028956`
+    - Картридж для смесителя `type_id=98994` `description_category_id=17028956`
+    - Монтажный комплект для счетчика `type_id=970748498` `description_category_id=17028956`
+  - Строительные смеси `description_category_id=17865409`
+    - Полимерное связующее `type_id=971074213` `description_category_id=17865409`
+    - Добавка в раствор строительная `type_id=97472` `description_category_id=17865409`
+    - Декоративная добавка для жидких обоев `type_id=970687517` `description_category_id=17865409`
+    - Стяжка для пола `type_id=97427` `description_category_id=17865409`
+    - Битум строительный `type_id=970986821` `description_category_id=17865409`
+    - Жидкие обои `type_id=99106` `description_category_id=17865409`
+    - Ремонтная смесь `type_id=971083618` `description_category_id=17865409`
+    - Гидропломба `type_id=971151761` `description_category_id=17865409`
+    - Щебень `type_id=971042796` `description_category_id=17865409`
+    - Кладочная смесь `type_id=970708780` `description_category_id=17865409`
+    - Мастика гидроизоляционная `type_id=970808274` `description_category_id=17865409`
+    - Шпатлевка `type_id=97429` `description_category_id=17865409`
+    - Состав для гидроизоляции `type_id=97431` `description_category_id=17865409`
+    - Цемент `type_id=640067226` `description_category_id=17865409`
+    - Керамзит `type_id=970572623` `description_category_id=17865409`
+    - Жидкий камень `type_id=971219690` `description_category_id=17865409`
+    - Гранитный отсев `type_id=971291564` `description_category_id=17865409`
+    - Декоративная штукатурка `type_id=97422` `description_category_id=17865409`
+    - Побелка `type_id=970998257` `description_category_id=17865409`
+    - Праймер битумный `type_id=970808275` `description_category_id=17865409`
+    - Декоративная шпатлевка `type_id=97423` `description_category_id=17865409`
+    - Штукатурно-клеевая смесь `type_id=970979894` `description_category_id=17865409`
+    - Инъекционная гидроизоляция `type_id=970832921` `description_category_id=17865409`
+    - Бетон сухой `type_id=970865686` `description_category_id=17865409`
+    - Бетонная смесь готовая `type_id=971167621` `description_category_id=17865409`
+    - Пескобетон `type_id=970865687` `description_category_id=17865409`
+    - Аксессуар для инъектирования `type_id=970832923` `description_category_id=17865409`
+    - Мастика для кровли `type_id=970694355` `description_category_id=17865409`
+    - Известь `type_id=639962818` `description_category_id=17865409`
+    - Песок строительный `type_id=971291562` `description_category_id=17865409`
+    - Холодный асфальт `type_id=970873008` `description_category_id=17865409`
+    - Гипс строительный `type_id=639962817` `description_category_id=17865409`
+    - Наливной пол `type_id=97426` `description_category_id=17865409`
+    - Штукатурка `type_id=97430` `description_category_id=17865409`
+    - Упрочнитель для пола `type_id=971363863` `description_category_id=17865409`
+  - Бытовое освещение `description_category_id=17028941`
+    - Удлинитель светодиодной ленты `type_id=971108184` `description_category_id=17028941`
+    - Контроллер управления светом `type_id=272925539` `description_category_id=17028941`
+    - Потолочный светильник `type_id=970589574` `description_category_id=17028941`
+    - Светодиодная лента `type_id=91665` `description_category_id=17028941`
+    - Настенный светильник `type_id=91647` `description_category_id=17028941`
+    - RGB-усилитель `type_id=970701978` `description_category_id=17028941`
+    - Напольный светильник `type_id=91645` `description_category_id=17028941`
+    - Уличный светильник `type_id=91670` `description_category_id=17028941`
+    - Комплект для светодиодной подсветки `type_id=970858581` `description_category_id=17028941`
+    - Декодер DMX `type_id=971094263` `description_category_id=17028941`
+    - Люстра `type_id=971434442` `description_category_id=17028941`
+    - Настольный светильник `type_id=91637` `description_category_id=17028941`
+    - Настенно-потолочный светильник `type_id=91646` `description_category_id=17028941`
+    - Шинопровод осветительный `type_id=756237456` `description_category_id=17028941`
+    - Светодиодная матрица `type_id=970829685` `description_category_id=17028941`
+    - Трековый светильник `type_id=504866303` `description_category_id=17028941`
+  - Древесно-плитные материалы `description_category_id=88913160`
+    - ДВП `type_id=970853823` `description_category_id=88913160`
+    - Фанера `type_id=970853798` `description_category_id=88913160`
+    - ХДФ `type_id=971360771` `description_category_id=88913160`
+    - ОСП `type_id=970853825` `description_category_id=88913160`
+    - ДСП `type_id=970853824` `description_category_id=88913160`
+  - Лестницы и стремянки `description_category_id=17027913`
+    - Стремянка `type_id=94520` `description_category_id=17027913`
+    - Подмости `type_id=94519` `description_category_id=17027913`
+    - Вышка-тура `type_id=94517` `description_category_id=17027913`
+    - Строительные ходули `type_id=863153711` `description_category_id=17027913`
+    - Стационарная лестница `type_id=99321` `description_category_id=17027913`
+    - Чердачная лестница `type_id=971324458` `description_category_id=17027913`
+    - Строительные леса `type_id=971076471` `description_category_id=17027913`
+    - Аксессуары для лестницы, лесов `type_id=970998255` `description_category_id=17027913`
+  - Водоотведение и канализация `description_category_id=80196759`
+    - Аксессуары для септика `type_id=971103793` `description_category_id=80196759`
+    - Кессон `type_id=970966961` `description_category_id=80196759`
+    - Септик `type_id=970696397` `description_category_id=80196759`
+  - Силовая техника и оборудование `description_category_id=17028657`
+    - Затирочная машина `type_id=94724` `description_category_id=17028657`
+    - Запчасти для штукатурных станций `type_id=971305813` `description_category_id=17028657`
+    - Вибрационное сито `type_id=971682566` `description_category_id=17028657`
+    - Вибростол `type_id=971291817` `description_category_id=17028657`
+    - Вибротрамбовка `type_id=94722` `description_category_id=17028657`
+    - Глубинный вибратор `type_id=94723` `description_category_id=17028657`
+    - Виброприсоска для укладки плитки `type_id=971116822` `description_category_id=17028657`
+    - Расходные материалы для бетономешалок `type_id=971313216` `description_category_id=17028657`
+    - Вибростанок `type_id=971291818` `description_category_id=17028657`
+    - Виброплита `type_id=94720` `description_category_id=17028657`
+    - Штукатурная станция `type_id=971305812` `description_category_id=17028657`
+    - Виброкаток `type_id=94719` `description_category_id=17028657`
+    - Бетономешалка `type_id=177860614` `description_category_id=17028657`
+    - Растворосмеситель `type_id=970719129` `description_category_id=17028657`
+    - Виброрейка `type_id=94721` `description_category_id=17028657`
+    - Распылитель строительный `type_id=970628976` `description_category_id=17028657`
+  - Дымоходы и комплектующие `description_category_id=17028719`
+    - Труба дымоходная `type_id=96071` `description_category_id=17028719`
+    - Комплект дымохода `type_id=971812293` `description_category_id=17028719`
+    - Элемент дымохода `type_id=971312451` `description_category_id=17028719`
+  - Электропилы `description_category_id=17028946`
+    - Плиткорез электрический `type_id=94708` `description_category_id=17028946`
+    - Электроножницы по металлу `type_id=94718` `description_category_id=17028946`
+    - Швонарезчик `type_id=97959` `description_category_id=17028946`
+    - Штроборез `type_id=94716` `description_category_id=17028946`
+    - Электропила `type_id=94715` `description_category_id=17028946`
+    - Бороздодел `type_id=94702` `description_category_id=17028946`
+    - Бензопила `type_id=94701` `description_category_id=17028946`
+    - Резчик кровли `type_id=971199686` `description_category_id=17028946`
+  - Смесители и душевые системы `description_category_id=64766017`
+    - Душевой комплект `type_id=94630` `description_category_id=64766017`
+    - Шланг для душа `type_id=94631` `description_category_id=64766017`
+    - Тропический душ `type_id=970580159` `description_category_id=64766017`
+    - Лейка для гигиенического душа `type_id=94632` `description_category_id=64766017`
+    - Душевая панель `type_id=970587756` `description_category_id=64766017`
+    - Держатель для душа `type_id=94628` `description_category_id=64766017`
+    - Лейка для душа `type_id=94633` `description_category_id=64766017`
+    - Скрытая монтажная часть `type_id=970587759` `description_category_id=64766017`
+    - Шланговое подключение `type_id=970587763` `description_category_id=64766017`
+    - Штанга для душа `type_id=94629` `description_category_id=64766017`
+    - Переключатель потока `type_id=98586` `description_category_id=64766017`
+  - Конструкционные материалы `description_category_id=200000167`
+    - Конструкционный материал `type_id=971433262` `description_category_id=200000167`
+  - Обои и покрытия `description_category_id=17028954`
+    - Малярный стеклохолст `type_id=97655` `description_category_id=17028954`
+    - Бордюр для обоев `type_id=971305878` `description_category_id=17028954`
+    - Фотообои `type_id=95820` `description_category_id=17028954`
+    - Геотекстиль `type_id=270549115` `description_category_id=17028954`
+    - Сайдинг `type_id=273170527` `description_category_id=17028954`
+    - Конструкционная стеклоткань `type_id=970969582` `description_category_id=17028954`
+    - Комплект для обивки дверей `type_id=970671832` `description_category_id=17028954`
+    - Самоклеящаяся пленка для мебели `type_id=970592548` `description_category_id=17028954`
+    - Георешетка `type_id=270549114` `description_category_id=17028954`
+    - Подложка под обои `type_id=97458` `description_category_id=17028954`
+    - Геомембрана `type_id=268839680` `description_category_id=17028954`
+    - Обои `type_id=95819` `description_category_id=17028954`
+    - Материал для обивки `type_id=970954004` `description_category_id=17028954`
+    - Флизелиновый холст `type_id=97654` `description_category_id=17028954`
+    - Сетка строительная `type_id=970572774` `description_category_id=17028954`
+    - Стеклообои `type_id=448472170` `description_category_id=17028954`
+  - Железобетонные изделия `description_category_id=17028723`
+    - Железобетонная конструкция `type_id=971167375` `description_category_id=17028723`
+  - Готовые дома, бани и гаражи `description_category_id=17028655`
+    - Гараж `type_id=96722` `description_category_id=17028655`
+    - Доп. оборудование для блок-контейнера `type_id=971010263` `description_category_id=17028655`
+    - Блок-контейнер `type_id=971010261` `description_category_id=17028655`
+    - Погреб `type_id=971039966` `description_category_id=17028655`
+    - Туалет садовый `type_id=971004554` `description_category_id=17028655`
+    - Бытовка `type_id=96721` `description_category_id=17028655`
+    - Проект дома `type_id=460805432` `description_category_id=17028655`
+    - Хозблок `type_id=970823879` `description_category_id=17028655`
+    - Сарай `type_id=96725` `description_category_id=17028655`
+    - Автонавес `type_id=971105759` `description_category_id=17028655`
+    - Дом готовый `type_id=971064365` `description_category_id=17028655`
+    - Баня готовая `type_id=971064366` `description_category_id=17028655`
+  - Аэрографы, краскопульты `description_category_id=87323842`
+    - Установка для порошковой окраски `type_id=971409261` `description_category_id=87323842`
+    - Электрический краскопульт `type_id=91473` `description_category_id=87323842`
+    - Запчасти оборудования для порошковой окраски `type_id=971409262` `description_category_id=87323842`
+  - Электроустановочные изделия `description_category_id=17028654`
+    - Обогреватель для электротехнических шкафов `type_id=970978662` `description_category_id=17028654`
+    - Плавкий предохранитель `type_id=970791958` `description_category_id=17028654`
+    - Автономное устройство пожаротушения `type_id=971445831` `description_category_id=17028654`
+    - Аксессуар для телекоммуникационного шкафа `type_id=971062768` `description_category_id=17028654`
+    - Щит учета электроэнергии в сборе `type_id=970994138` `description_category_id=17028654`
+    - Розеточно-клавишный блок `type_id=94815` `description_category_id=17028654`
+    - Розетка `type_id=94814` `description_category_id=17028654`
+    - Выключатель `type_id=94802` `description_category_id=17028654`
+    - Рамка электроустановочная `type_id=94812` `description_category_id=17028654`
+    - Лицевая панель для розетки, выключателя `type_id=970692179` `description_category_id=17028654`
+    - Конденсатор `type_id=971041143` `description_category_id=17028654`
+    - Подрозетник `type_id=94810` `description_category_id=17028654`
+    - Счетчик электроэнергии `type_id=97662` `description_category_id=17028654`
+    - Сетевой шнур с вилкой `type_id=99388` `description_category_id=17028654`
+    - Управление жалюзи `type_id=94820` `description_category_id=17028654`
+    - Комплект вилка-розетка `type_id=970971275` `description_category_id=17028654`
+    - Штепсельный разъем `type_id=94821` `description_category_id=17028654`
+    - Аксессуар для счетчика электроэнергии `type_id=971302800` `description_category_id=17028654`
+    - Автоматический выключатель `type_id=94800` `description_category_id=17028654`
+    - Телекоммуникационный шкаф `type_id=970607535` `description_category_id=17028654`
+    - Распределительный щит `type_id=321057674` `description_category_id=17028654`
+    - Аксессуар для электрощита `type_id=971011903` `description_category_id=17028654`
+    - Комплект для подключения к электроснабжению `type_id=971302037` `description_category_id=17028654`
+    - Защита для вилки `type_id=115012248` `description_category_id=17028654`
+    - Лючок для фальшпола `type_id=970841937` `description_category_id=17028654`
+    - Зональный коммуникатор `type_id=971323305` `description_category_id=17028654`
+  - Аккумуляторы `description_category_id=86539914`
+    - Аккумулятор для инструмента `type_id=91884` `description_category_id=86539914`
+  - Санфаянс и ванны `description_category_id=17028738`
+    - Биде `type_id=94748` `description_category_id=17028738`
+    - Бордюр для ванны `type_id=970803630` `description_category_id=17028738`
+    - Пьедестал `type_id=94756` `description_category_id=17028738`
+    - Напольный унитаз `type_id=970591719` `description_category_id=17028738`
+    - Раковина `type_id=199313140` `description_category_id=17028738`
+    - Мойка `type_id=94752` `description_category_id=17028738`
+    - Биде-накладка для унитаза `type_id=970740009` `description_category_id=17028738`
+    - Ванна `type_id=94749` `description_category_id=17028738`
+    - Бачок для унитаза `type_id=94758` `description_category_id=17028738`
+    - Аксессуар для сиденья унитаза `type_id=94324` `description_category_id=17028738`
+    - Подвесной унитаз `type_id=970591721` `description_category_id=17028738`
+    - Каркас для ванны `type_id=970629292` `description_category_id=17028738`
+    - Сиденье для унитаза `type_id=92043` `description_category_id=17028738`
+    - Крышка-биде для унитаза `type_id=970591777` `description_category_id=17028738`
+    - Писсуар `type_id=94754` `description_category_id=17028738`
+    - Полупьедестал `type_id=94755` `description_category_id=17028738`
+    - Комплект унитаза c инсталляцией `type_id=970591722` `description_category_id=17028738`
+- Спорт и отдых `description_category_id=17027491`
+  - Фехтование `description_category_id=76485760`
+    - Рапира `type_id=970666970` `description_category_id=76485760`
+    - Электрофиксатор уколов `type_id=970666955` `description_category_id=76485760`
+    - Фехтовальный протектор на маску `type_id=970667772` `description_category_id=76485760`
+    - Аксессуары для фехтовального оружия `type_id=970666969` `description_category_id=76485760`
+    - Сабля для фехтования `type_id=970666962` `description_category_id=76485760`
+    - Мишень для фехтования `type_id=970666998` `description_category_id=76485760`
+    - Шнур для фехтования `type_id=970666961` `description_category_id=76485760`
+    - Шпага для фехтования `type_id=970666960` `description_category_id=76485760`
+    - Маска фехтовальная `type_id=970667000` `description_category_id=76485760`
+  - Товары для ухода за оружием `description_category_id=100523676`
+    - Средство для ухода за оружием `type_id=98132` `description_category_id=100523676`
+    - Краска оружейная `type_id=971405345` `description_category_id=100523676`
+    - Масло оружейное `type_id=98143` `description_category_id=100523676`
+    - Обезжириватель для оружия `type_id=98142` `description_category_id=100523676`
+  - Электротранспорт `description_category_id=17029012`
+    - Моноцикл `type_id=92974` `description_category_id=17029012`
+    - Гироскутер `type_id=92972` `description_category_id=17029012`
+    - Аксессуары для гироскутера, моноколеса `type_id=96959` `description_category_id=17029012`
+    - Сигвей `type_id=92976` `description_category_id=17029012`
+  - Горелки, лампы и походные печи `description_category_id=17028996`
+    - Система приготовления пищи `type_id=971474319` `description_category_id=17028996`
+    - Туристическая лампа `type_id=93531` `description_category_id=17028996`
+    - Пьезоподжиг `type_id=98147` `description_category_id=17028996`
+    - Индикатор уровня газа `type_id=970976276` `description_category_id=17028996`
+    - Фитиль для лампы `type_id=971419621` `description_category_id=17028996`
+    - Удлинитель для газовых ламп `type_id=98037` `description_category_id=17028996`
+    - Туристический теплообменник `type_id=970807900` `description_category_id=17028996`
+    - Масляная лампа `type_id=96990` `description_category_id=17028996`
+    - Походная газовая плита `type_id=98038` `description_category_id=17028996`
+    - Переходник для горелки `type_id=98035` `description_category_id=17028996`
+    - Принадлежность для горелки `type_id=93542` `description_category_id=17028996`
+    - Походная печь `type_id=94351` `description_category_id=17028996`
+    - Колпак для баллона `type_id=971092454` `description_category_id=17028996`
+    - Туристическая горелка `type_id=970670274` `description_category_id=17028996`
+    - Туристический обогреватель `type_id=93539` `description_category_id=17028996`
+    - Сеточка для газовой лампы `type_id=98036` `description_category_id=17028996`
+    - Плафон для лампы, горелки `type_id=971434988` `description_category_id=17028996`
+  - Туристическая посуда `description_category_id=17028698`
+    - Походная посуда и столовые приборы `type_id=94434` `description_category_id=17028698`
+    - Ложка походная `type_id=99450` `description_category_id=17028698`
+    - Аксессуары для питьевой системы `type_id=970677581` `description_category_id=17028698`
+    - Вилка-ложка походная `type_id=94428` `description_category_id=17028698`
+    - Шарик для шейкера `type_id=971083626` `description_category_id=17028698`
+    - Вилка походная `type_id=971420579` `description_category_id=17028698`
+    - Питьевая система `type_id=94433` `description_category_id=17028698`
+    - Набор столовых приборов походный `type_id=971302805` `description_category_id=17028698`
+    - Спортивная бутылка `type_id=94435` `description_category_id=17028698`
+    - Держатель с карабином для бутылки `type_id=970892987` `description_category_id=17028698`
+    - Костровая подставка `type_id=94426` `description_category_id=17028698`
+    - Тарелка походная `type_id=94437` `description_category_id=17028698`
+    - Чайник походный `type_id=94441` `description_category_id=17028698`
+    - Набор походной посуды `type_id=94431` `description_category_id=17028698`
+    - Стакан походный `type_id=94436` `description_category_id=17028698`
+    - Кран-дозатор `type_id=971005040` `description_category_id=17028698`
+    - Котелок `type_id=94427` `description_category_id=17028698`
+    - Фляга `type_id=94438` `description_category_id=17028698`
+    - Канистра для воды `type_id=94424` `description_category_id=17028698`
+    - Половник походный `type_id=99451` `description_category_id=17028698`
+    - Кружка походная `type_id=94442` `description_category_id=17028698`
+    - Шейкер спортивный `type_id=94443` `description_category_id=17028698`
+    - Миска походная `type_id=94429` `description_category_id=17028698`
+    - Крышка для спортивной бутылки `type_id=970863785` `description_category_id=17028698`
+    - Бутылка складная `type_id=971047160` `description_category_id=17028698`
+  - Металлоискатели и аксессуары `description_category_id=87122370`
+    - Наушники для металлоискателя `type_id=97479` `description_category_id=87122370`
+    - Поисковые драги `type_id=971079729` `description_category_id=87122370`
+    - Аксессуары для металлоискателя `type_id=970966336` `description_category_id=87122370`
+    - Ковры дражные `type_id=971219832` `description_category_id=87122370`
+  - Цирковой реквизит `description_category_id=75163484`
+    - Воздушное полотно `type_id=971895002` `description_category_id=75163484`
+    - Диаболо `type_id=970665376` `description_category_id=75163484`
+    - Кольцо для воздушной гимнастики `type_id=971304478` `description_category_id=75163484`
+    - Бинбег `type_id=970664977` `description_category_id=75163484`
+    - Цирковой уницикл `type_id=970661630` `description_category_id=75163484`
+    - Цирковые ходули `type_id=970661629` `description_category_id=75163484`
+    - Пои `type_id=970665374` `description_category_id=75163484`
+    - Инвентарь для жонглирования `type_id=970665315` `description_category_id=75163484`
+    - Аксессуары для циркового шоу `type_id=970665558` `description_category_id=75163484`
+    - Батон для мажоретки `type_id=971326756` `description_category_id=75163484`
+    - Акробатическая трость `type_id=970662580` `description_category_id=75163484`
+  - Охота и стрельба `description_category_id=17028690`
+    - Инструмент для обработки трофеев `type_id=970894583` `description_category_id=17028690`
+    - Аксессуары для лука, арбалета, рогатки `type_id=971225378` `description_category_id=17028690`
+    - Аксессуары для охоты `type_id=970831548` `description_category_id=17028690`
+    - Наконечники для подводных ружей `type_id=970607524` `description_category_id=17028690`
+    - Мишень для стрельбы `type_id=93556` `description_category_id=17028690`
+    - Трезубец для подводной охоты `type_id=971299484` `description_category_id=17028690`
+    - Клещи для взведения капкана `type_id=971011972` `description_category_id=17028690`
+    - Засидка для охоты `type_id=94390` `description_category_id=17028690`
+    - Капкан, аксессуары для капкана `type_id=970634347` `description_category_id=17028690`
+    - Маскировка для охоты `type_id=970827604` `description_category_id=17028690`
+    - Инструмент для лука, арбалета `type_id=970951474` `description_category_id=17028690`
+    - Коврик для чистки оружия `type_id=971435631` `description_category_id=17028690`
+    - Мотовило для буйрепа `type_id=970942187` `description_category_id=17028690`
+    - Аксессуары для подводных ружей `type_id=970607523` `description_category_id=17028690`
+    - Камуфляжная лента `type_id=97974` `description_category_id=17028690`
+    - Светоотражающая экипировка для охоты `type_id=971369396` `description_category_id=17028690`
+    - Шарики, гарпуны, стрелы для рогатки `type_id=93574` `description_category_id=17028690`
+    - Крага для стрельбы из лука `type_id=96454` `description_category_id=17028690`
+    - Защитный корпус для фотоловушки `type_id=970974756` `description_category_id=17028690`
+    - Напальчник `type_id=96455` `description_category_id=17028690`
+    - Кукан для подводной охоты `type_id=971076692` `description_category_id=17028690`
+    - Тетива для арбалета `type_id=96457` `description_category_id=17028690`
+    - Резинка для рогатки `type_id=971053234` `description_category_id=17028690`
+    - Держатель для оружия `type_id=970863487` `description_category_id=17028690`
+    - Приманка для охоты `type_id=970588162` `description_category_id=17028690`
+    - Очки тактические `type_id=94119` `description_category_id=17028690`
+    - Чучело `type_id=97771` `description_category_id=17028690`
+    - Медальоны, держатели для охотничьих трофеев `type_id=970893377` `description_category_id=17028690`
+    - Сейф оружейный `type_id=98241` `description_category_id=17028690`
+    - Подвес для манка `type_id=970884550` `description_category_id=17028690`
+    - Манок `type_id=96937` `description_category_id=17028690`
+    - Фотоловушка `type_id=970824547` `description_category_id=17028690`
+    - Тетива для лука `type_id=96458` `description_category_id=17028690`
+    - Колчан для стрел `type_id=970951478` `description_category_id=17028690`
+    - Лабаз, тристенд `type_id=971477485` `description_category_id=17028690`
+    - Оружейная смазка `type_id=98141` `description_category_id=17028690`
+  - Скейтборды и самокаты `description_category_id=17028701`
+    - Мобильный трамплин для самоката `type_id=971196231` `description_category_id=17028701`
+    - Электроскутер `type_id=970725262` `description_category_id=17028701`
+    - Электроскейт `type_id=92978` `description_category_id=17028701`
+    - Лыжи для сноусамоката `type_id=971117470` `description_category_id=17028701`
+    - Лонгборд `type_id=93617` `description_category_id=17028701`
+    - Подушка на руль самоката `type_id=971446324` `description_category_id=17028701`
+    - Фриборд `type_id=971042558` `description_category_id=17028701`
+    - Самокат `type_id=93623` `description_category_id=17028701`
+    - Электросамокат `type_id=96958` `description_category_id=17028701`
+    - Джампер `type_id=93616` `description_category_id=17028701`
+    - Прицеп для электросамоката `type_id=971313787` `description_category_id=17028701`
+    - Круизер `type_id=93618` `description_category_id=17028701`
+    - Скейтборд `type_id=93624` `description_category_id=17028701`
+    - Ручка на колесо самоката `type_id=971438556` `description_category_id=17028701`
+    - Прыгалка-погостик `type_id=93619` `description_category_id=17028701`
+    - Пенни борд `type_id=970777597` `description_category_id=17028701`
+    - Роллерсерф `type_id=93620` `description_category_id=17028701`
+    - Держатель телефона для самоката `type_id=971298965` `description_category_id=17028701`
+    - Ручка газа для электротранспорта `type_id=971866594` `description_category_id=17028701`
+    - Парковка для самокатов `type_id=970955992` `description_category_id=17028701`
+  - Водный спорт и отдых на воде `description_category_id=85945852`
+    - Маска для снорклинга `type_id=970739448` `description_category_id=85945852`
+    - Байдарка `type_id=94362` `description_category_id=85945852`
+    - Аксессуары, запчасти для водных лыж `type_id=970780203` `description_category_id=85945852`
+    - Аксессуары, запчасти для кайтинга `type_id=970573782` `description_category_id=85945852`
+    - Ниборд `type_id=970739432` `description_category_id=85945852`
+    - Фал для вейкборда, водных лыж `type_id=971442675` `description_category_id=85945852`
+    - Гидрофойл `type_id=971426128` `description_category_id=85945852`
+    - Водные лыжи `type_id=970667732` `description_category_id=85945852`
+    - Сиденье для SUP-доски `type_id=970699214` `description_category_id=85945852`
+    - Аксессуары, запчасти для парусного спорта `type_id=971009879` `description_category_id=85945852`
+    - Весло для SUP-доски `type_id=970699215` `description_category_id=85945852`
+    - Аксессуары, запчасти для серфинга `type_id=970780335` `description_category_id=85945852`
+    - Аксессуары, запчасти для каяка, байдарки `type_id=970780259` `description_category_id=85945852`
+    - Вингфойл `type_id=971891914` `description_category_id=85945852`
+    - Плавник для SUP-доски `type_id=970699216` `description_category_id=85945852`
+    - Виндсерф `type_id=970739444` `description_category_id=85945852`
+    - SUP-доска `type_id=96919` `description_category_id=85945852`
+    - Вейкборд `type_id=970667731` `description_category_id=85945852`
+    - Парус для виндсерфинга `type_id=970739442` `description_category_id=85945852`
+    - Серф `type_id=970739431` `description_category_id=85945852`
+    - Кайт `type_id=970739435` `description_category_id=85945852`
+    - Аксессуары, запчасти для виндсерфинга `type_id=970780199` `description_category_id=85945852`
+    - Аксессуары, запчасти для вейкбординга `type_id=970780416` `description_category_id=85945852`
+    - Вейксерф `type_id=970780459` `description_category_id=85945852`
+    - Доска для кайта `type_id=970739436` `description_category_id=85945852`
+    - Аксессуары, запчасти для SUP-доски `type_id=970779855` `description_category_id=85945852`
+    - Аксессуары, запчасти для снорклинга `type_id=970780403` `description_category_id=85945852`
+    - Каяк `type_id=94367` `description_category_id=85945852`
+    - Парус для SUP-доски `type_id=970699213` `description_category_id=85945852`
+    - Весло для каяка, байдарки `type_id=970780331` `description_category_id=85945852`
+    - Крыло для гидрофойла `type_id=971152302` `description_category_id=85945852`
+  - Надувная мебель `description_category_id=17029007`
+    - Круг надувной `type_id=95729` `description_category_id=17029007`
+    - Матрас надувной `type_id=95728` `description_category_id=17029007`
+    - Пуфик надувной `type_id=95732` `description_category_id=17029007`
+    - Подстаканник надувной `type_id=970806857` `description_category_id=17029007`
+    - Ворота надувные `type_id=95730` `description_category_id=17029007`
+    - Клапан для надувного матраса `type_id=971198231` `description_category_id=17029007`
+    - Насос `type_id=91467` `description_category_id=17029007`
+    - Игла, ниппель для мяча `type_id=970861190` `description_category_id=17029007`
+    - Кровать надувная `type_id=95727` `description_category_id=17029007`
+    - Кресло надувное `type_id=95725` `description_category_id=17029007`
+    - Диван надувной `type_id=95724` `description_category_id=17029007`
+    - Ремкомплект для надувки `type_id=970989170` `description_category_id=17029007`
+    - Буксируемый водный аттракцион `type_id=971747768` `description_category_id=17029007`
+  - Фитнес и йога `description_category_id=17028709`
+    - Тренажер-реформер для пилатеса `type_id=971290276` `description_category_id=17028709`
+    - Обмотка для обруча `type_id=970679867` `description_category_id=17028709`
+    - Координационная дорожка `type_id=859554895` `description_category_id=17028709`
+    - Жилет утяжелитель `type_id=970685055` `description_category_id=17028709`
+    - Подушка для йоги `type_id=98065` `description_category_id=17028709`
+    - Стул для йоги `type_id=971114220` `description_category_id=17028709`
+    - Подушка балансировочная `type_id=970725249` `description_category_id=17028709`
+    - Бодибар `type_id=95917` `description_category_id=17028709`
+    - Ремень для йоги `type_id=98066` `description_category_id=17028709`
+    - Скакалка `type_id=95928` `description_category_id=17028709`
+    - Полотенце спортивное `type_id=38737067` `description_category_id=17028709`
+    - Утяжелители `type_id=95932` `description_category_id=17028709`
+    - Насыпной снаряд `type_id=970781496` `description_category_id=17028709`
+    - Аксессуары для йоги `type_id=970707299` `description_category_id=17028709`
+    - Силовой трос `type_id=970880122` `description_category_id=17028709`
+    - Обруч гимнастический `type_id=95925` `description_category_id=17028709`
+    - Массажер спортивный `type_id=970672227` `description_category_id=17028709`
+    - Болстер `type_id=970664630` `description_category_id=17028709`
+    - Тренировочные петли `type_id=95930` `description_category_id=17028709`
+    - Массажер МФР `type_id=970807930` `description_category_id=17028709`
+    - Полусфера для фитнеса `type_id=970684767` `description_category_id=17028709`
+    - Блок для йоги `type_id=95916` `description_category_id=17028709`
+    - Кольцо для пилатеса `type_id=95919` `description_category_id=17028709`
+    - Диски для скольжения `type_id=970589820` `description_category_id=17028709`
+    - Степ платформа `type_id=115947433` `description_category_id=17028709`
+    - Набор для фитнеса `type_id=95924` `description_category_id=17028709`
+    - Валик для пилатеса `type_id=970664628` `description_category_id=17028709`
+    - Трос для скакалки `type_id=970725295` `description_category_id=17028709`
+    - Кольца для кросс-тренинга `type_id=970727018` `description_category_id=17028709`
+    - Обруч массажный `type_id=970664629` `description_category_id=17028709`
+    - Коврик для йоги, фитнеса `type_id=95918` `description_category_id=17028709`
+    - Фитнес-резинка `type_id=970700415` `description_category_id=17028709`
+    - Подушка на глаза для медитации `type_id=971025807` `description_category_id=17028709`
+    - Фитбол `type_id=95921` `description_category_id=17028709`
+    - Балансир спортивный `type_id=970725247` `description_category_id=17028709`
+    - Гамак для йоги `type_id=15691502` `description_category_id=17028709`
+    - Скамейка для медитации `type_id=970662302` `description_category_id=17028709`
+    - Ролик для пресса `type_id=95926` `description_category_id=17028709`
+    - Рукоятка для фитнес-эспандера `type_id=971046368` `description_category_id=17028709`
+    - Слайд доска `type_id=971045889` `description_category_id=17028709`
+    - Ремень для коврика `type_id=970664927` `description_category_id=17028709`
+    - Эспандер `type_id=115947437` `description_category_id=17028709`
+    - Пояс для отягощений `type_id=970599171` `description_category_id=17028709`
+    - Реакционные ремни для тренировок `type_id=971045336` `description_category_id=17028709`
+    - Жироанализатор `type_id=98041` `description_category_id=17028709`
+    - Канат для кроссфита `type_id=971126773` `description_category_id=17028709`
+    - Пропс для йоги `type_id=98063` `description_category_id=17028709`
+    - Доска садху `type_id=970804379` `description_category_id=17028709`
+    - Наборы для йоги, пилатеса `type_id=95923` `description_category_id=17028709`
+    - Заглушка для фитбола `type_id=971364346` `description_category_id=17028709`
+  - Экипировка и защита `description_category_id=17028711`
+    - Страховочный жилет `type_id=970739447` `description_category_id=17028711`
+    - Компрессионная повязка `type_id=94184` `description_category_id=17028711`
+    - Средство для удаления тейпа `type_id=971134226` `description_category_id=17028711`
+    - Шипы для шиповок `type_id=970702195` `description_category_id=17028711`
+    - Маска хоккейная `type_id=98178` `description_category_id=17028711`
+    - Подшлемник для хоккея `type_id=971284923` `description_category_id=17028711`
+    - Защита локтя `type_id=94175` `description_category_id=17028711`
+    - Перчатки для занятий спортом `type_id=94216` `description_category_id=17028711`
+    - Гидрокостюм `type_id=94167` `description_category_id=17028711`
+    - Маска для страйкбола `type_id=970703536` `description_category_id=17028711`
+    - Спасательный жилет `type_id=94224` `description_category_id=17028711`
+    - Защита спины горнолыжная, сноубордическая `type_id=971216349` `description_category_id=17028711`
+    - Футы `type_id=94227` `description_category_id=17028711`
+    - Краги хоккейные `type_id=97994` `description_category_id=17028711`
+    - Защита корпуса `type_id=94180` `description_category_id=17028711`
+    - Перчатки вратарские `type_id=94166` `description_category_id=17028711`
+    - Атлетическая лента `type_id=971047760` `description_category_id=17028711`
+    - Пластырь для похудения `type_id=971325102` `description_category_id=17028711`
+    - Нашлемник спортивный `type_id=98008` `description_category_id=17028711`
+    - Лента для коньков `type_id=970971276` `description_category_id=17028711`
+    - Защита для стопы `type_id=970670229` `description_category_id=17028711`
+    - Кронштейн для страйкбольного шлема `type_id=971280906` `description_category_id=17028711`
+    - Шапочка для плавания `type_id=94229` `description_category_id=17028711`
+    - Комплект защиты для спорта `type_id=94183` `description_category_id=17028711`
+    - Шапочка для фигурного катания `type_id=970702270` `description_category_id=17028711`
+    - Трубка для плавания `type_id=94226` `description_category_id=17028711`
+    - Пояс для тяжелой атлетики `type_id=94220` `description_category_id=17028711`
+    - Комплект для перезарядки спасательных жилетов `type_id=971422136` `description_category_id=17028711`
+    - Перчатки боксерские `type_id=94160` `description_category_id=17028711`
+    - Повязка на голову спортивная `type_id=94218` `description_category_id=17028711`
+    - Защита запястья `type_id=94172` `description_category_id=17028711`
+    - Бинты боксерские `type_id=94161` `description_category_id=17028711`
+    - Светоотражающий жилет `type_id=94222` `description_category_id=17028711`
+    - Спиннер для фигурного катания `type_id=970958611` `description_category_id=17028711`
+    - Защита паха `type_id=971216350` `description_category_id=17028711`
+    - Перчатки для единоборств `type_id=94211` `description_category_id=17028711`
+    - Судейская атрибутика `type_id=971458818` `description_category_id=17028711`
+    - Подтейпник `type_id=971046086` `description_category_id=17028711`
+    - Капа спортивная `type_id=94159` `description_category_id=17028711`
+    - Спортивный компрессионный нарукавник `type_id=970677199` `description_category_id=17028711`
+    - Лезвия для коньков `type_id=970963757` `description_category_id=17028711`
+    - Жилет для вейкборда `type_id=970780462` `description_category_id=17028711`
+    - Спортивный бинт `type_id=98011` `description_category_id=17028711`
+    - Экипировка для флорбола `type_id=970849605` `description_category_id=17028711`
+    - Накладки на ладони `type_id=970680398` `description_category_id=17028711`
+    - Тренировочная маска `type_id=625230538` `description_category_id=17028711`
+    - Кинезиотейп `type_id=94225` `description_category_id=17028711`
+    - Шлем защитный `type_id=94231` `description_category_id=17028711`
+    - Гравитационные ботинки `type_id=970583659` `description_category_id=17028711`
+    - Защита колена `type_id=94173` `description_category_id=17028711`
+    - Защита голени `type_id=94170` `description_category_id=17028711`
+    - Каска для страйкбола `type_id=970703535` `description_category_id=17028711`
+    - Каска альпинистская `type_id=97972` `description_category_id=17028711`
+    - Бафф `type_id=970730468` `description_category_id=17028711`
+    - Жилет для бега `type_id=970803524` `description_category_id=17028711`
+    - Напульсник `type_id=93154` `description_category_id=17028711`
+    - Амбушюры для шлема `type_id=971032753` `description_category_id=17028711`
+    - Накладки для единоборств `type_id=970726848` `description_category_id=17028711`
+    - Клей для тейпа `type_id=970990060` `description_category_id=17028711`
+    - Очки для занятий спортом `type_id=97306` `description_category_id=17028711`
+    - Ремонтный набор для гидроодежды `type_id=971301613` `description_category_id=17028711`
+    - Визор для шлема `type_id=971390169` `description_category_id=17028711`
+    - Обвязка альпинистская `type_id=98748` `description_category_id=17028711`
+    - Ремень тактический `type_id=98442` `description_category_id=17028711`
+    - Датчик перезарядки спасательных жилетов `type_id=970875772` `description_category_id=17028711`
+  - Санки, снегокаты, тюбинги `description_category_id=17028700`
+    - Снегокат `type_id=93603` `description_category_id=17028700`
+    - Снегомобиль `type_id=93604` `description_category_id=17028700`
+    - Электроснегокат `type_id=971431582` `description_category_id=17028700`
+    - Самокат-снегокат `type_id=93605` `description_category_id=17028700`
+    - Аксессуары для санок `type_id=98159` `description_category_id=17028700`
+    - Тюбинг `type_id=93606` `description_category_id=17028700`
+    - Санки `type_id=93600` `description_category_id=17028700`
+    - Упряжка для саней `type_id=971441760` `description_category_id=17028700`
+    - Камера для тюбинга `type_id=970678767` `description_category_id=17028700`
+    - Ледянка `type_id=93599` `description_category_id=17028700`
+  - Столы для настольного тенниса `description_category_id=17028705`
+    - Теннисный стол `type_id=95714` `description_category_id=17028705`
+  - Велосипед `description_category_id=17028695`
+    - Веломобиль `type_id=94328` `description_category_id=17028695`
+    - Велосипед `type_id=98396` `description_category_id=17028695`
+    - Аккумулятор для электровелосипеда `type_id=970579920` `description_category_id=17028695`
+    - Электровелосипед `type_id=94333` `description_category_id=17028695`
+  - Пейнтбол `description_category_id=77024504`
+    - Компрессор высокого давления для пейнтбола `type_id=970671361` `description_category_id=77024504`
+    - Заправочная станция для пейнтбола `type_id=970671360` `description_category_id=77024504`
+    - Шар для пейнтбола `type_id=970669338` `description_category_id=77024504`
+    - Аксессуары для пейнтбола `type_id=970671483` `description_category_id=77024504`
+    - Маска для пейнтбола `type_id=970671457` `description_category_id=77024504`
+  - Прикормки, ароматизаторы, насадки `description_category_id=79282364`
+    - Наживка, насадка `type_id=971073325` `description_category_id=79282364`
+    - Прикормка `type_id=91929` `description_category_id=79282364`
+    - Ароматизатор для рыбалки `type_id=91920` `description_category_id=79282364`
+  - Клюшки `description_category_id=17029001`
+    - Клюшка хоккейная `type_id=95313` `description_category_id=17029001`
+    - Клюшка для флорбола `type_id=970849576` `description_category_id=17029001`
+    - Клюшка для гольфа `type_id=970673986` `description_category_id=17029001`
+  - Маски и очки `description_category_id=17029009`
+    - Маска для плавания `type_id=95326` `description_category_id=17029009`
+    - Маска горнолыжная `type_id=95325` `description_category_id=17029009`
+    - Аксессуары для спортивных масок, очков `type_id=95323` `description_category_id=17029009`
+    - Маска для дайвинга `type_id=971806639` `description_category_id=17029009`
+    - Очки для плавания `type_id=95330` `description_category_id=17029009`
+  - Бассейн `description_category_id=17028691`
+    - Лестница для бассейна `type_id=94518` `description_category_id=17028691`
+    - Водонагреватель для бассейна `type_id=814233457` `description_category_id=17028691`
+    - Хлорогенератор для бассейна `type_id=971006882` `description_category_id=17028691`
+    - Фильтрующий насос для бассейна `type_id=971002568` `description_category_id=17028691`
+    - Фонтан для бассейна `type_id=971310505` `description_category_id=17028691`
+    - Освещение для бассейна `type_id=971054994` `description_category_id=17028691`
+    - Ионизатор для бассейна `type_id=971039447` `description_category_id=17028691`
+    - Сухой бассейн `type_id=971748877` `description_category_id=17028691`
+    - Подстилка для бассейна `type_id=95082` `description_category_id=17028691`
+    - Бассейн `type_id=95812` `description_category_id=17028691`
+    - Чаша для бассейна `type_id=971011898` `description_category_id=17028691`
+    - Пылесос для бассейна `type_id=971061541` `description_category_id=17028691`
+    - Тент для бассейна `type_id=93524` `description_category_id=17028691`
+    - Озонатор для бассейна `type_id=971006883` `description_category_id=17028691`
+  - Мячи, воланы, снаряды `description_category_id=17029006`
+    - Воланы `type_id=93551` `description_category_id=17029006`
+    - Шайба хоккейная `type_id=93571` `description_category_id=17029006`
+    - Мяч футбольный `type_id=93565` `description_category_id=17029006`
+    - Мяч для детей `type_id=93562` `description_category_id=17029006`
+    - Мяч для гимнастики `type_id=93561` `description_category_id=17029006`
+    - Шарики для сухого бассейна `type_id=93572` `description_category_id=17029006`
+    - Медицинбол `type_id=93554` `description_category_id=17029006`
+    - Мяч теннисный `type_id=93564` `description_category_id=17029006`
+    - Мяч для гольфа `type_id=970673984` `description_category_id=17029006`
+    - Мяч для гандбола `type_id=93560` `description_category_id=17029006`
+    - Набор для петанка `type_id=558867338` `description_category_id=17029006`
+    - Мяч волейбольный `type_id=93559` `description_category_id=17029006`
+    - Шарики для пинг-понга `type_id=93573` `description_category_id=17029006`
+    - Мяч для падел тенниса `type_id=971061152` `description_category_id=17029006`
+    - Мяч бейсбольный `type_id=98976` `description_category_id=17029006`
+    - Аксессуары для стрел `type_id=970676549` `description_category_id=17029006`
+    - Дротики для арбалетов-пистолетов, трубок `type_id=93552` `description_category_id=17029006`
+    - Мяч для водного поло `type_id=970681913` `description_category_id=17029006`
+    - Мяч для тетербола `type_id=970707293` `description_category_id=17029006`
+    - Мяч для хоккея `type_id=98153` `description_category_id=17029006`
+    - Стрелы для арбалета `type_id=93570` `description_category_id=17029006`
+    - Мяч для американского футбола `type_id=97933` `description_category_id=17029006`
+    - Мяч для регби `type_id=98040` `description_category_id=17029006`
+    - Спортивный массажный мяч `type_id=93563` `description_category_id=17029006`
+    - Мяч для флорбола `type_id=970849578` `description_category_id=17029006`
+    - Стрела для лука `type_id=93553` `description_category_id=17029006`
+    - Мяч баскетбольный `type_id=93558` `description_category_id=17029006`
+    - Мяч для сквоша `type_id=970658590` `description_category_id=17029006`
+    - Мяч для мини-футбола `type_id=971066733` `description_category_id=17029006`
+  - Тренажеры `description_category_id=17028706`
+    - Кинезио-тренажер `type_id=971076501` `description_category_id=17028706`
+    - Парта для скамьи `type_id=970952419` `description_category_id=17028706`
+    - Уличный тренажер `type_id=971907004` `description_category_id=17028706`
+    - Конь гимнастический `type_id=970949105` `description_category_id=17028706`
+    - Скейт-парк `type_id=971310088` `description_category_id=17028706`
+    - Тренажер для шеи `type_id=970865533` `description_category_id=17028706`
+    - Велоэргометр `type_id=94244` `description_category_id=17028706`
+    - Тренажер со свободными весами `type_id=971103789` `description_category_id=17028706`
+    - Тренажер-кроссовер `type_id=971103794` `description_category_id=17028706`
+    - Навес для штанги `type_id=94260` `description_category_id=17028706`
+    - Тяговый модуль `type_id=971103807` `description_category_id=17028706`
+    - Беговая дорожка `type_id=94241` `description_category_id=17028706`
+    - Грузоблочный тренажер `type_id=971217784` `description_category_id=17028706`
+    - Турник `type_id=115945779` `description_category_id=17028706`
+    - Кор-доска `type_id=93630` `description_category_id=17028706`
+    - Полотно для беговой дорожки `type_id=970736862` `description_category_id=17028706`
+    - Батут гимнастический `type_id=971278444` `description_category_id=17028706`
+    - Аксессуары для тренажеров `type_id=970617425` `description_category_id=17028706`
+    - Тренировочная станция `type_id=971154561` `description_category_id=17028706`
+    - Памп-трек `type_id=971310089` `description_category_id=17028706`
+    - Силовая рама `type_id=971103791` `description_category_id=17028706`
+    - Тренажер для кисти `type_id=94255` `description_category_id=17028706`
+    - Стеллаж для спортивного инвентаря `type_id=94269` `description_category_id=17028706`
+    - Трос для тренажеров `type_id=971114694` `description_category_id=17028706`
+    - Перекладина гимнастическая `type_id=971278229` `description_category_id=17028706`
+    - Гриф для тяги `type_id=971103801` `description_category_id=17028706`
+    - Крепежный элемент для тренажера `type_id=971301594` `description_category_id=17028706`
+    - Велотренажер `type_id=94243` `description_category_id=17028706`
+    - Площадка ГТО `type_id=971310085` `description_category_id=17028706`
+    - Гиперэкстензия `type_id=94248` `description_category_id=17028706`
+    - Гребной тренажер `type_id=94250` `description_category_id=17028706`
+    - Вибротренажер `type_id=91818` `description_category_id=17028706`
+    - Стол для армрестлинга `type_id=971109715` `description_category_id=17028706`
+    - Стойка силовая `type_id=971073595` `description_category_id=17028706`
+    - Валик для тренажера `type_id=971138918` `description_category_id=17028706`
+    - Паркур-парк `type_id=971310087` `description_category_id=17028706`
+    - Мини-тренажер `type_id=93633` `description_category_id=17028706`
+    - Силовая скамья `type_id=94264` `description_category_id=17028706`
+    - Гимнастическая скамья `type_id=94247` `description_category_id=17028706`
+    - Эллиптический тренажер `type_id=94275` `description_category_id=17028706`
+    - Спортивная площадка для улицы `type_id=971310086` `description_category_id=17028706`
+    - Тренажер со встроенным весом `type_id=971103787` `description_category_id=17028706`
+    - Тренажер для спины `type_id=970892898` `description_category_id=17028706`
+    - Гимнастическое бревно `type_id=970948318` `description_category_id=17028706`
+    - Мультистанция `type_id=971103792` `description_category_id=17028706`
+    - Брусья `type_id=94242` `description_category_id=17028706`
+    - Аэробайк `type_id=971322258` `description_category_id=17028706`
+    - Канат для гибкой тяги `type_id=971103805` `description_category_id=17028706`
+    - Интерактивный спортивный тренажер `type_id=970856537` `description_category_id=17028706`
+    - Стойка для стенки, комплекса `type_id=94270` `description_category_id=17028706`
+    - Тренажер растяжки `type_id=971115472` `description_category_id=17028706`
+    - Крюки для турника `type_id=971110215` `description_category_id=17028706`
+    - Степпер `type_id=115945775` `description_category_id=17028706`
+    - Смазка для тренажера `type_id=970728927` `description_category_id=17028706`
+    - Козел гимнастический `type_id=970888909` `description_category_id=17028706`
+    - Диск здоровья `type_id=94251` `description_category_id=17028706`
+    - Гимнастические кольца `type_id=97154` `description_category_id=17028706`
+    - Шкив для тренажера `type_id=971291623` `description_category_id=17028706`
+    - Инверсионный стол `type_id=94253` `description_category_id=17028706`
+    - Тренажер для развития реакции `type_id=99529` `description_category_id=17028706`
+    - Мини-велотренажер `type_id=971289258` `description_category_id=17028706`
+    - Тумба для запрыгиваний `type_id=970800934` `description_category_id=17028706`
+    - Упор для отжиманий `type_id=95931` `description_category_id=17028706`
+  - Палатки, тенты, шатры и спальные мешки `description_category_id=17029010`
+    - Органайзер для палатки `type_id=970795346` `description_category_id=17029010`
+    - Набор колышков для палатки `type_id=93516` `description_category_id=17029010`
+    - Крыша для палатки `type_id=971196222` `description_category_id=17029010`
+    - Палатка детская игровая `type_id=93520` `description_category_id=17029010`
+    - Вкладыш в спальный мешок `type_id=115948445` `description_category_id=17029010`
+    - Навес `type_id=93518` `description_category_id=17029010`
+    - Маркиза для авто `type_id=970669867` `description_category_id=17029010`
+    - Спальный мешок `type_id=93529` `description_category_id=17029010`
+    - Шатер туристический `type_id=93526` `description_category_id=17029010`
+    - Аксессуары для палатки `type_id=970805528` `description_category_id=17029010`
+    - Пол для палатки `type_id=196128739` `description_category_id=17029010`
+    - Ремонтный набор для палаток `type_id=93522` `description_category_id=17029010`
+    - Оттяжки для палатки `type_id=196128744` `description_category_id=17029010`
+    - Тент `type_id=93523` `description_category_id=17029010`
+    - Палатка `type_id=93519` `description_category_id=17029010`
+  - Пневматическое оружие и арбалеты `description_category_id=17029011`
+    - Дымовая шашка `type_id=970671462` `description_category_id=17029011`
+    - Лук традиционный `type_id=971367781` `description_category_id=17029011`
+    - Арбалет для подводной охоты `type_id=834404554` `description_category_id=17029011`
+    - Хронограф `type_id=99428` `description_category_id=17029011`
+    - Гарпун для подводной охоты `type_id=834404553` `description_category_id=17029011`
+    - Духовая трубка `type_id=970779723` `description_category_id=17029011`
+    - Пневматическое ружье для подводной охоты `type_id=834539505` `description_category_id=17029011`
+    - Лук спортивный `type_id=94116` `description_category_id=17029011`
+  - Лодки и лодочные моторы `description_category_id=17029003`
+    - Набор для ремонта лодок `type_id=94372` `description_category_id=17029003`
+    - Косметика для лодки `type_id=970939517` `description_category_id=17029003`
+    - Якорная веревка `type_id=99121` `description_category_id=17029003`
+    - Навигационный огонь для лодки `type_id=970729003` `description_category_id=17029003`
+    - Фальшфейеры, ракеты `type_id=970628340` `description_category_id=17029003`
+    - Винт для лодки `type_id=94364` `description_category_id=17029003`
+    - Рым якорный `type_id=971006841` `description_category_id=17029003`
+    - Яхта парусная `type_id=970981081` `description_category_id=17029003`
+    - Лодка `type_id=94373` `description_category_id=17029003`
+    - Якорная лебедка `type_id=971061331` `description_category_id=17029003`
+    - Весло `type_id=94363` `description_category_id=17029003`
+    - Якорь для лодки `type_id=97907` `description_category_id=17029003`
+    - Прокладка для лодочных моторов `type_id=971072582` `description_category_id=17029003`
+    - Аксессуары для яхты `type_id=971453365` `description_category_id=17029003`
+    - Ремонтный комплект `type_id=96914` `description_category_id=17029003`
+    - Опора сиденья для лодки `type_id=971002074` `description_category_id=17029003`
+    - Аксессуары для ремонта, ухода за судном `type_id=970939521` `description_category_id=17029003`
+    - Парус для яхты `type_id=971315212` `description_category_id=17029003`
+    - Вертлюг якорный `type_id=970849111` `description_category_id=17029003`
+    - Понтон `type_id=971413694` `description_category_id=17029003`
+    - Модуль плавучести `type_id=971220179` `description_category_id=17029003`
+    - Аксессуары для судов `type_id=970861825` `description_category_id=17029003`
+    - Фартук, юбка для байдарки и каяка `type_id=971364401` `description_category_id=17029003`
+    - Комплект для промывки мотора `type_id=971422088` `description_category_id=17029003`
+    - Яхтенная посуда `type_id=970957916` `description_category_id=17029003`
+    - Катамаран `type_id=96911` `description_category_id=17029003`
+    - Штурвал `type_id=970801253` `description_category_id=17029003`
+    - Сиденье для лодки `type_id=96918` `description_category_id=17029003`
+    - Электрический компонент для лодки `type_id=970851806` `description_category_id=17029003`
+  - ЗИП для роликов, самокатов, скейтбордов `description_category_id=17028999`
+    - Аксессуары и запчасти для скейтбордов `type_id=972943130` `description_category_id=17028999`
+    - Аксессуары и запчасти для роликовых коньков `type_id=972943132` `description_category_id=17028999`
+  - Спортивные чехлы и сумки `description_category_id=77119630`
+    - Чехол для шлема `type_id=98177` `description_category_id=77119630`
+    - Гермочехол `type_id=94285` `description_category_id=77119630`
+    - Чехол для рюкзака `type_id=91376` `description_category_id=77119630`
+    - Набор гермосумок `type_id=94299` `description_category_id=77119630`
+    - Чехол для спортивного инвентаря `type_id=91378` `description_category_id=77119630`
+    - Тубус для поплавков `type_id=98060` `description_category_id=77119630`
+    - Органайзер рыболовный `type_id=95489` `description_category_id=77119630`
+    - Стяжка для рюкзака `type_id=97973` `description_category_id=77119630`
+    - Кан `type_id=94391` `description_category_id=77119630`
+    - Чехол для коньков `type_id=91368` `description_category_id=77119630`
+    - Хоккейный баул `type_id=97995` `description_category_id=77119630`
+    - Чехол для рации `type_id=970783339` `description_category_id=77119630`
+    - Чехол для хранения самоката `type_id=970683155` `description_category_id=77119630`
+    - Ящик рыболова `type_id=95510` `description_category_id=77119630`
+    - Чехол для велосипеда `type_id=98358` `description_category_id=77119630`
+    - Вкладыш в рюкзак `type_id=98018` `description_category_id=77119630`
+    - Чехол для рыболовного, охотничьего инвентаря `type_id=96938` `description_category_id=77119630`
+    - Чехол для бинокля `type_id=970872108` `description_category_id=77119630`
+    - Ящик для охотничьего снаряжения `type_id=971284636` `description_category_id=77119630`
+    - Ведро туристическое `type_id=98157` `description_category_id=77119630`
+    - Гермомешок `type_id=93527` `description_category_id=77119630`
+    - Мешок спортивный `type_id=115950834` `description_category_id=77119630`
+    - Бокс герметичный `type_id=696729464` `description_category_id=77119630`
+    - Емкость для прикормки `type_id=91316` `description_category_id=77119630`
+    - Пояс для бега `type_id=91327` `description_category_id=77119630`
+    - Кейс для патронов `type_id=971284501` `description_category_id=77119630`
+    - Аксессуары для рыболовного ящика `type_id=971882371` `description_category_id=77119630`
+  - Фонари и аксессуары `description_category_id=17028710`
+    - Крепление для фонаря `type_id=95121` `description_category_id=17028710`
+    - Налобный фонарь `type_id=115946627` `description_category_id=17028710`
+    - Поворотники велосипедные `type_id=971305387` `description_category_id=17028710`
+    - Тактический фонарь `type_id=115946633` `description_category_id=17028710`
+    - Лайтстик `type_id=94294` `description_category_id=17028710`
+    - Кемпинговый фонарь `type_id=95120` `description_category_id=17028710`
+    - Сигнальный маркер `type_id=95128` `description_category_id=17028710`
+    - Фонарь для велосипеда `type_id=91633` `description_category_id=17028710`
+    - Фонарь ручной `type_id=115946631` `description_category_id=17028710`
+    - Аксессуары для фонаря `type_id=970988964` `description_category_id=17028710`
+    - Зарядное устройство для фонаря `type_id=115949783` `description_category_id=17028710`
+    - Выносная кнопка `type_id=98033` `description_category_id=17028710`
+    - Проблесковый маячок для дайвинга `type_id=970974447` `description_category_id=17028710`
+  - Фитнес-браслеты и кардиомониторы `description_category_id=17028708`
+    - Ремень для кардиомонитора `type_id=971296062` `description_category_id=17028708`
+    - Фитнес-браслет `type_id=95976` `description_category_id=17028708`
+    - Велокомпьютер `type_id=115947475` `description_category_id=17028708`
+    - Кардиомонитор `type_id=95972` `description_category_id=17028708`
+    - Секундомер `type_id=91763` `description_category_id=17028708`
+    - Датчик каденса `type_id=970829684` `description_category_id=17028708`
+    - Спортивный таймер `type_id=91764` `description_category_id=17028708`
+    - Шагомер `type_id=91866` `description_category_id=17028708`
+    - Спортивный датчик `type_id=97943` `description_category_id=17028708`
+    - Трекер состава тела `type_id=971016147` `description_category_id=17028708`
+    - Комплект для велокомпьютера `type_id=95973` `description_category_id=17028708`
+  - Бинокли и подзорные трубы `description_category_id=17028911`
+    - Бинокль `type_id=94824` `description_category_id=17028911`
+    - Зрительная труба `type_id=91498` `description_category_id=17028911`
+    - Адаптер для установки бинокля `type_id=98031` `description_category_id=17028911`
+    - Аксессуары, запчасти для бинокля, подзорной трубы `type_id=971969485` `description_category_id=17028911`
+    - Перископ `type_id=971395306` `description_category_id=17028911`
+    - Подзорная труба `type_id=971101480` `description_category_id=17028911`
+    - Монокуляр `type_id=94826` `description_category_id=17028911`
+  - Аксессуары для лыж и сноубордов `description_category_id=17028688`
+    - Антифог для очков, горнолыжных масок `type_id=971117463` `description_category_id=17028688`
+    - Щуп лавинный `type_id=97970` `description_category_id=17028688`
+    - Лыжные палки `type_id=95337` `description_category_id=17028688`
+    - Аксессуары для треккинговых, скандинавских палок `type_id=240774473` `description_category_id=17028688`
+    - Палки для лыжероллеров `type_id=970707314` `description_category_id=17028688`
+    - Палки для скандинавской ходьбы `type_id=95339` `description_category_id=17028688`
+    - Аксессуары для лыж, сноуборда `type_id=971109030` `description_category_id=17028688`
+    - Лыжный тренажер `type_id=970728928` `description_category_id=17028688`
+    - Крепления для сноуборда `type_id=95335` `description_category_id=17028688`
+    - Крепления горнолыжные `type_id=95334` `description_category_id=17028688`
+    - Чехол для горнолыжной маски `type_id=970802129` `description_category_id=17028688`
+    - Чехол для лыж `type_id=970845479` `description_category_id=17028688`
+    - Крепления для сплитборда `type_id=971109907` `description_category_id=17028688`
+    - Чехол для сноуборда `type_id=91377` `description_category_id=17028688`
+    - Крепления для лыжероллеров `type_id=970707313` `description_category_id=17028688`
+    - Чехол для лыжных ботинок `type_id=97393` `description_category_id=17028688`
+    - Стойка для лыж, сноубордов `type_id=227219282` `description_category_id=17028688`
+    - Крепления лыжные `type_id=95336` `description_category_id=17028688`
+    - Горнолыжные палки `type_id=95332` `description_category_id=17028688`
+  - Ножи, топоры, лопаты `description_category_id=17029008`
+    - Лопата туристическая `type_id=94454` `description_category_id=17029008`
+    - Пила туристическая `type_id=94459` `description_category_id=17029008`
+    - Топор туристический `type_id=94461` `description_category_id=17029008`
+    - Лопата лавинная `type_id=97969` `description_category_id=17029008`
+    - Ледоруб `type_id=97987` `description_category_id=17029008`
+    - Лоток для промывки `type_id=970803632` `description_category_id=17029008`
+    - Молоток туристический `type_id=98357` `description_category_id=17029008`
+  - Лыжи и сноуборды `description_category_id=17029004`
+    - Сноускейт `type_id=93614` `description_category_id=17029004`
+    - Лыжи охотничьи `type_id=97971` `description_category_id=17029004`
+    - Лыжный комплект горный `type_id=93610` `description_category_id=17029004`
+    - Горные лыжи `type_id=93608` `description_category_id=17029004`
+    - Прогулочные мини-лыжи `type_id=93611` `description_category_id=17029004`
+    - Сплитборд `type_id=971109540` `description_category_id=17029004`
+    - Лыжероллеры `type_id=98383` `description_category_id=17029004`
+    - Сноуборд `type_id=93612` `description_category_id=17029004`
+    - Беговые лыжи `type_id=93607` `description_category_id=17029004`
+    - Сноубордический комплект `type_id=93613` `description_category_id=17029004`
+    - Лыжный комплект беговой `type_id=93609` `description_category_id=17029004`
+  - Керлинг `description_category_id=200001038`
+    - Аксессуары для керлинга `type_id=971416340` `description_category_id=200001038`
+  - Коврики и маты `description_category_id=17029002`
+    - Коврик под тренажер `type_id=504866186` `description_category_id=17029002`
+    - Подушка самонадувающаяся `type_id=970976229` `description_category_id=17029002`
+    - Спортивное напольное покрытие `type_id=95081` `description_category_id=17029002`
+    - Мат спортивный `type_id=95080` `description_category_id=17029002`
+    - Сидушка туристическая `type_id=95079` `description_category_id=17029002`
+    - Коврик туристический `type_id=95076` `description_category_id=17029002`
+  - Аксессуары для танцев `description_category_id=76893319`
+    - Станок для танцев `type_id=970670230` `description_category_id=76893319`
+    - Пилон, шест для танцев `type_id=971371211` `description_category_id=76893319`
+    - Аксессуары для танцев `type_id=970941851` `description_category_id=76893319`
+  - Аксессуары и принадлежности для рыбалки `description_category_id=17028702`
+    - Удилище `type_id=94419` `description_category_id=17028702`
+    - Жерлица `type_id=94389` `description_category_id=17028702`
+    - Органическая приманка для рыбалки `type_id=972197588` `description_category_id=17028702`
+    - Грузило `type_id=94387` `description_category_id=17028702`
+    - Джиг-головка `type_id=96941` `description_category_id=17028702`
+    - Вертлюг `type_id=97786` `description_category_id=17028702`
+    - Аксессуары, оснастка для рыбалки `type_id=94381` `description_category_id=17028702`
+    - Сигнализатор поклевки `type_id=94416` `description_category_id=17028702`
+    - Блесна `type_id=94384` `description_category_id=17028702`
+    - Плетеный шнур для рыбалки `type_id=94403` `description_category_id=17028702`
+    - Поводок для рыбалки `type_id=94404` `description_category_id=17028702`
+    - Поппер `type_id=94409` `description_category_id=17028702`
+    - Детали для ледобура `type_id=29799404` `description_category_id=17028702`
+    - Подсачек `type_id=94405` `description_category_id=17028702`
+    - Балансир рыболовный `type_id=94383` `description_category_id=17028702`
+    - Спиннинг `type_id=94417` `description_category_id=17028702`
+    - Прикормочный кораблик `type_id=970853103` `description_category_id=17028702`
+    - Воблер `type_id=94386` `description_category_id=17028702`
+    - Мормышка `type_id=94399` `description_category_id=17028702`
+    - Ледобур `type_id=94397` `description_category_id=17028702`
+    - Мягкая приманка для рыбалки `type_id=94410` `description_category_id=17028702`
+    - Кружок рыболовный `type_id=94394` `description_category_id=17028702`
+    - Катушка `type_id=94392` `description_category_id=17028702`
+    - Садок `type_id=94414` `description_category_id=17028702`
+    - Крючок рыболовный `type_id=94395` `description_category_id=17028702`
+    - Донная снасть `type_id=94388` `description_category_id=17028702`
+    - Кормушка для рыбалки `type_id=94393` `description_category_id=17028702`
+    - Поплавок `type_id=94408` `description_category_id=17028702`
+    - Леска для рыбалки `type_id=97773` `description_category_id=17028702`
+  - Зажигалки, огнива и грелки для рук `description_category_id=17028998`
+    - Туристическая грелка `type_id=90119559` `description_category_id=17028998`
+    - Сменный элемент для каталитической грелки `type_id=90119564` `description_category_id=17028998`
+    - Аксессуары для зажигалки `type_id=96896` `description_category_id=17028998`
+  - Аксессуары для туризма `description_category_id=17028689`
+    - Страховка для альпинизма, скалолазанья `type_id=98118` `description_category_id=17028689`
+    - Зацепы для скалолазания `type_id=98112` `description_category_id=17028689`
+    - Стропа `type_id=94283` `description_category_id=17028689`
+    - Компас `type_id=91282` `description_category_id=17028689`
+    - Веревка альпинистская `type_id=98126` `description_category_id=17028689`
+    - Трос туристический `type_id=94321` `description_category_id=17028689`
+    - Зажим альпинистский `type_id=98320` `description_category_id=17028689`
+    - Походная аптечка `type_id=95570` `description_category_id=17028689`
+    - Шнур для альпинизма `type_id=115949620` `description_category_id=17028689`
+    - Набор для выживания `type_id=94300` `description_category_id=17028689`
+    - Аксессуары для альпинизма, скалолазания `type_id=970984674` `description_category_id=17028689`
+    - Растопка для костра `type_id=970852729` `description_category_id=17028689`
+    - Подушка туристическая `type_id=94309` `description_category_id=17028689`
+    - Переносной душ `type_id=94308` `description_category_id=17028689`
+    - Аксессуары для туризма `type_id=971453304` `description_category_id=17028689`
+    - Карабин альпинистский `type_id=94289` `description_category_id=17028689`
+  - Бильярд `description_category_id=17028692`
+    - Бильярдный стол `type_id=95677` `description_category_id=17028692`
+    - Мост для кия `type_id=95685` `description_category_id=17028692`
+    - Кий для бильярда `type_id=95682` `description_category_id=17028692`
+    - Аксессуары, расходники для бильярда `type_id=970637865` `description_category_id=17028692`
+    - Бильярдное сукно `type_id=970592519` `description_category_id=17028692`
+    - Лузы для бильярдного стола `type_id=971077323` `description_category_id=17028692`
+    - Средство по уходу за бильярдом `type_id=95690` `description_category_id=17028692`
+    - Перчатки для бильярда `type_id=95687` `description_category_id=17028692`
+    - Треугольник для бильярда `type_id=95691` `description_category_id=17028692`
+    - Мел бильярдный `type_id=95684` `description_category_id=17028692`
+    - Киевница `type_id=95681` `description_category_id=17028692`
+    - Бильярдный светильник `type_id=971117529` `description_category_id=17028692`
+    - Бильярдный стул `type_id=970593455` `description_category_id=17028692`
+    - Шары для бильярда `type_id=95693` `description_category_id=17028692`
+  - Товары для велоспорта `description_category_id=17028693`
+    - Оплетка переключения `type_id=97918` `description_category_id=17028693`
+    - Штанга для велокресла `type_id=98351` `description_category_id=17028693`
+    - Удлинитель руля велосипеда `type_id=970967804` `description_category_id=17028693`
+    - Рулевая колонка для велосипеда `type_id=970662795` `description_category_id=17028693`
+    - Тренажер для велосипеда `type_id=970664758` `description_category_id=17028693`
+    - Велокамера `type_id=96203` `description_category_id=17028693`
+    - Руль для велосипеда `type_id=96889` `description_category_id=17028693`
+    - Аксессуары, запчасти для велосипеда `type_id=971067228` `description_category_id=17028693`
+    - Гидролиния для тормозного троса `type_id=971456811` `description_category_id=17028693`
+    - Велокресло детское `type_id=96210` `description_category_id=17028693`
+    - Мультиключ `type_id=96224` `description_category_id=17028693`
+    - Велокрыло `type_id=96221` `description_category_id=17028693`
+    - Трос с оплеткой `type_id=97919` `description_category_id=17028693`
+    - Ролики переключателя скоростей `type_id=97917` `description_category_id=17028693`
+    - Покрышка `type_id=96237` `description_category_id=17028693`
+    - Подушка для велокресла `type_id=971426421` `description_category_id=17028693`
+    - Ветровое стекло для велокресла `type_id=970782244` `description_category_id=17028693`
+    - Рога на руль `type_id=96238` `description_category_id=17028693`
+    - Инструмент для велосипеда `type_id=970739000` `description_category_id=17028693`
+    - Обод `type_id=96231` `description_category_id=17028693`
+    - Концевик троса `type_id=97920` `description_category_id=17028693`
+    - Велосмазка `type_id=96205` `description_category_id=17028693`
+    - Набор спиц `type_id=96228` `description_category_id=17028693`
+    - Эксцентрик для велосипеда `type_id=97906` `description_category_id=17028693`
+    - Кассета для велосипеда `type_id=97065` `description_category_id=17028693`
+    - Велошина `type_id=96206` `description_category_id=17028693`
+    - Ось для втулки `type_id=98364` `description_category_id=17028693`
+    - Ключ спицевой `type_id=96216` `description_category_id=17028693`
+    - Тормозная система для велосипеда `type_id=97905` `description_category_id=17028693`
+    - Цепи для велосипеда `type_id=96878` `description_category_id=17028693`
+    - Шифтер `type_id=97911` `description_category_id=17028693`
+    - Рама для велосипеда `type_id=970662798` `description_category_id=17028693`
+    - Втулка для велосипеда `type_id=97063` `description_category_id=17028693`
+    - Тормозная жидкость для велосипеда `type_id=96885` `description_category_id=17028693`
+    - Брызговики для велосипеда `type_id=971306223` `description_category_id=17028693`
+    - Трещотка для велосипеда `type_id=98091` `description_category_id=17028693`
+    - Спица `type_id=96242` `description_category_id=17028693`
+    - Манетка `type_id=971013776` `description_category_id=17028693`
+    - Комплект крыльев для велосипеда `type_id=94834` `description_category_id=17028693`
+    - Переключатель скоростей для велосипеда `type_id=96211` `description_category_id=17028693`
+    - Двигатель для электровелосипеда `type_id=971013187` `description_category_id=17028693`
+    - Монтажка `type_id=96223` `description_category_id=17028693`
+    - Система шатунов `type_id=98092` `description_category_id=17028693`
+    - Вынос руля `type_id=96208` `description_category_id=17028693`
+    - Ротор `type_id=970662769` `description_category_id=17028693`
+    - Проставочное кольцо `type_id=970662797` `description_category_id=17028693`
+    - Машинка для чистки цепи `type_id=970663066` `description_category_id=17028693`
+    - Шатун `type_id=971025778` `description_category_id=17028693`
+    - Адаптер для велосипеда `type_id=970662768` `description_category_id=17028693`
+    - Динамометрический ключ для велосипеда `type_id=970663028` `description_category_id=17028693`
+    - Звезда для велосипеда `type_id=970662734` `description_category_id=17028693`
+    - Оплетка троса тормоза `type_id=971288953` `description_category_id=17028693`
+    - Велостанок `type_id=970672766` `description_category_id=17028693`
+    - Велокосметика `type_id=96884` `description_category_id=17028693`
+    - Колесо для велосипеда `type_id=96217` `description_category_id=17028693`
+    - Ободная лента `type_id=96232` `description_category_id=17028693`
+    - Щетка для велосипеда `type_id=96888` `description_category_id=17028693`
+    - Педали `type_id=115948563` `description_category_id=17028693`
+    - Трос переключения скоростей `type_id=971289080` `description_category_id=17028693`
+    - Велоаптечка `type_id=96200` `description_category_id=17028693`
+    - Калипер `type_id=97916` `description_category_id=17028693`
+    - Ручка для велосипеда `type_id=98366` `description_category_id=17028693`
+    - Каретка `type_id=97064` `description_category_id=17028693`
+    - Колпачки на ниппеля `type_id=96219` `description_category_id=17028693`
+    - Комборучка `type_id=971013778` `description_category_id=17028693`
+  - Каркасные батуты и аксессуары `description_category_id=89293457`
+    - Аксессуары для батута `type_id=971414055` `description_category_id=89293457`
+    - Защитный мат на пружины `type_id=971092790` `description_category_id=89293457`
+    - Батут `type_id=84867453` `description_category_id=89293457`
+    - Надувная акробатическая дорожка `type_id=971816851` `description_category_id=89293457`
+  - Конный спорт `description_category_id=77023805`
+    - Путлище для лошади `type_id=970713674` `description_category_id=77023805`
+    - Подпруга для лошади `type_id=970713673` `description_category_id=77023805`
+    - Ногавки для лошади `type_id=970713676` `description_category_id=77023805`
+    - Колокольчик для лошади `type_id=970703594` `description_category_id=77023805`
+    - Седло для лошади `type_id=970685470` `description_category_id=77023805`
+    - Попона для лошади `type_id=970713670` `description_category_id=77023805`
+    - Трензель для лошади `type_id=970896148` `description_category_id=77023805`
+    - Хлыст для конного спорта `type_id=970685460` `description_category_id=77023805`
+    - Недоуздок для лошади `type_id=970703598` `description_category_id=77023805`
+    - Чумбур для лошади `type_id=970896108` `description_category_id=77023805`
+    - Корда для лошади `type_id=971110520` `description_category_id=77023805`
+    - Аксессуары для конного спорта `type_id=970671326` `description_category_id=77023805`
+    - Повод для лошади `type_id=970713675` `description_category_id=77023805`
+    - Меховушка для лошади `type_id=970896111` `description_category_id=77023805`
+    - Вальтрап `type_id=98327` `description_category_id=77023805`
+    - Хоббихорс `type_id=971083568` `description_category_id=77023805`
+    - Оголовье для лошади `type_id=970713671` `description_category_id=77023805`
+    - Уздечка для лошади `type_id=970616313` `description_category_id=77023805`
+    - Средство для ухода за конной амуницией `type_id=971040005` `description_category_id=77023805`
+    - Стремена для лошади `type_id=970713677` `description_category_id=77023805`
+    - Налобник для лошади `type_id=970896109` `description_category_id=77023805`
+  - Ракетки `description_category_id=17028699`
+    - Виброгаситель `type_id=93577` `description_category_id=17028699`
+    - Ракетка для спидбола `type_id=970707292` `description_category_id=17028699`
+    - Ракетка для пиклбола `type_id=971441996` `description_category_id=17028699`
+    - Сетка для бадминтона `type_id=94146` `description_category_id=17028699`
+    - Набор для настольного тенниса `type_id=93582` `description_category_id=17028699`
+    - Накладка для ракетки `type_id=970870245` `description_category_id=17028699`
+    - Ракетка для настольного тенниса `type_id=93585` `description_category_id=17028699`
+    - Набор для спидминтона `type_id=970850476` `description_category_id=17028699`
+    - Струны для ракетки `type_id=96935` `description_category_id=17028699`
+    - Основание ракетки для настольного тенниса `type_id=970887341` `description_category_id=17028699`
+    - Ракетка для бадминтона `type_id=93584` `description_category_id=17028699`
+    - Ракетка для сквоша `type_id=970658589` `description_category_id=17028699`
+    - Бустер для накладок ракетки `type_id=971301228` `description_category_id=17028699`
+    - Ракетка для пляжного тенниса `type_id=970852110` `description_category_id=17028699`
+    - Ракетка для ролибола `type_id=971124801` `description_category_id=17028699`
+    - Клей для накладок ракетки `type_id=971301229` `description_category_id=17028699`
+    - Ракетка для большого тенниса `type_id=93586` `description_category_id=17028699`
+    - Ракетка для падел тенниса `type_id=971060888` `description_category_id=17028699`
+    - Набор для бадминтона `type_id=93580` `description_category_id=17028699`
+    - Набор для большого тенниса `type_id=892800733` `description_category_id=17028699`
+    - Намотка `type_id=93583` `description_category_id=17028699`
+  - Летательные аппараты и экстремальные виды спорта `description_category_id=200000563`
+    - Параплан `type_id=972140464` `description_category_id=200000563`
+    - Дельтаплан `type_id=972140463` `description_category_id=200000563`
+    - Камера основного парашюта `type_id=971116281` `description_category_id=200000563`
+    - Камера запасного парашюта `type_id=971116293` `description_category_id=200000563`
+    - Аксессуары для парашютного спорта `type_id=971116268` `description_category_id=200000563`
+    - Парашют `type_id=971116208` `description_category_id=200000563`
+    - Планер `type_id=972140467` `description_category_id=200000563`
+  - Аксессуары и инвентарь для тяжелой атлетики `description_category_id=17028707`
+    - Лямки для тяги `type_id=98090` `description_category_id=17028707`
+    - Гиря `type_id=115947379` `description_category_id=17028707`
+    - Аксессуары для тяжелой атлетики `type_id=971111111` `description_category_id=17028707`
+    - Гриф гантельный `type_id=115947381` `description_category_id=17028707`
+    - Расширитель грифа `type_id=970673996` `description_category_id=17028707`
+    - Бицепс бластер `type_id=971111349` `description_category_id=17028707`
+    - Диски для штанги `type_id=115947383` `description_category_id=17028707`
+    - Замок для грифа `type_id=971058028` `description_category_id=17028707`
+    - Магнезия `type_id=96945` `description_category_id=17028707`
+    - Гриф для штанги `type_id=115947382` `description_category_id=17028707`
+    - Штанга `type_id=115947384` `description_category_id=17028707`
+    - Гантели `type_id=115947377` `description_category_id=17028707`
+    - Накладка на гриф `type_id=970727204` `description_category_id=17028707`
+    - Крюки для штанги `type_id=970584634` `description_category_id=17028707`
+    - Силовая манжета `type_id=970954769` `description_category_id=17028707`
+  - Спортивные игровые столы `description_category_id=92121881`
+    - Кикер турнирный `type_id=970915222` `description_category_id=92121881`
+    - Мяч для настольного футбола `type_id=970690044` `description_category_id=92121881`
+    - Игровой стол `type_id=95680` `description_category_id=92121881`
+    - Спортивная настольная игра `type_id=122770106` `description_category_id=92121881`
+    - Хоккей турнирный `type_id=970915360` `description_category_id=92121881`
+  - Спортивный инвентарь `description_category_id=17029000`
+    - Судейский гонг `type_id=970804441` `description_category_id=17029000`
+    - Аксессуары для футбола `type_id=970666949` `description_category_id=17029000`
+    - Сетка для настольного тенниса `type_id=94147` `description_category_id=17029000`
+    - Буй для плавания `type_id=238989884` `description_category_id=17029000`
+    - Тренажер для стоп `type_id=970888899` `description_category_id=17029000`
+    - Подушка для растяжки `type_id=970697812` `description_category_id=17029000`
+    - Беруши для плавания `type_id=94157` `description_category_id=17029000`
+    - Фрисби `type_id=98085` `description_category_id=17029000`
+    - Подставка для мяча `type_id=970858513` `description_category_id=17029000`
+    - Набор для игры в крокет `type_id=971035336` `description_category_id=17029000`
+    - Сетка баскетбольная `type_id=94145` `description_category_id=17029000`
+    - Булава для гимнастики `type_id=94126` `description_category_id=17029000`
+    - Диск для метания `type_id=970884224` `description_category_id=17029000`
+    - Подводный буксировщик `type_id=970885558` `description_category_id=17029000`
+    - Доска для плавания `type_id=94127` `description_category_id=17029000`
+    - Набор для игры в огоспорт `type_id=970982549` `description_category_id=17029000`
+    - Сетка волейбольная `type_id=970658825` `description_category_id=17029000`
+    - Набор для игры в дартс `type_id=94138` `description_category_id=17029000`
+    - Набор для игры в гольф `type_id=504866272` `description_category_id=17029000`
+    - Колобашка `type_id=94131` `description_category_id=17029000`
+    - Подвес для груши, мешка `type_id=558763361` `description_category_id=17029000`
+    - Биты городошные `type_id=971004342` `description_category_id=17029000`
+    - Аксессуары для аквааэробики `type_id=221593755` `description_category_id=17029000`
+    - Барьер для легкой атлетики `type_id=970884221` `description_category_id=17029000`
+    - Лезвие для коньков `type_id=970672720` `description_category_id=17029000`
+    - Очиститель для накладок ракетки `type_id=971153195` `description_category_id=17029000`
+    - Оперение для дротиков `type_id=94141` `description_category_id=17029000`
+    - Защитное кольцо для мишени `type_id=971092412` `description_category_id=17029000`
+    - Хвостовик для дротиков `type_id=94154` `description_category_id=17029000`
+    - Колышки для гольфа `type_id=970870904` `description_category_id=17029000`
+    - Набор инвентаря для бокса `type_id=971108822` `description_category_id=17029000`
+    - Инструмент для заточки коньков `type_id=970726650` `description_category_id=17029000`
+    - Набор для игры в тетербол `type_id=970707294` `description_category_id=17029000`
+    - Мяч для метания `type_id=970884225` `description_category_id=17029000`
+    - Аксессуары для дайвинга `type_id=970743108` `description_category_id=17029000`
+    - Доска для вращений `type_id=971438937` `description_category_id=17029000`
+    - Набор для игры в хоккей `type_id=970736835` `description_category_id=17029000`
+    - Мяч для отработки ударов `type_id=970872735` `description_category_id=17029000`
+    - Набор защиты для бокса `type_id=970879742` `description_category_id=17029000`
+    - Лунка для гольфа `type_id=970673989` `description_category_id=17029000`
+    - Гандбольные ворота `type_id=971304789` `description_category_id=17029000`
+    - Набор для бейсбола `type_id=93581` `description_category_id=17029000`
+    - Капитанская повязка `type_id=96903` `description_category_id=17029000`
+    - Компьютер для дайвинга `type_id=970743120` `description_category_id=17029000`
+    - Резинка для растяжки `type_id=971052246` `description_category_id=17029000`
+    - Спортивный нудл `type_id=970834486` `description_category_id=17029000`
+    - Аксессуары для бейсбола `type_id=970628947` `description_category_id=17029000`
+    - Аксессуары для легкой атлетики `type_id=970702163` `description_category_id=17029000`
+    - Шведская стенка `type_id=94274` `description_category_id=17029000`
+    - Сетка для большого тенниса `type_id=94144` `description_category_id=17029000`
+    - Заградительная спортивная сетка `type_id=971299823` `description_category_id=17029000`
+    - Мешок для метания `type_id=970986062` `description_category_id=17029000`
+    - Аксессуары для бокса `type_id=970995237` `description_category_id=17029000`
+    - Аксессуары для волейбола `type_id=970666948` `description_category_id=17029000`
+    - Набор для плавания `type_id=95328` `description_category_id=17029000`
+    - Футбольные ворота `type_id=96902` `description_category_id=17029000`
+    - Лента для клюшек `type_id=98176` `description_category_id=17029000`
+    - Кольцо баскетбольное `type_id=94132` `description_category_id=17029000`
+    - Держатель спортивного инвентаря `type_id=833296570` `description_category_id=17029000`
+    - Зажим для носа `type_id=94168` `description_category_id=17029000`
+    - Тренажер для плавания `type_id=970701477` `description_category_id=17029000`
+    - Аксессуары для хоккея `type_id=971104974` `description_category_id=17029000`
+    - Нарукавники для плавания `type_id=238989890` `description_category_id=17029000`
+    - Электронное судейство `type_id=971300743` `description_category_id=17029000`
+    - Торцевая лента для ракетки `type_id=971040952` `description_category_id=17029000`
+    - Спортивный таймер метроном `type_id=970853188` `description_category_id=17029000`
+    - Перчатка для бейсбола `type_id=970889537` `description_category_id=17029000`
+    - Бумеранг `type_id=92986` `description_category_id=17029000`
+    - Тренажер футбольный `type_id=559455262` `description_category_id=17029000`
+    - Мастика гандбольная `type_id=971301218` `description_category_id=17029000`
+    - Тренажер для настольного тенниса `type_id=971303777` `description_category_id=17029000`
+    - Лента для пуант `type_id=971133764` `description_category_id=17029000`
+    - Оборудование для OCR `type_id=971047080` `description_category_id=17029000`
+    - Тренажер для хоккея, флорбола `type_id=98410` `description_category_id=17029000`
+    - Аксессуары для гимнастики `type_id=971839769` `description_category_id=17029000`
+    - Конус для разметки `type_id=94137` `description_category_id=17029000`
+    - Лопатки для плавания `type_id=94191` `description_category_id=17029000`
+    - Футбэг `type_id=970665327` `description_category_id=17029000`
+    - Груз для дайвинга `type_id=863256797` `description_category_id=17029000`
+    - Корзина для теннисных мячей `type_id=970707283` `description_category_id=17029000`
+    - Палочка для гимнастики `type_id=970989382` `description_category_id=17029000`
+    - Набор для игры в городки `type_id=970688795` `description_category_id=17029000`
+    - Аксессуары для плавания `type_id=238989892` `description_category_id=17029000`
+    - Тележка для гольфа `type_id=971123278` `description_category_id=17029000`
+    - Тактическая доска `type_id=98149` `description_category_id=17029000`
+    - Баллон для дайвинга `type_id=970662052` `description_category_id=17029000`
+    - Лента для гимнастики `type_id=98148` `description_category_id=17029000`
+    - Пушка теннисная `type_id=96934` `description_category_id=17029000`
+    - Медаллер `type_id=98333` `description_category_id=17029000`
+    - Аксессуары для тенниса `type_id=98158` `description_category_id=17029000`
+    - Спортивный канат `type_id=94267` `description_category_id=17029000`
+    - Баскетбольная стойка `type_id=970974562` `description_category_id=17029000`
+    - Набор для игры в корнхол `type_id=971279952` `description_category_id=17029000`
+    - Свисток `type_id=94223` `description_category_id=17029000`
+    - Пусковое устройство для сигнальных патронов `type_id=971454548` `description_category_id=17029000`
+    - Жилет для плавания `type_id=94129` `description_category_id=17029000`
+    - Тренажер для свинга `type_id=970673991` `description_category_id=17029000`
+    - Набор для пляжного тенниса `type_id=970716313` `description_category_id=17029000`
+    - Манометр спортивный `type_id=971323311` `description_category_id=17029000`
+    - Пьедестал для награждения `type_id=971287971` `description_category_id=17029000`
+    - Бокс для спортивной капы `type_id=970829667` `description_category_id=17029000`
+    - Антенны для волейбольной сетки `type_id=970666944` `description_category_id=17029000`
+    - Спортивный элемент шведской стенки `type_id=94852` `description_category_id=17029000`
+    - Дротики `type_id=94128` `description_category_id=17029000`
+    - Устройство для подачи звуковых сигналов под водой `type_id=814037086` `description_category_id=17029000`
+    - Бампербол `type_id=971045946` `description_category_id=17029000`
+    - Тренажер для паттинга `type_id=970673990` `description_category_id=17029000`
+    - Сетка для мячей `type_id=822993802` `description_category_id=17029000`
+    - Баскетбольный тренажер `type_id=970624214` `description_category_id=17029000`
+    - Судейский флаг `type_id=970666945` `description_category_id=17029000`
+    - Футбольная сетка `type_id=970681901` `description_category_id=17029000`
+    - Баскетбольный щит `type_id=94125` `description_category_id=17029000`
+  - Боулинг `description_category_id=86811869`
+    - Перчатки для боулинга `type_id=970800623` `description_category_id=86811869`
+    - Аксессуары для боулинга `type_id=970800763` `description_category_id=86811869`
+    - Шар для боулинга `type_id=970800650` `description_category_id=86811869`
+  - Кемпинговая мебель `description_category_id=17029005`
+    - Набор складной мебели `type_id=94447` `description_category_id=17029005`
+    - Органайзер для туристического стола `type_id=971289485` `description_category_id=17029005`
+    - Аксессуары для туристической кровати `type_id=971036157` `description_category_id=17029005`
+    - Стул складной туристический `type_id=94450` `description_category_id=17029005`
+    - Стол складной туристический `type_id=94449` `description_category_id=17029005`
+    - Аксессуары для туристического стула `type_id=971410190` `description_category_id=17029005`
+    - Кровать раскладная туристическая `type_id=94446` `description_category_id=17029005`
+    - Шкаф складной туристический `type_id=94453` `description_category_id=17029005`
+    - Кухня кемпинговая `type_id=98559` `description_category_id=17029005`
+    - Платформа рыболовная `type_id=970954001` `description_category_id=17029005`
+  - Боксерские груши и мешки `description_category_id=17028997`
+    - Лапы боксерские `type_id=94336` `description_category_id=17028997`
+    - Боксерская груша `type_id=94335` `description_category_id=17028997`
+    - Набор для бокса `type_id=970695846` `description_category_id=17028997`
+    - Макивара `type_id=970666976` `description_category_id=17028997`
+    - Ракетка для отработки ударов `type_id=970601428` `description_category_id=17028997`
+    - Боксерский мешок `type_id=94338` `description_category_id=17028997`
+    - Манекен для борьбы `type_id=94337` `description_category_id=17028997`

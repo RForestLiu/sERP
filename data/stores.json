@@ -4,8 +4,8 @@
     "name": "anling",
     "platform": "ozon",
     "label": "Ozon - anling",
-    "client_id": "2295764",
-    "api_key": "2fe2bad2-86ee-4c71-ae6b-2744c2e0520b"
+    "client_id": "${OZON_ANLING_CLIENT_ID}",
+    "api_key": "${OZON_ANLING_API_KEY}"
   },
   {
     "id": "ozon_anmei",

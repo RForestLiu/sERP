@@ -1,0 +1,2114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ozon商品{{ '创建' if mode == 'create' else '编辑' }} - sERP</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            min-width: 1180px;
+            background: #f5f5f5;
+            color: #333;
+            font-family: Arial, "Microsoft YaHei", sans-serif;
+            font-size: 12px;
+        }
+        a { color: #2f8fca; text-decoration: none; }
+        button, input, select, textarea { font-family: inherit; font-size: 12px; }
+        button {
+            height: 32px;
+            border: 1px solid #d8d8d8;
+            border-radius: 2px;
+            background: #fff;
+            color: #555;
+            padding: 0 14px;
+            cursor: pointer;
+        }
+        button.blue { background: #5da2d8; border-color: #5da2d8; color: #fff; }
+        button.orange { background: #ff7f38; border-color: #ff7f38; color: #fff; }
+        button.green { background: #00a878; border-color: #00a878; color: #fff; }
+        button.link { height: auto; border: 0; background: transparent; color: #2f8fca; padding: 0 4px; }
+        .topbar {
+            height: 58px;
+            background: #2f8fca;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            padding-left: 66px;
+        }
+        .logo { width: 156px; font-size: 24px; font-weight: 700; }
+        .logo small { display: block; font-size: 10px; font-weight: 400; margin-top: 1px; }
+        .nav {
+            height: 58px;
+            line-height: 58px;
+            padding: 0 16px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .nav.active { background: #257bb1; }
+        .top-right { margin-left: auto; display: flex; gap: 14px; align-items: center; padding-right: 28px; }
+        .workspace {
+            width: calc(100% - 44px);
+            margin: 0 0 0 22px;
+            padding: 30px 0 82px;
+            display: grid;
+            grid-template-columns: minmax(760px, 1010px) minmax(300px, 360px);
+            gap: 16px;
+            justify-content: start;
+            align-items: start;
+        }
+        .ozon-form-module {
+            width: 1010px;
+            max-width: 100%;
+            position: relative;
+        }
+        .crumb { color: #999; margin-bottom: 28px; }
+        .actions-top {
+            position: absolute;
+            right: 0;
+            top: -6px;
+            display: flex;
+            gap: 10px;
+        }
+        .form-card {
+            background: #fff;
+            border: 1px solid #e4e4e4;
+            margin-bottom: 14px;
+        }
+        .form-card-header {
+            height: 44px;
+            line-height: 44px;
+            border-bottom: 1px solid #eee;
+            padding-left: 18px;
+        }
+        .form-card-title {
+            font-size: 15px;
+            font-weight: 700;
+        }
+        .form-card-title--desc {
+            color: #999;
+            font-size: 12px;
+            font-weight: 400;
+            margin-left: 6px;
+        }
+        .form-card-content { padding: 20px 0 26px; }
+        .ant-form-item {
+            display: grid;
+            grid-template-columns: 185px 1fr;
+            align-items: start;
+            min-height: 38px;
+            margin-bottom: 14px;
+        }
+        .ant-form-item-label {
+            text-align: right;
+            color: #555;
+            padding: 8px 12px 0 0;
+            font-size: 14px;
+        }
+        .ant-form-item-required:before { content: "*"; color: #d9534f; margin-right: 2px; }
+        .ant-form-item-control { min-width: 0; }
+        .input, .select, textarea {
+            height: 34px;
+            border: 1px solid #d8d8d8;
+            background: #fff;
+            color: #666;
+            padding: 6px 10px;
+        }
+        .select { width: 260px; }
+        .input { width: 282px; }
+        .input.mid { width: 430px; }
+        .input.long { width: 650px; }
+        textarea {
+            width: 720px;
+            height: 190px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+        .hint { color: #999; font-size: 12px; line-height: 1.7; margin-top: 6px; }
+        .tip {
+            display: inline-block;
+            background: #19b8b0;
+            color: #fff;
+            border-radius: 2px;
+            padding: 1px 5px;
+            margin-right: 6px;
+        }
+        .cat-path { color: #7f3f3f; margin-top: 10px; line-height: 1.6; }
+        .empty-category { color: #8a4b00; margin-top: 10px; }
+        .attr-area {
+            width: 830px;
+            height: 545px;
+            overflow-y: auto;
+            position: relative;
+            background: #eee;
+            border: 1px solid #e1e1e1;
+            padding: 22px 18px 20px 16px;
+        }
+        .scrollbar {
+            position: absolute;
+            right: 4px;
+            top: 0;
+            width: 7px;
+            height: 100%;
+            background: #d7d7d7;
+        }
+        .scrollbar:before {
+            content: "";
+            display: block;
+            width: 7px;
+            height: 92px;
+            background: #bcbcbc;
+        }
+        .attr-line {
+            display: grid;
+            grid-template-columns: 165px 1fr;
+            align-items: start;
+            margin-bottom: 16px;
+        }
+        .attr-empty {
+            color: #777;
+            line-height: 1.8;
+            padding: 10px;
+        }
+        .attr-label {
+            text-align: right;
+            padding: 7px 14px 0 0;
+            color: #555;
+            line-height: 1.35;
+        }
+        .q {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+            border: 1px solid #9aa3ad;
+            border-radius: 50%;
+            color: #777;
+            font-size: 11px;
+            margin-left: 4px;
+        }
+        .checks {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px 28px;
+            color: #444;
+            padding-top: 2px;
+        }
+        .checks.four { grid-template-columns: repeat(4, 1fr); }
+        .checks.scrollable {
+            width: min(100%, 720px);
+            max-height: 168px;
+            overflow: auto;
+            padding: 8px;
+            border: 1px solid #d6d6d6;
+            background: #fff;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        }
+        .checks label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        input[type="checkbox"] { width: 14px; height: 14px; margin: 0; }
+        .multi-select { width: 330px; min-height: 112px; }
+        .attr-search { width: 330px; height: 28px; margin-bottom: 6px; }
+        .attr-manual { width: 330px; height: 28px; margin-top: 6px; }
+        .selected-values { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; max-width: 520px; }
+        .selected-chip { background: #e9f7ef; border: 1px solid #b9dfc9; color: #236f43; padding: 2px 6px; border-radius: 2px; }
+        .attr-status {
+            display: inline-block;
+            margin-top: 6px;
+            padding: 2px 6px;
+            border-radius: 2px;
+            background: #e9f5ff;
+            color: #2675a9;
+        }
+        .attr-status.warn { background: #fff4d8; color: #9a6400; }
+        .attr-status.manual { background: #e9f7ef; color: #17834f; }
+        .attr-control-wrap.need-review .input,
+        .attr-control-wrap.need-review .select { border-color: #e0a800; }
+        .add-line { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+        .value-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px 28px;
+            max-height: 115px;
+            overflow: hidden;
+        }
+        .rich-json-editor {
+            width: 640px;
+            height: 310px;
+            border: 1px solid #ddd;
+            background: #fff;
+            color: #333;
+            margin-top: 8px;
+            padding: 10px;
+            resize: vertical;
+            font-family: Consolas, Monaco, monospace;
+            line-height: 1.5;
+        }
+        .rich-json-status {
+            width: 640px;
+            margin-top: 6px;
+            color: #777;
+        }
+        .upload-card {
+            display: inline-flex;
+            width: 112px;
+            height: 132px;
+            border: 1px dashed #b9c1cc;
+            margin-right: 16px;
+            background: #fafafa;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            font-size: 14px;
+            color: #555;
+        }
+        .upload-card b { font-size: 34px; line-height: 34px; color: #333; font-weight: 300; }
+        .variant-box {
+            width: 720px;
+            background: #f7f7f7;
+            border: 1px solid #e0e0e0;
+            padding: 14px;
+        }
+        .variant-row {
+            display: grid;
+            grid-template-columns: 130px 1fr 1fr 52px;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .variant-theme-actions {
+            margin-top: 10px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .pill {
+            display: inline-block;
+            background: #2796df;
+            color: #fff;
+            padding: 4px 8px;
+            margin: 2px;
+            border-radius: 2px;
+        }
+        table {
+            width: 960px;
+            margin: 0 auto;
+            border-collapse: collapse;
+            background: #fff;
+        }
+        th {
+            border: 1px solid #ddd;
+            background: #f3f3f3;
+            color: #666;
+            font-weight: 400;
+            padding: 8px;
+            text-align: center;
+        }
+        td {
+            border: 1px solid #ddd;
+            padding: 7px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .tbl-input { width: 92%; height: 28px; border: 1px solid #ddd; padding: 4px; }
+        .img-row {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .img-title { text-align: right; color: #555; line-height: 1.6; }
+        .pic {
+            display: inline-block;
+            width: 92px;
+            height: 108px;
+            border: 1px solid #ddd;
+            background: linear-gradient(135deg, #111, #777);
+            margin: 0 8px 8px 0;
+            position: relative;
+        }
+        .pic:after {
+            content: "800 x 800";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,.45);
+            color: #fff;
+            font-size: 11px;
+            text-align: center;
+        }
+        .pic img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .variant-selected-images {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .variant-image-option-grid {
+            max-height: 420px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 10px;
+        }
+        .variant-image-option {
+            border: 1px solid #ddd;
+            background: #fff;
+            padding: 6px;
+            cursor: pointer;
+        }
+        .variant-image-option.selected {
+            border-color: #2f8fca;
+            box-shadow: inset 0 0 0 2px #2f8fca;
+        }
+        .variant-image-option img {
+            width: 100%;
+            height: 92px;
+            object-fit: cover;
+            display: block;
+            background: #f5f5f5;
+        }
+        .variant-image-option span {
+            display: block;
+            margin-top: 4px;
+            font-size: 11px;
+            color: #666;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        .ai-zone {
+            position: sticky;
+            top: 74px;
+            max-height: calc(100vh - 96px);
+            overflow-y: auto;
+        }
+        .ai-card {
+            background: #fff;
+            border: 1px solid #e4e4e4;
+            margin-bottom: 14px;
+            box-shadow: 0 6px 20px rgba(20, 39, 70, 0.10);
+        }
+        .ai-card-title {
+            height: 44px;
+            line-height: 44px;
+            border-bottom: 1px solid #eee;
+            padding: 0 16px;
+            font-size: 15px;
+            font-weight: 700;
+        }
+        .ai-card-body { padding: 14px; }
+        .ai-main-actions { display: grid; gap: 10px; }
+        .ai-action {
+            width: 100%;
+            height: 42px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 14px;
+            font-size: 14px;
+        }
+        .ai-action.primary {
+            background: #2f8fca;
+            border-color: #2f8fca;
+            color: #fff;
+        }
+        .product-picker {
+            display: none;
+            margin-top: 12px;
+            border-top: 1px solid #eee;
+            padding-top: 12px;
+        }
+        .selected-product {
+            display: none;
+            margin-top: 12px;
+            border: 1px solid #e5e5e5;
+            background: #fbfbfb;
+            padding: 8px;
+            grid-template-columns: 48px 1fr;
+            gap: 8px;
+            align-items: center;
+        }
+        .product-search-row { display: flex; gap: 6px; }
+        .product-search-row input {
+            flex: 1;
+            height: 32px;
+            border: 1px solid #d8d8d8;
+            padding: 6px 8px;
+        }
+        .product-results {
+            max-height: 320px;
+            overflow-y: auto;
+            margin-top: 10px;
+            border: 1px solid #eee;
+        }
+        .product-result {
+            display: grid;
+            grid-template-columns: 48px 1fr;
+            gap: 8px;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            background: #fff;
+        }
+        .product-result:hover { background: #f5fbff; }
+        .product-result.selected {
+            background: #eaf5ff;
+            box-shadow: inset 3px 0 0 #2f8fca;
+        }
+        .product-result:last-child { border-bottom: 0; }
+        .product-thumb {
+            width: 48px;
+            height: 48px;
+            border: 1px solid #ddd;
+            background: #f5f5f5;
+            object-fit: cover;
+        }
+        .product-title {
+            color: #333;
+            line-height: 1.35;
+            max-height: 36px;
+            overflow: hidden;
+        }
+        .product-meta {
+            color: #999;
+            font-size: 11px;
+            margin-top: 4px;
+        }
+        .product-picker-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .ai-status {
+            border-top: 1px solid #eee;
+            margin-top: 12px;
+            padding-top: 12px;
+            color: #666;
+            line-height: 1.7;
+        }
+        .ai-status b { display: block; color: #333; margin-bottom: 4px; }
+        .attr-evidence-list {
+            display: grid;
+            gap: 10px;
+        }
+        .attr-evidence-empty {
+            color: #888;
+            line-height: 1.7;
+        }
+        .attr-evidence-item {
+            border: 1px solid #e7e7e7;
+            background: #fbfbfb;
+            padding: 10px;
+        }
+        .attr-evidence-name {
+            color: #333;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+        .attr-evidence-value {
+            color: #2f8fca;
+            margin-top: 5px;
+            word-break: break-word;
+        }
+        .attr-evidence-text {
+            color: #666;
+            margin-top: 6px;
+            line-height: 1.6;
+            word-break: break-word;
+        }
+        .ai-step {
+            padding: 9px 0;
+            border-bottom: 1px solid #f0f0f0;
+            line-height: 1.6;
+        }
+        .ai-step:last-child { border-bottom: 0; }
+        .category-dependent.is-hidden {
+            display: none;
+        }
+        .category-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, .35);
+        }
+        .category-modal {
+            width: 760px;
+            max-height: 78vh;
+            background: #fff;
+            border: 1px solid #d9d9d9;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, .18);
+            display: flex;
+            flex-direction: column;
+        }
+        .category-modal-header {
+            height: 44px;
+            padding: 0 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #eee;
+            font-size: 15px;
+            font-weight: 700;
+        }
+        .category-modal-body {
+            padding: 12px;
+            overflow: hidden;
+        }
+        .category-search {
+            width: 100%;
+            height: 34px;
+            border: 1px solid #d8d8d8;
+            padding: 6px 10px;
+            margin-bottom: 10px;
+        }
+        .category-tree {
+            height: 420px;
+            border: 1px solid #eee;
+            overflow-y: auto;
+            background: #fff;
+        }
+        .category-node {
+            min-height: 30px;
+            padding: 7px 12px;
+            cursor: pointer;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            border-bottom: 1px solid #f7f7f7;
+        }
+        .category-node:hover { background: #f2fbff; }
+        .category-node.selected {
+            background: #dff2ff;
+            box-shadow: inset 3px 0 0 #2f8fca;
+        }
+        .category-name-cn { color: #333; font-weight: 700; }
+        .category-name-ru { color: #777; margin-left: 4px; }
+        .category-path-preview {
+            min-height: 32px;
+            padding: 8px 2px 0;
+            color: #666;
+            line-height: 1.6;
+        }
+        .category-modal-footer {
+            height: 52px;
+            border-top: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 0 14px;
+        }
+        .variant-image-modal .category-modal {
+            width: 880px;
+        }
+        .bottom-actions {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 58px;
+            background: #fff;
+            border-top: 1px solid #ddd;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body data-mode="{{ mode }}">
+<div class="topbar">
+    <div class="logo">sERP<small>Ozon商品编辑</small></div>
+    <a class="nav" href="/">首页</a>
+    <a class="nav active" href="/product-maintenance">产品</a>
+    <a class="nav" href="/knowledge-base">知识库</a>
+    <a class="nav" href="/ozon-listing">Ozon上架(旧)</a>
+    <div class="top-right"><span>Ozon API</span><span>AI运营助手</span><span id="top-skc">未选品</span></div>
+</div>
+
+<div class="workspace">
+    <main class="ozon-form-module">
+        <div class="crumb">ozon产品 &gt; {{ '创建产品' if mode == 'create' else '在线产品 > 编辑' }}</div>
+        <div class="actions-top">
+            <button>一键翻译⌄</button>
+            <button>存为模板</button>
+            {% if mode == 'create' %}
+            <button class="orange" type="button">引用产品⌄</button><button class="orange" type="button" id="btn-save-top">保存</button><button class="green" type="button" id="btn-submit-top">发布</button>
+            {% else %}
+            <button class="green" type="button" id="btn-submit-top">更新</button>
+            {% endif %}
+        </div>
+
+        <section class="form-card base-info" id="basicInfo">
+            <div class="form-card-header"><h4 class="form-card-title">基本信息 <span class="form-card-title--desc"></span></h4></div>
+            <div class="form-card-content">
+                <form class="ant-form ant-form-horizontal base-info-form">
+                    <div class="ant-form-item shop-form-item">
+                        <div class="ant-form-item-label"><label class="ant-form-item-required">店铺名称</label></div>
+                        <div class="ant-form-item-control"><select class="select" id="store-select"><option value="">{{ '---- 请选择店铺 ----' if mode == 'create' else 'Ozon 安凌' }}</option></select></div>
+                    </div>
+                    <div class="ant-form-item category-form-item">
+                        <div class="ant-form-item-label"><label class="ant-form-item-required">产品分类</label></div>
+                        <div class="ant-form-item-control">
+                            <select class="select" id="category-select"><option>{{ '---- 请选择分类 ----' if mode == 'create' else '钱包(Кошелек)' }}</option></select>
+                            <button type="button" class="blue" id="btn-select-category" style="margin-left:10px">选择分类</button>
+                            {% if mode == 'create' %}
+                            <div class="empty-category" id="cat-path">未选择分类</div>
+                            {% else %}
+                            <div class="cat-path" id="cat-path">小百货和配饰(Галантерея и аксессуары) &gt; 配饰(Аксессуары) &gt; 钱包(Кошелек)</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="ant-form-item attrs-form-item" id="attr-row" {% if mode == 'create' %}style="display:none"{% endif %}>
+                        <div class="ant-form-item-label"><label>产品属性</label></div>
+                        <div class="ant-form-item-control">
+                            <div class="attr-area" id="attr-area">
+                                <div class="scrollbar"></div>
+                                <div class="attr-line">
+                                    <div class="attr-label"><span style="color:#d9534f">*</span>性别 (Пол) <span class="q">?</span></div>
+                                    <div class="checks four">
+                                        <label><input type="checkbox"> 男士(Мужской)</label>
+                                        <label><input type="checkbox" checked> 女士(Женский)</label>
+                                        <label><input type="checkbox"> 女童(Девочки)</label>
+                                        <label><input type="checkbox"> 男童(Мальчики)</label>
+                                    </div>
+                                </div>
+                                <div class="attr-line">
+                                    <div class="attr-label">商品重量，克 (Вес товара, г) <span class="q">?</span></div>
+                                    <div><input class="input" id="weight-input" value="200"></div>
+                                </div>
+                                <div class="attr-line">
+                                    <div class="attr-label">配套 (Комплектация) <span class="q">?</span></div>
+                                    <div><input class="input" id="comp-input" value="Кошелек, съемный ремешок"></div>
+                                </div>
+                                <div class="attr-line">
+                                    <div class="attr-label">保修期 (Гарантийный срок) <span class="q">?</span></div>
+                                    <div><input class="input" value=""></div>
+                                </div>
+                                <div class="attr-line">
+                                    <div class="attr-label">包装 (Упаковка) <span class="q">?</span></div>
+                                    <div>
+                                        <div class="add-line"><input class="input" value="更多属性值请搜索添加"><button type="button" class="blue">添加</button></div>
+                                        <div class="value-list">
+                                            <label><input type="checkbox"> 金属罐(Банка мета...)</label><label><input type="checkbox"> 吸塑(Блистер)</label><label><input type="checkbox"> 包装纸(Бумажная о...)</label>
+                                            <label><input type="checkbox"> 桶(Ведерко)</label><label><input type="checkbox"> 显示(Дисплей)</label><label><input type="checkbox"> 塑料外壳(Кейс плас...)</label>
+                                            <label><input type="checkbox"> 容器(Контейнер)</label><label><input type="checkbox"> 金属盒(Коробка ме...)</label><label><input type="checkbox"> 塑料盒(Коробка пл...)</label>
+                                            <label><input type="checkbox"> 礼品袋(Пакет пода...)</label><label><input type="checkbox"> 纸板文件夹(Папка к...)</label><label><input type="checkbox"> 铅笔盒(Пенал)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="attr-line">
+                                    <div class="attr-label">原产国 (Страна-изготовитель) <span class="q">?</span></div>
+                                    <div>
+                                        <div class="add-line"><input class="input" value="更多属性值请搜索添加"><button type="button" class="blue">添加</button></div>
+                                        <div class="value-list">
+                                            <label><input type="checkbox"> 俄罗斯(Россия)</label><label><input type="checkbox" checked> 中国(Китай)</label><label><input type="checkbox"> 未指定(Не указана)</label>
+                                            <label><input type="checkbox"> 意大利(Италия)</label><label><input type="checkbox"> 美国(США)</label><label><input type="checkbox"> 德国(Германия)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="attr-line">
+                                    <div class="attr-label">高度，厘米 (Высота, см)</div>
+                                    <div><input class="input" value="12"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section class="form-card" id="salesInfo">
+            <div class="form-card-header"><h4 class="form-card-title">店小秘信息 <span class="form-card-title--desc">（注：下列信息，仅在店小秘系统生效）</span></h4></div>
+            <div class="form-card-content">
+                <div class="ant-form-item"><div class="ant-form-item-label"><label>店小秘分类</label></div><div class="ant-form-item-control"><select class="select"><option>选择分类</option></select> <a style="margin-left:10px">+ 管理分类</a></div></div>
+                <div class="ant-form-item"><div class="ant-form-item-label"><label>来源URL</label></div><div class="ant-form-item-control"><input class="input long" value="用于记录供货渠道URL，方便采购。仅在店小秘显示，不会同步到OZON平台！"><button type="button">访问</button><button type="button">找货源</button><a style="margin-left:12px">+</a></div></div>
+            </div>
+        </section>
+
+        <section class="form-card" id="productInfo">
+            <div class="form-card-header"><h4 class="form-card-title">产品信息</h4></div>
+            <div class="form-card-content">
+                <div class="ant-form-item">
+                    <div class="ant-form-item-label"><label>产品标题</label></div>
+                    <div class="ant-form-item-control">
+                        <input class="input long" id="title-input" placeholder="请输入" value="{{ '' if mode == 'create' else 'Koшелек ANLING: Мужской/женский С Защитой NFC/RFID' }}"><button type="button" style="margin-left:0">↻</button><button type="button">Tt</button><span style="margin-left:8px;color:#999">0 / 255</span>
+                        <div class="hint"><span class="tip">说明</span>根据OZON平台要求，部分类目平台会自动生成标题，不支持自定义标题，点击查看详情</div>
+                    </div>
+                </div>
+                <div class="ant-form-item"><div class="ant-form-item-label"><label>VAT</label></div><div class="ant-form-item-control"><select class="select" id="vat-select"><option value="">请选择</option><option value="0" selected>0% / 不征税</option><option value="0.05">5%</option><option value="0.07">7%</option><option value="0.1">10%</option><option value="0.2">20%</option></select></div></div>
+            </div>
+        </section>
+
+        <section class="form-card category-dependent{% if mode == 'create' %} is-hidden{% endif %}" id="descriptionInfo">
+            <div class="form-card-header"><h4 class="form-card-title">描述信息</h4></div>
+            <div class="form-card-content">
+                <div class="ant-form-item"><div class="ant-form-item-label"><label>产品描述</label></div><div class="ant-form-item-control"><textarea>Компактный кошелек с защитой от NFC/RFID.</textarea><div class="hint" style="text-align:right;width:720px">0 / 6000</div></div></div>
+                <div class="ant-form-item"><div class="ant-form-item-label"><label>JSON富文本</label></div><div class="ant-form-item-control"><textarea class="rich-json-editor" id="rich-json-input"></textarea><div class="hint">填写 Ozon raShowcase JSON；留空则不提交 Rich Content。</div><div class="rich-json-status" id="rich-json-status"></div></div></div>
+                <div class="ant-form-item"><div class="ant-form-item-label"><label>产品视频</label></div><div class="ant-form-item-control"><div class="upload-card"><b>+</b>添加视频</div><div class="upload-card"><b>+</b>添加视频封面</div></div></div>
+            </div>
+        </section>
+
+        <section class="form-card category-dependent{% if mode == 'create' %} is-hidden{% endif %}" id="variantTheme">
+            <div class="form-card-header"><h4 class="form-card-title">变种属性 <button type="button" style="float:right;margin:5px 18px 0 0">一键套用变种模板</button></h4></div>
+            <div class="form-card-content">
+                <div class="ant-form-item"><div class="ant-form-item-label"><label>变种主题</label></div><div class="ant-form-item-control"><div class="variant-box">
+                    <div id="variant-theme-list"></div>
+                    <div class="variant-theme-actions"><button type="button" class="blue" data-action="add-variant-theme">添加变种</button></div>
+                </div></div></div>
+            </div>
+        </section>
+
+        <section class="form-card category-dependent{% if mode == 'create' %} is-hidden{% endif %}" id="variantInfo">
+            <div class="form-card-header"><h4 class="form-card-title">变种信息 <span style="float:right;font-weight:400;margin-right:18px"><label><input type="checkbox"> 设置sku标题</label> <label><input type="checkbox"> 自动补全</label> <a>+ 自定义变种属性</a></span></h4></div>
+            <div class="form-card-content">
+                <table>
+                    <thead><tr><th>颜色名称</th><th>颜色值</th><th>SKU</th><th>售价(CNY)</th><th>原价(CNY)</th><th>库存</th><th>长(cm)</th><th>宽(cm)</th><th>高(cm)</th><th>重量(g)</th><th>操作</th></tr></thead>
+                    <tbody id="variant-info-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="form-card category-dependent{% if mode == 'create' %} is-hidden{% endif %}" id="variantImage">
+            <div class="form-card-header"><h4 class="form-card-title">变种图片</h4></div>
+            <div class="form-card-content" id="variant-image-rows"></div>
+        </section>
+        <section class="form-card" id="scoreInfo">
+            <div class="form-card-header"><h4 class="form-card-title">积分评价推广</h4></div>
+            <div class="form-card-content">
+                <div class="ant-form-item"><div class="ant-form-item-label"><label>积分评价</label></div><div class="ant-form-item-control"><label><input type="checkbox"> 开启积分评价，买家评价后将获得积分，可用于促进买家留评。有评价的商品添加进购物车的频率最多可高出1倍。</label><div class="hint"><span class="tip">说明</span>买家获得的积分可用于在Ozon平台上购买其它商品</div></div></div>
+            </div>
+        </section>
+    </main>
+
+    <aside class="ai-zone">
+        <section class="ai-card">
+            <div class="ai-card-title">AI区</div>
+            <div class="ai-card-body">
+                <div class="ai-main-actions">
+                    <button class="ai-action" id="btn-ai-pick" type="button">选择产品 <span>从正式产品中选</span></button>
+                    <button class="ai-action primary" id="btn-ai-category" type="button">自动分类 <span>AI匹配Ozon类目</span></button>
+                    <button class="ai-action primary" id="btn-ai-fill" type="button">自动填充 <span>拉属性并填值</span></button>
+                </div>
+                <div class="selected-product" id="selected-product"></div>
+                <div class="product-picker" id="product-picker">
+                    <div class="product-search-row">
+                        <input id="product-search" placeholder="搜索正式产品标题 / SKC">
+                        <button id="btn-product-search" type="button">搜索</button>
+                    </div>
+                    <div class="product-results" id="product-results">
+                        <div class="hint" style="padding:10px">输入关键词，或直接搜索加载正式产品。</div>
+                    </div>
+                    <div class="product-picker-actions">
+                        <button id="btn-product-confirm" type="button">确认选择</button>
+                    </div>
+                </div>
+                <div class="ai-status" id="ai-status">
+                    <b>当前状态</b>
+                    左侧是人工操作区；右侧才是AI操作区。
+                </div>
+            </div>
+        </section>
+        <section class="ai-card">
+            <div class="ai-card-title">执行顺序</div>
+            <div class="ai-card-body">
+                <div class="ai-step"><b>1. 选择产品</b><br>从正式产品库选择 SKC，双击或确认后带出标题和商品上下文。</div>
+                <div class="ai-step"><b>2. 自动分类</b><br>AI 像运营一样判断 Ozon 类目，程序验证 type_id。</div>
+                <div class="ai-step"><b>3. 自动填充</b><br>程序拉官方属性，AI 填重要字段，程序再验证。</div>
+            </div>
+        </section>
+        <section class="ai-card">
+            <div class="ai-card-title">属性证据</div>
+            <div class="ai-card-body">
+                <div class="attr-evidence-list" id="attr-evidence-list">
+                    <div class="attr-evidence-empty">AI 填写非公共属性后，这里会显示每个属性的依据。</div>
+                </div>
+            </div>
+        </section>
+    </aside>
+</div>
+
+<div class="category-modal-overlay" id="category-modal">
+    <div class="category-modal">
+        <div class="category-modal-header">
+            <span>选择 Ozon 产品分类</span>
+            <button type="button" class="link" id="btn-close-category">关闭</button>
+        </div>
+        <div class="category-modal-body">
+            <input class="category-search" id="category-search" placeholder="搜索分类名称 / 俄文名称">
+            <div class="category-tree" id="category-tree">
+                <div class="hint" style="padding:12px">点击后加载 Ozon 分类树...</div>
+            </div>
+            <div class="category-path-preview" id="category-preview">请选择一个末级分类</div>
+        </div>
+        <div class="category-modal-footer">
+            <button type="button" id="btn-cancel-category">取消</button>
+            <button type="button" class="blue" id="btn-confirm-category" disabled>确认选择</button>
+        </div>
+    </div>
+</div>
+
+<div class="category-modal-overlay variant-image-modal" id="variant-image-modal">
+    <div class="category-modal">
+        <div class="category-modal-header">
+            <span>从产品图片集中选择图片</span>
+            <button type="button" class="link" id="btn-close-variant-images">关闭</button>
+        </div>
+        <div class="category-modal-body">
+            <div id="variant-image-picker-status" class="hint" style="padding-bottom:10px">请先选择产品。</div>
+            <div class="variant-image-option-grid" id="variant-image-picker"></div>
+        </div>
+        <div class="category-modal-footer">
+            <button type="button" id="btn-cancel-variant-images">取消</button>
+            <button type="button" class="blue" id="btn-confirm-variant-images">确认选择</button>
+        </div>
+    </div>
+</div>
+
+<div class="bottom-actions">
+    <button>一键翻译⌄</button>
+    <button>存为模板</button>
+    {% if mode == 'create' %}
+    <button class="orange" type="button">引用产品⌄</button><button class="orange" type="button" id="btn-save-bottom">保存</button><button class="green" type="button" id="btn-submit-bottom">发布</button>
+    {% else %}
+    <button class="green" type="button" id="btn-submit-bottom">更新</button>
+    {% endif %}
+</div>
+
+<script>
+var query = new URLSearchParams(location.search);
+var pageState = {
+    storeId: query.get("store_id") || "",
+    skc: query.get("skc") || "",
+    product: null,
+    pendingProductSkc: "",
+    categoryTree: null,
+    categoryFlat: [],
+    selectedCategory: null,
+    categoryId: null,
+    categoryTypeId: null,
+    categoryAttributes: [],
+    attributeEvidence: {},
+    variantThemes: [
+        { label: "黑色/чёрный", key: "black", sku: "wallet-0006-black", price: "1290", old_price: "1890", stock: "20", depth: "20", width: "12", height: "4", weight: "200" },
+        { label: "咖啡色/кофейный", key: "coffee", sku: "wallet-0006-coffee", price: "1290", old_price: "1890", stock: "18", depth: "20", width: "12", height: "4", weight: "200" }
+    ],
+    variantImages: {},
+    activeVariantKey: "",
+    productImageSets: [],
+    pendingVariantImageUrls: []
+};
+
+var PUBLIC_OZON_ATTRIBUTE_IDS = new Set([
+    85, 8229, 4180, 4191, 9024, 23171, 11254, 22232, 22390,
+    21837, 21841, 21845, 22273, 8789, 8790, 4383, 4389,
+    9048, 23249, 11650, 4497
+]);
+
+function $(id) { return document.getElementById(id); }
+
+function esc(value) {
+    var div = document.createElement("div");
+    div.textContent = value == null ? "" : String(value);
+    return div.innerHTML;
+}
+
+async function api(url, options) {
+    var res = await fetch(url, options || {});
+    var data = await res.json().catch(function () { return {}; });
+    if (!res.ok) throw new Error(data.error || "HTTP " + res.status);
+    return data;
+}
+
+function setAiStatus(title, detail) {
+    $("ai-status").innerHTML = "<b>" + esc(title) + "</b>" + detail;
+}
+
+async function loadStores() {
+    try {
+        var data = await api("/api/stores");
+        var stores = Array.isArray(data) ? data : (data.stores || []);
+        var select = $("store-select");
+        var firstText = select.options[0] ? select.options[0].textContent : "---- 请选择店铺 ----";
+        select.innerHTML = '<option value="">' + esc(firstText) + '</option>';
+        stores.forEach(function (store) {
+            var opt = document.createElement("option");
+            opt.value = store.id;
+            opt.textContent = store.label || store.name || store.id;
+            if (pageState.storeId && store.id === pageState.storeId) opt.selected = true;
+            select.appendChild(opt);
+        });
+        if (!pageState.storeId) {
+            var firstOzon = stores.find(function (store) {
+                return String(store.platform || "").toLowerCase() === "ozon";
+            });
+            if (firstOzon) {
+                pageState.storeId = firstOzon.id;
+                select.value = firstOzon.id;
+            }
+        }
+    } catch (e) {
+        console.warn("store load failed", e);
+    }
+}
+
+function firstImage(product) {
+    if (product.thumbnail) return product.thumbnail;
+    var images = product.images || product.product_images || [];
+    if (images.length) {
+        var img = images[0];
+        if (img.url || img.src || img.path || img.local_url) {
+            return img.url || img.src || img.path || img.local_url;
+        }
+        if (img.filename && product.skc) {
+            return "/product_images/" + encodeURIComponent(product.skc) + "/" + img.filename.split("/").map(encodeURIComponent).join("/");
+        }
+    }
+    var sets = product.image_sets || {};
+    for (var key in sets) {
+        if (Array.isArray(sets[key]) && sets[key].length) {
+            var setImg = sets[key][0];
+            if (setImg.url || setImg.src || setImg.path || setImg.local_url) {
+                return setImg.url || setImg.src || setImg.path || setImg.local_url;
+            }
+            if (setImg.filename && product.skc) {
+                return "/product_images/" + encodeURIComponent(product.skc) + "/" + setImg.filename.split("/").map(encodeURIComponent).join("/");
+            }
+        }
+    }
+    return "";
+}
+
+function renderProducts(products) {
+    var host = $("product-results");
+    if (!products.length) {
+        host.innerHTML = '<div class="hint" style="padding:10px">没有找到正式产品。</div>';
+        return;
+    }
+    host.innerHTML = products.map(function (product) {
+        var skc = product.skc || product.SKC || product.id || "";
+        var title = product.title || product.name || skc;
+        var img = firstImage(product);
+        return '<div class="product-result" data-skc="' + esc(skc) + '">' +
+            (img ? '<img class="product-thumb" src="' + esc(img) + '">' : '<div class="product-thumb"></div>') +
+            '<div><div class="product-title">' + esc(title) + '</div>' +
+            '<div class="product-meta">SKC: ' + esc(skc) + ' · ' + esc(product.platform || product.source || "") + '</div></div>' +
+            '</div>';
+    }).join("");
+    host.querySelectorAll(".product-result").forEach(function (el) {
+        el.addEventListener("click", function () {
+            pageState.pendingProductSkc = el.dataset.skc || "";
+            host.querySelectorAll(".product-result").forEach(function (item) {
+                item.classList.remove("selected");
+            });
+            el.classList.add("selected");
+            setAiStatus("待确认产品", "已高亮：" + esc(pageState.pendingProductSkc) + "<br>双击该产品或点击“确认选择”。");
+        });
+        el.addEventListener("dblclick", function () {
+            selectProduct(el.dataset.skc);
+        });
+    });
+}
+
+function renderSelectedProduct(product) {
+    var host = $("selected-product");
+    var skc = product.skc || product.SKC || pageState.skc || "";
+    var title = product.title || product.name || skc;
+    var img = firstImage(product);
+    host.innerHTML = (img ? '<img class="product-thumb" src="' + esc(img) + '">' : '<div class="product-thumb"></div>') +
+        '<div><div class="product-title">' + esc(title) + '</div>' +
+        '<div class="product-meta">SKC: ' + esc(skc) + '</div></div>';
+    host.style.display = "grid";
+}
+
+function renderVariantThemes() {
+    var host = $("variant-theme-list");
+    if (!host) return;
+    host.innerHTML = pageState.variantThemes.map(function (theme, index) {
+        return '<div class="variant-row" data-variant-theme-index="' + index + '">' +
+            '<b>颜色名称(Цвет товара)</b>' +
+            '<input class="input" data-variant-theme-field="label" data-variant-theme-index="' + index + '" value="' + esc(theme.label || "") + '">' +
+            '<input class="input" data-variant-theme-field="key" data-variant-theme-index="' + index + '" value="' + esc(theme.key || "") + '">' +
+            '<a data-action="remove-variant-theme" data-variant-theme-index="' + index + '">移除</a>' +
+            '</div>';
+    }).join("");
+    renderVariantInfoRows();
+    renderVariantImageRows();
+}
+
+function renderVariantInfoRows() {
+    var body = $("variant-info-body");
+    if (!body) return;
+    body.innerHTML = pageState.variantThemes.map(function (theme, index) {
+        return '<tr data-variant-key="' + esc(theme.key || "") + '">' +
+            '<td>' + esc(theme.label || "") + '</td>' +
+            '<td>' + esc(theme.key || "") + '</td>' +
+            '<td><input class="tbl-input" data-variant-theme-field="sku" data-variant-theme-index="' + index + '" value="' + esc(theme.sku || "") + '"></td>' +
+            '<td><input class="tbl-input" data-variant-theme-field="price" data-variant-theme-index="' + index + '" value="' + esc(theme.price || "") + '"></td>' +
+            '<td><input class="tbl-input" data-variant-theme-field="old_price" data-variant-theme-index="' + index + '" value="' + esc(theme.old_price || "") + '"></td>' +
+            '<td><input class="tbl-input" data-variant-theme-field="stock" data-variant-theme-index="' + index + '" value="' + esc(theme.stock || "") + '"></td>' +
+            '<td><input class="tbl-input" data-variant-theme-field="depth" data-variant-theme-index="' + index + '" value="' + esc(theme.depth || "") + '"></td>' +
+            '<td><input class="tbl-input" data-variant-theme-field="width" data-variant-theme-index="' + index + '" value="' + esc(theme.width || "") + '"></td>' +
+            '<td><input class="tbl-input" data-variant-theme-field="height" data-variant-theme-index="' + index + '" value="' + esc(theme.height || "") + '"></td>' +
+            '<td><input class="tbl-input" data-variant-theme-field="weight" data-variant-theme-index="' + index + '" value="' + esc(theme.weight || "") + '"></td>' +
+            '<td><a data-action="remove-variant-theme" data-variant-theme-index="' + index + '">移除</a></td>' +
+            '</tr>';
+    }).join("");
+}
+
+function renderVariantImageRows() {
+    var host = $("variant-image-rows");
+    if (!host) return;
+    host.innerHTML = pageState.variantThemes.map(function (theme) {
+        var key = theme.key || "";
+        var count = (pageState.variantImages[key] || []).length;
+        return '<div class="img-row" data-variant-key="' + esc(key) + '">' +
+            '<div class="img-title">' + esc(theme.label || key) + '<br><span style="color:#999">[' + count + '/30] 图片</span></div>' +
+            '<div><button type="button" data-action="pick-variant-images" data-variant-key="' + esc(key) + '">选择图片</button> ' +
+            '<a>商品图片</a> <a>从链接导入</a> <a>图片空间</a><br>' +
+            '<div class="variant-selected-images" data-variant-images="' + esc(key) + '"></div></div>' +
+            '</div>';
+    }).join("");
+    pageState.variantThemes.forEach(function (theme) {
+        renderVariantSelectedImages(theme.key || "");
+    });
+}
+
+function addVariantTheme() {
+    pageState.variantThemes.push({ label: "", key: "", sku: "", price: "", old_price: "", stock: "", depth: "", width: "", height: "", weight: "" });
+    renderVariantThemes();
+}
+
+function updateVariantTheme(index, field, value) {
+    var theme = pageState.variantThemes[index];
+    if (!theme) return;
+    var oldKey = theme.key;
+    theme[field] = value;
+    if (field === "key" && oldKey !== value) {
+        pageState.variantImages[value] = pageState.variantImages[oldKey] || [];
+        delete pageState.variantImages[oldKey];
+    }
+    if (field === "label" || field === "key") {
+        renderVariantInfoRows();
+        renderVariantImageRows();
+    }
+}
+
+function removeVariantTheme(index) {
+    var theme = pageState.variantThemes[index];
+    if (!theme) return;
+    delete pageState.variantImages[theme.key];
+    pageState.variantThemes.splice(index, 1);
+    renderVariantThemes();
+}
+
+function imageDisplayName(image, index) {
+    var raw = image.filename || image.local_path || image.url || ("图片 " + (index + 1));
+    return String(raw).split(/[\\/]/).pop();
+}
+
+function renderVariantSelectedImages(variantKey) {
+    var host = document.querySelector('[data-variant-images="' + String(variantKey).replace(/"/g, '\\"') + '"]');
+    if (!host) return;
+    var images = pageState.variantImages[variantKey] || [];
+    host.innerHTML = images.map(function (image) {
+        return '<span class="pic"><img src="' + esc(image.url || "") + '" alt=""></span>';
+    }).join("");
+    var row = document.querySelector('.img-row[data-variant-key="' + String(variantKey).replace(/"/g, '\\"') + '"]');
+    if (row) {
+        var count = row.querySelector(".img-title span");
+        if (count) count.textContent = "[" + images.length + "/30] 图片";
+    }
+}
+
+function flattenProductImageSets(data) {
+    var sets = data.image_sets || [];
+    if (!sets.length && (data.images || []).length) {
+        sets = [{ name: "", label: "全部图片 (" + data.images.length + "张)", images: data.images }];
+    }
+    return sets;
+}
+
+function renderVariantImageSetPicker(imageSets) {
+    var host = $("variant-image-picker");
+    if (!imageSets.length) {
+        host.innerHTML = '<div class="hint">当前产品没有可选图片。</div>';
+        return;
+    }
+    host.innerHTML = imageSets.map(function (set) {
+        var title = esc(set.label || set.name || "图片集");
+        return (set.images || []).map(function (image, index) {
+            var url = image.url || "";
+            var selected = pageState.pendingVariantImageUrls.indexOf(url) >= 0 ? " selected" : "";
+            return '<div class="variant-image-option' + selected + '" data-image-url="' + esc(url) + '">' +
+                '<img src="' + esc(url) + '" alt="">' +
+                '<span title="' + title + ' / ' + esc(imageDisplayName(image, index)) + '">' + title + ' / ' + esc(imageDisplayName(image, index)) + '</span>' +
+                '</div>';
+        }).join("");
+    }).join("");
+}
+
+async function openVariantImagePicker(variantKey) {
+    if (!pageState.skc) {
+        alert("请先选择产品");
+        return;
+    }
+    pageState.activeVariantKey = variantKey;
+    pageState.pendingVariantImageUrls = (pageState.variantImages[variantKey] || []).map(function (image) { return image.url; });
+    $("variant-image-modal").style.display = "flex";
+    $("variant-image-picker-status").textContent = "正在加载产品图片集...";
+    $("variant-image-picker").innerHTML = "";
+    try {
+        var data = await api("/api/products/" + encodeURIComponent(pageState.skc) + "/images");
+        pageState.productImageSets = flattenProductImageSets(data);
+        $("variant-image-picker-status").textContent = "已加载 " + (data.images || []).length + " 张图片，可多选后确认。";
+        renderVariantImageSetPicker(pageState.productImageSets);
+    } catch (e) {
+        $("variant-image-picker-status").textContent = "加载图片集失败：" + e.message;
+    }
+}
+
+function closeVariantImagePicker() {
+    $("variant-image-modal").style.display = "none";
+}
+
+function confirmVariantImages() {
+    if (!pageState.activeVariantKey) return;
+    var selected = [];
+    pageState.productImageSets.forEach(function (set) {
+        (set.images || []).forEach(function (image) {
+            if (pageState.pendingVariantImageUrls.indexOf(image.url || "") >= 0) {
+                selected.push({ url: image.url, source: image.source || "product-image-set" });
+            }
+        });
+    });
+    pageState.variantImages[pageState.activeVariantKey] = selected.slice(0, 30);
+    renderVariantSelectedImages(pageState.activeVariantKey);
+    closeVariantImagePicker();
+}
+
+async function searchProducts() {
+    var queryText = $("product-search").value.trim();
+    $("product-results").innerHTML = '<div class="hint" style="padding:10px">加载正式产品中...</div>';
+    try {
+        var data = await api("/api/products?query=" + encodeURIComponent(queryText));
+        renderProducts(data.products || []);
+    } catch (e) {
+        $("product-results").innerHTML = '<div class="hint" style="padding:10px;color:#d9534f">加载失败：' + esc(e.message) + '</div>';
+    }
+}
+
+async function selectProduct(skc) {
+    if (!skc) return;
+    try {
+        var product = await api("/api/products/" + encodeURIComponent(skc));
+        pageState.product = product;
+        pageState.skc = product.skc || skc;
+        pageState.variantImages = {};
+        renderVariantImageRows();
+        $("top-skc").textContent = pageState.skc;
+        $("title-input").value = product.title || product.name || "";
+        renderSelectedProduct(product);
+        $("product-picker").style.display = "none";
+        pageState.pendingProductSkc = "";
+        setAiStatus("已选品", "已从正式产品库载入：" + esc(pageState.skc) + "<br>" + esc(product.title || product.name || ""));
+    } catch (e) {
+        setAiStatus("选品失败", esc(e.message));
+    }
+}
+
+function openProductPicker() {
+    var picker = $("product-picker");
+    picker.style.display = "block";
+    searchProducts();
+}
+
+function confirmProductSelection() {
+    if (!pageState.pendingProductSkc) {
+        alert("请先在列表中选择一个产品");
+        return;
+    }
+    selectProduct(pageState.pendingProductSkc);
+}
+
+function hasSelectedCategory() {
+    return Boolean(pageState.categoryId && pageState.categoryTypeId);
+}
+
+function refreshAutoFillAvailability() {
+    if ($("btn-ai-fill")) {
+        $("btn-ai-fill").disabled = !hasSelectedCategory();
+    }
+}
+
+function showCategory(match, options) {
+    match = match || {};
+    options = options || {};
+    var categoryId = match.description_category_id || match.category_id || match.id || 17027904;
+    var typeId = match.type_id || match.category_type_id || 93338;
+    var name = match.name || match.category_name || match.type_name || "钱包(Кошелек)";
+    var path = match.path || match.category_path || "小百货和配饰(Галантерея и аксессуары) > 配饰(Аксессуары) > 钱包(Кошелек)";
+    var sameCategory = String(pageState.categoryId || "") === String(categoryId || "") &&
+        String(pageState.categoryTypeId || "") === String(typeId || "");
+    pageState.categoryId = categoryId;
+    pageState.categoryTypeId = typeId;
+    $("category-select").innerHTML = '<option value="' + esc(categoryId) + '">' + esc(name) + '</option>';
+    $("cat-path").className = "cat-path";
+    $("cat-path").textContent = path + " / type_id: " + typeId;
+    $("attr-row").style.display = "grid";
+    document.querySelectorAll(".category-dependent").forEach(function (section) {
+        section.classList.remove("is-hidden");
+    });
+    refreshAutoFillAvailability();
+    if (options.preserveAttributes && sameCategory && (pageState.categoryAttributes || []).length) {
+        return Promise.resolve();
+    }
+    return loadCategoryAttributes(categoryId, typeId);
+}
+
+function attrLabel(attr) {
+    var cn = attr.name_cn && attr.name_cn !== attr.name ? attr.name_cn : "";
+    return (attr.is_required ? '<span style="color:#d9534f">*</span>' : "") +
+        esc(cn || attr.name || ("属性 " + attr.id)) +
+        (cn ? " (" + esc(attr.name || "") + ")" : "") +
+        ' <span class="q" title="' + esc(attr.description_cn || attr.description || "") + '">?</span>';
+}
+
+function dictionaryValueText(value) {
+    return value.value || value.info || value.name || value.id || "";
+}
+
+function dictionaryValueLabel(value) {
+    var original = String(dictionaryValueText(value) || "");
+    var cn = String(value.value_cn || value.name_cn || "").trim();
+    if (cn && cn !== original) return cn + " (" + original + ")";
+    return original;
+}
+
+function renderDictionaryCheckboxes(attr, scrollable) {
+    var values = attr.dictionary_values || [];
+    var id = esc(attr.id || "");
+    return '<div class="checks' + (scrollable ? ' scrollable' : '') + '">' + values.map(function (value) {
+        var text = dictionaryValueText(value);
+        var label = dictionaryValueLabel(value);
+        return '<label data-attr-option="' + id + '" data-label="' + esc(label) + '" data-original-label="' + esc(text) + '">' +
+            '<input type="checkbox" data-attr-id="' + id + '" data-dictionary-value-id="' + esc(value.id || "") + '" value="' + esc(value.id || text) + '"> ' +
+            esc(label) +
+            '</label>';
+    }).join("") + '</div>';
+}
+
+function renderAttributeInput(attr) {
+    var values = attr.dictionary_values || [];
+    var id = esc(attr.id || "");
+    if (values.length > 0 && attr.is_collection && values.length <= 24) {
+        return renderDictionaryCheckboxes(attr, false);
+    }
+    if (values.length > 0 && attr.is_collection) {
+        return '<input class="input attr-search" data-attr-search="' + id + '" placeholder="搜索可选值">' +
+            renderDictionaryCheckboxes(attr, true) +
+            '<input class="input attr-manual" data-attr-manual="' + id + '">' +
+            '<div class="selected-values" data-attr-selected="' + id + '"></div>' +
+            '<div class="hint">勾选即可多选；找不到合适值时可手动补充。</div>';
+    }
+    if (values.length > 0) {
+        var search = values.length > 200 ? '<input class="input attr-search" data-attr-search="' + id + '" placeholder="搜索可选值">' : "";
+        return search + '<select class="select" data-attr-id="' + id + '" data-attr-type="dictionary">' +
+            '<option value="">请选择</option>' +
+            values.map(function (value) {
+                var text = dictionaryValueText(value);
+                var label = dictionaryValueLabel(value);
+                return '<option value="' + esc(value.id || text) + '" data-label="' + esc(label) + '" data-original-label="' + esc(text) + '">' + esc(label) + '</option>';
+            }).join("") +
+            '</select>';
+    }
+    if (String(attr.type || "").toLowerCase() === "boolean") {
+        return '<select class="select" data-attr-id="' + id + '" data-attr-type="Boolean"><option value="">请选择</option><option value="true">是</option><option value="false">否</option></select>';
+    }
+    return '<input class="input" data-attr-id="' + id + '" data-attr-type="' + esc(attr.type || "String") + '">';
+}
+
+function isPublicOzonAttribute(attr) {
+    var attrId = Number(attr && (attr.id || attr.attribute_id));
+    return PUBLIC_OZON_ATTRIBUTE_IDS.has(attrId);
+}
+
+function renderCategoryAttributes(attrs) {
+    attrs = attrs || [];
+    var dynamicAttrs = attrs.filter(function (attr) { return !isPublicOzonAttribute(attr); });
+    pageState.categoryAttributes = dynamicAttrs;
+    pageState.attributeEvidence = {};
+    renderAttributeEvidencePanel();
+    var area = $("attr-area");
+    if (!dynamicAttrs.length) {
+        area.innerHTML = '<div class="attr-empty">当前分类没有返回非公共产品属性；公共属性请在基础信息、产品信息、描述信息、变种、图片/视频等固定区域填写。</div>';
+        return;
+    }
+    area.innerHTML = dynamicAttrs.map(function (attr) {
+        return '<div class="attr-line">' +
+            '<div class="attr-label">' + attrLabel(attr) + '</div>' +
+            '<div class="attr-control-wrap" data-attr-wrap="' + esc(attr.id || "") + '">' +
+            renderAttributeInput(attr) +
+            '<div class="attr-status" data-attr-status="' + esc(attr.id || "") + '">待填写</div>' +
+            '</div>' +
+            '</div>';
+    }).join("");
+}
+
+function findAttrMeta(attrId) {
+    return (pageState.categoryAttributes || []).find(function (attr) {
+        return String(attr.id || attr.attribute_id) === String(attrId);
+    }) || {};
+}
+
+function formatAttributeEvidence(evidence) {
+    if (!evidence) return "";
+    if (Array.isArray(evidence)) {
+        return evidence.map(formatAttributeEvidence).filter(Boolean).join("；");
+    }
+    if (typeof evidence === "object") {
+        return JSON.stringify(evidence);
+    }
+    return String(evidence);
+}
+
+function formatAttributeFillValue(attr) {
+    if (Array.isArray(attr.values)) {
+        return attr.values.map(function (item) {
+            return item && typeof item === "object" ? (item.value || item.dictionary_value_id || item.id || "") : item;
+        }).filter(Boolean).join("；");
+    }
+    return attr.value || attr.dictionary_value_id || "";
+}
+
+function renderAttributeEvidencePanel() {
+    var list = $("attr-evidence-list");
+    if (!list) return;
+    var items = [];
+    (pageState.categoryAttributes || []).forEach(function (meta) {
+        var attrId = meta.id || meta.attribute_id;
+        var evidence = pageState.attributeEvidence[String(attrId)];
+        if (!evidence) return;
+        items.push(
+            '<div class="attr-evidence-item">' +
+            '<div class="attr-evidence-name">' + attrLabel(meta) + '</div>' +
+            '<div class="attr-evidence-value">填充值：' + esc(evidence.value || "") + '</div>' +
+            '<div class="attr-evidence-text">证据：' + esc(evidence.evidence || evidence.reason || "未提供") + '</div>' +
+            (evidence.reason ? '<div class="attr-evidence-text">判断：' + esc(evidence.reason) + '</div>' : "") +
+            '</div>'
+        );
+    });
+    list.innerHTML = items.length ? items.join("") : '<div class="attr-evidence-empty">AI 填写非公共属性后，这里会显示每个属性的依据。</div>';
+}
+
+function normalizeBooleanValue(value) {
+    var text = String(value || "").trim().toLowerCase();
+    if (["true", "1", "yes", "y"].indexOf(text) >= 0) return "true";
+    if (["false", "0", "no", "n"].indexOf(text) >= 0) return "false";
+    return "";
+}
+
+function optionValueByLabel(select, value) {
+    var target = String(value || "").trim().toLowerCase();
+    if (!target) return "";
+    for (var i = 0; i < select.options.length; i += 1) {
+        var opt = select.options[i];
+        var label = (opt.getAttribute("data-label") || opt.textContent || "").trim().toLowerCase();
+        var original = (opt.getAttribute("data-original-label") || "").trim().toLowerCase();
+        if (label === target || original === target || String(opt.value).trim().toLowerCase() === target) return opt.value;
+    }
+    return "";
+}
+
+function updateSelectedChips(attrId) {
+    var host = document.querySelector('[data-attr-selected="' + String(attrId).replace(/"/g, '\\"') + '"]');
+    var select = document.querySelector('select[data-attr-id="' + String(attrId).replace(/"/g, '\\"') + '"]');
+    if (!host) return;
+    var chips = [];
+    if (select) {
+        chips = Array.prototype.filter.call(select.options, function (opt) {
+        return opt.selected;
+        }).map(function (opt) {
+            return '<span class="selected-chip">' + esc(opt.getAttribute("data-label") || opt.textContent || opt.value) + '</span>';
+        });
+    }
+    document.querySelectorAll('input[type="checkbox"][data-attr-id="' + String(attrId).replace(/"/g, '\\"') + '"]:checked').forEach(function (box) {
+        var label = box.closest("label");
+        chips.push('<span class="selected-chip">' + esc((label && label.getAttribute("data-label")) || (label && label.textContent.trim()) || box.value) + '</span>');
+    });
+    var manual = document.querySelector('[data-attr-manual="' + String(attrId).replace(/"/g, '\\"') + '"]');
+    if (manual && manual.value.trim()) {
+        manual.value.split(";").map(function (x) { return x.trim(); }).filter(Boolean).forEach(function (text) {
+            chips.push('<span class="selected-chip">' + esc(text) + '</span>');
+        });
+    }
+    host.innerHTML = chips.join("");
+}
+
+function setAttributeControlValue(attr) {
+    var attrId = attr.attribute_id || attr.id;
+    if (!attrId) return false;
+    var controls = document.querySelectorAll('[data-attr-id="' + String(attrId).replace(/"/g, '\\"') + '"]');
+    if (!controls.length) return false;
+    var value = attr.dictionary_value_id || attr.value || "";
+    var meta = findAttrMeta(attrId);
+    var filled = false;
+    var matched = false;
+    controls.forEach(function (control) {
+        if (control.type === "checkbox") {
+            var values = Array.isArray(attr.values) ? attr.values : [value];
+            var labelEl = control.closest("label");
+            var labelText = (labelEl && labelEl.getAttribute("data-label")) || "";
+            var originalText = (labelEl && labelEl.getAttribute("data-original-label")) || "";
+            control.checked = values.some(function (item) {
+                var itemValue = item && typeof item === "object" ? (item.dictionary_value_id || item.value || item.id) : item;
+                return String(itemValue) === String(control.value) ||
+                    String(itemValue) === String(control.getAttribute("data-dictionary-value-id") || "") ||
+                    String(itemValue).trim().toLowerCase() === String(labelText).trim().toLowerCase() ||
+                    String(itemValue).trim().toLowerCase() === String(originalText).trim().toLowerCase();
+            });
+            if (control.checked) matched = true;
+            filled = true;
+            updateSelectedChips(attrId);
+            return;
+        }
+        if (control.tagName === "SELECT") {
+            var rawValues = Array.isArray(attr.values) ? attr.values : [attr.dictionary_value_id || attr.value || ""];
+            if (control.multiple) {
+                var unmatchedValues = [];
+                var selectedValues = rawValues.map(function (item) {
+                    var itemValue = item && typeof item === "object" ? (item.dictionary_value_id || item.value || item.id) : item;
+                    var optionValue = optionValueByLabel(control, itemValue);
+                    if (!optionValue && itemValue) unmatchedValues.push(String(itemValue));
+                    return optionValue;
+                }).filter(Boolean);
+                Array.prototype.forEach.call(control.options, function (opt) {
+                    opt.selected = selectedValues.indexOf(opt.value) >= 0;
+                });
+                matched = selectedValues.length > 0;
+                var manual = document.querySelector('[data-attr-manual="' + String(attrId).replace(/"/g, '\\"') + '"]');
+                if (manual && unmatchedValues.length) manual.value = unmatchedValues.join("; ");
+                updateSelectedChips(attrId);
+            } else {
+                var nextValue = "";
+                if (attr.dictionary_value_id) nextValue = optionValueByLabel(control, attr.dictionary_value_id);
+                if (!nextValue && value) nextValue = optionValueByLabel(control, value);
+                if (!nextValue && String(meta.type || "").toLowerCase() === "boolean") nextValue = normalizeBooleanValue(value);
+                control.value = nextValue || "";
+                matched = Boolean(nextValue);
+            }
+            filled = true;
+            return;
+        }
+        control.value = Array.isArray(value) ? value.join(", ") : String(value || "");
+        matched = Boolean(control.value);
+        filled = true;
+    });
+    markAttributeStatus(attrId, attr, filled, matched);
+    return filled;
+}
+
+function markAttributeStatus(attrId, attr, filled, matched) {
+    var status = document.querySelector('[data-attr-status="' + String(attrId).replace(/"/g, '\\"') + '"]');
+    var wrap = document.querySelector('[data-attr-wrap="' + String(attrId).replace(/"/g, '\\"') + '"]');
+    if (!status || !wrap) return;
+    var needsReview = Boolean(attr.needs_review || !matched);
+    wrap.classList.toggle("need-review", needsReview);
+    status.className = "attr-status" + (needsReview ? " warn" : "");
+    if (!filled) {
+        status.textContent = "未填写";
+    } else if (needsReview) {
+        status.textContent = "AI已填，需人工确认";
+    } else {
+        status.textContent = "AI已填";
+    }
+    var tips = [];
+    if (attr.confidence != null) tips.push("confidence: " + attr.confidence);
+    if (attr.reason) tips.push(attr.reason);
+    var evidenceText = formatAttributeEvidence(attr.evidence);
+    if (!evidenceText && String(attr.source || "").indexOf("llm") >= 0) {
+        evidenceText = "未提供证据，需人工复核";
+    }
+    if (evidenceText || attr.reason) {
+        pageState.attributeEvidence[String(attrId)] = {
+            value: formatAttributeFillValue(attr),
+            evidence: evidenceText,
+            reason: attr.reason || ""
+        };
+        tips.push("evidence: " + evidenceText);
+    }
+    status.title = tips.join("\n");
+    renderAttributeEvidencePanel();
+}
+
+document.addEventListener("change", function (event) {
+    var variantField = event.target && event.target.getAttribute && event.target.getAttribute("data-variant-theme-field");
+    if (variantField) {
+        updateVariantTheme(Number(event.target.getAttribute("data-variant-theme-index")), variantField, event.target.value);
+        return;
+    }
+    var attrId = event.target && event.target.getAttribute && event.target.getAttribute("data-attr-id");
+    if (!attrId) return;
+    var status = document.querySelector('[data-attr-status="' + String(attrId).replace(/"/g, '\\"') + '"]');
+    var wrap = document.querySelector('[data-attr-wrap="' + String(attrId).replace(/"/g, '\\"') + '"]');
+    if (status) {
+        status.className = "attr-status manual";
+        status.textContent = "人工已改";
+    }
+    if (wrap) wrap.classList.remove("need-review");
+    updateSelectedChips(attrId);
+});
+
+document.addEventListener("input", function (event) {
+    var searchId = event.target && event.target.getAttribute && event.target.getAttribute("data-attr-search");
+    if (searchId) {
+        var term = event.target.value.trim().toLowerCase();
+        var select = document.querySelector('select[data-attr-id="' + String(searchId).replace(/"/g, '\\"') + '"]');
+        if (select) {
+            Array.prototype.forEach.call(select.options, function (opt) {
+                var label = ((opt.getAttribute("data-label") || "") + " " + (opt.getAttribute("data-original-label") || "") + " " + opt.textContent).toLowerCase();
+                opt.hidden = Boolean(term && label.indexOf(term) < 0);
+            });
+        }
+        document.querySelectorAll('[data-attr-option="' + String(searchId).replace(/"/g, '\\"') + '"]').forEach(function (labelEl) {
+            var label = ((labelEl.getAttribute("data-label") || "") + " " + (labelEl.getAttribute("data-original-label") || "") + " " + labelEl.textContent).toLowerCase();
+            labelEl.style.display = term && label.indexOf(term) < 0 ? "none" : "";
+        });
+        return;
+    }
+    var manualId = event.target && event.target.getAttribute && event.target.getAttribute("data-attr-manual");
+    if (manualId) {
+        var status = document.querySelector('[data-attr-status="' + String(manualId).replace(/"/g, '\\"') + '"]');
+        var wrap = document.querySelector('[data-attr-wrap="' + String(manualId).replace(/"/g, '\\"') + '"]');
+        if (status) {
+            status.className = "attr-status manual";
+            status.textContent = "人工已改";
+        }
+        if (wrap) wrap.classList.remove("need-review");
+        updateSelectedChips(manualId);
+    }
+});
+
+document.addEventListener("click", function (event) {
+    var addVariantBtn = event.target && event.target.closest && event.target.closest('[data-action="add-variant-theme"]');
+    if (addVariantBtn) {
+        addVariantTheme();
+        return;
+    }
+    var removeVariantBtn = event.target && event.target.closest && event.target.closest('[data-action="remove-variant-theme"]');
+    if (removeVariantBtn) {
+        removeVariantTheme(Number(removeVariantBtn.getAttribute("data-variant-theme-index")));
+        return;
+    }
+    var pickBtn = event.target && event.target.closest && event.target.closest('[data-action="pick-variant-images"]');
+    if (pickBtn) {
+        openVariantImagePicker(pickBtn.getAttribute("data-variant-key") || "");
+        return;
+    }
+    var option = event.target && event.target.closest && event.target.closest(".variant-image-option");
+    if (option) {
+        var url = option.getAttribute("data-image-url") || "";
+        var idx = pageState.pendingVariantImageUrls.indexOf(url);
+        if (idx >= 0) {
+            pageState.pendingVariantImageUrls.splice(idx, 1);
+            option.classList.remove("selected");
+        } else {
+            pageState.pendingVariantImageUrls.push(url);
+            option.classList.add("selected");
+        }
+    }
+});
+
+function collectAttributeFormValues() {
+    var result = [];
+    (pageState.categoryAttributes || []).forEach(function (meta) {
+        var attrId = meta.id || meta.attribute_id;
+        if (!attrId) return;
+        var select = document.querySelector('select[data-attr-id="' + String(attrId).replace(/"/g, '\\"') + '"]');
+        var checkedBoxes = document.querySelectorAll('input[type="checkbox"][data-attr-id="' + String(attrId).replace(/"/g, '\\"') + '"]:checked');
+        var input = document.querySelector('input[data-attr-id="' + String(attrId).replace(/"/g, '\\"') + '"]:not([type="checkbox"])');
+        var manual = document.querySelector('[data-attr-manual="' + String(attrId).replace(/"/g, '\\"') + '"]');
+        var values = [];
+        if (checkedBoxes.length) {
+            checkedBoxes.forEach(function (box) {
+                values.push({ dictionary_value_id: Number(box.value) || box.value, value: box.parentElement ? box.parentElement.textContent.trim() : "" });
+            });
+        } else if (select && select.multiple) {
+            Array.prototype.filter.call(select.options, function (opt) { return opt.selected; }).forEach(function (opt) {
+                values.push({ dictionary_value_id: Number(opt.value) || opt.value, value: opt.getAttribute("data-label") || opt.textContent || "" });
+            });
+        } else if (select && select.value) {
+            var selected = select.options[select.selectedIndex];
+            if (String(select.getAttribute("data-attr-type") || "").toLowerCase() === "boolean") {
+                values.push({ value: select.value });
+            } else {
+                values.push({ dictionary_value_id: Number(select.value) || select.value, value: selected ? (selected.getAttribute("data-label") || selected.textContent || "") : "" });
+            }
+        } else if (input && input.value) {
+            values.push({ value: input.value });
+        }
+        if (manual && manual.value.trim()) {
+            manual.value.split(";").map(function (x) { return x.trim(); }).filter(Boolean).forEach(function (text) {
+                values.push({ value: text });
+            });
+        }
+        if (values.length) result.push({ attribute_id: Number(attrId) || attrId, values: values });
+    });
+    return result;
+}
+
+function collectRichContentValue() {
+    var input = $("rich-json-input");
+    var status = $("rich-json-status");
+    var raw = input ? input.value.trim() : "";
+    if (status) status.textContent = "";
+    if (!raw) return "";
+    try {
+        JSON.parse(raw);
+        if (status) status.textContent = "JSON富文本格式正确";
+        return raw;
+    } catch (err) {
+        var message = "JSON富文本格式错误：" + err.message;
+        if (status) status.textContent = message;
+        throw new Error(message);
+    }
+}
+
+function collectWorkbenchAttributes() {
+    var attrs = collectAttributeFormValues();
+    var richContent = collectRichContentValue();
+    if (richContent) {
+        attrs.push({ attribute_id: 11254, value: richContent });
+    }
+    return attrs;
+}
+
+function collectVatValue() {
+    var select = $("vat-select");
+    return select ? select.value : "";
+}
+
+function collectSkuRows() {
+    var rows = [];
+    document.querySelectorAll("#variantInfo tbody tr").forEach(function (row) {
+        var cells = row.querySelectorAll("td");
+        var inputs = row.querySelectorAll("input");
+        var variantKey = cells[1] ? cells[1].textContent.trim() : "";
+        rows.push({
+            name: cells[0] ? cells[0].textContent.trim() : variantKey,
+            sku_code: inputs[0] ? inputs[0].value.trim() : "",
+            price: inputs[1] ? inputs[1].value.trim() : "",
+            old_price: inputs[2] ? inputs[2].value.trim() : "",
+            stock: inputs[3] ? inputs[3].value.trim() : "",
+            depth: inputs[4] ? inputs[4].value.trim() : "",
+            width: inputs[5] ? inputs[5].value.trim() : "",
+            height: inputs[6] ? inputs[6].value.trim() : "",
+            weight: inputs[7] ? inputs[7].value.trim() : "",
+            images: pageState.variantImages[variantKey] || []
+        });
+    });
+    return rows.filter(function (row) { return row.sku_code; });
+}
+
+function buildWorkbenchPayload() {
+    return {
+        skc: pageState.skc || "",
+        name: $("title-input") ? $("title-input").value : "",
+        category_id: pageState.categoryId,
+        type_id: pageState.categoryTypeId,
+        vat: collectVatValue(),
+        attributes: collectWorkbenchAttributes(),
+        rich_content: collectRichContentValue(),
+        skus: collectSkuRows()
+    };
+}
+
+async function validateEditorPayload() {
+    pageState.storeId = $("store-select").value || pageState.storeId;
+    if (!pageState.storeId) {
+        alert("请先选择店铺");
+        return;
+    }
+    var payload;
+    try {
+        payload = buildWorkbenchPayload();
+    } catch (err) {
+        setAiStatus("表单校验失败", err.message);
+        return;
+    }
+    var data = await api("/api/ozon/" + encodeURIComponent(pageState.storeId) + "/listing/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
+    var score = data.report && data.report.score != null ? data.report.score : "-";
+    setAiStatus("表单已采集", "已采集 " + payload.attributes.length + " 个属性，当前校验分 " + score + "。");
+    return data;
+}
+
+function applyDraftAttributes(draft) {
+    var attrs = draft.attributes || [];
+    var filled = 0;
+    attrs.forEach(function (attr) {
+        if (setAttributeControlValue(attr)) filled += 1;
+    });
+    return filled;
+}
+
+async function loadCategoryAttributes(categoryId, typeId) {
+    pageState.storeId = $("store-select").value || pageState.storeId;
+    if (!pageState.storeId || !categoryId) return;
+    $("attr-area").innerHTML = '<div class="attr-empty">正在加载该分类的 Ozon 属性...</div>';
+    try {
+        var payload = { description_category_id: categoryId };
+        if (typeId) payload.type_id = typeId;
+        var data = await api("/api/ozon/" + encodeURIComponent(pageState.storeId) + "/category-attributes", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        if (!data.success) throw new Error(data.error || "属性加载失败");
+        renderCategoryAttributes(data.attributes || []);
+        if (data.warning) {
+            setAiStatus("分类属性提示", esc(data.warning));
+        }
+    } catch (e) {
+        $("attr-area").innerHTML = '<div class="attr-empty" style="color:#d9534f">属性加载失败：' + esc(e.message) + '</div>';
+    }
+}
+
+function nodeId(node) {
+    return node.type_id || node.description_category_id || node.id;
+}
+
+function nodeName(node) {
+    return node.type_name || node.category_name || node.name || "";
+}
+
+function nodeCnName(node) {
+    return node._name_cn || "";
+}
+
+function categoryLabel(node) {
+    var name = nodeName(node);
+    var cn = nodeCnName(node);
+    return cn && cn !== name ? cn + "(" + name + ")" : name;
+}
+
+function makeCategoryItem(node, path, inheritedCategoryId) {
+    var label = categoryLabel(node);
+    var currentPath = path ? path + " > " + label : label;
+    var categoryId = node.description_category_id || inheritedCategoryId || nodeId(node);
+    var typeId = node.type_id || null;
+    return {
+        description_category_id: categoryId,
+        type_id: typeId || categoryId,
+        name: label,
+        raw_name: nodeName(node),
+        path: currentPath,
+        search: (currentPath + " " + nodeName(node) + " " + nodeCnName(node)).toLowerCase()
+    };
+}
+
+function categoryTitleHtml(label) {
+    var parts = label.match(/^(.*)\((.*)\)$/);
+    if (parts) {
+        return '<span class="category-name-cn">' + esc(parts[1]) + '</span><span class="category-name-ru">' + esc(parts[2]) + '</span>';
+    }
+    return '<span class="category-name-cn">' + esc(label) + '</span>';
+}
+
+function buildCategoryIndex(nodes) {
+    var flat = [];
+    function walk(items, path, inheritedCategoryId) {
+        items.forEach(function (node) {
+            var item = makeCategoryItem(node, path, inheritedCategoryId);
+            var children = node.children || [];
+            if (children.length) {
+                walk(children, item.path, item.description_category_id);
+            } else {
+                flat.push(item);
+            }
+        });
+    }
+    walk(nodes || [], "", null);
+    return flat;
+}
+
+async function loadCategoryTree() {
+    if (pageState.categoryTree) return;
+    pageState.storeId = $("store-select").value || pageState.storeId;
+    if (!pageState.storeId) {
+        alert("请先选择店铺");
+        return;
+    }
+    $("category-tree").innerHTML = '<div class="hint" style="padding:12px">正在加载 Ozon 分类树...</div>';
+    var data = await api("/api/ozon/" + encodeURIComponent(pageState.storeId) + "/category-tree");
+    if (!data.success) throw new Error(data.error || "分类树加载失败");
+    pageState.categoryTree = data.category_tree || [];
+    pageState.categoryFlat = buildCategoryIndex(pageState.categoryTree);
+}
+
+function renderCategoryResults(keyword) {
+    var tree = $("category-tree");
+    var q = (keyword || "").trim().toLowerCase();
+    if (!q) {
+        renderCategoryTree(pageState.categoryTree || []);
+        return;
+    }
+    var list = pageState.categoryFlat.filter(function (item) {
+        return item.search.indexOf(q) >= 0;
+    }).slice(0, 300);
+    if (!list.length) {
+        tree.innerHTML = '<div class="hint" style="padding:12px">没有找到匹配分类</div>';
+        return;
+    }
+    tree.innerHTML = list.map(function (item, index) {
+        var title = categoryTitleHtml(item.name);
+        return '<div class="category-node" data-index="' + index + '">' +
+            '<span>□</span><span>' + title + '<span style="color:#aaa;margin-left:8px">ID: ' + esc(item.description_category_id) + ' / type: ' + esc(item.type_id) + '</span></span>' +
+            '</div>';
+    }).join("");
+    tree.querySelectorAll(".category-node").forEach(function (el) {
+        el.addEventListener("click", function () {
+            var selected = list[Number(el.dataset.index)];
+            pageState.selectedCategory = selected;
+            tree.querySelectorAll(".category-node").forEach(function (node) {
+                node.classList.remove("selected");
+            });
+            el.classList.add("selected");
+            $("category-preview").textContent = selected.path;
+            $("btn-confirm-category").disabled = false;
+        });
+    });
+}
+
+function renderCategoryTree(nodes) {
+    var tree = $("category-tree");
+    tree.innerHTML = "";
+
+    function draw(node, depth, path, inheritedCategoryId) {
+        var children = node.children || [];
+        var item = makeCategoryItem(node, path, inheritedCategoryId);
+        var row = document.createElement("div");
+        row.className = "category-node";
+        row.style.paddingLeft = (12 + depth * 18) + "px";
+        row.innerHTML = '<span>' + (children.length ? (node._expanded ? "▾" : "▸") : "□") + '</span><span>' +
+            categoryTitleHtml(item.name) +
+            '<span style="color:#aaa;margin-left:8px">ID: ' + esc(item.description_category_id) + (children.length ? "" : " / type: " + esc(item.type_id)) + '</span></span>';
+        row.addEventListener("click", function () {
+            if (children.length) {
+                node._expanded = !node._expanded;
+                renderCategoryTree(pageState.categoryTree || []);
+                return;
+            }
+            pageState.selectedCategory = item;
+            tree.querySelectorAll(".category-node").forEach(function (nodeEl) {
+                nodeEl.classList.remove("selected");
+            });
+            row.classList.add("selected");
+            $("category-preview").textContent = item.path;
+            $("btn-confirm-category").disabled = false;
+        });
+        tree.appendChild(row);
+        if (children.length && node._expanded) {
+            children.forEach(function (child) {
+                draw(child, depth + 1, item.path, item.description_category_id);
+            });
+        }
+    }
+
+    (nodes || []).forEach(function (node) {
+        draw(node, 0, "", null);
+    });
+}
+
+async function openManualCategoryTree() {
+    $("category-modal").style.display = "flex";
+    $("btn-confirm-category").disabled = true;
+    $("category-preview").textContent = "请选择一个末级分类";
+    try {
+        await loadCategoryTree();
+        renderCategoryResults($("category-search").value);
+    } catch (e) {
+        $("category-tree").innerHTML = '<div class="hint" style="padding:12px;color:#d9534f">加载失败：' + esc(e.message) + '</div>';
+    }
+}
+
+function closeManualCategoryTree() {
+    $("category-modal").style.display = "none";
+}
+
+function confirmManualCategory() {
+    if (!pageState.selectedCategory) return;
+    showCategory(pageState.selectedCategory);
+    closeManualCategoryTree();
+    setAiStatus("人工选择分类", "已按左侧人工选择回填分类：" + esc(pageState.selectedCategory.path));
+}
+
+async function autoCategory() {
+    pageState.storeId = $("store-select").value || pageState.storeId;
+    if (!pageState.storeId) {
+        alert("请先选择店铺");
+        return;
+    }
+    if (!pageState.skc) {
+        alert("请先在右侧选品");
+        return;
+    }
+    var btn = $("btn-ai-category");
+    var oldText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "自动分类中...";
+    try {
+        var prodData = pageState.product && pageState.product.product_data ? pageState.product.product_data : {};
+        var description = [prodData.about_item, prodData.product_description, prodData.description]
+            .filter(Boolean).join(" ");
+        var res = await fetch("/api/ozon/" + encodeURIComponent(pageState.storeId) + "/match-category", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                product_title: (pageState.product && (pageState.product.title || pageState.product.name)) || "",
+                product_category: (pageState.product && pageState.product.category) || prodData.category || "",
+                product_description: description
+            })
+        });
+        var data = await res.json().catch(function () { return {}; });
+        if (!res.ok) throw new Error(data.error || "HTTP " + res.status);
+        if (!data.success || !data.best_match || !data.best_match.id) {
+            var detail = data.error || data.warning || "LLM 未返回可用匹配结果";
+            if (data.trace && data.trace.length) {
+                var last = data.trace[data.trace.length - 1];
+                detail += "<br>最后层级：" + esc(last.path || "") +
+                    "<br>候选数：" + esc(last.candidate_count || 0) +
+                    "<br>AI回复：" + esc(last.llm_text || "");
+                if (last.llm_error) detail += "<br>LLM错误：" + esc(last.llm_error);
+            }
+            setAiStatus("自动分类失败", detail);
+            return;
+        }
+        showCategory(data.best_match);
+        setAiStatus("自动分类完成", "AI 已匹配 Ozon 类目，并展开左侧平台属性区。");
+    } catch (e) {
+        setAiStatus("自动分类失败", esc(e.message));
+    } finally {
+        btn.disabled = false;
+        btn.textContent = oldText;
+    }
+}
+
+function fillKnownWalletAttributes(draft) {
+    var attrs = draft.attributes || [];
+    attrs.forEach(function (attr) {
+        var value = attr.value || attr.values || "";
+        if (Array.isArray(value)) value = value.map(function (v) { return v.value || v; }).join(", ");
+        if (attr.attribute_id === 20926 && String(value).trim()) {
+            var comp = document.querySelector('[data-attr-id="20926"]') || $("comp-input");
+            if (comp) comp.value = String(value);
+        }
+    });
+}
+
+async function autoFill() {
+    pageState.storeId = $("store-select").value || pageState.storeId;
+    if (!pageState.storeId) {
+        alert("请先选择店铺");
+        return;
+    }
+    if (!pageState.skc) {
+        alert("请先在右侧选品");
+        return;
+    }
+    if (!hasSelectedCategory()) {
+        setAiStatus("不能自动填充", "请先选择 Ozon 分类，再自动填充。");
+        return;
+    }
+    var btn = $("btn-ai-fill");
+    var oldText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "自动填充中...";
+    try {
+        var data = await api("/api/ozon/" + encodeURIComponent(pageState.storeId) + "/listing/generate-draft", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ skc: pageState.skc })
+        });
+        if (!data.draft) throw new Error(data.error || "未返回草稿");
+        await showCategory({
+            category_id: data.draft.category_id,
+            type_id: data.draft.type_id,
+            category_path: data.draft.category_path
+        }, { preserveAttributes: true });
+        var filled = applyDraftAttributes(data.draft);
+        fillKnownWalletAttributes(data.draft);
+        setAiStatus("自动填充完成", "已根据 Ozon 属性定义和商品数据填充左侧表单，已回填 " + filled + " 个属性。");
+    } catch (e) {
+        setAiStatus("自动填充失败", esc(e.message));
+    } finally {
+        btn.disabled = false;
+        btn.textContent = oldText;
+    }
+}
+
+function init() {
+    renderVariantThemes();
+    loadStores();
+    if (pageState.skc) {
+        selectProduct(pageState.skc);
+    }
+    $("btn-ai-pick").addEventListener("click", openProductPicker);
+    $("btn-product-search").addEventListener("click", searchProducts);
+    $("btn-product-confirm").addEventListener("click", confirmProductSelection);
+    $("product-search").addEventListener("keydown", function (event) {
+        if (event.key === "Enter") searchProducts();
+    });
+    $("btn-select-category").addEventListener("click", openManualCategoryTree);
+    $("btn-close-category").addEventListener("click", closeManualCategoryTree);
+    $("btn-cancel-category").addEventListener("click", closeManualCategoryTree);
+    $("btn-confirm-category").addEventListener("click", confirmManualCategory);
+    $("category-modal").addEventListener("click", function (event) {
+        if (event.target === $("category-modal")) closeManualCategoryTree();
+    });
+    $("btn-close-variant-images").addEventListener("click", closeVariantImagePicker);
+    $("btn-cancel-variant-images").addEventListener("click", closeVariantImagePicker);
+    $("btn-confirm-variant-images").addEventListener("click", confirmVariantImages);
+    $("variant-image-modal").addEventListener("click", function (event) {
+        if (event.target === $("variant-image-modal")) closeVariantImagePicker();
+    });
+    $("category-search").addEventListener("input", function () {
+        renderCategoryResults(this.value);
+    });
+    $("btn-ai-category").addEventListener("click", autoCategory);
+    $("btn-ai-fill").addEventListener("click", autoFill);
+    refreshAutoFillAvailability();
+    ["btn-save-top", "btn-save-bottom", "btn-submit-top", "btn-submit-bottom"].forEach(function (id) {
+        var btn = $(id);
+        if (btn) btn.addEventListener("click", validateEditorPayload);
+    });
+}
+
+init();
+</script>
+</body>
+</html>

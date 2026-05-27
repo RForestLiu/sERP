@@ -1,0 +1,135 @@
+(function () {
+  "use strict";
+
+  var RESPONSE_TYPE = "SERP_DXM_RUNTIME_FIELD_MODEL";
+  var REQUEST_TYPE = "SERP_DXM_RUNTIME_REQUEST";
+
+  function inferControlKind(attr) {
+    if (!attr) return "unknown";
+    var dictionaryId = String(attr.dictionaryId || attr.dictionaryIdStr || "0");
+    var isDictionary = dictionaryId !== "" && dictionaryId !== "0" && dictionaryId !== "null" && dictionaryId !== "undefined";
+    var maxValueCount = attr.maxValueCount;
+    var isCollection = !!attr.collection || (maxValueCount !== undefined && maxValueCount !== null && String(maxValueCount) !== "0" && String(maxValueCount) !== "1");
+    var isRemote = !!attr._remoteSearch || !!attr._searchFlag;
+    var valueType = String(attr.type || "").toLowerCase();
+    if (isDictionary && isCollection && isRemote) return "dictionary-multiple-remote";
+    if (isDictionary && isCollection) return "dictionary-multiple";
+    if (isDictionary && isRemote) return "dictionary-single-remote";
+    if (isDictionary) return "dictionary-single";
+    if (valueType === "decimal" || valueType === "integer" || valueType === "number" || valueType === "double") return "number-input";
+    return "text-input";
+  }
+
+  function compactDxmOptions(attr) {
+    function parseOptions(value) {
+      if (Array.isArray(value)) return value;
+      if (typeof value === "string" && value.trim()) {
+        try {
+          var parsed = JSON.parse(value);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+          return [];
+        }
+      }
+      return [];
+    }
+    var source = parseOptions(attr && attr._allOptions);
+    if (!source.length) source = parseOptions(attr && attr._options);
+    if (!source.length) source = parseOptions(attr && attr.options);
+    var seen = {};
+    return source.map(function (item) {
+      if (!item || typeof item !== "object") return null;
+      var id = item.idStr || item.id || item.valueId || item.dictionary_value_id || "";
+      var value = item.value || item.label || item.text || item.name || "";
+      var key = String(id || value).trim();
+      if (!key || seen[key]) return null;
+      seen[key] = true;
+      return {
+        id: String(id || ""),
+        value: String(value || ""),
+        valueCn: String(item.valueCn || item.value_cn || item.textCn || ""),
+        valueEn: String(item.valueEn || item.value_en || item.textEn || "")
+      };
+    }).filter(Boolean).slice(0, 300);
+  }
+
+  function compactAttr(attr, sourceGroup) {
+    if (!attr) return null;
+    return {
+      sourceGroup: sourceGroup,
+      id: String(attr.id || ""),
+      attributeId: String(attr.attributeId || attr.attributeIdStr || ""),
+      name: attr.name || "",
+      nameCn: attr.nameCn || "",
+      type: attr.type || "",
+      collection: attr.collection,
+      required: attr.required,
+      dictionaryId: String(attr.dictionaryId || attr.dictionaryIdStr || "0"),
+      categoryId: attr.categoryId || "",
+      descriptionCategoryId: attr.descriptionCategoryId || attr.description_category_id || "",
+      typeId: attr.typeId || attr.type_id || "",
+      propertyType: attr.propertyType,
+      optionsNum: attr.optionsNum,
+      maxValueCount: attr.maxValueCount,
+      _inputType: attr._inputType,
+      _compType: attr._compType,
+      _searchFlag: attr._searchFlag,
+      _remoteSearch: attr._remoteSearch,
+      dxmControlKind: inferControlKind(attr),
+      options: compactDxmOptions(attr)
+    };
+  }
+
+  function readRuntimeModel() {
+    var appEl = document.querySelector("#app") || document.querySelector("[data-v-app]") || document.body.firstElementChild;
+    var app = appEl && appEl.__vue_app__;
+    var pinia = app && app.config && app.config.globalProperties && app.config.globalProperties.$pinia;
+    var store = pinia && pinia._s && pinia._s.get && pinia._s.get("ozonProductAddStore");
+    var state = store && store.$state;
+    var attrsInfo = state && state.attrsInfo;
+    var dataState = state && state.dataState;
+    var fields = [];
+    ["attrsList", "mergeAttrsList", "skuList"].forEach(function (groupName) {
+      var list = attrsInfo && Array.isArray(attrsInfo[groupName]) ? attrsInfo[groupName] : [];
+      list.forEach(function (attr) {
+        var meta = compactAttr(attr, groupName);
+        if (meta && meta.attributeId) fields.push(meta);
+      });
+    });
+    var fieldCategory = fields.find(function (field) {
+      return field.descriptionCategoryId || field.typeId;
+    }) || {};
+    return {
+      flags: {
+        showProductVideo: !!(attrsInfo && attrsInfo.showProductVideo),
+        showDesc: !!(attrsInfo && attrsInfo.showDesc),
+        showQualification: !!(attrsInfo && attrsInfo.showQualification),
+        showSizeTable: !!(attrsInfo && attrsInfo.showSizeTable),
+        showRichJSON: !!(attrsInfo && attrsInfo.showRichJSON)
+      },
+      category: {
+        descriptionCategoryId: (dataState && dataState.descriptionCategoryId) || fieldCategory.descriptionCategoryId || "",
+        typeId: (dataState && dataState.typeId) || fieldCategory.typeId || ""
+      },
+      fields: fields
+    };
+  }
+
+  function emitRuntimeModel() {
+    try {
+      window.postMessage({ type: RESPONSE_TYPE, model: readRuntimeModel() }, "*");
+    } catch (e) {
+      window.postMessage({ type: RESPONSE_TYPE, model: { flags: {}, fields: [] }, error: String(e && e.message || e) }, "*");
+    }
+  }
+
+  window.addEventListener("message", function (event) {
+    if (event.source !== window) return;
+    var data = event.data || {};
+    if (data.type === REQUEST_TYPE) emitRuntimeModel();
+  });
+
+  emitRuntimeModel();
+  setTimeout(emitRuntimeModel, 800);
+  setTimeout(emitRuntimeModel, 2500);
+})();

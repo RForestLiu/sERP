@@ -1,0 +1,449 @@
+{
+  "meta": {
+    "description": "Ozon 跨类目公共属性分析 — 基于12个不同大类目的真实 API 数据",
+    "total_categories_queried": 12,
+    "query_date": "2026-05-22",
+    "methodology": "从 Ozon 品类树取 12 个不同一级类目下的二级品类（含 type_id），调用 /v1/description-category/attribute 获取属性，交叉比对",
+    "categories_sampled": [
+      {"top": "Автотовары", "mid": "Автомобильные масла", "type_id": 96161},
+      {"top": "Антиквариат и коллекционирование", "mid": "Коллекционирование", "type_id": 93831},
+      {"top": "Аптека", "mid": "Комплектующие для техники для инвалидов", "type_id": 971472296},
+      {"top": "Бытовая техника", "mid": "Приготовление алкоголя", "type_id": 90122721},
+      {"top": "Бытовая химия", "mid": "Средства от вредителей", "type_id": 970842803},
+      {"top": "Галантерея и аксессуары", "mid": "Аксессуары", "type_id": 971092190},
+      {"top": "Детские товары", "mid": "Товары для кормления", "type_id": 92512},
+      {"top": "Дом и сад", "mid": "Хранение вещей", "type_id": 970860462},
+      {"top": "Канцелярские товары", "mid": "Печати и штампы", "type_id": 971078138},
+      {"top": "Кино, музыка, видеоигры, софт", "mid": "Кино, музыка, видеоигры, софт", "type_id": 392638731},
+      {"top": "Книги", "mid": "Букинистические издания", "type_id": 971445089},
+      {"top": "Красота и гигиена", "mid": "Принадлежности для гигиены полости рта", "type_id": 93479}
+    ]
+  },
+  "公共属性": {
+    "全部类目共有": [
+      {
+        "attribute_id": 85,
+        "name_ru": "Бренд",
+        "name_cn": "品牌",
+        "functional_category": "品牌与标识",
+        "type": "String",
+        "is_required": true,
+        "category_dependent": true,
+        "dictionary_id": 28732849,
+        "description": "Наименование бренда, под которым произведен товар. Если товар не имеет бренда, используйте значение 'Нет бренда'.",
+        "occurrence": "12/12 (100%)",
+        "fill_advice": "必须从品牌字典中选择 dictionary_value_id"
+      },
+      {
+        "attribute_id": 8229,
+        "name_ru": "Тип",
+        "name_cn": "产品类型",
+        "functional_category": "基本信息",
+        "type": "String",
+        "is_required": true,
+        "category_dependent": true,
+        "dictionary_id": 1960,
+        "description": "Выберите из списка наиболее подходящий тип товара. Типы отличаются в зависимости от товара и категории на сайте Ozon.",
+        "occurrence": "12/12 (100%)",
+        "fill_advice": "必须从类目类型字典中选择，每个类目有不同的可用值"
+      },
+      {
+        "attribute_id": 4180,
+        "name_ru": "Название",
+        "name_cn": "产品名称",
+        "functional_category": "基本信息",
+        "type": "String",
+        "is_required": false,
+        "category_dependent": false,
+        "dictionary_id": 0,
+        "description": "Название пишется по принципу: Тип + Бренд + Модель + Важные характеристики + (запятая) + Особые свойства.",
+        "occurrence": "12/12 (100%)",
+        "fill_advice": "按 Ozon 命名公式生成：类型+品牌+型号+关键属性"
+      },
+      {
+        "attribute_id": 4191,
+        "name_ru": "Аннотация",
+        "name_cn": "产品简介/亮点",
+        "functional_category": "基本信息",
+        "type": "String",
+        "is_required": false,
+        "category_dependent": false,
+        "dictionary_id": 0,
+        "description": "Описание товара, маркетинговый текст.",
+        "occurrence": "12/12 (100%)",
+        "fill_advice": "LLM 根据采集数据生成 2-3 句卖点描述"
+      },
+      {
+        "attribute_id": 9024,
+        "name_ru": "Код продавца",
+        "name_cn": "卖家货号/SKU编码",
+        "functional_category": "条码与编码",
+        "type": "String",
+        "is_required": false,
+        "category_dependent": false,
+        "dictionary_id": 0,
+        "description": "数字字母编码，用于卖家内部商品管理。不等于 EAN/序列号/条码。",
+        "occurrence": "12/12 (100%)",
+        "fill_advice": "建议填入 sERP 的 SKC 或 SKU 编码"
+      },
+      {
+        "attribute_id": 23171,
+        "name_ru": "#Хэштег",
+        "name_cn": "搜索标签/Hashtag",
+        "functional_category": "营销信息",
+        "type": "String",
+        "is_required": false,
+        "category_dependent": false,
+        "dictionary_id": 0,
+        "description": "关键词标签，帮助买家搜索时找到商品。多个标签用逗号分隔。",
+        "occurrence": "12/12 (100%)",
+        "fill_advice": "LLM 从标题和卖点提取 5-10 个俄语关键词"
+      },
+      {
+        "attribute_id": 11254,
+        "name_ru": "Rich-контент JSON",
+        "name_cn": "Rich内容/富文本JSON",
+        "functional_category": "媒体资源",
+        "type": "String",
+        "is_required": false,
+        "category_dependent": false,
+        "dictionary_id": 0,
+        "description": "Добавьте расширенное описание товара в форме с видео или таблицей в формате JSON.",
+        "occurrence": "12/12 (100%)",
+        "fill_advice": "短期可留空；长期按 Ozon Rich Content 模板生成 JSON"
+      },
+      {
+        "attribute_id": 22232,
+        "name_ru": "Код ТН ВЭД ЕАЭС",
+        "name_cn": "欧亚经济联盟海关编码",
+        "functional_category": "法规与合规",
+        "type": "String",
+        "is_required": false,
+        "category_dependent": true,
+        "dictionary_id": 124412395,
+        "description": "Выберите одно значение из списка. Если вы не знаете, какой код выбрать, обратитесь к таможенному брокеру.",
+        "occurrence": "12/12 (100%)",
+        "fill_advice": "如果是跨境卖家需要填写，一般可留空"
+      },
+      {
+        "attribute_id": 22390,
+        "name_ru": "Обслуживание в сервисном центре",
+        "name_cn": "售后服务中心信息",
+        "functional_category": "法规与合规",
+        "type": "String",
+        "is_required": false,
+        "category_dependent": false,
+        "dictionary_id": 0,
+        "description": "Сведения об организации, осуществляющей обслуживание товара в гарантийный период.",
+        "occurrence": "12/12 (100%)",
+        "fill_advice": "填品牌方或卖家的售后联系方式"
+      },
+      {
+        "attribute_id": 21837,
+        "name_ru": "Изображение видео: название",
+        "name_cn": "视频名称",
+        "functional_category": "媒体资源",
+        "type": "String",
+        "is_required": false,
+        "category_dependent": false,
+        "dictionary_id": 0,
+        "description": "Название для видео.",
+        "occurrence": "12/12 (100%)",
+        "fill_advice": "如有产品视频，填俄语名称"
+      },
+      {
+        "attribute_id": 21841,
+        "name_ru": "Изображение видео: обложка",
+        "name_cn": "视频封面图",
+        "functional_category": "媒体资源",
+        "type": "String",
+        "is_required": false,
+        "category_dependent": false,
+        "dictionary_id": 0,
+        "description": "Укажите обложку для видео (MP4, MOV), длительность до 5 минут.",
+        "occurrence": "12/12 (100%)",
+        "fill_advice": "如有产品视频，上传封面图"
+      },
+      {
+        "attribute_id": 21845,
+        "name_ru": "Изображение видеогалерея: обложка",
+        "name_cn": "视频画廊封面图",
+        "functional_category": "媒体资源",
+        "type": "String",
+        "is_required": false,
+        "category_dependent": false,
+        "dictionary_id": 0,
+        "description": "Обложка для видео в галерее (MP4, MOV), длительность до 30 секунд.",
+        "occurrence": "12/12 (100%)",
+        "fill_advice": "如有短视频展示，上传封面"
+      },
+      {
+        "attribute_id": 22273,
+        "name_ru": "Изображение видео: товар на видео",
+        "name_cn": "视频中展示的商品SKU",
+        "functional_category": "媒体资源",
+        "type": "String",
+        "is_required": false,
+        "category_dependent": false,
+        "dictionary_id": 0,
+        "description": "Укажите товар, который демонстрируется в вашем видео.",
+        "occurrence": "12/12 (100%)",
+        "fill_advice": "关联到对应 SKU 编码"
+      },
+      {
+        "attribute_id": 8789,
+        "name_ru": "Название файла PDF",
+        "name_cn": "PDF文件名",
+        "functional_category": "媒体资源",
+        "type": "String",
+        "is_required": false,
+        "category_dependent": false,
+        "dictionary_id": 0,
+        "occurrence": "12/12 (100%)",
+        "fill_advice": "如有说明书/认证 PDF，填文件名"
+      },
+      {
+        "attribute_id": 8790,
+        "name_ru": "Документ PDF",
+        "name_cn": "PDF文档链接",
+        "functional_category": "媒体资源",
+        "type": "URL",
+        "is_required": false,
+        "category_dependent": false,
+        "dictionary_id": 0,
+        "occurrence": "12/12 (100%)",
+        "fill_advice": "上传 PDF 文档 URL"
+      }
+    ],
+    "大部分类目共有": [
+      {
+        "attribute_id": 4383,
+        "name_ru": "Вес товара, г",
+        "name_cn": "商品净重（克）",
+        "functional_category": "物理属性",
+        "type": "Decimal",
+        "is_required": false,
+        "category_dependent": false,
+        "dictionary_id": 0,
+        "description": "Вес товара без упаковки (нетто) в граммах на 1 SKU.",
+        "occurrence": "11/12 (92%)"
+      },
+      {
+        "attribute_id": 4389,
+        "name_ru": "Страна-изготовитель",
+        "name_cn": "原产国",
+        "functional_category": "品牌与标识",
+        "type": "String",
+        "is_required": false,
+        "category_dependent": false,
+        "dictionary_id": 20785065,
+        "description": "Страна, в которой изготовлен/собран товар.",
+        "occurrence": "10/12 (83%)"
+      },
+      {
+        "attribute_id": 9048,
+        "name_ru": "Название модели (для объединения в одну карточку)",
+        "name_cn": "型号名称（用于合并商品卡）",
+        "functional_category": "基本信息",
+        "type": "String",
+        "is_required": true,
+        "category_dependent": false,
+        "dictionary_id": 0,
+        "description": "Заполните данное поле, чтобы одинаковые товары от разных поставщиков объединились на одной карточке.",
+        "occurrence": "10/12 (83%)"
+      },
+      {
+        "attribute_id": 23249,
+        "name_ru": "Количество товара в упаковке",
+        "name_cn": "包装内商品数量",
+        "functional_category": "包装与配件",
+        "type": "Decimal",
+        "is_required": false,
+        "category_dependent": false,
+        "dictionary_id": 0,
+        "description": "Штук — минимальная единица измерения.",
+        "occurrence": "10/12 (83%)"
+      },
+      {
+        "attribute_id": 11650,
+        "name_ru": "Количество заводских упаковок",
+        "name_cn": "工厂包装数量",
+        "functional_category": "物流信息",
+        "type": "Integer",
+        "is_required": false,
+        "category_dependent": false,
+        "dictionary_id": 0,
+        "description": "Сколько заводских упаковок продается под одним SKU.",
+        "occurrence": "10/12 (83%)"
+      },
+      {
+        "attribute_id": 4497,
+        "name_ru": "Вес с упаковкой, г",
+        "name_cn": "带包装重量（克）",
+        "functional_category": "物理属性",
+        "type": "Decimal",
+        "is_required": false,
+        "category_dependent": false,
+        "dictionary_id": 0,
+        "description": "Вес товара вместе с упаковкой.",
+        "occurrence": "9/12 (75%)"
+      }
+    ],
+    "部分类目共有": [
+      {
+        "attribute_id": 10096,
+        "name_ru": "Цвет товара",
+        "name_cn": "商品颜色",
+        "functional_category": "颜色与外观",
+        "occurrence": "7/12 (58%)"
+      },
+      {
+        "attribute_id": 4384,
+        "name_ru": "Комплектация",
+        "name_cn": "配件/包装内容",
+        "functional_category": "包装与配件",
+        "occurrence": "7/12 (58%)"
+      },
+      {
+        "attribute_id": 8962,
+        "name_ru": "Единиц в одном товаре",
+        "name_cn": "单件商品内含数量",
+        "functional_category": "包装与配件",
+        "occurrence": "6/12 (50%)"
+      },
+      {
+        "attribute_id": 10400,
+        "name_ru": "Гарантия",
+        "name_cn": "质保期",
+        "functional_category": "包装与配件",
+        "occurrence": "5/12 (42%)"
+      },
+      {
+        "attribute_id": 4385,
+        "name_ru": "Гарантийный срок",
+        "name_cn": "保修期限",
+        "functional_category": "包装与配件",
+        "occurrence": "5/12 (42%)"
+      },
+      {
+        "attribute_id": 8205,
+        "name_ru": "Срок годности в днях",
+        "name_cn": "保质期（天）",
+        "functional_category": "物流信息",
+        "occurrence": "4/12 (33%)"
+      },
+      {
+        "attribute_id": 9070,
+        "name_ru": "Признак 18+",
+        "name_cn": "18+标识",
+        "functional_category": "法规与合规",
+        "occurrence": "4/12 (33%)"
+      },
+      {
+        "attribute_id": 4386,
+        "name_ru": "Упаковка",
+        "name_cn": "包装类型",
+        "functional_category": "包装与配件",
+        "occurrence": "3/12 (25%)"
+      },
+      {
+        "attribute_id": 8416,
+        "name_ru": "Длина, мм",
+        "name_cn": "长度（毫米）",
+        "functional_category": "物理属性",
+        "occurrence": "3/12 (25%)"
+      },
+      {
+        "attribute_id": 9390,
+        "name_ru": "Целевая аудитория",
+        "name_cn": "目标受众",
+        "functional_category": "适用信息",
+        "occurrence": "3/12 (25%)"
+      },
+      {
+        "attribute_id": 9163,
+        "name_ru": "Пол",
+        "name_cn": "性别",
+        "functional_category": "适用信息",
+        "occurrence": "2/12 (17%)"
+      },
+      {
+        "attribute_id": 5309,
+        "name_ru": "Материал",
+        "name_cn": "材质/材料",
+        "functional_category": "材质与成分",
+        "occurrence": "2/12 (17%)"
+      }
+    ]
+  },
+  "功能分类总结": {
+    "基本信息": {
+      "描述": "所有类目都需要的基础描述字段",
+      "包含属性": ["产品类型(8229)*", "产品名称(4180)", "产品简介(4191)", "型号名称(9048)*"],
+      "填充策略": "类型从类目字典选，名称按 Ozon 公式生成，简介和型号由 LLM 生成"
+    },
+    "品牌与标识": {
+      "描述": "品牌和产地信息",
+      "包含属性": ["品牌(85)*", "原产国(4389)"],
+      "填充策略": "品牌必须用 dictionary_value_id，原产国从采集数据提取或默认 'Китай'"
+    },
+    "媒体资源": {
+      "描述": "图片、视频、PDF 等多媒体文件",
+      "包含属性": ["Rich内容JSON(11254)", "视频封面(21841)", "视频名称(21837)", "PDF(8789/8790)"],
+      "填充策略": "图片必传，视频/PDF 有则传，Rich Content 短期留空"
+    },
+    "物理属性": {
+      "描述": "商品重量和尺寸",
+      "包含属性": ["商品净重(4383)", "带包装重量(4497)", "长度(8416)"],
+      "填充策略": "从采集数据 LLM 提取并换算为国际单位（克、毫米）"
+    },
+    "条码与编码": {
+      "描述": "商品标识编码",
+      "包含属性": ["卖家货号(9024)"],
+      "填充策略": "填入 sERP SKC/SKU"
+    },
+    "营销信息": {
+      "描述": "搜索优化和营销标签",
+      "包含属性": ["#Хэштег(23171)"],
+      "填充策略": "LLM 从标题和卖点生成俄语标签"
+    },
+    "包装与配件": {
+      "描述": "包装、配件、质保",
+      "包含属性": ["包装内数量(23249)", "工厂包装数(11650)", "配件(4384)", "质保(10400)"],
+      "填充策略": "有数据则填，质保默认填 '1 год' 或按品牌实际"
+    },
+    "法规与合规": {
+      "描述": "海关编码、年龄限制等法规字段",
+      "包含属性": ["海关编码(22232)", "售后信息(22390)", "18+标识(9070)"],
+      "填充策略": "海关编码跨境才填，售后填品牌方信息"
+    },
+    "物流信息": {
+      "描述": "仓储、保质期等物流相关",
+      "包含属性": ["保质期天(8205)"],
+      "填充策略": "食品/化妆品才需要"
+    },
+    "适用信息": {
+      "描述": "目标受众、性别等",
+      "包含属性": ["目标受众(9390)", "性别(9163)"],
+      "填充策略": "从类目字典选择"
+    },
+    "材质与成分": {
+      "描述": "材质和成分信息",
+      "包含属性": ["材质(5309)"],
+      "填充策略": "从采集数据提取，优先匹配字典值"
+    },
+    "颜色与外观": {
+      "描述": "颜色、外观相关",
+      "包含属性": ["商品颜色(10096)"],
+      "填充策略": "从采集数据提取颜色名或字典值"
+    }
+  },
+  "summary_stats": {
+    "total_unique_attributes_across_12_categories": 150,
+    "universal_attributes": 15,
+    "most_common_attributes": 6,
+    "some_common_attributes": 18,
+    "category_specific_attributes": 111,
+    "key_insight": "15个属性在所有12个类目中出现，它们是任何Ozon产品都需要准备的基础字段。另有6个属性在75%+类目中出现。74%的属性（111个）是类目特异性属性。"
+  }
+}
