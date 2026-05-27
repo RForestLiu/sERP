@@ -246,6 +246,8 @@ class Product(AggregateRoot):
             "image_sets": dict(self._image_sets),
             "image_subsets": dict(self._image_subsets),
             "pending_approvals": list(self._pending_approvals),
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
         }
 
     def to_view(self, store_ids: list[str] = None) -> dict:
@@ -270,6 +272,8 @@ class Product(AggregateRoot):
             "image_sets": dict(self._image_sets),
             "image_subsets": dict(self._image_subsets),
             "pending_approvals": list(self._pending_approvals),
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
         }
 
     @classmethod

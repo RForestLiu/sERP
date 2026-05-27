@@ -303,7 +303,21 @@ class ProductApplicationService(ProductFacade):
         if platform:
             results = [r for r in results if r.get("platform", "") == platform]
 
+        results.sort(key=lambda r: self._parse_product_time(r.get("created_at", "")), reverse=True)
         return results
+
+    @staticmethod
+    def _parse_product_time(value: str) -> datetime:
+        if not value:
+            return datetime.min
+        try:
+            return datetime.fromisoformat(str(value))
+        except ValueError:
+            pass
+        try:
+            return datetime.strptime(str(value), "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            return datetime.min
 
     def get_product(self, skc: str) -> dict:
         product = self._find_product_or_raise(skc)
