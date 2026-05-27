@@ -52,6 +52,9 @@
             line-height: 1.2;
             text-align: center;
         }
+        .nav-spacer {
+            flex: 1;
+        }
         
         /* ===== 模块容器（导航栏右侧所有内容） ===== */
         .module-container {
@@ -1522,24 +1525,25 @@
     <div class="nav-bar">
         <div class="nav-item" data-module="collect-product">
             <span class="nav-icon">📦</span>
-            <span class="nav-label">采集产品</span>
-        </div>
-        <div class="nav-item active" data-module="image-batch">
-            <span class="nav-icon">📷</span>
-            <span class="nav-label">图片批量处理</span>
+            <span class="nav-label">采集</span>
         </div>
         <div class="nav-item" data-module="product-manage">
             <span class="nav-icon">📋</span>
             <span class="nav-label">产品管理</span>
         </div>
-        <div class="nav-item" data-module="settings">
-            <span class="nav-icon">⚙</span>
-            <span class="nav-label">设置</span>
+        <div class="nav-item active" data-module="image-batch">
+            <span class="nav-icon">📷</span>
+            <span class="nav-label">图片处理</span>
         </div>
+        <div class="nav-spacer"></div>
         <a href="/knowledge-base" class="nav-item" style="text-decoration:none;">
             <span class="nav-icon">&#128218;</span>
             <span class="nav-label">知识库</span>
         </a>
+        <div class="nav-item" data-module="settings">
+            <span class="nav-icon">⚙</span>
+            <span class="nav-label">设置</span>
+        </div>
     </div>
 
     <!-- ===== 模块容器 ===== -->

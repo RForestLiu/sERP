@@ -19,6 +19,22 @@ def test_legacy_product_management_listing_entries_are_hidden():
     assert "window.open(`/ozon-product/add?skc=${encodeURIComponent(skc)}&store_id=${encodeURIComponent(storeId)}`" not in template
 
 
+def test_index_sidebar_navigation_order_and_bottom_items():
+    template = read_template("index.html")
+
+    collect_pos = template.index('data-module="collect-product"')
+    product_pos = template.index('data-module="product-manage"')
+    image_pos = template.index('data-module="image-batch"')
+    spacer_pos = template.index('class="nav-spacer"')
+    knowledge_pos = template.index('href="/knowledge-base"')
+    settings_pos = template.index('data-module="settings"')
+
+    assert collect_pos < product_pos < image_pos
+    assert image_pos < spacer_pos < knowledge_pos < settings_pos
+    assert "<span class=\"nav-label\">采集</span>" in template
+    assert "<span class=\"nav-label\">图片处理</span>" in template
+
+
 def test_product_maintenance_listing_entries_are_hidden():
     template = read_template("product_maintenance.html")
 
