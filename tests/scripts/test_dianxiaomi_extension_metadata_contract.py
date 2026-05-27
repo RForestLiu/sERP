@@ -4,7 +4,7 @@ from pathlib import Path
 EXTENSION_FILE = Path(__file__).resolve().parents[2] / "extensions" / "amazon_collector" / "dianxiaomi_ozon.js"
 BRIDGE_FILE = Path(__file__).resolve().parents[2] / "extensions" / "amazon_collector" / "dxm_runtime_bridge.js"
 MANIFEST_FILE = Path(__file__).resolve().parents[2] / "extensions" / "amazon_collector" / "manifest.json"
-EXPECTED_EXTENSION_VERSION = "3.2.43"
+EXPECTED_EXTENSION_VERSION = "3.2.44"
 
 
 def test_extension_collects_dianxiaomi_runtime_field_model():

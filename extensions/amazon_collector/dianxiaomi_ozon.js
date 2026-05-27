@@ -9,7 +9,7 @@
   var FLASK_BASE = "http://127.0.0.1:5000";
   var API_PRODUCTS = FLASK_BASE + "/api/products";
   var API_AUTO_FILL = FLASK_BASE + "/api/auto-fill/analyze";
-  var SERP_EXTENSION_VERSION = "3.2.43";
+  var SERP_EXTENSION_VERSION = "3.2.44";
   var UNKNOWN_DXM_CONTROL_STORAGE_KEY = "serp_unknown_dxm_controls";
 
   // ==================== Service Worker Fetch Proxy ====================
