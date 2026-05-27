@@ -96,6 +96,18 @@ class CopyToClipboardService:
         kernel32.GlobalLock.restype = wintypes.LPVOID
         kernel32.GlobalUnlock.argtypes = [wintypes.HGLOBAL]
         kernel32.GlobalUnlock.restype = wintypes.BOOL
+        kernel32.GlobalFree.argtypes = [wintypes.HGLOBAL]
+        kernel32.GlobalFree.restype = wintypes.HGLOBAL
+
+        user32 = ctypes.windll.user32
+        user32.OpenClipboard.argtypes = [wintypes.HWND]
+        user32.OpenClipboard.restype = wintypes.BOOL
+        user32.EmptyClipboard.argtypes = []
+        user32.EmptyClipboard.restype = wintypes.BOOL
+        user32.SetClipboardData.argtypes = [wintypes.UINT, wintypes.HANDLE]
+        user32.SetClipboardData.restype = wintypes.HANDLE
+        user32.CloseClipboard.argtypes = []
+        user32.CloseClipboard.restype = wintypes.BOOL
 
         file_list = b""
         for p in file_paths:
@@ -117,12 +129,22 @@ class CopyToClipboardService:
         ctypes.memmove(ptr, data, len(data))
         kernel32.GlobalUnlock(hglobal)
 
-        import win32clipboard
-
-        win32clipboard.OpenClipboard(None)
-        win32clipboard.EmptyClipboard()
-        win32clipboard.SetClipboardData(win32clipboard.CF_HDROP, hglobal)
-        win32clipboard.CloseClipboard()
+        CF_HDROP = 15
+        clipboard_open = False
+        try:
+            if not user32.OpenClipboard(None):
+                raise OSError("OpenClipboard failed")
+            clipboard_open = True
+            if not user32.EmptyClipboard():
+                raise OSError("EmptyClipboard failed")
+            if not user32.SetClipboardData(CF_HDROP, hglobal):
+                raise OSError("SetClipboardData failed")
+            hglobal = None
+        finally:
+            if clipboard_open:
+                user32.CloseClipboard()
+            if hglobal:
+                kernel32.GlobalFree(hglobal)
 
 
 class FileManagementService:

@@ -57,6 +57,14 @@ def test_product_image_management_supports_box_toggle_and_copy_actions():
     assert "CopyToClipboardService.copy_files(paths)" in product_commands
 
 
+def test_clipboard_copy_uses_ctypes_without_pywin32_dependency():
+    service_source = read_source("src/serp/imagetask/domain/services.py")
+
+    assert "import win32clipboard" not in service_source
+    assert "CF_HDROP = 15" in service_source
+    assert "user32.SetClipboardData(CF_HDROP, hglobal)" in service_source
+
+
 def test_product_maintenance_listing_entries_are_hidden():
     template = read_template("product_maintenance.html")
 
